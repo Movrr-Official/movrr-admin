@@ -44,9 +44,17 @@ export async function middleware(request: NextRequest) {
       success: false,
     };
 
+    const log = async (data: any) => {
+      fetch(`${request.nextUrl.origin}/api/log-admin-access`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }).catch(() => {});
+    };
+
     if (!user) {
       // Log unauthorized access attempt
-      await supabase.from("admin_access_logs").insert(logData);
+      await log(logData);
 
       // Redirect to login with return URL
       const redirectUrl = new URL("/auth/signin", request.url);
@@ -63,14 +71,14 @@ export async function middleware(request: NextRequest) {
 
     if (!adminUser) {
       // Log unauthorized access attempt
-      await supabase.from("admin_access_logs").insert(logData);
+      await log(logData);
 
       // Redirect to unauthorized page
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
 
     // Log successful access
-    await supabase.from("admin_access_logs").insert({
+    await log({
       ...logData,
       success: true,
     });
