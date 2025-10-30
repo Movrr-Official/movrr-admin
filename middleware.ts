@@ -11,20 +11,11 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) =>
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
-          );
-        },
+          ),
       },
     }
   );
@@ -32,7 +23,12 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname === "/") {
     const {
       data: { user },
+      error: userError,
     } = await supabase.auth.getUser();
+
+    if (userError) {
+      console.error("Auth error:", userError);
+    }
 
     // Log access attempt
     const logData = {
@@ -63,11 +59,15 @@ export async function middleware(request: NextRequest) {
     }
 
     // Check if user is an admin
-    const { data: adminUser } = await supabase
+    const { data: adminUser, error: adminError } = await supabase
       .from("admin_users")
       .select("role")
       .eq("user_id", user.id)
       .single();
+
+    if (adminError) {
+      console.error("Admin user query error:", adminError);
+    }
 
     if (!adminUser) {
       // Log unauthorized access attempt
