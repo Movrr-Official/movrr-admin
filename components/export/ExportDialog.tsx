@@ -53,9 +53,11 @@ interface ExportDialogProps {
   defaultFilename?: string;
   title?: string;
   description?: string;
+  formats?: Array<"csv" | "xlsx" | "pdf" | "json">; // New optional prop
 }
 
-const formatOptions = [
+// Available format options
+const allFormatOptions = [
   {
     value: "csv" as const,
     label: "CSV",
@@ -100,11 +102,12 @@ export function ExportDialog({
   defaultFilename = "export",
   title = "Export Data",
   description = "Configure your export settings",
+  formats = ["csv", "xlsx", "pdf", "json"], // Default to all formats
 }: ExportDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<
     "csv" | "xlsx" | "pdf" | "json"
-  >("csv");
+  >(formats[0] || "csv"); // Default to first available format
   const [filename, setFilename] = useState(defaultFilename);
   const [includeHeaders, setIncludeHeaders] = useState(true);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
@@ -115,6 +118,11 @@ export function ExportDialog({
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
 
+  // Filter available formats based on the formats prop
+  const formatOptions = allFormatOptions.filter((option) =>
+    formats.includes(option.value)
+  );
+
   const availableFields = getAvailableFields(data);
 
   // Initialize selected fields when data changes
@@ -123,6 +131,13 @@ export function ExportDialog({
       setSelectedFields(availableFields);
     }
   }, [availableFields, selectedFields.length]);
+
+  // Update selected format if the current one is not in available formats
+  useEffect(() => {
+    if (!formats.includes(selectedFormat) && formats.length > 0) {
+      setSelectedFormat(formats[0]);
+    }
+  }, [formats, selectedFormat]);
 
   const handleFieldToggle = (field: string) => {
     setSelectedFields((prev) =>

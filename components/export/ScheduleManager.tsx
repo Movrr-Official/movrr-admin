@@ -1,45 +1,68 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Clock, Play, Pause, Trash2, Edit, Calendar, CheckCircle2, AlertCircle, Timer } from "lucide-react"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Clock,
+  Play,
+  Pause,
+  Trash2,
+  Edit,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  Timer,
+} from "lucide-react";
 
 interface ScheduledExport {
-  id: string
-  name: string
-  description?: string
-  dataSourceId: string
+  id: string;
+  name: string;
+  description?: string;
+  dataSourceId: string;
   exportOptions: {
-    format: "csv" | "xlsx" | "pdf" | "json"
-    filename: string
-    includeHeaders: boolean
-  }
+    format: "csv" | "xlsx" | "pdf" | "json";
+    filename: string;
+    includeHeaders: boolean;
+  };
   schedule: {
-    type: "once" | "daily" | "weekly" | "monthly"
-    time: string
-    dayOfWeek?: number
-    dayOfMonth?: number
-    timezone: string
-  }
-  isActive: boolean
-  createdAt: Date
-  lastRun?: Date
-  nextRun: Date
-  runCount: number
+    type: "once" | "daily" | "weekly" | "monthly";
+    time: string;
+    dayOfWeek?: number;
+    dayOfMonth?: number;
+    timezone: string;
+  };
+  isActive: boolean;
+  createdAt: Date;
+  lastRun?: Date;
+  nextRun: Date;
+  runCount: number;
 }
 
 interface ScheduleManagerProps {
-  schedules: ScheduledExport[]
-  onToggleSchedule?: (id: string, isActive: boolean) => void
-  onDeleteSchedule?: (id: string) => void
-  onEditSchedule?: (id: string) => void
-  onRunNow?: (id: string) => void
+  schedules: ScheduledExport[];
+  onToggleSchedule?: (id: string, isActive: boolean) => void;
+  onDeleteSchedule?: (id: string) => void;
+  onEditSchedule?: (id: string) => void;
+  onRunNow?: (id: string) => void;
 }
 
-const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function ScheduleManager({
   schedules,
@@ -48,35 +71,38 @@ export function ScheduleManager({
   onEditSchedule,
   onRunNow,
 }: ScheduleManagerProps) {
-  const [selectedSchedule, setSelectedSchedule] = useState<string | null>(null)
+  const [selectedSchedule, setSelectedSchedule] = useState<string | null>(null);
 
   const getScheduleDescription = (schedule: ScheduledExport["schedule"]) => {
     switch (schedule.type) {
       case "once":
-        return `Once at ${schedule.time}`
+        return `Once at ${schedule.time}`;
       case "daily":
-        return `Daily at ${schedule.time}`
+        return `Daily at ${schedule.time}`;
       case "weekly":
-        return `Weekly on ${weekDays[schedule.dayOfWeek || 0]} at ${schedule.time}`
+        return `Weekly on ${weekDays[schedule.dayOfWeek || 0]} at ${schedule.time}`;
       case "monthly":
-        return `Monthly on day ${schedule.dayOfMonth} at ${schedule.time}`
+        return `Monthly on day ${schedule.dayOfMonth} at ${schedule.time}`;
       default:
-        return "Unknown schedule"
+        return "Unknown schedule";
     }
-  }
+  };
 
   const getStatusBadge = (schedule: ScheduledExport) => {
     if (!schedule.isActive) {
       return (
-        <Badge variant="outline" className="bg-muted text-muted-foreground border-border font-semibold">
+        <Badge
+          variant="outline"
+          className="bg-muted text-muted-foreground border-border font-semibold"
+        >
           <Pause className="h-3 w-3 mr-1" />
           Paused
         </Badge>
-      )
+      );
     }
 
-    const now = new Date()
-    const isOverdue = schedule.nextRun < now
+    const now = new Date();
+    const isOverdue = schedule.nextRun < now;
 
     if (isOverdue) {
       return (
@@ -87,7 +113,7 @@ export function ScheduleManager({
           <AlertCircle className="h-3 w-3 mr-1" />
           Overdue
         </Badge>
-      )
+      );
     }
 
     return (
@@ -98,8 +124,8 @@ export function ScheduleManager({
         <CheckCircle2 className="h-3 w-3 mr-1" />
         Active
       </Badge>
-    )
-  }
+    );
+  };
 
   const getFormatBadge = (format: string) => {
     const colors = {
@@ -107,14 +133,17 @@ export function ScheduleManager({
       xlsx: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800",
       pdf: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800",
       json: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800",
-    }
+    };
 
     return (
-      <Badge variant="outline" className={`font-semibold ${colors[format as keyof typeof colors] || colors.csv}`}>
+      <Badge
+        variant="outline"
+        className={`font-semibold ${colors[format as keyof typeof colors] || colors.csv}`}
+      >
         {format.toUpperCase()}
       </Badge>
-    )
-  }
+    );
+  };
 
   return (
     <Card className="glass-card border-0 shadow-xl">
@@ -129,7 +158,10 @@ export function ScheduleManager({
               Manage your automated export schedules
             </CardDescription>
           </div>
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 font-semibold px-4 py-2">
+          <Badge
+            variant="outline"
+            className="bg-primary/10 text-primary border-primary/30 font-semibold px-4 py-2"
+          >
             {schedules.length} schedules
           </Badge>
         </div>
@@ -138,61 +170,104 @@ export function ScheduleManager({
         {schedules.length === 0 ? (
           <div className="text-center py-16 bg-muted/10 rounded-2xl border-2 border-dashed border-border/50">
             <Clock className="h-20 w-20 mx-auto text-muted-foreground/50 mb-6" />
-            <p className="font-bold text-foreground text-xl mb-3">No scheduled exports</p>
-            <p className="text-muted-foreground font-medium">Create your first scheduled export to get started</p>
+            <p className="font-bold text-foreground text-xl mb-3">
+              No scheduled exports
+            </p>
+            <p className="text-muted-foreground font-medium">
+              Create your first scheduled export to get started
+            </p>
           </div>
         ) : (
           <div className="rounded-2xl border border-border/50 overflow-hidden bg-card/40 backdrop-blur-sm shadow-lg">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-border/30 bg-muted/20">
-                  <TableHead className="font-bold text-foreground py-4 px-6">Schedule</TableHead>
-                  <TableHead className="font-bold text-foreground py-4 px-6">Format</TableHead>
-                  <TableHead className="font-bold text-foreground py-4 px-6">Frequency</TableHead>
-                  <TableHead className="font-bold text-foreground py-4 px-6">Next Run</TableHead>
-                  <TableHead className="font-bold text-foreground py-4 px-6">Status</TableHead>
-                  <TableHead className="font-bold text-foreground py-4 px-6">Actions</TableHead>
+                  <TableHead className="font-bold text-foreground py-4 px-6">
+                    Schedule
+                  </TableHead>
+                  <TableHead className="font-bold text-foreground py-4 px-6">
+                    Format
+                  </TableHead>
+                  <TableHead className="font-bold text-foreground py-4 px-6">
+                    Frequency
+                  </TableHead>
+                  <TableHead className="font-bold text-foreground py-4 px-6">
+                    Next Run
+                  </TableHead>
+                  <TableHead className="font-bold text-foreground py-4 px-6">
+                    Status
+                  </TableHead>
+                  <TableHead className="font-bold text-foreground py-4 px-6">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {schedules.map((schedule) => (
-                  <TableRow key={schedule.id} className="hover:bg-muted/20 transition-colors border-border/20 group">
+                  <TableRow
+                    key={schedule.id}
+                    className="hover:bg-muted/20 transition-colors border-border/20 group"
+                  >
                     <TableCell className="py-4 px-6">
                       <div className="space-y-1">
-                        <p className="font-bold text-foreground">{schedule.name}</p>
+                        <p className="font-bold text-foreground">
+                          {schedule.name}
+                        </p>
                         {schedule.description && (
-                          <p className="text-sm text-muted-foreground font-medium">{schedule.description}</p>
+                          <p className="text-sm text-muted-foreground font-medium">
+                            {schedule.description}
+                          </p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          Created {schedule.createdAt.toLocaleDateString()} • {schedule.runCount} runs
+                          Created {schedule.createdAt.toLocaleDateString()} •{" "}
+                          {schedule.runCount} runs
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell className="py-4 px-6">{getFormatBadge(schedule.exportOptions.format)}</TableCell>
+                    <TableCell className="py-4 px-6">
+                      {getFormatBadge(schedule.exportOptions.format)}
+                    </TableCell>
                     <TableCell className="py-4 px-6">
                       <div className="space-y-1">
-                        <p className="font-semibold text-foreground">{getScheduleDescription(schedule.schedule)}</p>
-                        <p className="text-xs text-muted-foreground">{schedule.schedule.timezone}</p>
+                        <p className="font-semibold text-foreground">
+                          {getScheduleDescription(schedule.schedule)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {schedule.schedule.timezone}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell className="py-4 px-6">
                       <div className="space-y-1">
-                        <p className="font-semibold text-foreground">{schedule.nextRun.toLocaleDateString()}</p>
+                        <p className="font-semibold text-foreground">
+                          {schedule.nextRun.toLocaleDateString()}
+                        </p>
                         <p className="text-sm text-muted-foreground">
-                          {schedule.nextRun.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          {schedule.nextRun.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell className="py-4 px-6">{getStatusBadge(schedule)}</TableCell>
+                    <TableCell className="py-4 px-6">
+                      {getStatusBadge(schedule)}
+                    </TableCell>
                     <TableCell className="py-4 px-6">
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => onToggleSchedule?.(schedule.id, !schedule.isActive)}
+                          onClick={() =>
+                            onToggleSchedule?.(schedule.id, !schedule.isActive)
+                          }
                           className="hover:bg-primary/10 hover:text-primary transition-colors rounded-xl p-2"
                         >
-                          {schedule.isActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                          {schedule.isActive ? (
+                            <Pause className="h-4 w-4" />
+                          ) : (
+                            <Play className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button
                           variant="ghost"
@@ -228,5 +303,5 @@ export function ScheduleManager({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

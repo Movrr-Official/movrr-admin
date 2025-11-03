@@ -17,12 +17,13 @@
   --secondary-foreground: oklch(1 0 0);
   --muted: oklch(0.96 0.002 240);
   --muted-foreground: oklch(0.45 0.005 240);
-  --accent: oklch(0.65 0.18 45); /* Energy orange #ff6b35 for CTAs */
-  --accent-foreground: oklch(1 0 0);
+  /* --accent: oklch(0.65 0.18 45);  Energy orange #ff6b35 for CTAs */
+  --accent: oklch(0.967 0.003 264.542);
+  --accent-foreground: oklch(0.21 0.034 264.665);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.9 0.002 240);
-  --input: oklch(1 0 0);
+  --input: oklch(85.982% 0.00773 260.87);
   --ring: oklch(0.6 0.15 142); /* Green ring with subtle transparency */
   --chart-1: oklch(0.669 0.1897 146.47); /* Brand green */
   --chart-2: oklch(0.65 0.18 45); /* Energy orange */
