@@ -1,18 +1,21 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Bike, MapPin, Users } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
 import { ActiveFiltersDisplay } from "../filters/ActiveFiltersDisplay";
-import { columns } from "./WaitlistTableColumns";
+import { getWaitlistTableColumns } from "./WaitlistTableColumns";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "../skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
 import { FilterSummary } from "../filters/FilterSummary";
 import { WaitlistEntry } from "@/types/types";
 import { ScheduleManager } from "../export/ScheduleManager";
+import { StatusUpdateDialog } from "../StatusUpdateDialog";
 import { useDataTable } from "@/context/DataTableContext";
+import { useToast } from "@/hooks/useToast";
+import { updateWaitlistStatus } from "@/app/actions/waitlist";
 
 interface WaitlistTableProps {
   entries: WaitlistEntry[];
@@ -38,6 +41,11 @@ export default function WaitlistTableContent({
   const searchParams = useSearchParams();
   const [isSearching, setIsSearching] = React.useState(false);
   const searchValue = searchParams.get("search") || "";
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<WaitlistEntry | null>(
+    null
+  );
+  const { toast } = useToast();
 
   const {
     data: entries,
@@ -49,6 +57,56 @@ export default function WaitlistTableContent({
     activeFilterCount,
     filterConfig,
   } = useDataTable();
+
+  // Handle status update from dropdown menu
+  const handleStatusUpdateClick = (entry: WaitlistEntry) => {
+    setSelectedEntry(entry);
+    setStatusDialogOpen(true);
+  };
+
+  // Handle actual status update confirmation with server action
+  const handleStatusUpdate = async (
+    id: string,
+    newStatus: "pending" | "approved" | "rejected",
+    reason?: string
+  ) => {
+    try {
+      // Calls server action
+      const result = await updateWaitlistStatus(id, newStatus, reason);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      refetchData?.();
+
+      toast({
+        title: "Status Updated",
+        description: `Entry status has been updated to ${newStatus}`,
+        variant: "default",
+      });
+
+      // Close dialog
+      setStatusDialogOpen(false);
+      setSelectedEntry(null);
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to update status",
+        variant: "destructive",
+      });
+
+      console.error("Status update failed:", error);
+    }
+  };
+
+  // Gets columns with stable callbacks
+  const tableColumns = useMemo(() => {
+    return getWaitlistTableColumns({
+      onStatusUpdate: handleStatusUpdateClick,
+    });
+  }, []); // Empty dependencies since handlers are stable
 
   // Analytics data for dataSources
   const analyticsData = useMemo(() => {
@@ -222,6 +280,14 @@ export default function WaitlistTableContent({
 
   return (
     <>
+      {/* Status Update Dialog */}
+      <StatusUpdateDialog
+        open={statusDialogOpen}
+        onOpenChange={setStatusDialogOpen}
+        entry={selectedEntry}
+        onStatusUpdate={handleStatusUpdate}
+      />
+
       {toolbar && (
         <DataTableToolbar
           search={{
@@ -275,7 +341,7 @@ export default function WaitlistTableContent({
         />
       ) : (
         <DataTable
-          columns={columns}
+          columns={tableColumns}
           data={tableData}
           searchFields={["name", "email"]}
           searchParamKey="search"
