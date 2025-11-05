@@ -182,7 +182,9 @@ export function DataTableToolbar({
                 disabled={!hasExportData}
               >
                 <Download className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                {variant === "default" && "Export"}
+                <span className="hidden lg:inline">
+                  {variant === "default" && "Export"}
+                </span>
               </Button>
             }
           />

@@ -44,7 +44,7 @@ export function FilterDropdown({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2 group">
           <SlidersHorizontal className="h-4 w-4 group-hover:scale-110 transition-transform" />
-          Filter
+          <span className="hidden lg:inline">Filter</span>
           {hasActiveFilters && (
             <Badge
               variant="secondary"
@@ -53,7 +53,7 @@ export function FilterDropdown({
               {activeFilterCount}
             </Badge>
           )}
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4 hidden lg:inline" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

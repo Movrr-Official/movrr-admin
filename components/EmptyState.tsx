@@ -48,15 +48,17 @@ export function EmptyState({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      <div className="bg-muted dark:bg-muted/30 p-6 rounded-full mb-6 text-muted-foreground">
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="bg-muted dark:bg-muted/30 p-4 rounded-full mb-4 text-muted-foreground/60">
         {icons[iconName]}
       </div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-muted-foreground max-w-md mb-6">{description}</p>
+      <h3 className="text-sm font-semibold mb-2">{title}</h3>
+      <p className="text-xs text-muted-foreground max-w-md mb-4">
+        {description}
+      </p>
 
       {(buttonAction || navigateTo) && (
-        <Button onClick={handleClick} className="mt-4">
+        <Button size="sm" onClick={handleClick} className="mt-4">
           <PlusCircle className="mr-2 h-4 w-4" />
           {buttonText}
         </Button>

@@ -36,6 +36,7 @@ interface NavItem {
 }
 
 const Sidebar = () => {
+  const [isMobile, setIsMobile] = useState(false);
   const [isPending, startTransition] = useTransition();
   const sidebarOpen = useAppSelector((state) => state.ui.sidebarOpen);
   const pathname = usePathname();
@@ -44,6 +45,21 @@ const Sidebar = () => {
   const { toast } = useToast();
 
   const { totalWaitlist, isLoading, isError } = useCounts();
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    // Check initially
+    checkMobile();
+
+    // Add resize listener
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("sidebarOpen", JSON.stringify(sidebarOpen));
@@ -112,6 +128,8 @@ const Sidebar = () => {
     });
   };
 
+  const sidebarWidth = sidebarOpen ? 256 : 80;
+
   const shouldHideSidebar = useShouldHideComponent();
 
   if (shouldHideSidebar) {
@@ -137,13 +155,15 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       <motion.aside
-        initial={{ width: 80 }}
+        initial={false}
         animate={{
-          width: sidebarOpen ? 256 : 80,
+          width: sidebarWidth,
+          x: isMobile && !sidebarOpen ? -sidebarWidth : 0,
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "relative flex flex-col bg-(--dashboard-card) border-r border-border h-full lg:relative z-50",
+          "flex flex-col bg-background border-r border-border h-full z-50",
+          isMobile ? "fixed" : "relative",
           "shadow-sm lg:shadow-none"
         )}
         aria-label="Main navigation"
