@@ -4,6 +4,7 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Link,
   Preview,
   Section,
@@ -14,12 +15,18 @@ interface UserConfirmationEmailProps {
   name: string;
   city: string;
   bikeOwnership: string;
+  id?: string;
+  ctaUrl?: string;
+  locale?: string;
 }
 
 export default function UserConfirmationEmail({
   name,
   city,
   bikeOwnership,
+  id,
+  ctaUrl = "https://movrr.nl",
+  locale = "en-US",
 }: UserConfirmationEmailProps) {
   const bikeStatusText = {
     yes: "Perfect! You're ready to ride.",
@@ -28,18 +35,24 @@ export default function UserConfirmationEmail({
   };
 
   return (
-    <Html>
+    <Html lang={locale.split("-")[0] || "en"}>
       <Head />
-      <Preview>Welcome to Movrr - Transform Your Ride!</Preview>
+      <Preview>Welcome to Movrr — next steps inside</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Heading style={logo}>Movrr</Heading>
+            <Img
+              src="https://res.cloudinary.com/dgy9bf37b/image/upload/v1769860718/movrr_logo_icon_green_no_bg_pycuih.png"
+              width="150"
+              height="50"
+              alt="Movrr Logo"
+              style={logo}
+            />
             <Text style={tagline}>Ride. Earn. Make Cities Move.</Text>
           </Section>
 
           <Section style={content}>
-            <Heading style={h1}>Welcome to the Movement, {name}! 🚴‍♂️</Heading>
+            <Heading style={h1}>Welcome to the Movement, {name}!</Heading>
 
             <Text style={text}>
               You've just joined something bigger than a waitlist - you've
@@ -48,33 +61,124 @@ export default function UserConfirmationEmail({
             </Text>
 
             <Section style={infoBox}>
-              <Text style={infoTitle}>Your Registration Details:</Text>
-              <Text style={infoText}>📍 City: {city}</Text>
-              <Text style={infoText}>
-                🚲 Bike Status:{" "}
-                {bikeStatusText[bikeOwnership as keyof typeof bikeStatusText]}
-              </Text>
+              <Text style={infoTitle}>Your registration details</Text>
+              <table
+                role="presentation"
+                width="100%"
+                cellPadding={0}
+                cellSpacing={0}
+                border={0}
+                style={{
+                  borderCollapse: "collapse",
+                  fontFamily: main.fontFamily,
+                  color: "#374151",
+                  fontSize: "14px",
+                }}
+              >
+                <tbody>
+                  <tr>
+                    <td
+                      style={{
+                        padding: "6px 8px",
+                        verticalAlign: "top",
+                        fontWeight: 600,
+                        width: 140,
+                      }}
+                    >
+                      City:
+                    </td>
+                    <td
+                      style={{
+                        padding: "6px 8px",
+                        fontFamily: main.fontFamily,
+                        lineHeight: "1.4",
+                      }}
+                    >
+                      {city}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style={{
+                        padding: "6px 8px",
+                        verticalAlign: "top",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Bike status:
+                    </td>
+                    <td
+                      style={{
+                        padding: "6px 8px",
+                        fontFamily: main.fontFamily,
+                        lineHeight: "1.4",
+                      }}
+                    >
+                      {
+                        bikeStatusText[
+                          bikeOwnership as keyof typeof bikeStatusText
+                        ]
+                      }
+                    </td>
+                  </tr>
+                  {id && (
+                    <tr>
+                      <td
+                        style={{
+                          padding: "6px 8px",
+                          verticalAlign: "top",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Signup ID:
+                      </td>
+                      <td
+                        style={{
+                          padding: "6px 8px",
+                          fontFamily: main.fontFamily,
+                          lineHeight: "1.4",
+                        }}
+                      >
+                        {id}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </Section>
 
             <Text style={text}>
               <strong>What happens next?</strong>
             </Text>
 
-            <Text style={text}>
-              • We'll notify you as soon as Movrr launches in {city}
-              <br />• You'll get early access to our rider onboarding
-              <br />• Start earning €15-30/hour while exploring your city
-              <br />• Join a community of riders making cities more vibrant
-            </Text>
+            <div style={{ marginTop: 8 }}>
+              <ul style={{ margin: "8px 0 16px 20px", padding: 0 }}>
+                <li>We'll notify you as soon as Movrr launches in {city}.</li>
+                <li>You'll get early access to our rider onboarding.</li>
+                <li>Start earning rewards while exploring your city.</li>
+                <li>Join a community of riders making cities more vibrant.</li>
+              </ul>
+            </div>
 
             <Section style={ctaSection}>
-              <Link href="https://movrr.nl" style={button}>
+              <Link
+                href={ctaUrl}
+                style={{
+                  ...button,
+                  fontFamily: main.fontFamily,
+                  lineHeight: "1.2",
+                  textDecoration: "none",
+                }}
+                aria-label="Learn more about Movrr"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Learn More About Movrr
               </Link>
             </Section>
 
             <Text style={footer}>
-              Questions? Reply to this email - we're here to help!
+              Questions? Reply to this email — we're here to help!
               <br />
               The Movrr Team
             </Text>
@@ -83,6 +187,47 @@ export default function UserConfirmationEmail({
       </Body>
     </Html>
   );
+}
+
+export function userConfirmationText({
+  name,
+  city,
+  bikeOwnership,
+  id,
+  ctaUrl,
+}: {
+  name: string;
+  city: string;
+  bikeOwnership: string;
+  id?: string;
+  ctaUrl?: string;
+}) {
+  const bikeStatusText = {
+    yes: "Perfect! You're ready to ride.",
+    no: "No worries - we'll help you get started.",
+    planning: "Great! We'll keep you updated on bike options.",
+  } as const;
+
+  const lines = [];
+  lines.push(`Welcome to Movrr — ${name}`);
+  lines.push("");
+  lines.push(`City: ${city}`);
+  lines.push(
+    `Bike status: ${bikeStatusText[bikeOwnership as keyof typeof bikeStatusText] ?? bikeOwnership}`,
+  );
+  if (id) lines.push(`Signup ID: ${id}`);
+  lines.push("");
+  lines.push("What happens next:");
+  lines.push("- We will notify you when Movrr launches in your city.");
+  lines.push("- You will get early access to onboarding.");
+  lines.push("- Start earning rewards while exploring your city.");
+  lines.push("");
+  if (ctaUrl) lines.push(`Learn more: ${ctaUrl}`);
+  lines.push("");
+  lines.push("Questions? Reply to this email.");
+  lines.push("The Movrr Team");
+
+  return lines.join("\n");
 }
 
 const main = {
@@ -98,16 +243,14 @@ const container = {
 };
 
 const header = {
-  backgroundColor: "#23b245",
+  backgroundColor: "#000000",
   padding: "32px 24px",
   textAlign: "center" as const,
 };
 
 const logo = {
-  color: "#ffffff",
-  fontSize: "32px",
-  fontWeight: "800",
-  margin: "0 0 8px 0",
+  margin: "auto",
+  marginBottom: "4px",
 };
 
 const tagline = {
@@ -128,6 +271,8 @@ const h1 = {
   fontWeight: "700",
   lineHeight: "1.3",
   margin: "0 0 24px 0",
+  fontFamily:
+    "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
 
 const text = {
@@ -135,6 +280,8 @@ const text = {
   fontSize: "16px",
   lineHeight: "1.6",
   margin: "0 0 16px 0",
+  fontFamily:
+    "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
 
 const infoBox = {
@@ -149,12 +296,16 @@ const infoTitle = {
   fontSize: "16px",
   fontWeight: "600",
   margin: "0 0 12px 0",
+  fontFamily:
+    "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
 
 const infoText = {
   color: "#374151",
   fontSize: "14px",
   margin: "0 0 8px 0",
+  fontFamily:
+    "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
 
 const ctaSection = {
@@ -163,16 +314,16 @@ const ctaSection = {
 };
 
 const button = {
-  backgroundColor: "#ff6b35",
+  backgroundColor: "#16a34a",
   color: "#ffffff",
-  fontSize: "16px",
+  fontSize: "15px",
   fontWeight: "600",
   textDecoration: "none",
-  padding: "16px 32px",
-  borderRadius: "24px",
+  padding: "14px 30px",
+  borderRadius: "999px",
   display: "inline-block",
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.05em",
+  fontFamily:
+    "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
 
 const footer = {

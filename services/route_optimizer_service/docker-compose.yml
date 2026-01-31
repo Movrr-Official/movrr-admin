@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  route-optimizer:
+    build: .
+    image: route-optimizer:dev
+    ports:
+      - "5000:5000"
+    environment:
+      - ROUTE_OPTIMIZER_TOKEN=${ROUTE_OPTIMIZER_TOKEN}
+      - ROUTE_ALLOW_PREV_TOKEN=${ROUTE_ALLOW_PREV_TOKEN:-false}
+      - ROUTE_LOG_DIR=/app/logs
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    shm_size: "1gb"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=3).read()",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3

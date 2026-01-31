@@ -7,12 +7,16 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Users,
-  Bike,
   LayoutDashboard,
   LogOut,
   ChevronRight,
   ChevronLeft,
+  List,
+  Megaphone,
+  Coins,
+  Settings,
 } from "lucide-react";
+import { FaRoute } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { toggleSidebar, setSidebarOpen } from "@/redux/slices/ui";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +48,14 @@ const Sidebar = () => {
   const router = useRouter();
   const { toast } = useToast();
 
-  const { totalWaitlist, isLoading, isError } = useCounts();
+  const {
+    totalWaitlist,
+    totalUsers,
+    totalCampaigns,
+    totalRoutes,
+    isLoading,
+    isError,
+  } = useCounts();
 
   // Detect mobile viewport
   useEffect(() => {
@@ -94,7 +105,7 @@ const Sidebar = () => {
       {
         name: "Waitlist",
         href: "/waitlist",
-        icon: Users,
+        icon: List,
         roles: ["admin", "super-admin"],
         badge: (
           <CountDisplay
@@ -104,8 +115,68 @@ const Sidebar = () => {
           />
         ),
       },
+      {
+        name: "Users",
+        href: "/users",
+        icon: Users,
+        roles: ["admin", "super-admin"],
+        badge: (
+          <CountDisplay
+            count={totalUsers}
+            isLoading={isLoading}
+            isError={isError}
+          />
+        ),
+      },
+      {
+        name: "Campaigns",
+        href: "/campaigns",
+        icon: Megaphone,
+        roles: ["admin", "super-admin"],
+        badge: (
+          <CountDisplay
+            count={totalCampaigns}
+            isLoading={isLoading}
+            isError={isError}
+          />
+        ),
+      },
+      {
+        name: "Routes",
+        href: "/routes",
+        icon: FaRoute,
+        roles: ["admin", "super-admin", "moderator"],
+        badge: (
+          <CountDisplay
+            count={totalRoutes}
+            isLoading={isLoading}
+            isError={isError}
+          />
+        ),
+      },
+      {
+        name: "Rewards",
+        href: "/rewards",
+        icon: Coins,
+        roles: ["admin", "super-admin"],
+        badge: null,
+      },
+      {
+        name: "Settings",
+        href: "/settings",
+        icon: Settings,
+        roles: ["admin", "super-admin"],
+        badge: null,
+      },
     ],
-    [isError, isLoading, totalWaitlist]
+    [
+      isError,
+      isLoading,
+      totalCampaigns,
+      totalRoutes,
+      totalUsers,
+      totalWaitlist,
+    ],
   );
 
   const handleSignOut = async () => {
@@ -162,9 +233,9 @@ const Sidebar = () => {
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "flex flex-col bg-background border-r border-border h-full z-50",
+          "flex flex-col bg-background h-full z-50",
           isMobile ? "fixed" : "relative",
-          "shadow-sm lg:shadow-none"
+          "shadow-sm lg:shadow-none",
         )}
         aria-label="Main navigation"
       >
@@ -236,7 +307,7 @@ const Sidebar = () => {
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                    !sidebarOpen && "justify-center"
+                    !sidebarOpen && "justify-center",
                   )}
                   aria-current={isActive ? "page" : undefined}
                 >
@@ -276,7 +347,7 @@ const Sidebar = () => {
             disabled={isPending}
             className={cn(
               "w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer",
-              !sidebarOpen && "justify-center"
+              !sidebarOpen && "justify-center",
             )}
             aria-busy={isPending}
           >

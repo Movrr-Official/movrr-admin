@@ -9,7 +9,7 @@ export const campaignStatusSchema = z.enum([
   "cancelled",
 ]);
 
-export const campaignTypeSchema = z.enum(["branding", "conversion"]);
+export const campaignTypeSchema = z.enum(["destination_ride", "swarm"]);
 
 const engagementByCitySchema = z.object({
   city: z.string(),
@@ -34,7 +34,7 @@ export const campaignSchema = z.object({
   name: z.string().min(1),
   brand: z.string().optional(),
   description: z.string(),
-  status: z.enum(["active", "paused", "draft", "completed"]),
+  status: campaignStatusSchema,
   budget: z.number().min(0),
   spent: z.number().min(0),
   startDate: z.string(),
@@ -55,7 +55,7 @@ export const campaignSchema = z.object({
     z.object({
       start: z.string(), // "HH:mm"
       end: z.string(),
-    })
+    }),
   ),
   assets: z.array(
     z.object({
@@ -63,7 +63,7 @@ export const campaignSchema = z.object({
       type: z.enum(["image", "video"]),
       url: z.string().url(),
       altText: z.string().max(100).optional(),
-    })
+    }),
   ),
   deliveryMode: z.enum(["manual", "automated"]),
   creativeAssets: z.array(z.string().url()),
@@ -80,7 +80,7 @@ export const campaignSchema = z.object({
       id: z.string(),
       name: z.string(),
       status: z.string(),
-    })
+    }),
   ),
   pauseReason: z.string().optional(),
   campaignAnalytics: z

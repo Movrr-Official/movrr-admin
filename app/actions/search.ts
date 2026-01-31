@@ -25,27 +25,22 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
 
     // Search across multiple tables with better relevance scoring
     const [ridersResult, campaignsResult, usersResult] = await Promise.all([
-      // Search riders - prioritize name matches
       supabase
-        .from("riders")
-        .select("id, name, email, current_route, avatar_url, status")
-        .or(
-          `name.ilike.${searchTerm},email.ilike.${searchTerm},current_route.ilike.${searchTerm}`
-        )
+        .from("rider")
+        .select("id, status, city, user:user_id (name, email, avatar_url)")
+        .or(`city.ilike.${searchTerm}`)
         .limit(8),
 
-      // Search campaigns
       supabase
-        .from("campaigns")
-        .select("id, name, description, status")
+        .from("campaign")
+        .select("id, name, description, lifecycle_status")
         .or(`name.ilike.${searchTerm},description.ilike.${searchTerm}`)
         .limit(8),
 
-      // Search users
       supabase
-        .from("profiles")
-        .select("id, full_name, email, avatar_url")
-        .or(`full_name.ilike.${searchTerm},email.ilike.${searchTerm}`)
+        .from("user")
+        .select("id, name, email, avatar_url, role")
+        .or(`name.ilike.${searchTerm},email.ilike.${searchTerm}`)
         .limit(8),
     ]);
 
@@ -55,20 +50,22 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
     if (ridersResult.data) {
       ridersResult.data.forEach((rider) => {
         let relevance = 0;
-        if (rider.name?.toLowerCase().includes(query.toLowerCase()))
+        const riderName = rider.user?.name ?? "";
+        const riderEmail = rider.user?.email ?? "";
+        if (riderName.toLowerCase().includes(query.toLowerCase()))
           relevance += 3;
-        if (rider.email?.toLowerCase().includes(query.toLowerCase()))
+        if (riderEmail.toLowerCase().includes(query.toLowerCase()))
           relevance += 2;
-        if (rider.current_route?.toLowerCase().includes(query.toLowerCase()))
+        if (rider.city?.toLowerCase().includes(query.toLowerCase()))
           relevance += 1;
 
         results.push({
           id: rider.id,
           type: "rider",
-          name: rider.name,
-          email: rider.email,
-          route: rider.current_route,
-          avatarUrl: rider.avatar_url,
+          name: riderName || "Rider",
+          email: riderEmail,
+          route: rider.city,
+          avatarUrl: rider.user?.avatar_url,
           status: rider.status,
           relevance,
         });
@@ -89,7 +86,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
           type: "campaign",
           name: campaign.name,
           description: campaign.description,
-          status: campaign.status,
+          status: campaign.lifecycle_status,
           relevance,
         });
       });
@@ -99,7 +96,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
     if (usersResult.data) {
       usersResult.data.forEach((user) => {
         let relevance = 0;
-        if (user.full_name?.toLowerCase().includes(query.toLowerCase()))
+        if (user.name?.toLowerCase().includes(query.toLowerCase()))
           relevance += 3;
         if (user.email?.toLowerCase().includes(query.toLowerCase()))
           relevance += 2;
@@ -107,7 +104,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
         results.push({
           id: user.id,
           type: "user",
-          name: user.full_name,
+          name: user.name,
           email: user.email,
           avatarUrl: user.avatar_url,
           relevance,

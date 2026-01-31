@@ -3,10 +3,12 @@ import { RootState } from "@/redux/store";
 import { UserRole } from "@/schemas";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
+import { getUsers } from "@/app/actions/users";
+import { shouldUseMockData } from "@/lib/dataSource";
 
 export const useUserStats = () => {
   const selectedAdvertiserIds = useSelector(
-    (state: RootState) => state.advertiserFilter.selectedAdvertiserIds
+    (state: RootState) => state.advertiserFilter.selectedAdvertiserIds,
   );
 
   return useQuery({
@@ -14,12 +16,19 @@ export const useUserStats = () => {
     queryFn: async () => {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
+      const usersResult = shouldUseMockData()
+        ? { success: true, data: mockUsers }
+        : await getUsers(undefined, selectedAdvertiserIds);
+
+      const users =
+        usersResult.success && usersResult.data ? usersResult.data : [];
+
       const filteredUsers = selectedAdvertiserIds.length
-        ? mockUsers.filter(
+        ? users.filter(
             (u) =>
-              u.role !== "advertiser" || selectedAdvertiserIds.includes(u.id)
+              u.role !== "advertiser" || selectedAdvertiserIds.includes(u.id),
           )
-        : mockUsers;
+        : users;
 
       const total = filteredUsers.length;
       const active = filteredUsers.filter((u) => u.status === "active").length;
@@ -29,12 +38,12 @@ export const useUserStats = () => {
           acc[user.role as UserRole] = (acc[user.role as UserRole] || 0) + 1;
           return acc;
         },
-        {} as Record<UserRole, number>
+        {} as Record<UserRole, number>,
       );
 
       const latestUser = [...filteredUsers].sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )[0];
 
       return {

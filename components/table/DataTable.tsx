@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -35,7 +35,9 @@ import {
   CardTitle,
 } from "../ui/card";
 import { DataTableSearch } from "./DataTableSearch";
+import { DataTableStatusFilters } from "./DataTableStatusFilters";
 import { useSearchParams } from "next/navigation";
+import { LucideIcon } from "lucide-react";
 
 interface FilterOptions {
   role?: string[];
@@ -43,7 +45,12 @@ interface FilterOptions {
   campaignType?: string[];
 }
 
-interface DataTableProps<TData, TValue> {
+interface StatusFilterOption {
+  value: string;
+  label: string;
+}
+
+interface DataTableProps<TData extends Record<string, any> = Record<string, any>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   searchValue?: string;
@@ -56,19 +63,24 @@ interface DataTableProps<TData, TValue> {
   defaultSort?: { id: string; desc: boolean };
   searchBar?: boolean;
   viewOptions?: boolean;
+  title?: string;
+  description?: string;
   emptyStateTitle?: string;
   emptyStateDescription?: string;
-  emptyStateIcon?:
-    | "file"
-    | "book"
-    | "database"
-    | "search"
-    | "package"
-    | "default";
+  emptyStateIcon?: LucideIcon;
   className?: string;
+  enableRowSelection?: boolean;
+  onBulkAction?: (selectedRows: TData[]) => void;
+  onSelectionChange?: (selectedRows: TData[]) => void;
+  bulkActionsComponent?: React.ReactNode | ((selectedRows: TData[]) => React.ReactNode);
+  statusFilters?: {
+    enabled?: boolean;
+    statusKey?: string;
+    options?: StatusFilterOption[];
+  };
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends Record<string, any> = Record<string, any>, TValue = unknown>({
   columns,
   data,
   searchValue,
@@ -81,10 +93,17 @@ export function DataTable<TData, TValue>({
   defaultSort,
   searchBar = true,
   viewOptions = false,
+  title,
+  description,
   emptyStateTitle,
   emptyStateDescription,
   emptyStateIcon,
   className,
+  enableRowSelection = false,
+  onBulkAction,
+  onSelectionChange,
+  bulkActionsComponent,
+  statusFilters,
 }: DataTableProps<TData, TValue>) {
   const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>(
@@ -93,6 +112,8 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+  const onSelectionChangeRef = useRef(onSelectionChange);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
   // Get search value from URL params first, then fall back to props
   const urlSearchValue = searchParams.get(searchParamKey) || "";
@@ -119,13 +140,44 @@ export function DataTable<TData, TValue>({
   // Initialize column filters from filterOptions
   useEffect(() => {
     if (filterOptions) {
-      const initialFilters = Object.entries(filterOptions)
-        // only include filters that actually have values
-        .filter(([, options]) => options.length > 0)
-        .map(([id, options]) => ({ id, value: options }));
-      setColumnFilters(initialFilters);
+      const statusKey = statusFilters?.enabled ? statusFilters.statusKey : null;
+      setColumnFilters((prevFilters) => {
+        const initialFilters = Object.entries(filterOptions)
+          // only include filters that actually have values
+          .filter(([, options]) => options.length > 0)
+          // Exclude status filter if statusFilters is enabled (it's managed separately)
+          .filter(([id]) => statusKey ? id !== statusKey : true)
+          .map(([id, options]) => ({ id, value: options }));
+        
+        // Preserve status filter if it exists
+        const existingStatusFilter = prevFilters.find((f) => f.id === statusKey);
+        if (existingStatusFilter) {
+          return [...initialFilters, existingStatusFilter];
+        } else {
+          return initialFilters;
+        }
+      });
     }
-  }, [filterOptions]);
+  }, [filterOptions, statusFilters?.enabled, statusFilters?.statusKey]);
+
+  // Handle status filter changes
+  useEffect(() => {
+    if (statusFilters?.enabled && statusFilters.statusKey) {
+      const statusKey = statusFilters.statusKey;
+      setColumnFilters((prevFilters) => {
+        // Remove existing status filter
+        const otherFilters = prevFilters.filter((f) => f.id !== statusKey);
+        
+        if (selectedStatus) {
+          // Add status filter
+          return [...otherFilters, { id: statusKey, value: selectedStatus }];
+        } else {
+          // Clear status filter
+          return otherFilters;
+        }
+      });
+    }
+  }, [selectedStatus, statusFilters?.enabled, statusFilters?.statusKey]);
 
   const table = useReactTable({
     data,
@@ -163,9 +215,31 @@ export function DataTable<TData, TValue>({
     }
   };
 
+  // Store the callback in a ref to avoid dependency issues
+  useEffect(() => {
+    onSelectionChangeRef.current = onSelectionChange;
+  }, [onSelectionChange]);
+
+  // Get selected rows for bulk actions - compute only when rowSelection changes
+  const selectedRows = useMemo(() => {
+    if (!enableRowSelection) return [];
+    return table.getFilteredSelectedRowModel().rows.map((row) => row.original);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enableRowSelection, rowSelection]);
+
+  // Notify parent of selection changes - use rowSelection state as dependency
+  // This prevents infinite loops by only running when selection actually changes
+  useEffect(() => {
+    if (enableRowSelection && onSelectionChangeRef.current) {
+      const currentSelectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
+      onSelectionChangeRef.current(currentSelectedRows);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enableRowSelection, rowSelection]);
+
   return (
     <Card
-      className={`glass-card border-0 shadow-lg animate-slide-up ${className}`}
+      className={`glass-card border-0 animate-slide-up ${className}`}
       style={{ animationDelay: "0.5s" }}
     >
       {viewOptions && (
@@ -177,11 +251,13 @@ export function DataTable<TData, TValue>({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
             <CardTitle className="text-xl font-bold">
-              Waitlist Entries
+              {title || "No Data Found"}
             </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              All pre-launch signups ({data.length} total)
-            </CardDescription>
+            {description && (
+              <CardDescription className="text-muted-foreground">
+                {description.replace("{count}", table.getRowModel().rows.length.toString())}
+              </CardDescription>
+            )}
           </div>
           {searchBar && (
             <DataTableSearch
@@ -191,6 +267,17 @@ export function DataTable<TData, TValue>({
             />
           )}
         </div>
+        {statusFilters?.enabled && statusFilters.statusKey && statusFilters.options && (
+          <div className="mt-4">
+            <DataTableStatusFilters
+              data={data}
+              statusKey={statusFilters.statusKey}
+              statusOptions={statusFilters.options}
+              selectedStatus={selectedStatus}
+              onStatusChange={setSelectedStatus}
+            />
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="w-full rounded-xl border border-border/50 overflow-x-auto bg-card/30 backdrop-blur-sm">
@@ -249,7 +336,7 @@ export function DataTable<TData, TValue>({
                         emptyStateDescription ||
                         "No records match your search criteria."
                       }
-                      iconName={emptyStateIcon || "search"}
+                      iconName={emptyStateIcon}
                     />
                   </TableCell>
                 </TableRow>
@@ -258,6 +345,14 @@ export function DataTable<TData, TValue>({
           </Table>
         </div>
       </CardContent>
+      {/* Bulk actions component inside table (if provided) */}
+      {bulkActionsComponent && enableRowSelection && selectedRows.length > 0 && (
+        <div className="px-4 pb-4">
+          {typeof bulkActionsComponent === "function"
+            ? bulkActionsComponent(selectedRows)
+            : bulkActionsComponent}
+        </div>
+      )}
       <div className="px-4">
         <DataTablePagination table={table} />
       </div>

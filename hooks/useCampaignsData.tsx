@@ -4,10 +4,12 @@ import { Campaign, CampaignFiltersSchema } from "@/schemas";
 import { mockCampaigns } from "@/data/mockCampaigns";
 import { RootState } from "@/redux/store";
 import { useQuery } from "@tanstack/react-query";
+import { getCampaigns } from "@/app/actions/campaigns";
+import { shouldUseMockData } from "@/lib/dataSource";
 
 export const useCampaignsData = (filters?: CampaignFiltersSchema) => {
   const selectedAdvertiserIds = useSelector(
-    (state: RootState) => state.advertiserFilter.selectedAdvertiserIds
+    (state: RootState) => state.advertiserFilter.selectedAdvertiserIds,
   );
 
   return useQuery<Campaign[]>({
@@ -15,23 +17,63 @@ export const useCampaignsData = (filters?: CampaignFiltersSchema) => {
     queryFn: async () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      let campaigns = [...mockCampaigns];
+      if (shouldUseMockData()) {
+        let campaigns = [...mockCampaigns];
 
-      // Filter by advertiser ID
-      if (selectedAdvertiserIds.length > 0) {
-        campaigns = campaigns.filter((c) =>
-          selectedAdvertiserIds.includes(c.advertiserId)
-        );
+        if (selectedAdvertiserIds.length > 0) {
+          campaigns = campaigns.filter((c) =>
+            selectedAdvertiserIds.includes(c.advertiserId),
+          );
+        }
+
+        if (filters?.status && filters.status !== "all") {
+          campaigns = campaigns.filter((c) => c.status === filters.status);
+        }
+
+        if (filters?.campaignType && filters.campaignType !== "all") {
+          campaigns = campaigns.filter(
+            (c) => c.campaignType === filters.campaignType,
+          );
+        }
+
+        if (filters?.targetAudience) {
+          campaigns = campaigns.filter(
+            (c) =>
+              c.targetAudience?.toLowerCase() ===
+              filters.targetAudience?.toLowerCase(),
+          );
+        }
+
+        if (filters?.targetZones?.length) {
+          campaigns = campaigns.filter((c) =>
+            c.targetZones?.some((zone) => filters.targetZones?.includes(zone)),
+          );
+        }
+
+        if (filters?.searchQuery) {
+          const query = filters.searchQuery.toLowerCase();
+          campaigns = campaigns.filter((c) =>
+            c.name.toLowerCase().includes(query),
+          );
+        }
+
+        return campaigns;
       }
 
-      // Apply UI filters
+      const result = await getCampaigns(filters, selectedAdvertiserIds);
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to fetch campaigns");
+      }
+
+      let campaigns = result.data;
+
       if (filters?.status && filters.status !== "all") {
         campaigns = campaigns.filter((c) => c.status === filters.status);
       }
 
       if (filters?.campaignType && filters.campaignType !== "all") {
         campaigns = campaigns.filter(
-          (c) => c.campaignType === filters.campaignType
+          (c) => c.campaignType === filters.campaignType,
         );
       }
 
@@ -39,20 +81,20 @@ export const useCampaignsData = (filters?: CampaignFiltersSchema) => {
         campaigns = campaigns.filter(
           (c) =>
             c.targetAudience?.toLowerCase() ===
-            filters.targetAudience?.toLowerCase()
+            filters.targetAudience?.toLowerCase(),
         );
       }
 
       if (filters?.targetZones?.length) {
         campaigns = campaigns.filter((c) =>
-          c.targetZones?.some((zone) => filters.targetZones?.includes(zone))
+          c.targetZones?.some((zone) => filters.targetZones?.includes(zone)),
         );
       }
 
       if (filters?.searchQuery) {
         const query = filters.searchQuery.toLowerCase();
         campaigns = campaigns.filter((c) =>
-          c.name.toLowerCase().includes(query)
+          c.name.toLowerCase().includes(query),
         );
       }
 

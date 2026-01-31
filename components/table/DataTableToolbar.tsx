@@ -1,11 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { BatchExportDialog } from "../export/BatchExportDialog";
 import { Button } from "@/components/ui/button";
 import { ExportDialog } from "@/components/export/ExportDialog";
 import { FilterDropdown } from "../filters/FilterDropdown";
 import { DataTableSearch } from "@/components/table/DataTableSearch";
-import { Download, RefreshCw, Package, Clock } from "lucide-react";
+import { Download, RefreshCw, Package, Clock, LayoutGrid, Table, LucideIcon, Plus } from "lucide-react";
 import { ScheduledExportDialog } from "../export/ScheduledExportDialog";
 import { useDataTable } from "@/context/DataTableContext";
 
@@ -51,7 +52,25 @@ export interface TableToolbarProps {
   };
 
   // Additional Actions
-  additionalActions?: React.ReactNode;
+  additionalActionsLeft?: {
+    enabled?: boolean;
+    path?: string;
+    label?: string;
+    icon: React.ComponentType<{ className?: string }>;
+  };
+  additionalActionsRight?: {
+    enabled?: boolean;
+    path?: string;
+    label?: string;
+    icon: React.ComponentType<{ className?: string }>;
+  };
+
+  // View Toggle Configuration
+  viewToggle?: {
+    enabled?: boolean;
+    view?: "table" | "grid";
+    onViewChange?: (view: "table" | "grid") => void;
+  };
 
   // Layout
   variant?: "default" | "compact";
@@ -96,10 +115,26 @@ export function DataTableToolbar({
   },
 
   // Other props
-  additionalActions,
+  additionalActionsLeft = {
+    enabled: false,
+    path: "",
+    label: "",
+    icon: Plus,
+  },
+  additionalActionsRight = {
+    enabled: false,
+    path: "",
+    label: "",
+    icon: Plus,
+  },
+  viewToggle = {
+    enabled: false,
+    view: "table",
+  },
   variant = "default",
   className = "",
 }: TableToolbarProps) {
+  const router = useRouter();
   const {
     filteredData,
     filters: activeFilters,
@@ -115,13 +150,17 @@ export function DataTableToolbar({
   const batchExportData = batchExport.dataSources || [];
   const scheduledExportData = scheduledExport.dataSources || [];
 
+  const Icon = additionalActionsLeft.icon || additionalActionsRight.icon;
+
   // Don't render toolbar if no features are enabled
   const shouldRenderToolbar =
     search.enabled ||
     hasFilterOptions ||
     exportConfig.enabled ||
     refresh.enabled ||
-    additionalActions;
+    viewToggle.enabled ||
+    additionalActionsLeft ||
+    additionalActionsRight;
 
   if (!shouldRenderToolbar) {
     return null;
@@ -130,7 +169,7 @@ export function DataTableToolbar({
   return (
     <div
       className={`
-      flex flex-col gap-3 p-4 glass-card border-0 shadow-lg rounded-xl animate-slide-up
+      flex flex-col gap-3 p-4 glass-card border-0 rounded-xl animate-slide-up
       ${variant === "compact" ? "sm:flex-row sm:items-center sm:gap-4" : "sm:flex-row sm:items-start sm:gap-6"}
       ${className}
     `}
@@ -152,7 +191,45 @@ export function DataTableToolbar({
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2 flex-wrap ml-auto">
-        {additionalActions}
+        {/* Additional Actions Left */}
+        {additionalActionsLeft.enabled && (
+          <div className="flex items-center gap-2">
+            <Button variant="default" size="sm" onClick={() => router.push(`${additionalActionsLeft.path}`)}>
+              <Icon className="h-4 w-4" />
+              {additionalActionsLeft.label}
+            </Button>
+          </div>
+        )}
+
+        {/* View Toggle */}
+        {viewToggle.enabled && (
+          <div 
+            className="flex items-center gap-1 p-1 bg-muted rounded-lg"
+            role="group"
+            aria-label="View mode toggle"
+          >
+            <Button
+              variant={viewToggle.view === "table" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => viewToggle.onViewChange?.("table")}
+              className="h-6 px-2"
+              aria-label="Table view"
+              aria-pressed={viewToggle.view === "table"}
+            >
+              <Table className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewToggle.view === "grid" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => viewToggle.onViewChange?.("grid")}
+              className="h-6 px-2"
+              aria-label="Grid view"
+              aria-pressed={viewToggle.view === "grid"}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
         {/* Filter Dropdown */}
         {hasFilterOptions && (
@@ -224,6 +301,14 @@ export function DataTableToolbar({
               </Button>
             }
           />
+        )}
+
+        {/* Additional Actions Right */}
+        {additionalActionsRight.enabled && (
+          <Button variant="default" size="sm" onClick={() => router.push(`${additionalActionsRight.path}`)}>
+          <Icon className="h-4 w-4" />
+          {additionalActionsRight.label}
+        </Button>
         )}
 
         {/* Refresh Button */}

@@ -12,6 +12,7 @@ import { toggleSidebar } from "@/redux/slices/ui";
 import { useAppDispatch } from "@/redux/hooks";
 import { UserProfile } from "../UserProfile";
 import useShouldHideComponent from "@/hooks/useShouldHideComponent";
+import Breadcrumb from "@/components/layout/Breadcrumb";
 
 const Navbar = () => {
   const shouldHideNavbar = useShouldHideComponent();
@@ -31,7 +32,7 @@ const Navbar = () => {
         className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8"
       >
         {/* Left Section - Movrr Icon & Search Bar */}
-        <div className="flex items-center gap-4 flex-1 max-w-2xl">
+        <div className="flex items-center gap-4 flex-1 max-w-3xl">
           {/* Movrr Icon - Hidden on desktop, visible on mobile */}
           <div className="lg:hidden flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
@@ -56,14 +57,18 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="flex-1">
-            <GlobalSearch />
+          <div className="hidden md:flex items-center">
+            <Breadcrumb />
           </div>
         </div>
 
         {/* Right Section - User & Actions */}
         <div className="flex items-center gap-3">
+          {/* Search Bar */}
+          <div className="flex-1">
+            <GlobalSearch />
+          </div>
+
           {/* Menu Button - Visible only on mobile */}
           <Button
             variant="ghost"

@@ -10,6 +10,9 @@ import { getDashboardCounts } from "@/app/actions/count";
 
 type CountContextType = {
   totalWaitlist: number;
+  totalUsers: number;
+  totalCampaigns: number;
+  totalRoutes: number;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -43,6 +46,9 @@ export const CountProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     totalWaitlist: data?.totalWaitlist || 0,
+    totalUsers: data?.totalUsers || 0,
+    totalCampaigns: data?.totalCampaigns || 0,
+    totalRoutes: data?.totalRoutes || 0,
     isLoading,
     isError,
     error,
@@ -85,7 +91,7 @@ export const CountDisplay = ({
         className={cn(
           "flex items-center justify-center h-4 w-4 rounded-full",
           "bg-destructive text-white text-xs",
-          className
+          className,
         )}
       >
         !

@@ -2,13 +2,32 @@
 
 import { FaXTwitter, FaLinkedin, FaFacebook } from "react-icons/fa6";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
 import { Heart } from "lucide-react";
 import useShouldHideComponent from "@/hooks/useShouldHideComponent";
+import { useSettingsData } from "@/hooks/useSettingsData";
 
 const DashboardFooter = () => {
   const shouldHideFooter = useShouldHideComponent();
+  const { data: settingsData } = useSettingsData();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["systemHealth"],
+    queryFn: async () => {
+      const response = await fetch("/api/health", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Failed to fetch health status");
+      }
+      return response.json() as Promise<{
+        status: "operational" | "degraded" | "down";
+        timestamp: string;
+      }>;
+    },
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
+    retry: 1,
+  });
 
   if (shouldHideFooter) {
     return null; // Do not render Footer
@@ -77,7 +96,7 @@ const DashboardFooter = () => {
             <span className="hidden md:inline">•</span>
             <div className="flex items-center gap-x-1">
               <span>Made with</span>
-              <Heart className="w-4 h-4 text-red-500 fill-current" />
+              <Heart className="w-4 h-4 text-primary fill-current" />
               <span>in The Netherlands</span>
             </div>
           </motion.div>
@@ -123,11 +142,19 @@ const DashboardFooter = () => {
               className="flex items-center gap-3"
             >
               <Badge variant="outline" className="text-xs font-mono">
-                v1.0.0
+                v{settingsData?.system?.appVersion ?? "1.0.0"}
               </Badge>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <motion.div
-                  className="w-2 h-2 bg-green-500 rounded-full"
+                  className={`w-2 h-2 rounded-full ${
+                    isError
+                      ? "bg-red-500"
+                      : isLoading
+                        ? "bg-yellow-500"
+                        : data?.status === "operational"
+                          ? "bg-green-500"
+                          : "bg-orange-500"
+                  }`}
                   animate={{
                     scale: [1, 1.2, 1],
                     opacity: [0.8, 1, 0.8],
@@ -138,7 +165,15 @@ const DashboardFooter = () => {
                     ease: "easeInOut",
                   }}
                 />
-                <span>All systems operational</span>
+                <span>
+                  {isError
+                    ? "Status unavailable"
+                    : isLoading
+                      ? "Checking status"
+                      : data?.status === "operational"
+                        ? "All systems operational"
+                        : "Degraded service"}
+                </span>
               </div>
             </motion.div>
           </div>

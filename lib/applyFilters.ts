@@ -65,7 +65,15 @@ export const applyFilters = <T extends Record<string, any>>(
       // Handle multi-select filter
       if (filterConfig.type === "multi-select" && filterValue) {
         const values = Array.isArray(filterValue) ? filterValue : [filterValue];
-        return values.includes(item[filterConfig.key]);
+        const itemValue = item[filterConfig.key];
+        
+        // Handle array fields (e.g., campaignId, assignedRiderId)
+        if (Array.isArray(itemValue)) {
+          return values.some((val) => itemValue.includes(val));
+        }
+        
+        // Handle single value fields
+        return values.includes(itemValue);
       }
 
       // Handle checkbox filter

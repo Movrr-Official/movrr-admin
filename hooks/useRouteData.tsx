@@ -1,23 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { mockRoutes } from "@/data/mockRoutes";
+import { RiderRoute } from "@/schemas";
+import { getRoutes } from "@/app/actions/routes";
+import { shouldUseMockData } from "@/lib/dataSource";
 
-type RouteData = typeof mockRoutes;
+export const useRouteData = () => {
+  return useQuery<RiderRoute[]>({
+    queryKey: ["routes"],
+    queryFn: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (shouldUseMockData()) {
+        return [...mockRoutes];
+      }
 
-export function useRouteData() {
-  const [data, setData] = useState<RouteData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      setData(mockRoutes);
-      setIsLoading(false);
-    };
-
-    fetchData();
-  }, []);
-
-  return { data, isLoading };
-}
+      const result = await getRoutes();
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to fetch routes");
+      }
+      return result.data;
+    },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 1,
+  });
+};

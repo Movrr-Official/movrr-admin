@@ -215,7 +215,7 @@ export function ExportDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col glass-card border-0 shadow-2xl backdrop-blur-xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col glass-card border-0 backdrop-blur-xl p-0 overflow-hidden">
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
@@ -256,7 +256,7 @@ export function ExportDialog({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Format Selection */}
             <div className="lg:col-span-1 space-y-6">
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Settings className="h-6 w-6 text-primary" />
@@ -274,7 +274,7 @@ export function ExportDialog({
                         key={option.value}
                         className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
                           selectedFormat === option.value
-                            ? `${option.bgColor} ${option.borderColor} shadow-lg scale-105`
+                            ? `${option.bgColor} ${option.borderColor} scale-105`
                             : "border-border/50 hover:border-border hover:bg-muted/30"
                         }`}
                         onClick={() => setSelectedFormat(option.value)}
@@ -308,7 +308,7 @@ export function ExportDialog({
               </Card>
 
               {/* Export Settings */}
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Sparkles className="h-6 w-6 text-primary" />
@@ -353,7 +353,7 @@ export function ExportDialog({
             {/* Field Selection & Date Range */}
             <div className="lg:col-span-2 space-y-6">
               {/* Date Range Filter */}
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Calendar className="h-6 w-6 text-primary" />
@@ -410,7 +410,7 @@ export function ExportDialog({
               </Card>
 
               {/* Field Selection */}
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -449,7 +449,7 @@ export function ExportDialog({
                         key={field}
                         className={`flex items-center space-x-3 p-4 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
                           selectedFields.includes(field)
-                            ? "border-primary/30 bg-primary/5 shadow-md"
+                            ? "border-primary/30 bg-primary/5"
                             : "border-border/50 hover:border-border hover:bg-muted/30"
                         }`}
                         onClick={() => handleFieldToggle(field)}
@@ -535,7 +535,7 @@ export function ExportDialog({
                   size="sm"
                   onClick={handleExport}
                   disabled={selectedFields.length === 0 || isExporting}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 gap-2 flex-1 sm:flex-initial group"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 gap-2 flex-1 sm:flex-initial group"
                 >
                   {isExporting ? (
                     <>

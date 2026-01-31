@@ -3,10 +3,10 @@ name: CI — Route Optimizer Service
 on:
   push:
     paths:
-      - 'services/route_optimizer_service/**'
+      - "services/route_optimizer_service/**"
   pull_request:
     paths:
-      - 'services/route_optimizer_service/**'
+      - "services/route_optimizer_service/**"
 
 jobs:
   build-and-smoke:

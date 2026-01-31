@@ -146,7 +146,7 @@ export function ScheduleManager({
   };
 
   return (
-    <Card className="glass-card border-0 shadow-xl">
+    <Card className="glass-card border-0">
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <div>
@@ -178,7 +178,7 @@ export function ScheduleManager({
             </p>
           </div>
         ) : (
-          <div className="rounded-2xl border border-border/50 overflow-hidden bg-card/40 backdrop-blur-sm shadow-lg">
+          <div className="rounded-2xl border border-border/50 overflow-hidden bg-card/40 backdrop-blur-sm">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-border/30 bg-muted/20">

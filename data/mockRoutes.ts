@@ -9,6 +9,7 @@ export const mockRoutes: RiderRoute[] = [
     startLocation: "123 Main St",
     endLocation: "456 Central Ave",
     campaignId: [mockCampaigns[1].id],
+    difficulty: "Medium",
     waypoints: [
       {
         order: 0,
@@ -50,6 +51,7 @@ export const mockRoutes: RiderRoute[] = [
     startLocation: "789 College Ave",
     endLocation: "101 Campus Dr",
     campaignId: [mockCampaigns[0].id],
+    difficulty: "Easy",
     waypoints: [
       {
         order: 0,
@@ -85,6 +87,7 @@ export const mockRoutes: RiderRoute[] = [
     startLocation: "200 Harbor Dr",
     endLocation: "300 Pier Ave",
     campaignId: [mockCampaigns[2].id],
+    difficulty: "Hard",
     waypoints: [
       {
         order: 0,
@@ -126,6 +129,7 @@ export const mockRoutes: RiderRoute[] = [
     startLocation: "500 5th Ave",
     endLocation: "600 Broadway",
     campaignId: [mockCampaigns[3].id],
+    difficulty: "Medium",
     waypoints: [
       {
         order: 0,
@@ -161,6 +165,7 @@ export const mockRoutes: RiderRoute[] = [
     startLocation: "700 Factory Rd",
     endLocation: "800 Warehouse Blvd",
     campaignId: [mockCampaigns[4].id],
+    difficulty: "Hard",
     waypoints: [
       {
         order: 0,

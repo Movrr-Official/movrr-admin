@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Bike, MapPin, Users } from "lucide-react";
+import { Bike, List, MapPin, Users } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
 import { ActiveFiltersDisplay } from "../filters/ActiveFiltersDisplay";
@@ -346,6 +346,11 @@ export default function WaitlistTableContent({
           searchFields={["name", "email"]}
           searchParamKey="search"
           searchBar={searchBar}
+          title="Waitlist Entries"
+          description={`All pre-launch signups ({count} total)`}
+          emptyStateTitle="No Waitlist Entries"
+          emptyStateDescription="No waitlist entries match your search criteria. Try adjusting your filters or search terms."
+          emptyStateIcon={List}
           className={className}
         />
       )}

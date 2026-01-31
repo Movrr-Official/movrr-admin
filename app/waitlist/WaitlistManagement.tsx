@@ -1,10 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, TrendingUp, CheckCircle, Clock } from "lucide-react";
 import { WaitlistTable } from "@/components/waitlist/WaitlistTable";
-import { PageHeader } from "@/components/PageHeader";
 import { useWaitlistData } from "@/hooks/useWaitlistData";
+import { StatsCard } from "@/components/stats/StatsCard";
 
 export default function WaitlistManagement() {
   const {
@@ -45,7 +44,7 @@ export default function WaitlistManagement() {
   ];
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16">
+    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl animate-float"></div>
         <div
@@ -59,41 +58,32 @@ export default function WaitlistManagement() {
       </div>
 
       <div className="space-y-6 md:space-y-8">
-        {/* Header */}
-        <PageHeader
-          title="Waitlist Management"
-          description="Manage and track all waitlist entries from potential riders"
-        />
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card
-                key={index}
-                className="glass-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden relative animate-slide-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                  <CardTitle className="text-sm font-semibold text-muted-foreground">
-                    {stat.label}
-                  </CardTitle>
-                  <div
-                    className={`p-3 rounded-xl group-hover:scale-110 transition-all duration-300 ${stat.color}`}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </div>
-                </CardHeader>
-                <CardContent className="relative z-10">
-                  <div className="text-3xl md:text-4xl font-bold text-foreground">
-                    {stat.value}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          <StatsCard
+            title="Total Entries"
+            value={stats[0].value ?? 0}
+            icon={Users}
+            animationDelay="0s"
+          />
+          <StatsCard
+            title="Approved"
+            value={stats[1].value ?? 0}
+            icon={CheckCircle}
+            animationDelay="0.1s"
+          />
+          <StatsCard
+            title="Pending"
+            value={stats[2].value ?? 0}
+            icon={Clock}
+            animationDelay="0.2s"
+          />
+          <StatsCard
+            title="Approval Rate"
+            value={stats[3].value ?? "0%"}
+            icon={TrendingUp}
+            animationDelay="0.3s"
+          />
         </div>
 
         {/* Waitlist Table */}

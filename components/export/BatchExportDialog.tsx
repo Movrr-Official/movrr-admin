@@ -257,7 +257,7 @@ export function BatchExportDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col glass-card border-0 shadow-2xl backdrop-blur-xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col glass-card border-0 backdrop-blur-xl p-0 overflow-hidden">
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
@@ -293,7 +293,7 @@ export function BatchExportDialog({
 
           {/* Export Progress */}
           {isExporting && (
-            <Card className="glass-card border-0 shadow-lg mb-6">
+            <Card className="glass-card border-0 mb-6">
               <CardHeader className="pb-4">
                 <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                   <Zap className="h-6 w-6 text-primary animate-pulse" />
@@ -386,7 +386,7 @@ export function BatchExportDialog({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Data Source Selection */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -428,7 +428,7 @@ export function BatchExportDialog({
                           key={source.id}
                           className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
                             isSelected
-                              ? `${source.bgColor} ${source.borderColor} shadow-lg scale-[1.02]`
+                              ? `${source.bgColor} ${source.borderColor} scale-[1.02]`
                               : "border-border/50 hover:border-border hover:bg-muted/30"
                           }`}
                           onClick={() => handleSourceToggle(source.id)}
@@ -487,7 +487,7 @@ export function BatchExportDialog({
 
             {/* Export Settings */}
             <div className="lg:col-span-1 space-y-6">
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Settings className="h-6 w-6 text-primary" />
@@ -549,7 +549,7 @@ export function BatchExportDialog({
               </Card>
 
               {/* Date Range Filter */}
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Calendar className="h-6 w-6 text-primary" />
@@ -653,7 +653,7 @@ export function BatchExportDialog({
                   size="sm"
                   onClick={handleBatchExport}
                   disabled={selectedSources.length === 0 || isExporting}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 gap-2 flex-1 sm:flex-initial group"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 gap-2 flex-1 sm:flex-initial group"
                 >
                   {isExporting ? (
                     <>

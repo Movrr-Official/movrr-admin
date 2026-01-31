@@ -3,10 +3,7 @@
 import {
   PlusCircle,
   FileText,
-  BookOpen,
-  Database,
-  Package,
-  Search,
+  LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -14,7 +11,7 @@ import { useRouter } from "next/navigation";
 interface EmptyStateProps {
   title?: string;
   description?: string;
-  iconName?: "file" | "book" | "database" | "search" | "package" | "default";
+  iconName?: LucideIcon;
   buttonText?: string;
   buttonAction?: () => void;
   navigateTo?: string;
@@ -23,21 +20,12 @@ interface EmptyStateProps {
 export function EmptyState({
   title = "No content available",
   description = "Get started by creating your first item",
-  iconName = "default",
+  iconName: IconName = FileText,
   buttonText = "Create New",
   buttonAction,
   navigateTo,
 }: EmptyStateProps) {
   const router = useRouter();
-
-  const icons = {
-    file: <FileText className="h-10 w-10" />,
-    book: <BookOpen className="h-10 w-10" />,
-    search: <Search className="h-10 w-10" />,
-    database: <Database className="h-10 w-10" />,
-    package: <Package className="h-10 w-10" />,
-    default: <FileText className="h-10 w-10" />,
-  };
 
   const handleClick = () => {
     if (buttonAction) {
@@ -50,7 +38,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
       <div className="bg-muted dark:bg-muted/30 p-4 rounded-full mb-4 text-muted-foreground/60">
-        {icons[iconName]}
+        <IconName className="h-10 w-10" />
       </div>
       <h3 className="text-sm font-semibold mb-2">{title}</h3>
       <p className="text-xs text-muted-foreground max-w-md mb-4">

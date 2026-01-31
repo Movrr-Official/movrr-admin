@@ -229,7 +229,7 @@ export function ScheduledExportDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col glass-card border-0 shadow-2xl backdrop-blur-xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col glass-card border-0 backdrop-blur-xl p-0 overflow-hidden">
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
@@ -250,7 +250,7 @@ export function ScheduledExportDialog({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Basic Information */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Settings className="h-6 w-6 text-primary" />
@@ -378,7 +378,7 @@ export function ScheduledExportDialog({
               </Card>
 
               {/* Schedule Configuration */}
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Repeat className="h-6 w-6 text-primary" />
@@ -399,7 +399,7 @@ export function ScheduledExportDialog({
                           key={type.value}
                           className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
                             scheduleType === type.value
-                              ? "border-primary/30 bg-primary/5 shadow-md"
+                              ? "border-primary/30 bg-primary/5"
                               : "border-border/50 hover:border-border hover:bg-muted/30"
                           }`}
                           onClick={() => setScheduleType(type.value as any)}
@@ -523,7 +523,7 @@ export function ScheduledExportDialog({
             {/* Preview & Settings */}
             <div className="lg:col-span-1 space-y-6">
               {/* Schedule Preview */}
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Timer className="h-6 w-6 text-primary" />
@@ -614,7 +614,7 @@ export function ScheduledExportDialog({
               </Card>
 
               {/* Schedule Status */}
-              <Card className="glass-card border-0 shadow-lg">
+              <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Zap className="h-6 w-6 text-primary" />
@@ -669,7 +669,7 @@ export function ScheduledExportDialog({
                   size="sm"
                   onClick={handleCreateSchedule}
                   disabled={!scheduleName || !selectedDataSource}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 gap-2 flex-1 sm:flex-initial group"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 gap-2 flex-1 sm:flex-initial group"
                 >
                   <Plus className="h-5 w-5 group-hover:scale-110 transition-transform" />
                   Create Schedule

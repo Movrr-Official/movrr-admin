@@ -1,16 +1,24 @@
 import { ReactNode } from "react";
+import Link from "next/link";
+import { Button } from "./ui/button";
 
 interface PageHeaderProps {
-  title: string;
+  title?: string;
   description?: string;
-  actions?: ReactNode;
+  action?: {
+    label: string;
+    href?: string;
+    icon?: ReactNode;
+    onClick?: () => void;
+    asChild?: boolean;
+  };
 }
 
-export function PageHeader({ title, description, actions }: PageHeaderProps) {
+export function PageHeader({ title, description, action }: PageHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
       <div>
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">
           {title}
         </h1>
         {description && (
@@ -18,7 +26,29 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
         )}
       </div>
 
-      {actions && <div className="mt-4 md:mt-0">{actions}</div>}
+      {action && (
+        <Button
+          asChild={action.asChild || Boolean(action.href)}
+          onClick={action.onClick}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground mt-4 md:mt-0"
+        >
+          {action.href ? (
+            <Link href={action.href}>
+              {action.icon && (
+                <span className="mr-2 h-4 w-4">{action.icon}</span>
+              )}
+              {action.label}
+            </Link>
+          ) : (
+            <>
+              {action.icon && (
+                <span className="mr-2 h-4 w-4">{action.icon}</span>
+              )}
+              {action.label}
+            </>
+          )}
+        </Button>
+      )}
     </div>
   );
 }

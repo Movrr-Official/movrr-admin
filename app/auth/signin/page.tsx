@@ -11,7 +11,7 @@ import { SignInForm } from "@/components/forms/signin-form";
 
 export default function SignInPage() {
   return (
-    <Card className="border-0 shadow-2xl">
+    <Card className="border-0">
       <CardHeader className="text-center pb-6">
         <CardTitle className="text-3xl font-bold tracking-tight">
           Welcome Back

@@ -17,7 +17,7 @@ export const optimizeRouteSchema = z.object({
   }),
 });
 
-const routeStatusSchema = z.enum([
+export const routeStatusSchema = z.enum([
   "assigned",
   "in-progress",
   "completed",
@@ -26,20 +26,35 @@ const routeStatusSchema = z.enum([
 
 export const routeSchema = z.object({
   id: z.string(),
+  routeId: z.string().optional(),
+  campaignIdPrimary: z.string().optional(),
   name: z.string(),
+  description: z.string().optional(),
   brand: z.string().optional(),
   startLocation: z.string(),
   endLocation: z.string(),
   campaignId: z.array(z.string()),
+  startLat: z.number().optional(),
+  startLng: z.number().optional(),
+  endLat: z.number().optional(),
+  endLng: z.number().optional(),
   waypoints: z.array(waypointSchema),
   performance: z.string(),
+  difficulty: z.enum(["Easy", "Medium", "Hard"]),
+  templateStatus: z
+    .enum(["pending", "active", "paused", "completed", "cancelled"])
+    .optional(),
   assignedDate: z.string(),
   assignedRiderId: z.array(z.string().optional()),
   status: routeStatusSchema,
   estimatedDuration: z.string(),
+  estimatedDurationMinutes: z.number().optional(),
   coverage: z.number().optional(),
+  coverageKm: z.number().optional(),
   zone: z.string(),
   city: z.string(),
+  country: z.string().optional(),
+  tolerance: z.number().optional(),
   startedAt: z.string().datetime().optional(),
   completedAt: z.string().optional(),
   cancelledAt: z.string().datetime().optional(),

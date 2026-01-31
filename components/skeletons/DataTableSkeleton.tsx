@@ -54,7 +54,7 @@ export function DataTableSkeleton({
 
   return (
     <Card
-      className={`glass-card border-0 shadow-lg animate-pulse ${className}`}
+      className={`glass-card border-0 animate-pulse ${className}`}
     >
       {viewOptions && (
         <div className="flex items-center p-4 pt-6">

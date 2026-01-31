@@ -88,7 +88,7 @@ export function SearchDialog({ isOpen, onOpenChange }: SearchDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl h-[60vh] flex flex-col glass-card border-0 shadow-2xl backdrop-blur-xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-3xl h-[60vh] flex flex-col glass-card border-0 backdrop-blur-xl p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />

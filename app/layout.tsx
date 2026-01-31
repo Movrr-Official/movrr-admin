@@ -11,6 +11,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Toaster } from "@/components/ui/toaster";
 import Sidebar from "@/components/layout/Sidebar";
+import MaintenanceBanner from "@/components/layout/MaintenanceBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -65,6 +66,7 @@ export default function RootLayout({
                 <div className="flex-1 flex flex-col overflow-y-auto">
                   <div className="flex-1 flex flex-col">
                     <Navbar />
+                    <MaintenanceBanner />
                     {/* Main content area with suspense for lazy loading */}
                     <Suspense>
                       <main className="flex-1">{children}</main>
