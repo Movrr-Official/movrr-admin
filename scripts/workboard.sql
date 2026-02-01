@@ -2,6 +2,8 @@
 
 create extension if not exists pgcrypto;
 
+create sequence if not exists public.workboard_card_seq;
+
 -- Enum types (create only if missing)
 do $$
 begin
@@ -73,6 +75,8 @@ create table if not exists public.workboard_boards (
 
 create table if not exists public.workboard_cards (
   id uuid primary key default gen_random_uuid(),
+  card_number bigint not null default nextval('public.workboard_card_seq'),
+  card_reference text generated always as ('MOVRR-' || card_number) stored,
   team_id uuid not null references public.workboard_teams(id) on delete cascade,
   board_id uuid not null references public.workboard_boards(id) on delete cascade,
   title text not null,
@@ -86,7 +90,8 @@ create table if not exists public.workboard_cards (
   created_by uuid not null,
   updated_by uuid,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (card_reference)
 );
 
 -- Helper functions

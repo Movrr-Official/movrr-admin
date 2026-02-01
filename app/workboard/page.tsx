@@ -117,10 +117,11 @@ const formatDueDate = (date?: string | null) => {
   }
 };
 
-const formatCardId = (id: string) => {
-  if (!id) return "";
-  if (id.length <= 8) return id.toUpperCase();
-  const lastChunk = id.split("-").pop() ?? id;
+const formatCardId = (card: WorkboardCard) => {
+  if (card.card_reference) return card.card_reference.toUpperCase();
+  if (!card.id) return "";
+  if (card.id.length <= 8) return card.id.toUpperCase();
+  const lastChunk = card.id.split("-").pop() ?? card.id;
   return lastChunk.slice(0, 6).toUpperCase();
 };
 
@@ -488,22 +489,31 @@ export default function WorkboardPage() {
     const nextPosition = boardCards.length;
 
     if (useMockData) {
-      setCards((prev) => [
-        ...prev,
-        {
-          id: `mock-${Date.now()}`,
-          team_id: teamId,
-          board_id: boardId,
-          title: trimmedTitle,
-          description: newCardDescription.trim() || null,
-          type: "Operations",
-          priority: "Medium",
-          due_date: null,
-          effort: "3 pts",
-          position: nextPosition,
-          archived_at: null,
-        },
-      ]);
+      setCards((prev) => {
+        const maxNumber = prev.reduce(
+          (max, card) => Math.max(max, card.card_number ?? 0),
+          0,
+        );
+        const nextNumber = maxNumber + 1;
+        return [
+          ...prev,
+          {
+            id: `mock-${Date.now()}`,
+            card_number: nextNumber,
+            card_reference: `MOVRR-${nextNumber}`,
+            team_id: teamId,
+            board_id: boardId,
+            title: trimmedTitle,
+            description: newCardDescription.trim() || null,
+            type: "Operations",
+            priority: "Medium",
+            due_date: null,
+            effort: "3 pts",
+            position: nextPosition,
+            archived_at: null,
+          },
+        ];
+      });
       resetCardComposer();
       return;
     }
@@ -1471,7 +1481,7 @@ export default function WorkboardPage() {
                             ))}
                           </div>
                           <Badge variant="outline" className="text-[10px]">
-                            {formatCardId(card.id)}
+                            {formatCardId(card)}
                           </Badge>
                         </div>
                       </CardContent>

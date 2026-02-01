@@ -11,6 +11,8 @@ export type WorkboardBoard = {
 
 export type WorkboardCard = {
   id: string;
+  card_number: number | null;
+  card_reference: string | null;
   team_id: string;
   board_id: string;
   title: string;
@@ -121,6 +123,8 @@ export const workboardMockBoards: WorkboardBoard[] = [
 export const workboardMockCards: WorkboardCard[] = [
   {
     id: "mvrr-201",
+    card_number: 201,
+    card_reference: "MOVRR-201",
     team_id: "local",
     board_id: "draft",
     title: "New partner onboarding concept",
@@ -134,6 +138,8 @@ export const workboardMockCards: WorkboardCard[] = [
   },
   {
     id: "mvrr-202",
+    card_number: 202,
+    card_reference: "MOVRR-202",
     team_id: "local",
     board_id: "backlog",
     title: "Ops: Rider onboarding playbook",
@@ -147,6 +153,8 @@ export const workboardMockCards: WorkboardCard[] = [
   },
   {
     id: "mvrr-203",
+    card_number: 203,
+    card_reference: "MOVRR-203",
     team_id: "local",
     board_id: "in-progress",
     title: "Product: Partner brief automation",
@@ -160,6 +168,8 @@ export const workboardMockCards: WorkboardCard[] = [
   },
   {
     id: "mvrr-204",
+    card_number: 204,
+    card_reference: "MOVRR-204",
     team_id: "local",
     board_id: "in-progress",
     title: "Engineering: Map routing perf patch",
@@ -173,6 +183,8 @@ export const workboardMockCards: WorkboardCard[] = [
   },
   {
     id: "mvrr-205",
+    card_number: 205,
+    card_reference: "MOVRR-205",
     team_id: "local",
     board_id: "backlog",
     title: "Growth: Ambassador outreach wave",
@@ -186,6 +198,8 @@ export const workboardMockCards: WorkboardCard[] = [
   },
   {
     id: "mvrr-206",
+    card_number: 206,
+    card_reference: "MOVRR-206",
     team_id: "local",
     board_id: "done",
     title: "Compliance: Identity verification audit",
@@ -199,6 +213,8 @@ export const workboardMockCards: WorkboardCard[] = [
   },
   {
     id: "mvrr-207",
+    card_number: 207,
+    card_reference: "MOVRR-207",
     team_id: "local",
     board_id: "completed",
     title: "Campaign: Winter impact wrap-up",
