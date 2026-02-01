@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
+import {
+  ROUTE_OPTIMIZER_KEY,
+  ROUTE_OPTIMIZER_TOKEN,
+  ROUTE_OPTIMIZER_URL,
+} from "@/lib/env";
 
-const TARGET = process.env.ROUTE_OPTIMIZER_URL || "http://localhost:5000";
-const SERVICE_TOKEN =
-  process.env.ROUTE_OPTIMIZER_TOKEN || process.env.ROUTE_OPTIMIZER_KEY || "";
+const TARGET = ROUTE_OPTIMIZER_URL || "http://localhost:5000";
+const SERVICE_TOKEN = ROUTE_OPTIMIZER_TOKEN || ROUTE_OPTIMIZER_KEY || "";
 
 function makeTraceId(req: Request) {
   try {

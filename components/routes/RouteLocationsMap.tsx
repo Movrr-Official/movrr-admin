@@ -27,6 +27,12 @@ import {
 import { Button } from "@/components/ui/button";
 import type { RiderRoute } from "@/schemas";
 import { useRiderLocations } from "@/hooks/useRiderLocations";
+import {
+  NEXT_PUBLIC_MAP_STYLE_HOT_ZONES,
+  NEXT_PUBLIC_MAP_STYLE_HYBRID,
+  NEXT_PUBLIC_MAP_STYLE_URL,
+  NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS,
+} from "@/lib/env";
 
 const THE_HAGUE_CENTER = { lat: 52.0705, lng: 4.3007 };
 const THE_HAGUE_JITTER = 0.03;
@@ -120,8 +126,7 @@ const mergeBounds = (
 };
 
 export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
-  const useMockData =
-    process.env.NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS === "true";
+  const useMockData = NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS;
   const mapRef = useRef<MapRef | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
@@ -220,11 +225,10 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
 
   const mapStyle = useMemo(() => {
     const baseStyle =
-      process.env.NEXT_PUBLIC_MAP_STYLE_URL ??
+      NEXT_PUBLIC_MAP_STYLE_URL ??
       "https://tiles.openfreemap.org/styles/liberty";
-    const hotZonesStyle =
-      process.env.NEXT_PUBLIC_MAP_STYLE_HOT_ZONES ?? baseStyle;
-    const hybridStyle = process.env.NEXT_PUBLIC_MAP_STYLE_HYBRID ?? baseStyle;
+    const hotZonesStyle = NEXT_PUBLIC_MAP_STYLE_HOT_ZONES ?? baseStyle;
+    const hybridStyle = NEXT_PUBLIC_MAP_STYLE_HYBRID ?? baseStyle;
 
     if (mapMode === "hot-zones") return hotZonesStyle;
     if (mapMode === "hybrid") return hybridStyle;

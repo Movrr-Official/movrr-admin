@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { RESEND_API_KEY } from "@/lib/env";
+import { logger } from "@/lib/logger";
 import { Resend } from "resend";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +29,7 @@ const checkDatabase = async (): Promise<HealthCheck> => {
 
     return { name: "database", status: "ok" };
   } catch (error) {
+    logger.error("Health check failed for database", error);
     return {
       name: "database",
       status: "error",
@@ -53,6 +56,7 @@ const checkRewardsRpc = async (): Promise<HealthCheck> => {
       message: "Rewards catalog reachable",
     };
   } catch (error) {
+    logger.error("Health check failed for rewards catalog", error);
     return {
       name: "rewards_rpc",
       status: "error",
@@ -63,16 +67,7 @@ const checkRewardsRpc = async (): Promise<HealthCheck> => {
 
 const checkEmail = async (): Promise<HealthCheck> => {
   try {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      return {
-        name: "email",
-        status: "error",
-        message: "RESEND_API_KEY is not configured",
-      };
-    }
-
-    const resend = new Resend(apiKey);
+    const resend = new Resend(RESEND_API_KEY);
     const { error } = await resend.domains.list();
 
     if (error) {
@@ -81,6 +76,7 @@ const checkEmail = async (): Promise<HealthCheck> => {
 
     return { name: "email", status: "ok" };
   } catch (error) {
+    logger.error("Health check failed for email", error);
     return {
       name: "email",
       status: "error",

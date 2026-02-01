@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { logger } from "@/lib/logger";
 import { settings, adminSettingsSchema } from "@/schemas/settings";
 
 const SETTINGS_KEYS = [
@@ -70,12 +71,14 @@ export async function getAdminSettings(): Promise<{
       .in("key", SETTINGS_KEYS);
 
     if (error) {
+      logger.error("Failed to load admin settings", error);
       return { success: false, error: error.message };
     }
 
     const merged = mergeSettings((data ?? []) as any);
     return { success: true, data: merged };
   } catch (error) {
+    logger.error("Failed to load admin settings", error);
     return {
       success: false,
       error:
@@ -106,12 +109,14 @@ export async function updateSettings(
       .upsert(rows, { onConflict: "key" });
 
     if (error) {
+      logger.error("Failed to update admin settings", error);
       return { success: false, error: error.message };
     }
 
     revalidatePath("/settings");
     return { success: true };
   } catch (error) {
+    logger.error("Failed to update admin settings", error);
     return {
       success: false,
       error:

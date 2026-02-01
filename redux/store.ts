@@ -11,6 +11,7 @@ import campaignsFilterReducer from "./slices/campaignsFilter";
 import notificationReducer from "./slices/notification";
 import maintenanceReducer from "./slices/maintenance";
 import { waitlistFilterReducer } from "./slices/waitlistFilter";
+import { NODE_ENV } from "@/lib/env";
 
 export const store = configureStore({
   reducer: {
@@ -26,7 +27,7 @@ export const store = configureStore({
     usersFilter: usersFilterReducer,
     waitlistFilter: waitlistFilterReducer,
   },
-  devTools: process.env.NODE_ENV !== "production",
+  devTools: NODE_ENV !== "production",
 });
 
 export type RootState = ReturnType<typeof store.getState>;

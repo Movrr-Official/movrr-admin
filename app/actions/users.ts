@@ -14,6 +14,7 @@ import { z } from "zod";
 import { Resend } from "resend";
 import UserWelcomeEmail from "@/emails/user-welcome";
 import PasswordResetEmail from "@/emails/password-reset";
+import { FROM_EMAIL, NEXT_PUBLIC_APP_URL, RESEND_API_KEY } from "@/lib/env";
 
 const mapUiRoleToDb = (role: string) => {
   if (role === "super-admin") return "super_admin";
@@ -78,13 +79,13 @@ const deleteUserSchema = z.object({
 });
 
 const getResendClient = () => {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = RESEND_API_KEY;
   if (!apiKey) return null;
   return new Resend(apiKey);
 };
 
 const getSenderEmail = () =>
-  process.env.FROM_EMAIL || "Movrr <no-reply@movrr.nl>";
+  FROM_EMAIL ? `Movrr <${FROM_EMAIL}>` : "Movrr <no-reply@movrr.nl>";
 
 /**
  * Server action to fetch users for the dashboard.
@@ -250,8 +251,7 @@ export async function createUser(
             "RESEND_API_KEY is not configured; skipping welcome email.",
           );
         } else {
-          const dashboardUrl =
-            process.env.NEXT_PUBLIC_APP_URL || "https://admin.movrr.nl";
+          const dashboardUrl = NEXT_PUBLIC_APP_URL || "https://admin.movrr.nl";
           await resend.emails.send({
             from: getSenderEmail(),
             to: validatedData.email,

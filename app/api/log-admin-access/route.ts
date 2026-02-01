@@ -1,10 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { logger } from "@/lib/logger";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabase = createSupabaseAdminClient();
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +10,7 @@ export async function POST(request: Request) {
     await supabase.from("admin_access_logs").insert(data);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Log insert failed:", error);
+    logger.error("Admin access log insert failed", error);
     return NextResponse.json({ success: false, error: String(error) });
   }
 }

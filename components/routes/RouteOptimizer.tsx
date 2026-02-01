@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, Target, Clock, MapPin, TrendingUp, Settings } from "lucide-react";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { useToast } from "@/hooks/useToast";
+import { isProduction } from "@/lib/env";
 
 type OptimizerLocation = { id?: string; lat: number; lng: number };
 
@@ -632,7 +633,7 @@ export function RouteOptimizer({
           : String(err);
       setOptimizeError(msg);
       // In production, mark upstream failures as service unavailable
-      if (process.env.NODE_ENV === "production") {
+      if (isProduction) {
         setServiceUnavailable(true);
         setServiceStatus("unavailable");
         setOptimizeError(

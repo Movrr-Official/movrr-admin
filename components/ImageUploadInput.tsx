@@ -11,6 +11,10 @@ import { z } from "zod";
 import { setImageName, setPublicId } from "@/redux/slices/imageUpload";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useToast } from "@/hooks/useToast";
+import {
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+} from "@/lib/env";
 
 interface Props {
   name?: string;
@@ -35,8 +39,8 @@ const ImageUploadInput = ({
   const dispatch = useAppDispatch();
 
   // Get environment variables
-  const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!;
-  const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
+  const UPLOAD_PRESET = NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  const CLOUD_NAME = NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
   // Check if environment variables are set
   useEffect(() => {
@@ -123,7 +127,7 @@ const ImageUploadInput = ({
       xhr.open(
         "POST",
         `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        true
+        true,
       );
 
       xhr.upload.onprogress = (event) => {

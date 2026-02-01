@@ -1,17 +1,23 @@
 import { Resend } from "resend";
 import UserConfirmationEmail from "@/emails/user-confirmation";
 import AdminNotificationEmail from "@/emails/admin-notification";
+import {
+  ADMIN_EMAIL as ADMIN_EMAIL_ENV,
+  RESEND_API_KEY,
+  SYSTEM_EMAIL as SYSTEM_EMAIL_ENV,
+  WELCOME_EMAIL as WELCOME_EMAIL_ENV,
+} from "@/lib/env";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const WELCOME_EMAIL = process.env.WELCOME_EMAIL! || "welcome@movrr.nl";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL! || "admin@movrr.nl";
-const SYSTEM_EMAIL = process.env.SYSTEM_EMAIL! || "system@movrr.nl";
+const resend = new Resend(RESEND_API_KEY);
+const WELCOME_EMAIL = WELCOME_EMAIL_ENV || "welcome@movrr.nl";
+const ADMIN_EMAIL = ADMIN_EMAIL_ENV || "admin@movrr.nl";
+const SYSTEM_EMAIL = SYSTEM_EMAIL_ENV || "system@movrr.nl";
 
 export async function sendUserConfirmationEmail(
   email: string,
   name: string,
   city: string,
-  bikeOwnership: string
+  bikeOwnership: string,
 ) {
   try {
     const { data, error } = await resend.emails.send({
@@ -37,7 +43,7 @@ export async function sendAdminNotificationEmail(
   name: string,
   email: string,
   city: string,
-  bikeOwnership: string
+  bikeOwnership: string,
 ) {
   const timestamp = new Date().toLocaleString();
 

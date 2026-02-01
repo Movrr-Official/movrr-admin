@@ -8,6 +8,7 @@ import type { LayerProps } from "react-map-gl/maplibre";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { NavigationControl } from "react-map-gl/maplibre";
+import { NEXT_PUBLIC_MAP_STYLE_URL } from "@/lib/env";
 
 const DEFAULT_CENTER = { latitude: 52.0705, longitude: 4.3007 };
 
@@ -74,8 +75,7 @@ export function RouteTrackingMap({ points }: { points: any[] }) {
   };
 
   const mapStyle =
-    process.env.NEXT_PUBLIC_MAP_STYLE_URL ??
-    "https://tiles.openfreemap.org/styles/liberty";
+    NEXT_PUBLIC_MAP_STYLE_URL ?? "https://tiles.openfreemap.org/styles/liberty";
 
   if (!geoJson) {
     return (

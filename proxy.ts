@@ -1,5 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  NEXT_PUBLIC_SUPABASE_URL,
+  ROUTE_OPTIMIZER_KEY,
+  ROUTE_OPTIMIZER_OLD_TOKEN,
+  ROUTE_OPTIMIZER_PREV_TOKEN,
+  ROUTE_OPTIMIZER_TOKEN,
+} from "@/lib/env";
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -10,14 +18,9 @@ export async function proxy(request: NextRequest) {
   try {
     const pathname = request.nextUrl.pathname || "";
     if (pathname.startsWith("/api/optimize")) {
-      const expected =
-        process.env.ROUTE_OPTIMIZER_TOKEN ||
-        process.env.ROUTE_OPTIMIZER_KEY ||
-        "";
+      const expected = ROUTE_OPTIMIZER_TOKEN || ROUTE_OPTIMIZER_KEY || "";
       const previous =
-        process.env.ROUTE_OPTIMIZER_PREV_TOKEN ||
-        process.env.ROUTE_OPTIMIZER_OLD_TOKEN ||
-        "";
+        ROUTE_OPTIMIZER_PREV_TOKEN || ROUTE_OPTIMIZER_OLD_TOKEN || "";
 
       if (!expected && !previous) {
         console.warn(
@@ -34,8 +37,8 @@ export async function proxy(request: NextRequest) {
   }
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
