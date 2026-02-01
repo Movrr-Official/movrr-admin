@@ -175,12 +175,26 @@ export default function WorkboardPage() {
     null,
   );
   const [cardToDelete, setCardToDelete] = useState<WorkboardCard | null>(null);
+  const isAnyModalOpen =
+    isBoardFormOpen ||
+    isTeamModalOpen ||
+    Boolean(editingBoard) ||
+    Boolean(editingCard) ||
+    Boolean(boardToDelete) ||
+    Boolean(cardToDelete);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id ?? null);
     });
   }, [supabase]);
+
+  useEffect(() => {
+    if (!isAnyModalOpen) {
+      document.body.style.pointerEvents = "";
+      document.body.style.overflow = "";
+    }
+  }, [isAnyModalOpen]);
 
   useEffect(() => {
     if (useMockData) {
