@@ -53,14 +53,21 @@ import { cn } from "@/lib/utils";
 import { NEXT_PUBLIC_USE_MOCK_DATA, isProduction } from "@/lib/env";
 import { createSupabaseBrowserClient } from "@/supabase/client";
 import {
+  archiveWorkboardBoard,
+  archiveWorkboardCard,
   bootstrapWorkboardTeam,
   createWorkboardBoard,
   createWorkboardCard,
   deleteWorkboardBoard,
+  deleteWorkboardCard,
   getWorkboardBoards,
   getWorkboardCards,
   getWorkboardMembers,
   inviteWorkboardMember,
+  updateWorkboardBoard,
+  updateWorkboardBoardOrder,
+  updateWorkboardCard,
+  updateWorkboardCardPositions,
   updateWorkboardMemberRole,
   removeWorkboardMember,
 } from "@/app/actions/workboard";
@@ -340,15 +347,23 @@ export default function WorkboardPage() {
   };
 
   const persistBoardOrder = async (nextBoards: WorkboardBoard[]) => {
-    if (!currentUserId || useMockData) return;
-    await Promise.all(
-      nextBoards.map((board, index) =>
-        supabase
-          .from("workboard_boards")
-          .update({ position: index, updated_by: currentUserId })
-          .eq("id", board.id),
-      ),
-    );
+    if (!teamId || useMockData) return;
+    try {
+      await updateWorkboardBoardOrder({
+        teamId,
+        boards: nextBoards.map((board, index) => ({
+          id: board.id,
+          position: index,
+        })),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({
+        title: "Unable to reorder boards",
+        description: message,
+        variant: "destructive",
+      });
+    }
   };
 
   const reorderBoards = (sourceId: string, targetId: string) => {
@@ -372,20 +387,24 @@ export default function WorkboardPage() {
     boardId: string,
     boardCards: WorkboardCard[],
   ) => {
-    if (!currentUserId) return;
-    if (useMockData) return;
-    await Promise.all(
-      boardCards.map((card, index) =>
-        supabase
-          .from("workboard_cards")
-          .update({
-            position: index,
-            board_id: boardId,
-            updated_by: currentUserId,
-          })
-          .eq("id", card.id),
-      ),
-    );
+    if (!teamId || useMockData) return;
+    try {
+      await updateWorkboardCardPositions({
+        teamId,
+        updates: boardCards.map((card, index) => ({
+          id: card.id,
+          boardId,
+          position: index,
+        })),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({
+        title: "Unable to reorder cards",
+        description: message,
+        variant: "destructive",
+      });
+    }
   };
 
   const moveCard = async (
@@ -622,20 +641,21 @@ export default function WorkboardPage() {
       setEditingBoard(null);
       return;
     }
-    const { error } = await supabase
-      .from("workboard_boards")
-      .update({
+    try {
+      await updateWorkboardBoard({
+        teamId: editingBoard.team_id,
+        boardId: editingBoard.id,
         title: editingBoard.title,
         helper: editingBoard.helper,
-        updated_by: currentUserId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", editingBoard.id);
-
-    if (error) {
+      });
+      if (teamId) {
+        await fetchBoards(teamId);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       toast({
         title: "Unable to update board",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
       return;
@@ -645,7 +665,7 @@ export default function WorkboardPage() {
   };
 
   const handleArchiveBoard = async (boardId: string) => {
-    if (!currentUserId) return;
+    if (!currentUserId || !teamId) return;
     if (useMockData) {
       setBoards((prev) =>
         prev.map((board) =>
@@ -656,13 +676,22 @@ export default function WorkboardPage() {
       );
       return;
     }
-    await supabase
-      .from("workboard_boards")
-      .update({
-        archived_at: new Date().toISOString(),
-        updated_by: currentUserId,
-      })
-      .eq("id", boardId);
+    try {
+      await archiveWorkboardBoard({
+        teamId,
+        boardId,
+      });
+      if (teamId) {
+        await fetchBoards(teamId);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({
+        title: "Unable to archive board",
+        description: message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteBoard = async () => {
@@ -706,24 +735,25 @@ export default function WorkboardPage() {
       setEditingCard(null);
       return;
     }
-    const { error } = await supabase
-      .from("workboard_cards")
-      .update({
+    try {
+      await updateWorkboardCard({
+        teamId: editingCard.team_id,
+        cardId: editingCard.id,
         title: editingCard.title,
         description: editingCard.description,
         priority: editingCard.priority,
         type: editingCard.type,
-        due_date: editingCard.due_date,
+        dueDate: editingCard.due_date,
         effort: editingCard.effort,
-        updated_by: currentUserId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", editingCard.id);
-
-    if (error) {
+      });
+      if (teamId) {
+        await fetchCards(teamId);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       toast({
         title: "Unable to update card",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
       return;
@@ -733,7 +763,7 @@ export default function WorkboardPage() {
   };
 
   const handleArchiveCard = async (cardId: string) => {
-    if (!currentUserId) return;
+    if (!currentUserId || !teamId) return;
     if (useMockData) {
       setCards((prev) =>
         prev.map((card) =>
@@ -744,13 +774,22 @@ export default function WorkboardPage() {
       );
       return;
     }
-    await supabase
-      .from("workboard_cards")
-      .update({
-        archived_at: new Date().toISOString(),
-        updated_by: currentUserId,
-      })
-      .eq("id", cardId);
+    try {
+      await archiveWorkboardCard({
+        teamId,
+        cardId,
+      });
+      if (teamId) {
+        await fetchCards(teamId);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({
+        title: "Unable to archive card",
+        description: message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteCard = async () => {
@@ -760,14 +799,19 @@ export default function WorkboardPage() {
       setCardToDelete(null);
       return;
     }
-    const { error } = await supabase
-      .from("workboard_cards")
-      .delete()
-      .eq("id", cardToDelete.id);
-    if (error) {
+    try {
+      await deleteWorkboardCard({
+        teamId: cardToDelete.team_id,
+        cardId: cardToDelete.id,
+      });
+      if (teamId) {
+        await fetchCards(teamId);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       toast({
         title: "Unable to delete card",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     }

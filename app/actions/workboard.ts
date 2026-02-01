@@ -449,6 +449,346 @@ export async function createWorkboardCard(input: {
   return { success: true, id: card.id };
 }
 
+export async function updateWorkboardBoard(input: {
+  teamId: string;
+  boardId: string;
+  title: string;
+  helper?: string | null;
+}) {
+  const auth = await requireAdmin();
+  const supabase = createSupabaseAdminClient();
+
+  const payload = z
+    .object({
+      teamId: z.string().uuid(),
+      boardId: z.string().uuid(),
+      title: z.string().min(1),
+      helper: z.string().nullable().optional(),
+    })
+    .parse(input);
+
+  const { data: membership } = await supabase
+    .from("workboard_team_members")
+    .select("id, role")
+    .eq("team_id", payload.teamId)
+    .eq("user_id", auth.authUser.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!membership || !["owner", "admin"].includes(membership.role)) {
+    throw new Error("Not authorized to update boards");
+  }
+
+  const { error } = await supabase
+    .from("workboard_boards")
+    .update({
+      title: payload.title,
+      helper: payload.helper ?? null,
+      updated_by: auth.authUser.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", payload.boardId)
+    .eq("team_id", payload.teamId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}
+
+export async function archiveWorkboardBoard(input: {
+  teamId: string;
+  boardId: string;
+}) {
+  const auth = await requireAdmin();
+  const supabase = createSupabaseAdminClient();
+
+  const payload = z
+    .object({ teamId: z.string().uuid(), boardId: z.string().uuid() })
+    .parse(input);
+
+  const { data: membership } = await supabase
+    .from("workboard_team_members")
+    .select("id, role")
+    .eq("team_id", payload.teamId)
+    .eq("user_id", auth.authUser.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!membership || !["owner", "admin"].includes(membership.role)) {
+    throw new Error("Not authorized to archive boards");
+  }
+
+  const { error } = await supabase
+    .from("workboard_boards")
+    .update({
+      archived_at: new Date().toISOString(),
+      updated_by: auth.authUser.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", payload.boardId)
+    .eq("team_id", payload.teamId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}
+
+export async function updateWorkboardBoardOrder(input: {
+  teamId: string;
+  boards: { id: string; position: number }[];
+}) {
+  const auth = await requireAdmin();
+  const supabase = createSupabaseAdminClient();
+
+  const payload = z
+    .object({
+      teamId: z.string().uuid(),
+      boards: z
+        .array(
+          z.object({
+            id: z.string().uuid(),
+            position: z.number().int().min(0),
+          }),
+        )
+        .min(1),
+    })
+    .parse(input);
+
+  const { data: membership } = await supabase
+    .from("workboard_team_members")
+    .select("id, role")
+    .eq("team_id", payload.teamId)
+    .eq("user_id", auth.authUser.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!membership || !["owner", "admin"].includes(membership.role)) {
+    throw new Error("Not authorized to reorder boards");
+  }
+
+  const updates = payload.boards.map((board) =>
+    supabase
+      .from("workboard_boards")
+      .update({
+        position: board.position,
+        updated_by: auth.authUser.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", board.id)
+      .eq("team_id", payload.teamId),
+  );
+
+  const results = await Promise.all(updates);
+  const firstError = results.find((result) => result.error)?.error;
+  if (firstError) {
+    throw new Error(firstError.message);
+  }
+
+  return { success: true };
+}
+
+export async function updateWorkboardCard(input: {
+  teamId: string;
+  cardId: string;
+  title: string;
+  description?: string | null;
+  type: "Engineering" | "Operations" | "Campaign" | "Product" | "Growth";
+  priority: "Low" | "Medium" | "High" | "Critical";
+  dueDate?: string | null;
+  effort?: string | null;
+}) {
+  const auth = await requireAdmin();
+  const supabase = createSupabaseAdminClient();
+
+  const payload = z
+    .object({
+      teamId: z.string().uuid(),
+      cardId: z.string().uuid(),
+      title: z.string().min(1),
+      description: z.string().nullable().optional(),
+      type: z.enum([
+        "Engineering",
+        "Operations",
+        "Campaign",
+        "Product",
+        "Growth",
+      ]),
+      priority: z.enum(["Low", "Medium", "High", "Critical"]),
+      dueDate: z.string().nullable().optional(),
+      effort: z.string().nullable().optional(),
+    })
+    .parse(input);
+
+  const { data: membership } = await supabase
+    .from("workboard_team_members")
+    .select("id, role")
+    .eq("team_id", payload.teamId)
+    .eq("user_id", auth.authUser.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!membership || !["owner", "admin", "editor"].includes(membership.role)) {
+    throw new Error("Not authorized to update cards");
+  }
+
+  const { error } = await supabase
+    .from("workboard_cards")
+    .update({
+      title: payload.title,
+      description: payload.description ?? null,
+      type: payload.type,
+      priority: payload.priority,
+      due_date: payload.dueDate ?? null,
+      effort: payload.effort ?? null,
+      updated_by: auth.authUser.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", payload.cardId)
+    .eq("team_id", payload.teamId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}
+
+export async function updateWorkboardCardPositions(input: {
+  teamId: string;
+  updates: { id: string; boardId: string; position: number }[];
+}) {
+  const auth = await requireAdmin();
+  const supabase = createSupabaseAdminClient();
+
+  const payload = z
+    .object({
+      teamId: z.string().uuid(),
+      updates: z
+        .array(
+          z.object({
+            id: z.string().uuid(),
+            boardId: z.string().uuid(),
+            position: z.number().int().min(0),
+          }),
+        )
+        .min(1),
+    })
+    .parse(input);
+
+  const { data: membership } = await supabase
+    .from("workboard_team_members")
+    .select("id, role")
+    .eq("team_id", payload.teamId)
+    .eq("user_id", auth.authUser.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!membership || !["owner", "admin", "editor"].includes(membership.role)) {
+    throw new Error("Not authorized to reorder cards");
+  }
+
+  const updates = payload.updates.map((update) =>
+    supabase
+      .from("workboard_cards")
+      .update({
+        position: update.position,
+        board_id: update.boardId,
+        updated_by: auth.authUser.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", update.id)
+      .eq("team_id", payload.teamId),
+  );
+
+  const results = await Promise.all(updates);
+  const firstError = results.find((result) => result.error)?.error;
+  if (firstError) {
+    throw new Error(firstError.message);
+  }
+
+  return { success: true };
+}
+
+export async function archiveWorkboardCard(input: {
+  teamId: string;
+  cardId: string;
+}) {
+  const auth = await requireAdmin();
+  const supabase = createSupabaseAdminClient();
+
+  const payload = z
+    .object({ teamId: z.string().uuid(), cardId: z.string().uuid() })
+    .parse(input);
+
+  const { data: membership } = await supabase
+    .from("workboard_team_members")
+    .select("id, role")
+    .eq("team_id", payload.teamId)
+    .eq("user_id", auth.authUser.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!membership || !["owner", "admin", "editor"].includes(membership.role)) {
+    throw new Error("Not authorized to archive cards");
+  }
+
+  const { error } = await supabase
+    .from("workboard_cards")
+    .update({
+      archived_at: new Date().toISOString(),
+      updated_by: auth.authUser.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", payload.cardId)
+    .eq("team_id", payload.teamId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}
+
+export async function deleteWorkboardCard(input: {
+  teamId: string;
+  cardId: string;
+}) {
+  const auth = await requireAdmin();
+  const supabase = createSupabaseAdminClient();
+
+  const payload = z
+    .object({ teamId: z.string().uuid(), cardId: z.string().uuid() })
+    .parse(input);
+
+  const { data: membership } = await supabase
+    .from("workboard_team_members")
+    .select("id, role")
+    .eq("team_id", payload.teamId)
+    .eq("user_id", auth.authUser.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!membership || !["owner", "admin"].includes(membership.role)) {
+    throw new Error("Not authorized to delete cards");
+  }
+
+  const { error } = await supabase
+    .from("workboard_cards")
+    .delete()
+    .eq("id", payload.cardId)
+    .eq("team_id", payload.teamId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}
+
 export async function deleteWorkboardBoard(input: {
   teamId: string;
   boardId: string;
