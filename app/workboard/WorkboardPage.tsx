@@ -1272,14 +1272,46 @@ export default function WorkboardPage() {
                     placeholder="Effort (e.g. 5 pts)"
                   />
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setEditingCard(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleUpdateCard}>Save</Button>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (editingCard) {
+                          handleArchiveCard(editingCard.id);
+                          setEditingCard(null);
+                        }
+                      }}
+                      disabled={!canEditCards}
+                    >
+                      <Archive className="mr-2 h-4 w-4" />
+                      Archive
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        if (editingCard) {
+                          setCardToDelete(editingCard);
+                          setEditingCard(null);
+                        }
+                      }}
+                      disabled={!canDeleteCards}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditingCard(null)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleUpdateCard}>Save</Button>
+                  </div>
                 </div>
               </div>
             </DialogContent>
@@ -1438,6 +1470,11 @@ export default function WorkboardPage() {
                         setActiveCardId(card.id);
                       }}
                       onDrop={handleDropOnCard(board.id, card.id)}
+                      onDoubleClick={() => {
+                        if (canEditCards) {
+                          setEditingCard(card);
+                        }
+                      }}
                       className={cn(
                         "cursor-grab border-0 bg-background shadow-sm transition-all",
                         draggedCardId === card.id && "opacity-60",
@@ -1454,52 +1491,15 @@ export default function WorkboardPage() {
                             >
                               {card.type}
                             </Badge>
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  "border-0 text-[10px]",
-                                  priorityTone[card.priority],
-                                )}
-                              >
-                                {card.priority}
-                              </Badge>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-6 w-6"
-                                  >
-                                    <MoreHorizontal className="h-3.5 w-3.5" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => setEditingCard(card)}
-                                    disabled={!canEditCards}
-                                  >
-                                    <Pencil className="mr-2 h-3.5 w-3.5" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleArchiveCard(card.id)}
-                                    disabled={!canEditCards}
-                                  >
-                                    <Archive className="mr-2 h-3.5 w-3.5" />
-                                    Archive
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-rose-600"
-                                    onClick={() => setCardToDelete(card)}
-                                    disabled={!canDeleteCards}
-                                  >
-                                    <Trash2 className="mr-2 h-3.5 w-3.5" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "border-0 text-[10px]",
+                                priorityTone[card.priority],
+                              )}
+                            >
+                              {card.priority}
+                            </Badge>
                           </div>
                           <h3 className="text-sm font-semibold text-foreground">
                             {card.title}
