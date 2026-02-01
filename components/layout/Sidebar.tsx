@@ -15,6 +15,7 @@ import {
   Megaphone,
   Coins,
   Settings,
+  KanbanSquare,
 } from "lucide-react";
 import { FaRoute } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -100,6 +101,13 @@ const Sidebar = () => {
         href: "/",
         icon: LayoutDashboard,
         roles: ["admin", "super-admin"],
+        badge: null,
+      },
+      {
+        name: "Workboard",
+        href: "/workboard",
+        icon: KanbanSquare,
+        roles: ["admin", "super-admin", "moderator"],
         badge: null,
       },
       {

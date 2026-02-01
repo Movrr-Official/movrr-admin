@@ -26,6 +26,7 @@ const routeLabels: Record<string, string> = {
   management: "Management",
   overview: "Overview",
   "available-riders": "Available Riders",
+  workboard: "Workboard",
 };
 
 // Function to format route segment to readable label
