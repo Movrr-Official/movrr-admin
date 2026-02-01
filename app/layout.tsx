@@ -12,6 +12,7 @@ import Footer from "@/components/layout/Footer";
 import { Toaster } from "@/components/ui/toaster";
 import Sidebar from "@/components/layout/Sidebar";
 import MaintenanceBanner from "@/components/layout/MaintenanceBanner";
+import { getAdminRoleForLayout } from "@/lib/admin";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,11 +48,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const adminRole = await getAdminRoleForLayout();
+
   return (
     <ReduxProvider>
       <QueryClientProvider>
@@ -62,7 +65,7 @@ export default function RootLayout({
           <body className="min-h-screen bg-background text-foreground">
             <CountProvider>
               <div className="flex h-screen">
-                <Sidebar />
+                <Sidebar currentRole={adminRole ?? null} />
                 <div className="flex-1 flex flex-col overflow-y-auto">
                   <div className="flex-1 flex flex-col">
                     <Navbar />

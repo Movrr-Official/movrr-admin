@@ -7,7 +7,7 @@ import {
 
 export const userRoleSchema = z.enum([
   "admin",
-  "super-admin",
+  "super_admin",
   "moderator",
   "support",
   "advertiser",

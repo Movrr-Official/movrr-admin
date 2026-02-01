@@ -40,7 +40,7 @@ interface NavItem {
   badge: JSX.Element | null;
 }
 
-const Sidebar = () => {
+const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isPending, startTransition] = useTransition();
   const sidebarOpen = useAppSelector((state) => state.ui.sidebarOpen);
@@ -100,21 +100,21 @@ const Sidebar = () => {
         name: "Dashboard",
         href: "/",
         icon: LayoutDashboard,
-        roles: ["admin", "super-admin"],
+        roles: ["admin", "super_admin"],
         badge: null,
       },
       {
         name: "Workboard",
         href: "/workboard",
         icon: KanbanSquare,
-        roles: ["admin", "super-admin", "moderator"],
+        roles: ["admin", "super_admin", "moderator"],
         badge: null,
       },
       {
         name: "Waitlist",
         href: "/waitlist",
         icon: List,
-        roles: ["admin", "super-admin"],
+        roles: ["admin", "super_admin"],
         badge: (
           <CountDisplay
             count={totalWaitlist}
@@ -127,7 +127,7 @@ const Sidebar = () => {
         name: "Users",
         href: "/users",
         icon: Users,
-        roles: ["admin", "super-admin"],
+        roles: ["admin", "super_admin"],
         badge: (
           <CountDisplay
             count={totalUsers}
@@ -140,7 +140,7 @@ const Sidebar = () => {
         name: "Campaigns",
         href: "/campaigns",
         icon: Megaphone,
-        roles: ["admin", "super-admin"],
+        roles: ["admin", "super_admin"],
         badge: (
           <CountDisplay
             count={totalCampaigns}
@@ -153,7 +153,7 @@ const Sidebar = () => {
         name: "Routes",
         href: "/routes",
         icon: FaRoute,
-        roles: ["admin", "super-admin", "moderator"],
+        roles: ["admin", "super_admin", "moderator"],
         badge: (
           <CountDisplay
             count={totalRoutes}
@@ -166,14 +166,14 @@ const Sidebar = () => {
         name: "Rewards",
         href: "/rewards",
         icon: Coins,
-        roles: ["admin", "super-admin"],
+        roles: ["admin", "super_admin"],
         badge: null,
       },
       {
         name: "Settings",
         href: "/settings",
         icon: Settings,
-        roles: ["admin", "super-admin"],
+        roles: ["admin", "super_admin"],
         badge: null,
       },
     ],
@@ -186,6 +186,11 @@ const Sidebar = () => {
       totalWaitlist,
     ],
   );
+
+  const visibleNavigation = useMemo(() => {
+    if (!currentRole) return [] as NavItem[];
+    return navigation.filter((item) => item.roles.includes(currentRole));
+  }, [currentRole, navigation]);
 
   const handleSignOut = async () => {
     startTransition(async () => {
@@ -302,7 +307,7 @@ const Sidebar = () => {
         {/* Navigation */}
         <ScrollArea className="flex-1 px-3 py-4">
           <nav className="space-y-2">
-            {navigation.map((item, idx) => {
+            {visibleNavigation.map((item, idx) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
 

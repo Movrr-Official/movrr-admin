@@ -2,6 +2,9 @@
 
 import { createSupabaseServerClient } from "./supabase-server";
 import { createSupabaseAdminClient } from "./supabase-admin";
+import { headers } from "next/headers";
+import { normalizeAdminRole } from "@/lib/authPermissions";
+import { logger } from "@/lib/logger";
 import {
   type AdminUser,
   type AuthenticatedUser,
@@ -14,6 +17,30 @@ const VALID_ADMIN_ROLES: AdminRole[] = [
   "moderator",
   "support",
 ];
+
+const EXCLUDED_PATHS = ["/auth", "/unauthorized"] as const;
+
+const resolvePathnameFromHeaders = async (): Promise<string | undefined> => {
+  const headerStore = await headers();
+  const rawPath =
+    headerStore.get("x-pathname") ??
+    headerStore.get("x-invoke-path") ??
+    headerStore.get("next-url") ??
+    headerStore.get("x-url");
+
+  if (!rawPath) return undefined;
+
+  try {
+    return new URL(rawPath, "http://localhost").pathname;
+  } catch {
+    return rawPath.split("?")[0];
+  }
+};
+
+const shouldResolveRoleForPath = (pathname?: string) => {
+  if (!pathname) return true;
+  return !EXCLUDED_PATHS.some((path) => pathname.startsWith(path));
+};
 
 /**
  * Returns the authenticated admin user with role information
@@ -74,4 +101,44 @@ export async function requireAdmin(): Promise<AuthenticatedUser> {
   }
 
   return user;
+}
+
+export async function getAdminRoleForLayout(): Promise<AdminRole | undefined> {
+  const pathname = await resolvePathnameFromHeaders();
+  const shouldResolveRole = shouldResolveRoleForPath(pathname);
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    logger.warn("Supabase getUser failed in RootLayout", {
+      message: userError.message,
+    });
+  }
+
+  if (!user || !shouldResolveRole) {
+    return undefined;
+  }
+
+  const { data: adminUser, error: adminUserError } = await supabase
+    .from("admin_users")
+    .select("role")
+    .eq("user_id", user.id)
+    .single();
+
+  if (adminUserError) {
+    logger.warn("Admin role lookup failed in RootLayout", {
+      message: adminUserError.message,
+      userId: user.id,
+    });
+  }
+
+  const rawRole =
+    typeof adminUser?.role === "string" ? adminUser.role : undefined;
+  const normalizedRole = normalizeAdminRole(rawRole);
+
+  return normalizedRole as AdminRole | undefined;
 }

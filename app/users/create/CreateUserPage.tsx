@@ -65,7 +65,7 @@ const createUserFormSchema = z.object({
   phone: z.string().optional(),
   role: z.enum([
     "admin",
-    "super-admin",
+    "super_admin",
     "moderator",
     "support",
     "advertiser",
@@ -84,7 +84,7 @@ type CreateUserFormData = z.infer<typeof createUserFormSchema>;
 
 const roleDescriptions: Record<string, string> = {
   admin: "Administrator with full system access",
-  "super-admin": "Super administrator with elevated privileges",
+  super_admin: "Super administrator with elevated privileges",
   moderator: "Content and user moderation access",
   support: "Customer support and assistance access",
   advertiser: "Campaign creation and management access",
