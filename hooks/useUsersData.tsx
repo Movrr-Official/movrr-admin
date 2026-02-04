@@ -42,6 +42,21 @@ export const useUsersData = (filters?: UserFiltersSchema) => {
           );
         }
 
+        if (filters?.dateRange?.from || filters?.dateRange?.to) {
+          const from = filters.dateRange?.from
+            ? new Date(filters.dateRange.from)
+            : null;
+          const to = filters.dateRange?.to
+            ? new Date(filters.dateRange.to)
+            : null;
+          users = users.filter((user) => {
+            const createdAt = new Date(user.createdAt);
+            if (from && createdAt < from) return false;
+            if (to && createdAt > to) return false;
+            return true;
+          });
+        }
+
         if (selectedAdvertiserIds.length > 0) {
           users = users.filter(
             (u) =>

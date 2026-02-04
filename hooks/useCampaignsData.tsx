@@ -91,6 +91,36 @@ export const useCampaignsData = (filters?: CampaignFiltersSchema) => {
         );
       }
 
+      if (filters?.dateRange?.from || filters?.dateRange?.to) {
+        const from = filters.dateRange?.from
+          ? new Date(filters.dateRange.from)
+          : null;
+        const to = filters.dateRange?.to
+          ? new Date(filters.dateRange.to)
+          : null;
+        campaigns = campaigns.filter((c) => {
+          const createdAt = new Date(c.createdAt);
+          if (from && createdAt < from) return false;
+          if (to && createdAt > to) return false;
+          return true;
+        });
+      }
+
+      if (filters?.dateRange?.from || filters?.dateRange?.to) {
+        const from = filters.dateRange?.from
+          ? new Date(filters.dateRange.from)
+          : null;
+        const to = filters.dateRange?.to
+          ? new Date(filters.dateRange.to)
+          : null;
+        campaigns = campaigns.filter((c) => {
+          const createdAt = new Date(c.createdAt);
+          if (from && createdAt < from) return false;
+          if (to && createdAt > to) return false;
+          return true;
+        });
+      }
+
       if (filters?.searchQuery) {
         const query = filters.searchQuery.toLowerCase();
         campaigns = campaigns.filter((c) =>

@@ -19,7 +19,10 @@ const adjustPointsSchema = z.object({
 /**
  * Server action to get reward statistics
  */
-export async function getRewardStats(): Promise<{
+export async function getRewardStats(dateRange?: {
+  from?: Date;
+  to?: Date;
+}): Promise<{
   success: boolean;
   data?: {
     totalPointsAwarded: number;
@@ -61,7 +64,30 @@ export async function getRewardStats(): Promise<{
       return { success: false, error: redemptionError.message };
     }
 
-    const totalPointsAwarded = (transactions ?? []).reduce((sum, txn) => {
+    const rangeEnd = dateRange?.to ? new Date(dateRange.to) : new Date();
+    rangeEnd.setHours(23, 59, 59, 999);
+    const rangeStart = dateRange?.from
+      ? new Date(dateRange.from)
+      : new Date(rangeEnd);
+    if (!dateRange?.from) {
+      rangeStart.setDate(rangeEnd.getDate() - 29);
+    }
+    rangeStart.setHours(0, 0, 0, 0);
+
+    const isInRange = (value?: string | null) => {
+      if (!value) return false;
+      const date = new Date(value);
+      return date >= rangeStart && date <= rangeEnd;
+    };
+
+    const filteredTransactions = (transactions ?? []).filter((txn) =>
+      isInRange(txn.created_at ?? null),
+    );
+    const filteredRedemptions = (redemptions ?? []).filter((redemption) =>
+      isInRange(redemption.requested_at ?? null),
+    );
+
+    const totalPointsAwarded = filteredTransactions.reduce((sum, txn) => {
       const direction = txn.metadata?.adjustment_direction as
         | string
         | undefined;
@@ -69,12 +95,12 @@ export async function getRewardStats(): Promise<{
       return sum + (isDebit ? 0 : Number(txn.points_earned ?? 0));
     }, 0);
 
-    const totalPointsRedeemed = (redemptions ?? []).reduce(
+    const totalPointsRedeemed = filteredRedemptions.reduce(
       (sum, redemption) => sum + Number(redemption.points_spent ?? 0),
       0,
     );
 
-    const totalAdjustmentsDebited = (transactions ?? []).reduce((sum, txn) => {
+    const totalAdjustmentsDebited = filteredTransactions.reduce((sum, txn) => {
       const direction = txn.metadata?.adjustment_direction as
         | string
         | undefined;
@@ -86,7 +112,7 @@ export async function getRewardStats(): Promise<{
     const totalPointsOutstanding = totalPointsAwarded - totalRedeemed;
 
     const pointsByCampaign = new Map<string, number>();
-    (transactions ?? []).forEach((txn) => {
+    filteredTransactions.forEach((txn) => {
       if (!txn.campaign_id) return;
       const direction = txn.metadata?.adjustment_direction as
         | string
@@ -100,7 +126,7 @@ export async function getRewardStats(): Promise<{
     });
 
     const pointsByRider = new Map<string, number>();
-    (transactions ?? []).forEach((txn) => {
+    filteredTransactions.forEach((txn) => {
       const direction = txn.metadata?.adjustment_direction as
         | string
         | undefined;
@@ -110,17 +136,21 @@ export async function getRewardStats(): Promise<{
     });
 
     const dailyMap = new Map<string, { awarded: number; redeemed: number }>();
-    const start = new Date();
-    start.setDate(start.getDate() - 29);
+    const days = Math.max(
+      1,
+      Math.ceil(
+        (rangeEnd.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24),
+      ) + 1,
+    );
 
-    for (let i = 0; i < 30; i += 1) {
-      const date = new Date(start);
-      date.setDate(start.getDate() + i);
+    for (let i = 0; i < days; i += 1) {
+      const date = new Date(rangeStart);
+      date.setDate(rangeStart.getDate() + i);
       const key = date.toISOString().split("T")[0];
       dailyMap.set(key, { awarded: 0, redeemed: 0 });
     }
 
-    (transactions ?? []).forEach((txn) => {
+    filteredTransactions.forEach((txn) => {
       if (!txn.created_at) return;
       const key = new Date(txn.created_at).toISOString().split("T")[0];
       const bucket = dailyMap.get(key);
@@ -136,7 +166,7 @@ export async function getRewardStats(): Promise<{
       }
     });
 
-    (redemptions ?? []).forEach((redemption) => {
+    filteredRedemptions.forEach((redemption) => {
       if (!redemption.requested_at) return;
       const key = new Date(redemption.requested_at).toISOString().split("T")[0];
       const bucket = dailyMap.get(key);
@@ -197,7 +227,7 @@ export async function getRewardStats(): Promise<{
         totalPointsRedeemed: totalRedeemed,
         totalPointsOutstanding,
         totalTransactions:
-          (transactions?.length ?? 0) + (redemptions?.length ?? 0),
+          filteredTransactions.length + filteredRedemptions.length,
         pointsByCampaign: Array.from(pointsByCampaign.entries()).map(
           ([campaignId, points]) => ({
             campaignId,

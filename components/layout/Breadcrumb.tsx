@@ -80,7 +80,7 @@ const generateBreadcrumbs = (
   if (segments.length === 0) {
     return [
       {
-        label: "Dashboard",
+        label: "Overview",
         href: "/",
         isActive: true,
       },
@@ -154,7 +154,7 @@ export default function Breadcrumb() {
                     item.isActive && "text-foreground",
                   )}
                   aria-label="Home"
-                  title="Go to Dashboard"
+                  title="Go to Overview"
                 >
                   <Home className="h-3.5 w-3.5" />
                   <span className="text-xs font-medium">{item.label}</span>

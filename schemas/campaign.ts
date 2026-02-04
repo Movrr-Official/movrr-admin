@@ -115,6 +115,12 @@ export const campaignFiltersSchema = z.object({
   campaignType: z.string().optional(),
   targetAudience: z.string().optional(),
   targetZones: z.array(z.string()).optional(),
+  dateRange: z
+    .object({
+      from: z.date().optional(),
+      to: z.date().optional(),
+    })
+    .optional(),
 });
 
 export const updateCampaignSchema = createCampaignSchema.partial().extend({

@@ -20,6 +20,13 @@ interface RewardFilters {
   endDate?: string;
 }
 
+interface RewardStatsFilters {
+  dateRange?: {
+    from?: Date;
+    to?: Date;
+  };
+}
+
 export const useRewardTransactions = (filters?: RewardFilters) => {
   return useQuery<RewardTransaction[]>({
     queryKey: ["rewardTransactions", filters],
@@ -96,14 +103,28 @@ export const useRiderBalances = () => {
   });
 };
 
-export const useRewardStats = () => {
+export const useRewardStats = (filters?: RewardStatsFilters) => {
   return useQuery({
-    queryKey: ["rewardStats"],
+    queryKey: ["rewardStats", filters],
     queryFn: async () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (shouldUseMockData()) {
-        const transactions = mockRewardTransactions;
+        let transactions = [...mockRewardTransactions];
+        if (filters?.dateRange?.from || filters?.dateRange?.to) {
+          const from = filters.dateRange?.from
+            ? new Date(filters.dateRange.from)
+            : null;
+          const to = filters.dateRange?.to
+            ? new Date(filters.dateRange.to)
+            : null;
+          transactions = transactions.filter((txn) => {
+            const createdAt = new Date(txn.createdAt);
+            if (from && createdAt < from) return false;
+            if (to && createdAt > to) return false;
+            return true;
+          });
+        }
         const totalPointsAwarded = transactions
           .filter((txn) => txn.type === "awarded" || txn.type === "adjusted")
           .reduce((sum, txn) => sum + Math.abs(txn.points), 0);
@@ -160,12 +181,29 @@ export const useRewardStats = () => {
           awarded: number;
           redeemed: number;
         }> = [];
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const rangeEnd = filters?.dateRange?.to
+          ? new Date(filters.dateRange.to)
+          : new Date();
+        rangeEnd.setHours(23, 59, 59, 999);
+        const rangeStart = filters?.dateRange?.from
+          ? new Date(filters.dateRange.from)
+          : new Date(rangeEnd);
 
-        for (let i = 0; i < 30; i++) {
-          const date = new Date(thirtyDaysAgo);
-          date.setDate(date.getDate() + i);
+        if (!filters?.dateRange?.from) {
+          rangeStart.setDate(rangeEnd.getDate() - 29);
+        }
+        rangeStart.setHours(0, 0, 0, 0);
+
+        const days = Math.max(
+          1,
+          Math.ceil(
+            (rangeEnd.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24),
+          ) + 1,
+        );
+
+        for (let i = 0; i < days; i++) {
+          const date = new Date(rangeStart);
+          date.setDate(rangeStart.getDate() + i);
           const dateStr = date.toISOString().split("T")[0];
 
           const dayTransactions = transactions.filter((txn) =>
@@ -193,7 +231,7 @@ export const useRewardStats = () => {
         };
       }
 
-      const result = await getRewardStats();
+      const result = await getRewardStats(filters?.dateRange);
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to fetch reward stats");
       }
