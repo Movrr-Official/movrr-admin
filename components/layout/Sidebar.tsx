@@ -16,6 +16,7 @@ import {
   Coins,
   Settings,
   KanbanSquare,
+  Bell,
 } from "lucide-react";
 import { FaRoute } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -97,7 +98,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
   const navigation: NavItem[] = useMemo(
     () => [
       {
-        name: "Dashboard",
+        name: "Overview",
         href: "/",
         icon: LayoutDashboard,
         roles: ["admin", "super_admin"],
@@ -167,6 +168,13 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         href: "/rewards",
         icon: Coins,
         roles: ["admin", "super_admin"],
+        badge: null,
+      },
+      {
+        name: "Notifications",
+        href: "/notifications",
+        icon: Bell,
+        roles: ["admin", "super_admin", "moderator", "support"],
         badge: null,
       },
       {

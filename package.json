@@ -79,13 +79,13 @@
     "zod": "3.25.67"
   },
   "devDependencies": {
-    "@react-email/preview-server": "^4.2.8",
+    "@react-email/preview-server": "^5.2.5",
     "@tailwindcss/postcss": "^4.1.9",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5",
-    "react-email": "4.2.8",
+    "react-email": "^5.2.5",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"

@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RouteDetailsCard } from "@/components/routes/RouteDetailsCard";
 import { AvailableRidersCard } from "@/components/routes/AvailableRidersCard";
 import { RouteTemplatesPanel } from "@/components/routes/RouteTemplatesPanel";
-import { PageHeader } from "@/components/PageHeader";
 import { useState } from "react";
 import { useCampaignsData } from "@/hooks/useCampaignsData";
 import { getCampaignHotZones, getCampaignZones } from "@/app/actions/campaigns";

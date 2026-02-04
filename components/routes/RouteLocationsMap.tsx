@@ -455,9 +455,7 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
     >
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-lg font-bold">
-            Live Rider Locations
-          </CardTitle>
+          <CardTitle className="text-lg font-bold">Live Route Map</CardTitle>
           <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">
             {useMockData
               ? `Mock · ${locations.length} active`
@@ -603,120 +601,114 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
             </MapGL>
           )}
 
-          {useMockData && (
-            <>
-              <div className="absolute left-4 top-4 z-10 flex flex-col gap-3 pointer-events-auto">
-                <div className="bg-card rounded-lg shadow-lg p-2 flex space-x-1">
-                  <Button
-                    variant={
-                      mapMode === "campaign-zones" ? "default" : "outline"
-                    }
-                    size="sm"
-                    onClick={() => setMapMode("campaign-zones")}
-                  >
-                    <Navigation className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={mapMode === "hot-zones" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setMapMode("hot-zones")}
-                  >
-                    <Target className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={mapMode === "hybrid" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setMapMode("hybrid")}
-                  >
-                    <Layers className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="bg-card rounded-lg shadow-lg p-2 flex flex-col space-y-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleZoom(zoom + 1)}
-                  >
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleZoom(zoom - 1)}
-                  >
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleResetView}>
-                    <RefreshCcw className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+          <div className="absolute left-4 top-4 z-10 flex flex-col gap-3 pointer-events-auto">
+            <div className="bg-card rounded-lg shadow-lg p-2 flex space-x-1">
+              <Button
+                variant={mapMode === "campaign-zones" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMapMode("campaign-zones")}
+              >
+                <Navigation className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={mapMode === "hot-zones" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMapMode("hot-zones")}
+              >
+                <Target className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={mapMode === "hybrid" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMapMode("hybrid")}
+              >
+                <Layers className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="bg-card rounded-lg shadow-lg p-2 flex flex-col space-y-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleZoom(zoom + 1)}
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleZoom(zoom - 1)}
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleResetView}>
+                <RefreshCcw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-              <div className="absolute right-4 top-4 w-64 rounded-2xl bg-background/95 shadow-lg border border-border p-4 pointer-events-auto">
-                <h5 className="text-sm font-semibold text-foreground mb-3">
-                  Routes
-                </h5>
-                <div className="space-y-3">
-                  {routeOverlayItems.map((route) => (
-                    <div
-                      key={route.id}
+          <div className="absolute right-4 top-4 w-64 rounded-2xl bg-background/95 shadow-lg border border-border p-4 pointer-events-auto">
+            <h5 className="text-sm font-semibold text-foreground mb-3">
+              Routes
+            </h5>
+            <div className="space-y-3">
+              {routeOverlayItems.map((route) => (
+                <div
+                  key={route.id}
+                  className={
+                    "rounded-xl px-3 py-2 flex items-start justify-between gap-3 cursor-pointer transition " +
+                    (route.id === selectedRouteId
+                      ? "ring-2 ring-emerald-300/70"
+                      : "") +
+                    (route.status === "in-progress"
+                      ? " bg-emerald-500 text-white"
+                      : route.status === "assigned"
+                        ? " bg-blue-500 text-white"
+                        : " bg-muted/40 text-foreground")
+                  }
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleSelectRoute(route.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleSelectRoute(route.id);
+                    }
+                  }}
+                >
+                  <div>
+                    <p className="text-sm font-semibold leading-tight">
+                      {route.name}
+                    </p>
+                    <p
                       className={
-                        "rounded-xl px-3 py-2 flex items-start justify-between gap-3 cursor-pointer transition " +
-                        (route.id === selectedRouteId
-                          ? "ring-2 ring-emerald-300/70"
-                          : "") +
-                        (route.status === "in-progress"
-                          ? " bg-emerald-500 text-white"
-                          : route.status === "assigned"
-                            ? " bg-blue-500 text-white"
-                            : " bg-muted/40 text-foreground")
+                        "text-[11px] " +
+                        (route.status === "in-progress" ||
+                        route.status === "assigned"
+                          ? "text-white/70"
+                          : "text-muted-foreground")
                       }
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleSelectRoute(route.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          handleSelectRoute(route.id);
-                        }
-                      }}
                     >
-                      <div>
-                        <p className="text-sm font-semibold leading-tight">
-                          {route.name}
-                        </p>
-                        <p
-                          className={
-                            "text-[11px] " +
-                            (route.status === "in-progress" ||
-                            route.status === "assigned"
-                              ? "text-white/70"
-                              : "text-muted-foreground")
-                          }
-                        >
-                          {route.city}
-                          {route.updatedAt
-                            ? ` · ${new Date(route.updatedAt).toLocaleTimeString()}`
-                            : ""}
-                        </p>
-                      </div>
-                      <span
-                        className={
-                          "rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap shrink-0 " +
-                          (route.status === "in-progress" ||
-                          route.status === "assigned"
-                            ? "bg-white/20 text-white"
-                            : "bg-white text-foreground")
-                        }
-                      >
-                        {formatStatus(route.status)}
-                      </span>
-                    </div>
-                  ))}
+                      {route.city}
+                      {route.updatedAt
+                        ? ` · ${new Date(route.updatedAt).toLocaleTimeString()}`
+                        : ""}
+                    </p>
+                  </div>
+                  <span
+                    className={
+                      "rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap shrink-0 " +
+                      (route.status === "in-progress" ||
+                      route.status === "assigned"
+                        ? "bg-white/20 text-white"
+                        : "bg-white text-foreground")
+                    }
+                  >
+                    {formatStatus(route.status)}
+                  </span>
                 </div>
-              </div>
-            </>
-          )}
+              ))}
+            </div>
+          </div>
         </div>
 
         {selectedRoute && showRouteDetails && (

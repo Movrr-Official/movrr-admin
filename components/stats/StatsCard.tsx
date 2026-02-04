@@ -197,27 +197,7 @@ export function StatsCard({
         />
       )}
       <CardHeader className={cn("relative z-10", headerSizeClasses[size])}>
-        <div className="flex items-center gap-3">
-          {Icon && (
-            <div
-              className={cn(
-                "group-hover:scale-110 group-hover:rotate-3 transition-all duration-300",
-                isGradient
-                  ? "bg-primary-foreground/15"
-                  : iconBgClasses[effectiveIconBg],
-                iconWrapperSizeClasses[size],
-              )}
-            >
-              <Icon
-                className={cn(
-                  iconSizeClasses[size],
-                  isGradient
-                    ? "text-primary-foreground"
-                    : iconColorClasses[effectiveIconColor],
-                )}
-              />
-            </div>
-          )}
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <CardTitle
               className={cn(
@@ -255,6 +235,26 @@ export function StatsCard({
               )}
             </div>
           </div>
+          {Icon && (
+            <div
+              className={cn(
+                "group-hover:scale-110 group-hover:rotate-3 transition-all duration-300",
+                isGradient
+                  ? "bg-primary-foreground/15"
+                  : iconBgClasses[effectiveIconBg],
+                iconWrapperSizeClasses[size],
+              )}
+            >
+              <Icon
+                className={cn(
+                  iconSizeClasses[size],
+                  isGradient
+                    ? "text-primary-foreground"
+                    : iconColorClasses[effectiveIconColor],
+                )}
+              />
+            </div>
+          )}
         </div>
       </CardHeader>
       {hasContent && (
