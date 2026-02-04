@@ -176,11 +176,6 @@ export default function NotificationsOverview() {
   return (
     <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
       <div className="space-y-6 md:space-y-8">
-        <PageHeader
-          title="Notifications"
-          description="Create targeted updates for riders, advertisers, and partners. Review delivery status and engagement at a glance."
-        />
-
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <StatsCard
             title="Total Sent"
