@@ -64,20 +64,35 @@ export async function getRewardStats(dateRange?: {
       return { success: false, error: redemptionError.message };
     }
 
-    const rangeEnd = dateRange?.to ? new Date(dateRange.to) : new Date();
-    rangeEnd.setHours(23, 59, 59, 999);
-    const rangeStart = dateRange?.from
-      ? new Date(dateRange.from)
-      : new Date(rangeEnd);
-    if (!dateRange?.from) {
-      rangeStart.setDate(rangeEnd.getDate() - 29);
+    let rangeEnd = dateRange?.to ? new Date(dateRange.to) : null;
+    let rangeStart = dateRange?.from ? new Date(dateRange.from) : null;
+
+    if (!rangeStart || !rangeEnd) {
+      const dates: Date[] = [];
+      (transactions ?? []).forEach((txn) => {
+        if (txn.created_at) dates.push(new Date(txn.created_at));
+      });
+      (redemptions ?? []).forEach((redemption) => {
+        if (redemption.requested_at)
+          dates.push(new Date(redemption.requested_at));
+      });
+      if (dates.length) {
+        const times = dates.map((d) => d.getTime());
+        rangeStart = new Date(Math.min(...times));
+        rangeEnd = new Date(Math.max(...times));
+      } else {
+        rangeStart = new Date();
+        rangeEnd = new Date();
+      }
     }
+
     rangeStart.setHours(0, 0, 0, 0);
+    rangeEnd.setHours(23, 59, 59, 999);
 
     const isInRange = (value?: string | null) => {
       if (!value) return false;
       const date = new Date(value);
-      return date >= rangeStart && date <= rangeEnd;
+      return date >= rangeStart! && date <= rangeEnd!;
     };
 
     const filteredTransactions = (transactions ?? []).filter((txn) =>

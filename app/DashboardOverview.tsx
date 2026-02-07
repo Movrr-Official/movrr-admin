@@ -28,7 +28,6 @@ import { useRouteData } from "@/hooks/useRouteData";
 import { useCampaignsData } from "@/hooks/useCampaignsData";
 import { useRewardStats } from "@/hooks/useRewardsData";
 import { useAuditLogsData } from "@/hooks/useAuditLogsData";
-import { shouldUseMockData } from "@/lib/dataSource";
 import {
   ClipboardCheck,
   Users,
@@ -44,10 +43,9 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 
 export default function DashboardOverview() {
-  const useMockData = shouldUseMockData();
   const [selectedRange, setSelectedRange] = useState<
-    "7d" | "30d" | "90d" | "180d" | "365d"
-  >("30d");
+    "all" | "7d" | "30d" | "90d" | "180d" | "365d"
+  >("all");
   const [userGrowthView, setUserGrowthView] = useState<
     "riders" | "advertisers"
   >("riders");
@@ -65,7 +63,8 @@ export default function DashboardOverview() {
     [],
   );
 
-  const dateRange = useMemo(() => {
+  const activeDateRange = useMemo(() => {
+    if (selectedRange === "all") return undefined;
     const end = new Date();
     end.setHours(23, 59, 59, 999);
     const start = new Date(end);
@@ -74,16 +73,104 @@ export default function DashboardOverview() {
     return { from: start, to: end };
   }, [rangeDays, selectedRange]);
 
+  const getDateBounds = (values: Array<string | null | undefined>) => {
+    const dates = values
+      .map((value) => (value ? new Date(value) : null))
+      .filter((value): value is Date =>
+        value ? !Number.isNaN(value.getTime()) : false,
+      );
+
+    if (!dates.length) return null;
+    const times = dates.map((date) => date.getTime());
+    return {
+      from: new Date(Math.min(...times)),
+      to: new Date(Math.max(...times)),
+    };
+  };
+
+  const getFallbackRange = (months: number) => {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const start = new Date(end);
+    start.setMonth(end.getMonth() - (months - 1));
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+    return { from: start, to: end };
+  };
+
+  const buildMonthlyBuckets = (from: Date, to: Date) => {
+    const start = new Date(from.getFullYear(), from.getMonth(), 1);
+    const end = new Date(to.getFullYear(), to.getMonth(), 1);
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      year: "2-digit",
+    });
+
+    const buckets: Array<{
+      key: string;
+      label: string;
+      start: Date;
+      end: Date;
+    }> = [];
+    const cursor = new Date(start);
+    while (cursor <= end) {
+      const bucketStart = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+      const bucketEnd = new Date(
+        cursor.getFullYear(),
+        cursor.getMonth() + 1,
+        0,
+      );
+      buckets.push({
+        key: `${bucketStart.getFullYear()}-${String(
+          bucketStart.getMonth() + 1,
+        ).padStart(2, "0")}`,
+        label: formatter.format(bucketStart),
+        start: bucketStart,
+        end: bucketEnd,
+      });
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    return buckets;
+  };
+
+  const buildWeekBuckets = (from: Date, to: Date) => {
+    const start = new Date(from);
+    const end = new Date(to);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    const totalDays =
+      Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000)) + 1;
+    const bucketSize = Math.max(1, Math.ceil(totalDays / 4));
+
+    return Array.from({ length: 4 }).map((_, index) => {
+      const bucketStart = new Date(start);
+      bucketStart.setDate(start.getDate() + index * bucketSize);
+      const bucketEnd = new Date(bucketStart);
+      bucketEnd.setDate(bucketStart.getDate() + bucketSize - 1);
+      bucketEnd.setHours(23, 59, 59, 999);
+      return {
+        label: `Week ${index + 1}`,
+        start: bucketStart,
+        end: bucketEnd,
+      };
+    });
+  };
+
   const {
     data: userStats,
     isLoading: userStatsLoading,
     isError: userStatsError,
-  } = useUserStats({ dateRange });
+  } = useUserStats(
+    activeDateRange ? { dateRange: activeDateRange } : undefined,
+  );
   const {
     data: users,
     isLoading: usersLoading,
     isError: usersError,
-  } = useUsersData({ dateRange });
+  } = useUsersData(
+    activeDateRange ? { dateRange: activeDateRange } : undefined,
+  );
   const {
     data: riders,
     isLoading: ridersLoading,
@@ -98,26 +185,40 @@ export default function DashboardOverview() {
     data: campaigns,
     isLoading: campaignsLoading,
     isError: campaignsError,
-  } = useCampaignsData({ status: "all", dateRange });
+  } = useCampaignsData(
+    activeDateRange
+      ? { status: "all", dateRange: activeDateRange }
+      : { status: "all" },
+  );
   const {
     data: rewardStats,
     isLoading: rewardStatsLoading,
     isError: rewardStatsError,
-  } = useRewardStats({ dateRange });
+  } = useRewardStats(
+    activeDateRange ? { dateRange: activeDateRange } : undefined,
+  );
   const {
     data: auditLogs = [],
     isLoading: auditLogsLoading,
     isError: auditLogsError,
-  } = useAuditLogsData({ dateRange });
+  } = useAuditLogsData(
+    activeDateRange ? { dateRange: activeDateRange } : undefined,
+  );
 
   const isDateWithinRange = (value?: string | null) => {
     if (!value) return false;
+    if (!activeDateRange) return true;
     const date = new Date(value);
-    return date >= dateRange.from && date <= dateRange.to;
+    return date >= activeDateRange.from && date <= activeDateRange.to;
   };
 
-  const activeCampaigns =
-    campaigns?.filter((campaign) => campaign.status === "active").length ?? 0;
+  const filteredCampaigns = (campaigns ?? []).filter((campaign) =>
+    isDateWithinRange(campaign.startDate),
+  );
+
+  const activeCampaigns = filteredCampaigns.filter(
+    (campaign) => campaign.status === "active",
+  ).length;
   const activeRiders =
     (riders ?? []).filter((rider) => isDateWithinRange(rider.createdAt))
       .length ?? 0;
@@ -129,7 +230,7 @@ export default function DashboardOverview() {
   const statsError =
     userStatsError || ridersError || campaignsError || rewardStatsError;
 
-  const campaignStatusCounts = (campaigns ?? []).reduce(
+  const campaignStatusCounts = filteredCampaigns.reduce(
     (acc, campaign) => {
       acc[campaign.status] = (acc[campaign.status] || 0) + 1;
       return acc;
@@ -153,40 +254,70 @@ export default function DashboardOverview() {
     "Nov",
     "Dec",
   ];
-  const now = new Date();
-  const monthlyBuckets = Array.from({ length: 6 }).map((_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
+
+  const usersCreated = users ?? [];
+  const userGrowthYear = activeDateRange?.to
+    ? activeDateRange.to.getFullYear()
+    : new Date().getFullYear();
+  const userGrowthBuckets = monthLabels.map((label, index) => {
+    if (!activeDateRange) {
+      return {
+        label,
+        monthIndex: index,
+        start: null as Date | null,
+        end: null as Date | null,
+      };
+    }
+    const monthStart = new Date(userGrowthYear, index, 1);
+    const monthEnd = new Date(userGrowthYear, index + 1, 0, 23, 59, 59, 999);
     return {
-      key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`,
-      label: monthLabels[date.getMonth()],
-      date,
+      label,
+      monthIndex: index,
+      start: monthStart,
+      end: monthEnd,
     };
   });
 
-  const usersCreated = users ?? [];
-  const userGrowthBuckets = monthLabels.map((label, index) => {
-    const date = new Date(now.getFullYear(), index, 1);
+  const campaignRange =
+    activeDateRange ??
+    getDateBounds(filteredCampaigns.map((campaign) => campaign.startDate)) ??
+    getFallbackRange(1);
+  const campaignBuckets = buildWeekBuckets(
+    campaignRange.from,
+    campaignRange.to,
+  );
+
+  const routeRange =
+    activeDateRange ??
+    getDateBounds((routes ?? []).map((route) => route.assignedDate)) ??
+    getFallbackRange(6);
+  const routeBuckets = buildMonthlyBuckets(routeRange.from, routeRange.to);
+  const routeMonthlyYear = activeDateRange?.to
+    ? activeDateRange.to.getFullYear()
+    : new Date().getFullYear();
+  const routeMonthlyYearBuckets = monthLabels.map((label, index) => {
+    const monthStart = new Date(routeMonthlyYear, index, 1);
+    const monthEnd = new Date(routeMonthlyYear, index + 1, 0, 23, 59, 59, 999);
     return {
       label,
-      date,
+      start: monthStart,
+      end: monthEnd,
     };
   });
   const buildUserGrowthSeries = (role: "rider" | "advertiser") => {
     return userGrowthBuckets.reduce<Array<{ name: string; value: number }>>(
       (acc, bucket) => {
-        const monthStart = bucket.date;
-        const monthEnd = new Date(
-          monthStart.getFullYear(),
-          monthStart.getMonth() + 1,
-          0,
-        );
         const createdCount = usersCreated.filter((user) => {
+          if (user.role !== role) return false;
           const createdAt = new Date(user.createdAt);
-          return (
-            user.role === role &&
-            createdAt >= monthStart &&
-            createdAt <= monthEnd
-          );
+          if (Number.isNaN(createdAt.getTime())) return false;
+          if (!activeDateRange) {
+            return createdAt.getMonth() === bucket.monthIndex;
+          }
+          const monthStart = bucket.start;
+          const monthEnd = bucket.end;
+          if (!monthStart || !monthEnd) return false;
+          return createdAt >= monthStart && createdAt <= monthEnd;
         }).length;
         const previousTotal = acc.length ? acc[acc.length - 1].value : 0;
         acc.push({ name: bucket.label, value: previousTotal + createdCount });
@@ -199,17 +330,18 @@ export default function DashboardOverview() {
   const userGrowthAdvertisers = buildUserGrowthSeries("advertiser");
   const userGrowthSeries =
     userGrowthView === "riders" ? userGrowthRiders : userGrowthAdvertisers;
-  const userGrowthData = monthlyBuckets.reduce<
+  const userGrowthData = userGrowthBuckets.reduce<
     Array<{ name: string; users: number }>
   >((acc, bucket) => {
-    const monthStart = bucket.date;
-    const monthEnd = new Date(
-      monthStart.getFullYear(),
-      monthStart.getMonth() + 1,
-      0,
-    );
     const createdCount = usersCreated.filter((user) => {
       const createdAt = new Date(user.createdAt);
+      if (Number.isNaN(createdAt.getTime())) return false;
+      if (!activeDateRange) {
+        return createdAt.getMonth() === bucket.monthIndex;
+      }
+      const monthStart = bucket.start;
+      const monthEnd = bucket.end;
+      if (!monthStart || !monthEnd) return false;
       return createdAt >= monthStart && createdAt <= monthEnd;
     }).length;
     const previousTotal = acc.length ? acc[acc.length - 1].users : 0;
@@ -217,20 +349,12 @@ export default function DashboardOverview() {
     return acc;
   }, []);
 
-  const campaignPerformanceData = monthlyBuckets.map((bucket) => {
-    const monthStart = bucket.date;
-    const monthEnd = new Date(
-      monthStart.getFullYear(),
-      monthStart.getMonth() + 1,
-      0,
-    );
-    const monthlyCampaigns = (campaigns ?? []).filter((campaign) => {
+  const campaignPerformanceData = campaignBuckets.map((bucket) => {
+    const monthStart = bucket.start;
+    const monthEnd = bucket.end;
+    const monthlyCampaigns = filteredCampaigns.filter((campaign) => {
       const startDate = new Date(campaign.startDate);
-      return (
-        startDate >= monthStart &&
-        startDate <= monthEnd &&
-        isDateWithinRange(campaign.startDate)
-      );
+      return startDate >= monthStart && startDate <= monthEnd;
     });
     const impressions = monthlyCampaigns.reduce(
       (sum, campaign) => sum + (campaign.impressions ?? 0),
@@ -243,13 +367,11 @@ export default function DashboardOverview() {
     return { name: bucket.label, impressions, revenue };
   });
 
-  const campaignPerformanceChartData = campaignPerformanceData
-    .slice(-4)
-    .map((item, index) => ({
-      name: `Week ${index + 1}`,
-      impressions: item.impressions,
-      engagements: item.revenue,
-    }));
+  const campaignPerformanceChartData = campaignPerformanceData.map((item) => ({
+    name: item.name,
+    impressions: item.impressions,
+    engagements: item.revenue,
+  }));
   const campaignPerformanceMax = campaignPerformanceChartData.reduce(
     (max, item) => Math.max(max, item.impressions, item.engagements),
     0,
@@ -259,27 +381,24 @@ export default function DashboardOverview() {
     Math.ceil(campaignPerformanceMax / 5000) * 5000,
   );
 
-  const pointsTrendData = (() => {
-    const trends = rewardStats?.dailyTrends ?? [];
-    const monthly = Array.from({ length: 12 }).map(() => ({
-      awarded: 0,
-      redeemed: 0,
-    }));
-
-    trends.forEach((trend) => {
+  const pointsYear = activeDateRange?.to
+    ? activeDateRange.to.getFullYear()
+    : new Date().getFullYear();
+  const pointsTrendData = monthLabels.map((label, index) => {
+    const monthStart = new Date(pointsYear, index, 1);
+    const monthEnd = new Date(pointsYear, index + 1, 0, 23, 59, 59, 999);
+    const trends = (rewardStats?.dailyTrends ?? []).filter((trend) => {
       const date = new Date(trend.date);
-      const monthIndex = date.getMonth();
-      if (Number.isNaN(monthIndex)) return;
-      monthly[monthIndex].awarded += trend.awarded;
-      monthly[monthIndex].redeemed += trend.redeemed;
+      return date >= monthStart && date <= monthEnd;
     });
-
-    return monthLabels.map((label, index) => ({
+    const awarded = trends.reduce((sum, trend) => sum + trend.awarded, 0);
+    const redeemed = trends.reduce((sum, trend) => sum + trend.redeemed, 0);
+    return {
       name: label,
-      awarded: monthly[index].awarded,
-      redeemed: monthly[index].redeemed,
-    }));
-  })();
+      awarded,
+      redeemed,
+    };
+  });
 
   const pointsChartMax = pointsTrendData.reduce(
     (max, item) => Math.max(max, item.awarded, item.redeemed),
@@ -313,13 +432,9 @@ export default function DashboardOverview() {
     .map((_, index) => pointsDomainMin + index * pointsAxisStep)
     .filter((value) => value !== 0);
 
-  const routeCompletionData = monthlyBuckets.map((bucket) => {
-    const monthStart = bucket.date;
-    const monthEnd = new Date(
-      monthStart.getFullYear(),
-      monthStart.getMonth() + 1,
-      0,
-    );
+  const routeCompletionData = routeBuckets.map((bucket) => {
+    const monthStart = bucket.start;
+    const monthEnd = bucket.end;
     const monthlyRoutes = (routes ?? []).filter((route) => {
       const assigned = route.assignedDate ? new Date(route.assignedDate) : null;
       return assigned
@@ -344,7 +459,9 @@ export default function DashboardOverview() {
   const routeCompletionWeeklyData = (() => {
     const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const startOfWeek = (() => {
-      const date = new Date();
+      const date = activeDateRange?.to
+        ? new Date(activeDateRange.to)
+        : new Date();
       const day = date.getDay();
       const diff = (day + 6) % 7;
       date.setHours(0, 0, 0, 0);
@@ -383,7 +500,7 @@ export default function DashboardOverview() {
   })();
 
   const routeCompletionDailyData = (() => {
-    const now = new Date();
+    const now = activeDateRange?.to ? new Date(activeDateRange.to) : new Date();
     const start = new Date(now);
     start.setHours(0, 0, 0, 0);
 
@@ -423,31 +540,34 @@ export default function DashboardOverview() {
     });
   })();
 
-  const routeCompletionMonthlyYearData = monthLabels.map((label, index) => {
-    const monthStart = new Date(now.getFullYear(), index, 1);
-    const monthEnd = new Date(now.getFullYear(), index + 1, 0);
-    monthEnd.setHours(23, 59, 59, 999);
+  const routeCompletionMonthlyYearData = routeMonthlyYearBuckets.map(
+    (bucket) => {
+      const monthStart = bucket.start;
+      const monthEnd = bucket.end;
 
-    const monthlyRoutes = (routes ?? []).filter((route) => {
-      const assigned = route.assignedDate ? new Date(route.assignedDate) : null;
-      return assigned
-        ? assigned >= monthStart &&
-            assigned <= monthEnd &&
-            isDateWithinRange(route.assignedDate)
-        : false;
-    });
+      const monthlyRoutes = (routes ?? []).filter((route) => {
+        const assigned = route.assignedDate
+          ? new Date(route.assignedDate)
+          : null;
+        return assigned
+          ? assigned >= monthStart &&
+              assigned <= monthEnd &&
+              isDateWithinRange(route.assignedDate)
+          : false;
+      });
 
-    const completed = monthlyRoutes.filter(
-      (route) => route.status === "completed",
-    ).length;
-    const total = monthlyRoutes.length;
-    const completionRate = total ? Math.round((completed / total) * 100) : 0;
+      const completed = monthlyRoutes.filter(
+        (route) => route.status === "completed",
+      ).length;
+      const total = monthlyRoutes.length;
+      const completionRate = total ? Math.round((completed / total) * 100) : 0;
 
-    return {
-      name: label,
-      completionRate,
-    };
-  });
+      return {
+        name: bucket.label,
+        completionRate,
+      };
+    },
+  );
 
   const routeCompletionChartData =
     routeCompletionView === "weekly"
@@ -541,9 +661,13 @@ export default function DashboardOverview() {
           actions={[
             {
               type: "select",
-              label: "Last 30 days",
+              label:
+                selectedRange === "all"
+                  ? "All time"
+                  : `Last ${rangeDays[selectedRange]} days`,
               placeholder: "Select range",
               options: [
+                { label: "All time", value: "all" },
                 { label: "Last 7 days", value: "7d" },
                 { label: "Last 30 days", value: "30d" },
                 { label: "Last 90 days", value: "90d" },
@@ -553,7 +677,7 @@ export default function DashboardOverview() {
               value: selectedRange,
               onValueChange: (value: string) =>
                 setSelectedRange(
-                  value as "7d" | "30d" | "90d" | "180d" | "365d",
+                  value as "all" | "7d" | "30d" | "90d" | "180d" | "365d",
                 ),
             },
             {

@@ -181,18 +181,29 @@ export const useRewardStats = (filters?: RewardStatsFilters) => {
           awarded: number;
           redeemed: number;
         }> = [];
-        const rangeEnd = filters?.dateRange?.to
+        let rangeEnd = filters?.dateRange?.to
           ? new Date(filters.dateRange.to)
-          : new Date();
-        rangeEnd.setHours(23, 59, 59, 999);
-        const rangeStart = filters?.dateRange?.from
+          : null;
+        let rangeStart = filters?.dateRange?.from
           ? new Date(filters.dateRange.from)
-          : new Date(rangeEnd);
+          : null;
 
-        if (!filters?.dateRange?.from) {
-          rangeStart.setDate(rangeEnd.getDate() - 29);
+        if (!rangeStart || !rangeEnd) {
+          const dates = transactions
+            .map((txn) => new Date(txn.createdAt))
+            .filter((date) => !Number.isNaN(date.getTime()));
+          if (dates.length) {
+            const times = dates.map((date) => date.getTime());
+            rangeStart = new Date(Math.min(...times));
+            rangeEnd = new Date(Math.max(...times));
+          } else {
+            rangeStart = new Date();
+            rangeEnd = new Date();
+          }
         }
+
         rangeStart.setHours(0, 0, 0, 0);
+        rangeEnd.setHours(23, 59, 59, 999);
 
         const days = Math.max(
           1,

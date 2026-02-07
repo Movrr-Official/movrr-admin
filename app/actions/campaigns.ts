@@ -165,11 +165,11 @@ export async function getCampaigns(
     }
 
     if (filters?.dateRange?.from) {
-      query = query.gte("created_at", filters.dateRange.from.toISOString());
+      query = query.gte("end_date", filters.dateRange.from.toISOString());
     }
 
     if (filters?.dateRange?.to) {
-      query = query.lte("created_at", filters.dateRange.to.toISOString());
+      query = query.lte("start_date", filters.dateRange.to.toISOString());
     }
 
     if (allowedAdvertiserIds && allowedAdvertiserIds.length > 0) {
