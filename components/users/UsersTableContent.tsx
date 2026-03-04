@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { ActiveFiltersDisplay } from "../filters/ActiveFiltersDisplay";
@@ -62,6 +62,28 @@ export default function UsersTableContent({
     activeFilterCount,
     filterConfig,
   } = useDataTable();
+
+  useEffect(() => {
+    if (!selectedUser || !isDrawerOpen) return;
+
+    const latestUser = users.find((user) => user.id === selectedUser.id);
+    if (!latestUser) {
+      setIsDrawerOpen(false);
+      setSelectedUser(null);
+      return;
+    }
+
+    const hasChanged =
+      latestUser.updatedAt !== selectedUser.updatedAt ||
+      latestUser.status !== selectedUser.status ||
+      latestUser.role !== selectedUser.role ||
+      latestUser.name !== selectedUser.name ||
+      latestUser.email !== selectedUser.email;
+
+    if (hasChanged) {
+      setSelectedUser(latestUser);
+    }
+  }, [users, selectedUser, isDrawerOpen]);
 
   // Handle user row click - open detail drawer
   const handleRowClick = (user: User) => {

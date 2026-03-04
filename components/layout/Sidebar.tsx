@@ -17,6 +17,7 @@ import {
   Settings,
   KanbanSquare,
   Bell,
+  Building2,
 } from "lucide-react";
 import { FaRoute } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -53,6 +54,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
   const {
     totalWaitlist,
     totalUsers,
+    totalAdvertisers,
     totalCampaigns,
     totalRoutes,
     isLoading,
@@ -138,6 +140,19 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
+        name: "Advertisers",
+        href: "/advertisers",
+        icon: Building2,
+        roles: ["admin", "super_admin"],
+        badge: (
+          <CountDisplay
+            count={totalAdvertisers}
+            isLoading={isLoading}
+            isError={isError}
+          />
+        ),
+      },
+      {
         name: "Campaigns",
         href: "/campaigns",
         icon: Megaphone,
@@ -189,6 +204,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
       isError,
       isLoading,
       totalCampaigns,
+      totalAdvertisers,
       totalRoutes,
       totalUsers,
       totalWaitlist,

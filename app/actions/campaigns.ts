@@ -260,7 +260,17 @@ export async function getCampaigns(
         daysActive: [],
         hoursActive: [],
         assets: [],
-        deliveryMode: "manual",
+        deliveryMode:
+          campaign.requirements &&
+          typeof campaign.requirements === "object" &&
+          "deliveryMode" in campaign.requirements &&
+          ["manual", "automated"].includes(
+            String((campaign.requirements as Record<string, unknown>).deliveryMode),
+          )
+            ? (String(
+                (campaign.requirements as Record<string, unknown>).deliveryMode,
+              ) as Campaign["deliveryMode"])
+            : "manual",
         creativeAssets: toCreativeAssets(campaign.creative_assets),
         complianceStatus: "pending",
         _count: {
@@ -329,6 +339,8 @@ export async function createCampaign(
       budget: validatedData.budget,
       start_date: validatedData.startDate,
       end_date: validatedData.endDate,
+      visibility_target:
+        data.impressionGoal !== undefined ? String(data.impressionGoal) : null,
       impressions: 0,
       clicks: 0,
       conversions: 0,
@@ -336,6 +348,9 @@ export async function createCampaign(
       campaign_type: mapUiCampaignTypeToDb(data.campaignType),
       target_zones: data.targetZones || [],
       vehicle_type_required: data.vehicleTypeRequired || "bike",
+      requirements: data.deliveryMode
+        ? { deliveryMode: data.deliveryMode }
+        : undefined,
       creative_assets: [],
       lifecycle_status: "draft",
       created_at: new Date().toISOString(),
@@ -377,14 +392,7 @@ export async function createCampaign(
  * Server action to update campaign information
  */
 export async function updateCampaign(
-  data: z.infer<typeof updateCampaignSchema> & {
-    advertiserId?: string;
-    campaignType?: "destination_ride" | "swarm";
-    targetZones?: string[];
-    vehicleTypeRequired?: "bike" | "e-bike" | "cargo-bike";
-    deliveryMode?: "manual" | "automated";
-    status?: z.infer<typeof campaignStatusSchema>;
-  },
+  data: z.infer<typeof updateCampaignSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await requireAdmin();
@@ -405,15 +413,36 @@ export async function updateCampaign(
       updateData.start_date = validatedData.startDate;
     if (validatedData.endDate !== undefined)
       updateData.end_date = validatedData.endDate;
-    if (data.advertiserId !== undefined)
-      updateData.advertiser_id = data.advertiserId;
-    if (data.campaignType !== undefined)
-      updateData.campaign_type = mapUiCampaignTypeToDb(data.campaignType);
-    if (data.targetZones !== undefined)
-      updateData.target_zones = data.targetZones;
-    if (data.vehicleTypeRequired !== undefined)
-      updateData.vehicle_type_required = data.vehicleTypeRequired;
-    if (data.status !== undefined) updateData.lifecycle_status = data.status;
+    if (validatedData.impressionGoal !== undefined)
+      updateData.visibility_target = String(validatedData.impressionGoal);
+    if (validatedData.advertiserId !== undefined)
+      updateData.advertiser_id = validatedData.advertiserId;
+    if (validatedData.campaignType !== undefined)
+      updateData.campaign_type = mapUiCampaignTypeToDb(validatedData.campaignType);
+    if (validatedData.targetZones !== undefined)
+      updateData.target_zones = validatedData.targetZones;
+    if (validatedData.vehicleTypeRequired !== undefined)
+      updateData.vehicle_type_required = validatedData.vehicleTypeRequired;
+    if (validatedData.status !== undefined)
+      updateData.lifecycle_status = validatedData.status;
+    if (validatedData.deliveryMode !== undefined) {
+      const { data: existingCampaign } = await supabaseAdmin
+        .from("campaign")
+        .select("requirements")
+        .eq("id", validatedData.id)
+        .maybeSingle();
+
+      const existingRequirements =
+        existingCampaign?.requirements &&
+        typeof existingCampaign.requirements === "object"
+          ? (existingCampaign.requirements as Record<string, unknown>)
+          : {};
+
+      updateData.requirements = {
+        ...existingRequirements,
+        deliveryMode: validatedData.deliveryMode,
+      };
+    }
 
     const { error } = await supabaseAdmin
       .from("campaign")

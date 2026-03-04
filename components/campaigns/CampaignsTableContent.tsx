@@ -72,6 +72,30 @@ export default function CampaignsTableContent({
     filterConfig,
   } = useDataTable();
 
+  useEffect(() => {
+    if (!selectedCampaign || !isDrawerOpen) return;
+
+    const latestCampaign = campaigns.find(
+      (campaign) => campaign.id === selectedCampaign.id,
+    );
+    if (!latestCampaign) {
+      setIsDrawerOpen(false);
+      setSelectedCampaign(null);
+      return;
+    }
+
+    const hasChanged =
+      latestCampaign.updatedAt !== selectedCampaign.updatedAt ||
+      latestCampaign.status !== selectedCampaign.status ||
+      latestCampaign.name !== selectedCampaign.name ||
+      latestCampaign.budget !== selectedCampaign.budget ||
+      latestCampaign.impressionGoal !== selectedCampaign.impressionGoal;
+
+    if (hasChanged) {
+      setSelectedCampaign(latestCampaign);
+    }
+  }, [campaigns, selectedCampaign, isDrawerOpen]);
+
   // Handle campaign row click - open detail drawer
   const handleRowClick = useCallback((campaign: Campaign) => {
     setSelectedCampaign(campaign);

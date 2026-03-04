@@ -9,3 +9,4 @@ export * from "./route";
 export * from "./shared";
 export * from "./user";
 export * from "./notification";
+export * from "./advertiser";

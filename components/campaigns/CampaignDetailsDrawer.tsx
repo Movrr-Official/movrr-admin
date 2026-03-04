@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import {
   X,
   Calendar,
@@ -24,9 +26,8 @@ import {
   PauseCircle,
   Edit,
   Save,
+  Plus,
   Loader2,
-  UserPlus,
-  UserMinus,
   RefreshCw,
   Copy,
   Trash2,
@@ -48,6 +49,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -82,10 +84,13 @@ import {
   deleteCampaign,
   duplicateCampaign,
 } from "@/app/actions/campaigns";
+import {
+  getAdvertiserOptions,
+} from "@/app/actions/advertisers";
 
 const editCampaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  brand: z.string().optional(),
+  advertiserId: z.string().min(1, "Advertiser is required"),
   description: z.string().optional(),
   budget: z.number().min(0, "Budget must be positive"),
   startDate: z.string().min(1, "Start date is required"),
@@ -112,6 +117,7 @@ export function CampaignDetailsDrawer({
   onOpenChange,
   onCampaignUpdate,
 }: CampaignDetailsDrawerProps) {
+  const router = useRouter();
   const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -124,7 +130,7 @@ export function CampaignDetailsDrawer({
     resolver: zodResolver(editCampaignSchema),
     defaultValues: {
       name: "",
-      brand: "",
+      advertiserId: "",
       description: "",
       budget: 0,
       startDate: "",
@@ -136,6 +142,19 @@ export function CampaignDetailsDrawer({
       deliveryMode: "manual",
     },
   });
+
+  const { data: advertisers = [], isLoading: advertisersLoading } =
+    useQuery({
+      queryKey: ["advertiser-profile-options"],
+      queryFn: async () => {
+        const result = await getAdvertiserOptions();
+        if (!result.success || !result.data) {
+          throw new Error(result.error || "Failed to load advertisers");
+        }
+        return result.data;
+      },
+      enabled: open,
+    });
 
   // Reset form when campaign changes or edit mode is enabled
   useEffect(() => {
@@ -153,7 +172,7 @@ export function CampaignDetailsDrawer({
 
       form.reset({
         name: campaign.name,
-        brand: campaign.brand || "",
+        advertiserId: campaign.advertiserId,
         description: campaign.description || "",
         budget: campaign.budget,
         startDate: formatDateForInput(campaign.startDate),
@@ -186,10 +205,12 @@ export function CampaignDetailsDrawer({
       const result = await updateCampaign({
         id: campaign.id,
         name: data.name,
+        advertiserId: data.advertiserId,
         description: data.description,
         budget: data.budget,
         startDate: startDateISO,
         endDate: endDateISO,
+        impressionGoal: data.impressionGoal,
         campaignType: data.campaignType,
         targetZones: data.targetZones,
         vehicleTypeRequired: data.vehicleTypeRequired,
@@ -219,6 +240,13 @@ export function CampaignDetailsDrawer({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddAdvertiser = () => {
+    onOpenChange(false);
+    router.push(
+      `/advertisers/create?returnTo=${encodeURIComponent("/campaigns")}`,
+    );
   };
 
   const handleCancel = () => {
@@ -466,6 +494,9 @@ export function CampaignDetailsDrawer({
                   {isEditMode ? (
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+                        <p className="text-xs text-muted-foreground">
+                          Brand is managed at the advertiser level and is read-only here.
+                        </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <FormField
                             control={form.control}
@@ -476,23 +507,6 @@ export function CampaignDetailsDrawer({
                                 <FormControl>
                                   <Input
                                     placeholder="Campaign Name"
-                                    className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="brand"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-sm font-semibold">Brand</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Brand Name"
                                     className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
                                     {...field}
                                   />
@@ -570,6 +584,73 @@ export function CampaignDetailsDrawer({
                                     {...field}
                                   />
                                 </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="advertiserId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center justify-between gap-3">
+                                  <FormLabel className="text-sm font-semibold flex items-center gap-2">
+                                    Advertiser{" "}
+                                    <span className="text-destructive">*</span>
+                                  </FormLabel>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleAddAdvertiser}
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add New
+                                  </Button>
+                                </div>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                  disabled={advertisersLoading}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                      <SelectValue
+                                        placeholder={
+                                          advertisersLoading
+                                            ? "Loading advertisers..."
+                                            : "Select advertiser"
+                                        }
+                                      />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {advertisers.length > 0 ? (
+                                      advertisers.map((advertiser) => (
+                                        <SelectItem
+                                          key={advertiser.id}
+                                          value={advertiser.id}
+                                        >
+                                          <div className="flex flex-col items-start">
+                                            <span>{advertiser.label}</span>
+                                            {advertiser.email && (
+                                              <span className="text-xs text-muted-foreground">
+                                                {advertiser.email}
+                                              </span>
+                                            )}
+                                          </div>
+                                        </SelectItem>
+                                      ))
+                                    ) : (
+                                      <div className="px-2 py-3 text-sm text-muted-foreground">
+                                        No advertisers available. Add a new advertiser.
+                                      </div>
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                                <FormDescription className="text-xs">
+                                  Select an advertiser profile for this campaign.
+                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}

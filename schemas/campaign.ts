@@ -125,6 +125,13 @@ export const campaignFiltersSchema = z.object({
 
 export const updateCampaignSchema = createCampaignSchema.partial().extend({
   id: z.string(),
+  advertiserId: z.string().optional(),
+  campaignType: campaignTypeSchema.optional(),
+  targetZones: z.array(z.string()).optional(),
+  vehicleTypeRequired: z.enum(["bike", "e-bike", "cargo-bike"]).optional(),
+  deliveryMode: z.enum(["manual", "automated"]).optional(),
+  status: campaignStatusSchema.optional(),
+  impressionGoal: z.number().min(0).optional(),
 });
 
 export type Campaign = z.infer<typeof campaignSchema>;

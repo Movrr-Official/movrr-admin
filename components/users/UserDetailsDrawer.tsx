@@ -124,6 +124,70 @@ export function UserDetailsDrawer({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!open || !user || isEditMode) {
+      if (!open) {
+        setActivityLogs([]);
+        setRoutes([]);
+        setCampaigns([]);
+        setRewardTransactions([]);
+        setPointsBalance(null);
+        setIsLoadingAdditionalData(false);
+      }
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadAdditionalData = async () => {
+      setIsLoadingAdditionalData(true);
+
+      try {
+        const [
+          activityResult,
+          routesResult,
+          campaignsResult,
+          rewardsResult,
+          pointsResult,
+        ] = await Promise.all([
+          getUserActivityLogs(user.id),
+          getUserRoutes(user.id),
+          getUserCampaigns(user.id),
+          getUserRewardTransactions(user.id),
+          getUserPointsBalance(user.id),
+        ]);
+
+        if (!isMounted) return;
+
+        setActivityLogs(activityResult.success ? (activityResult.data ?? []) : []);
+        setRoutes(routesResult.success ? (routesResult.data ?? []) : []);
+        setCampaigns(campaignsResult.success ? (campaignsResult.data ?? []) : []);
+        setRewardTransactions(
+          rewardsResult.success ? (rewardsResult.data ?? []) : [],
+        );
+        setPointsBalance(pointsResult.success ? (pointsResult.data ?? null) : null);
+      } catch (error) {
+        console.error("Load user additional data error:", error);
+        if (!isMounted) return;
+        setActivityLogs([]);
+        setRoutes([]);
+        setCampaigns([]);
+        setRewardTransactions([]);
+        setPointsBalance(null);
+      } finally {
+        if (isMounted) {
+          setIsLoadingAdditionalData(false);
+        }
+      }
+    };
+
+    loadAdditionalData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [open, user, isEditMode]);
+
   const handleSave = async (data: EditUserFormData) => {
     if (!user) return;
 

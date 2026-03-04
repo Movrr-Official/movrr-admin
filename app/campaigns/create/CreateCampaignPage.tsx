@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import {
   Loader2,
   ArrowLeft,
@@ -48,10 +49,14 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/hooks/useToast";
-import { createCampaign } from "@/app/actions/campaigns";
+import {
+  createCampaign,
+} from "@/app/actions/campaigns";
+import {
+  getAdvertiserOptions,
+} from "@/app/actions/advertisers";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useRouteData } from "@/hooks/useRouteData";
-import { useUsersData } from "@/hooks/useUsersData";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -61,7 +66,6 @@ const createCampaignFormSchema = z
       .string()
       .min(1, "Campaign name is required")
       .max(100, "Campaign name must be less than 100 characters"),
-    brand: z.string().optional(),
     description: z.string().optional(),
     budget: z.number().min(0.01, "Budget must be greater than 0"),
     startDate: z.string().min(1, "Start date is required"),
@@ -107,14 +111,21 @@ export default function CreateCampaignPage() {
     "basic",
   );
 
-  // Fetch routes and users data
+  // Fetch routes and advertiser data
   const { data: routes = [], isLoading: routesLoading } = useRouteData();
-  const { data: users = [], isLoading: usersLoading } = useUsersData();
-
-  // Filter advertisers from users
-  const advertisers = useMemo(() => {
-    return users.filter((user) => user.role === "advertiser");
-  }, [users]);
+  const {
+    data: advertisers = [],
+    isLoading: advertisersLoading,
+  } = useQuery({
+    queryKey: ["advertiser-profile-options"],
+    queryFn: async () => {
+      const result = await getAdvertiserOptions();
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to fetch advertisers");
+      }
+      return result.data;
+    },
+  });
 
   // Prepare route options
   const routeOptions = useMemo(() => {
@@ -128,7 +139,6 @@ export default function CreateCampaignPage() {
     resolver: zodResolver(createCampaignFormSchema),
     defaultValues: {
       name: "",
-      brand: "",
       description: "",
       budget: 0,
       startDate: "",
@@ -210,6 +220,12 @@ export default function CreateCampaignPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddAdvertiser = () => {
+    router.push(
+      `/advertisers/create?returnTo=${encodeURIComponent("/campaigns/create")}`,
+    );
   };
 
   const selectedAdvertiser = advertisers.find(
@@ -324,25 +340,14 @@ export default function CreateCampaignPage() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="brand"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-semibold">
-                            Brand
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Brand name (optional)"
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="space-y-2">
+                      <FormLabel className="text-sm font-semibold">
+                        Brand (Advertiser-managed)
+                      </FormLabel>
+                      <div className="h-10 rounded-xl border border-border/50 bg-muted/40 px-3 flex items-center text-sm text-muted-foreground">
+                        Managed from Advertiser settings
+                      </div>
+                    </div>
                   </div>
 
                   <FormField
@@ -388,23 +393,23 @@ export default function CreateCampaignPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="branding">
+                              <SelectItem value="destination_ride">
                                 <div className="flex flex-col">
                                   <span className="font-medium self-start">
-                                    Branding
+                                    Destination Ride
                                   </span>
                                   <span className="text-xs text-muted-foreground">
-                                    Increase brand awareness
+                                    Rider-targeted destination campaign
                                   </span>
                                 </div>
                               </SelectItem>
-                              <SelectItem value="conversion">
+                              <SelectItem value="swarm">
                                 <div className="flex flex-col">
                                   <span className="font-medium">
-                                    Conversion
+                                    Swarm
                                   </span>
                                   <span className="text-xs text-muted-foreground">
-                                    Drive specific actions
+                                    Multi-rider swarm campaign
                                   </span>
                                 </div>
                               </SelectItem>
@@ -419,44 +424,66 @@ export default function CreateCampaignPage() {
                       name="advertiserId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-semibold flex items-center gap-2">
-                            Advertiser{" "}
-                            <span className="text-destructive">*</span>
-                          </FormLabel>
+                          <div className="flex items-center justify-between gap-3">
+                            <FormLabel className="text-sm font-semibold flex items-center gap-2">
+                              Advertiser{" "}
+                              <span className="text-destructive">*</span>
+                            </FormLabel>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleAddAdvertiser}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add New
+                            </Button>
+                          </div>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
-                            disabled={usersLoading}
+                            disabled={advertisersLoading}
                           >
                             <FormControl>
                               <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
                                 <SelectValue
                                   placeholder={
-                                    usersLoading
-                                      ? "Loading..."
+                                    advertisersLoading
+                                      ? "Loading advertisers..."
                                       : "Select advertiser"
                                   }
                                 />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {advertisers.map((advertiser) => (
-                                <SelectItem
-                                  key={advertiser.id}
-                                  value={advertiser.id}
-                                >
-                                  <div className="flex flex-col">
-                                    <span className="font-medium self-start">
-                                      {advertiser.name}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {advertiser.email}
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
+                              {advertisers.length > 0 ? (
+                                advertisers.map((advertiser) => (
+                                  <SelectItem
+                                    key={advertiser.id}
+                                    value={advertiser.id}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium self-start">
+                                        {advertiser.label}
+                                      </span>
+                                      {advertiser.email && (
+                                        <span className="text-xs text-muted-foreground">
+                                          {advertiser.email}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <div className="px-2 py-3 text-sm text-muted-foreground">
+                                  No advertisers available. Add a new advertiser.
+                                </div>
+                              )}
                             </SelectContent>
                           </Select>
+                          <FormDescription className="text-xs">
+                            Select an advertiser profile for this campaign.
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -798,7 +825,9 @@ export default function CreateCampaignPage() {
                         Campaign Type
                       </p>
                       <Badge variant="outline" className="capitalize">
-                        {watchedValues.campaignType}
+                        {watchedValues.campaignType === "destination_ride"
+                          ? "Destination Ride"
+                          : "Swarm"}
                       </Badge>
                     </div>
                     <div className="space-y-2">
@@ -806,7 +835,7 @@ export default function CreateCampaignPage() {
                         Advertiser
                       </p>
                       <p className="text-base font-medium">
-                        {selectedAdvertiser?.name || "—"}
+                        {selectedAdvertiser?.label || "—"}
                       </p>
                     </div>
                     <div className="space-y-2">

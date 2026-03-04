@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { ActiveFiltersDisplay } from "../filters/ActiveFiltersDisplay";
@@ -60,6 +60,40 @@ export default function RoutesTableContent({
     activeFilterCount,
     filterConfig,
   } = useDataTable();
+
+  useEffect(() => {
+    if (!selectedRoute || !isDrawerOpen) return;
+
+    const latestRoute = routes.find((route) => route.id === selectedRoute.id);
+    if (!latestRoute) {
+      setIsDrawerOpen(false);
+      setSelectedRoute(null);
+      return;
+    }
+
+    const hasChanged =
+      latestRoute.status !== selectedRoute.status ||
+      latestRoute.completedAt !== selectedRoute.completedAt ||
+      latestRoute.assignedDate !== selectedRoute.assignedDate ||
+      latestRoute.name !== selectedRoute.name ||
+      latestRoute.city !== selectedRoute.city ||
+      latestRoute.country !== selectedRoute.country ||
+      latestRoute.difficulty !== selectedRoute.difficulty ||
+      latestRoute.templateStatus !== selectedRoute.templateStatus ||
+      latestRoute.coverageKm !== selectedRoute.coverageKm ||
+      latestRoute.estimatedDurationMinutes !==
+        selectedRoute.estimatedDurationMinutes ||
+      latestRoute.startLat !== selectedRoute.startLat ||
+      latestRoute.startLng !== selectedRoute.startLng ||
+      latestRoute.endLat !== selectedRoute.endLat ||
+      latestRoute.endLng !== selectedRoute.endLng ||
+      latestRoute.tolerance !== selectedRoute.tolerance ||
+      latestRoute.campaignIdPrimary !== selectedRoute.campaignIdPrimary;
+
+    if (hasChanged) {
+      setSelectedRoute(latestRoute);
+    }
+  }, [routes, selectedRoute, isDrawerOpen]);
 
   // Handle route row click - open detail view
   const handleRowClick = (route: RiderRoute) => {

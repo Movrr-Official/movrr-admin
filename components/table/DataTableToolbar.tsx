@@ -55,12 +55,14 @@ export interface TableToolbarProps {
   additionalActionsLeft?: {
     enabled?: boolean;
     path?: string;
+    onClick?: () => void;
     label?: string;
     icon: React.ComponentType<{ className?: string }>;
   };
   additionalActionsRight?: {
     enabled?: boolean;
     path?: string;
+    onClick?: () => void;
     label?: string;
     icon: React.ComponentType<{ className?: string }>;
   };
@@ -118,12 +120,14 @@ export function DataTableToolbar({
   additionalActionsLeft = {
     enabled: false,
     path: "",
+    onClick: undefined,
     label: "",
     icon: Plus,
   },
   additionalActionsRight = {
     enabled: false,
     path: "",
+    onClick: undefined,
     label: "",
     icon: Plus,
   },
@@ -150,7 +154,8 @@ export function DataTableToolbar({
   const batchExportData = batchExport.dataSources || [];
   const scheduledExportData = scheduledExport.dataSources || [];
 
-  const Icon = additionalActionsLeft.icon || additionalActionsRight.icon;
+  const LeftActionIcon = additionalActionsLeft.icon;
+  const RightActionIcon = additionalActionsRight.icon;
 
   // Don't render toolbar if no features are enabled
   const shouldRenderToolbar =
@@ -159,8 +164,8 @@ export function DataTableToolbar({
     exportConfig.enabled ||
     refresh.enabled ||
     viewToggle.enabled ||
-    additionalActionsLeft ||
-    additionalActionsRight;
+    additionalActionsLeft.enabled ||
+    additionalActionsRight.enabled;
 
   if (!shouldRenderToolbar) {
     return null;
@@ -194,8 +199,20 @@ export function DataTableToolbar({
         {/* Additional Actions Left */}
         {additionalActionsLeft.enabled && (
           <div className="flex items-center gap-2">
-            <Button variant="default" size="sm" onClick={() => router.push(`${additionalActionsLeft.path}`)}>
-              <Icon className="h-4 w-4" />
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                if (additionalActionsLeft.onClick) {
+                  additionalActionsLeft.onClick();
+                  return;
+                }
+                if (additionalActionsLeft.path) {
+                  router.push(`${additionalActionsLeft.path}`);
+                }
+              }}
+            >
+              <LeftActionIcon className="h-4 w-4" />
               {additionalActionsLeft.label}
             </Button>
           </div>
@@ -305,10 +322,22 @@ export function DataTableToolbar({
 
         {/* Additional Actions Right */}
         {additionalActionsRight.enabled && (
-          <Button variant="default" size="sm" onClick={() => router.push(`${additionalActionsRight.path}`)}>
-          <Icon className="h-4 w-4" />
-          {additionalActionsRight.label}
-        </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => {
+              if (additionalActionsRight.onClick) {
+                additionalActionsRight.onClick();
+                return;
+              }
+              if (additionalActionsRight.path) {
+                router.push(`${additionalActionsRight.path}`);
+              }
+            }}
+          >
+            <RightActionIcon className="h-4 w-4" />
+            {additionalActionsRight.label}
+          </Button>
         )}
 
         {/* Refresh Button */}

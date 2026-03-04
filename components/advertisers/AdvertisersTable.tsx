@@ -2,33 +2,30 @@
 
 import React from "react";
 
-import { FilterConfig } from "@/lib/applyFilters";
 import { DataTableContainer } from "@/context/DataTableContext";
-import { Campaign } from "@/schemas";
-import CampaignsTableContent from "./CampaignsTableContent";
+import { FilterConfig } from "@/lib/applyFilters";
+import { Advertiser } from "@/schemas";
+import AdvertisersTableContent from "./AdvertisersTableContent";
 
-
-interface CampaignsTableProps {
-  campaigns: Campaign[];
+interface AdvertisersTableProps {
+  advertisers: Advertiser[];
   isLoading: boolean;
   toolbar?: boolean;
   searchBar?: boolean;
   className?: string;
   refetchData?: () => void;
   isRefetching?: boolean;
-  enableGridView?: boolean;
 }
 
-export function CampaignsTable({
-  campaigns,
+export function AdvertisersTable({
+  advertisers,
   isLoading,
   toolbar = true,
-  searchBar = true,
+  searchBar = false,
   className,
   refetchData,
   isRefetching = false,
-  enableGridView = false,
-}: CampaignsTableProps) {
+}: AdvertisersTableProps) {
   const filterConfig: FilterConfig[] = [
     {
       id: "status",
@@ -37,39 +34,26 @@ export function CampaignsTable({
       key: "status",
       options: [
         { value: "active", label: "Active" },
-        { value: "paused", label: "Paused" },
-        { value: "draft", label: "Draft" },
-        { value: "completed", label: "Completed" },
-        { value: "cancelled", label: "Cancelled" },
-      ],
-    },
-    {
-      id: "campaignType",
-      label: "Type",
-      type: "multi-select",
-      key: "campaignType",
-      options: [
-        { value: "destination_ride", label: "Destination Ride" },
-        { value: "swarm", label: "Swarm" },
+        { value: "pending", label: "Pending" },
+        { value: "inactive", label: "Inactive" },
       ],
     },
   ];
 
   return (
     <DataTableContainer
-      data={campaigns}
+      data={advertisers}
       filterConfig={filterConfig}
       persistToUrl={true}
       debounceMs={500}
     >
-      <CampaignsTableContent
+      <AdvertisersTableContent
         isLoading={isLoading}
         toolbar={toolbar}
         searchBar={searchBar}
         className={className}
         refetchData={refetchData}
         isRefetching={isRefetching}
-        enableGridView={enableGridView}
       />
     </DataTableContainer>
   );
