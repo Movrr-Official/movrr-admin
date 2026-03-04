@@ -18,7 +18,7 @@ import { getRouteStops } from "@/app/actions/routes";
 import { shouldUseMockData } from "@/lib/dataSource";
 
 export default function RoutesOverview() {
-  const { data: routes, isLoading, refetch } = useRouteData();
+  const { data: routes, isLoading, isFetching, refetch } = useRouteData();
   const { data: campaigns } = useCampaignsData();
   const [optimizing, setOptimizing] = useState(false);
 
@@ -389,6 +389,7 @@ export default function RoutesOverview() {
                 <RoutesTable
                   routes={routes ?? []}
                   isLoading={isLoading}
+                  isRefetching={isFetching}
                   toolbar={true}
                   searchBar={false}
                   refetchData={refetch}

@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 
 export default function UsersOverview() {
   const router = useRouter();
-  const { data: users, isLoading, error, refetch } = useUsersData();
+  const { data: users, isLoading, isFetching, error, refetch } = useUsersData();
   const { data: stats } = useUserStats();
 
   // Calculate comprehensive stats for user management
@@ -326,6 +326,7 @@ export default function UsersOverview() {
         <UsersTable
           users={users ?? []}
           isLoading={isLoading}
+          isRefetching={isFetching}
           toolbar={true}
           searchBar={false}
           refetchData={refetch}

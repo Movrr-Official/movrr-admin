@@ -24,7 +24,7 @@ import { StatsCard } from "@/components/stats/StatsCard";
 
 export default function CampaignsOverview() {
   const router = useRouter();
-  const { data: campaigns, isLoading, error, refetch } = useCampaignsData();
+  const { data: campaigns, isLoading, isFetching, error, refetch } = useCampaignsData();
 
   // Calculate comprehensive stats for campaign management
   const totalCampaigns = campaigns?.length ?? 0;
@@ -253,6 +253,7 @@ export default function CampaignsOverview() {
           <CampaignsTable
             campaigns={campaigns ?? []}
             isLoading={isLoading}
+            isRefetching={isFetching}
             toolbar={true}
             searchBar={false}
             refetchData={refetch}
