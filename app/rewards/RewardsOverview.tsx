@@ -25,11 +25,13 @@ export default function RewardsOverview() {
   const {
     data: transactions,
     isLoading: isLoadingTransactions,
+    isFetching: isFetchingTransactions,
     refetch: refetchTransactions,
   } = useRewardTransactions();
   const {
     data: balances,
     isLoading: isLoadingBalances,
+    isFetching: isFetchingBalances,
     refetch: refetchBalances,
   } = useRiderBalances();
   const { data: stats } = useRewardStats();
@@ -220,7 +222,7 @@ export default function RewardsOverview() {
                   isLoading={isLoadingTransactions}
                   searchBar={false}
                   refetchData={refetchTransactions}
-                  isRefetching={false}
+                  isRefetching={isFetchingTransactions}
                 />
               </TabsContent>
 
@@ -231,7 +233,7 @@ export default function RewardsOverview() {
                   isLoading={isLoadingBalances}
                   searchBar={false}
                   refetchData={refetchBalances}
-                  isRefetching={false}
+                  isRefetching={isFetchingBalances}
                 />
               </TabsContent>
 

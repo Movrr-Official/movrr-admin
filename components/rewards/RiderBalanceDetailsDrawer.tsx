@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   X,
   Coins,
@@ -58,9 +59,12 @@ import { useToast } from "@/hooks/useToast";
 import { adjustRiderPoints } from "@/app/actions/rewards";
 import { useRewardTransactions } from "@/hooks/useRewardsData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { shouldUseMockData } from "@/lib/dataSource";
 
 const adjustPointsSchema = z.object({
-  points: z.number().int().min(-1000000).max(1000000),
+  points: z.coerce.number().int().min(-1000000).max(1000000).refine((value) => value !== 0, {
+    message: "Points adjustment must be non-zero",
+  }),
   description: z.string().min(1, "Description is required"),
   type: z.enum(["adjusted"]),
 });
@@ -81,11 +85,13 @@ export function RiderBalanceDetailsDrawer({
   onBalanceUpdate,
 }: RiderBalanceDetailsDrawerProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAdjustment, setPendingAdjustment] =
     useState<AdjustPointsFormData | null>(null);
+  const isMockData = shouldUseMockData();
 
   const { data: transactions, isLoading: isLoadingTransactions } =
     useRewardTransactions(balance ? { riderId: balance.riderId } : undefined);
@@ -110,6 +116,15 @@ export function RiderBalanceDetailsDrawer({
 
   const handleSave = async (data: AdjustPointsFormData) => {
     if (!balance) return;
+    if (isMockData) {
+      toast({
+        title: "Mock Data Mode",
+        description:
+          "Points adjustment is disabled while mock data mode is enabled.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setPendingAdjustment(data);
     setShowConfirmDialog(true);
@@ -140,6 +155,11 @@ export function RiderBalanceDetailsDrawer({
       setPendingAdjustment(null);
       setIsEditMode(false);
       form.reset();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["riderBalances"] }),
+        queryClient.invalidateQueries({ queryKey: ["rewardTransactions"] }),
+        queryClient.invalidateQueries({ queryKey: ["rewardStats"] }),
+      ]);
       onBalanceUpdate?.();
       onOpenChange(false);
     } catch (error) {
@@ -296,6 +316,7 @@ export function RiderBalanceDetailsDrawer({
                           <Button
                             variant="outline"
                             size="sm"
+                            disabled={isMockData}
                             onClick={() => setIsEditMode(true)}
                           >
                             <Edit className="mr-2 h-4 w-4" />
@@ -322,11 +343,7 @@ export function RiderBalanceDetailsDrawer({
                                       type="number"
                                       placeholder="Enter points (positive to add, negative to deduct)"
                                       {...field}
-                                      onChange={(e) =>
-                                        field.onChange(
-                                          parseInt(e.target.value) || 0,
-                                        )
-                                      }
+                                      onChange={(e) => field.onChange(e.target.value)}
                                     />
                                   </FormControl>
                                   <FormDescription>
@@ -357,7 +374,7 @@ export function RiderBalanceDetailsDrawer({
                             <div className="flex gap-2">
                               <Button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isLoading || isMockData}
                                 className="flex-1"
                               >
                                 {isLoading ? (

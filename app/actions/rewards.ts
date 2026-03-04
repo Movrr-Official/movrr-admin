@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { requireAdmin } from "@/lib/admin";
 import {
   RewardTransaction,
   RiderBalance,
@@ -11,7 +12,9 @@ import { z } from "zod";
 
 const adjustPointsSchema = z.object({
   riderId: z.string(),
-  points: z.number(),
+  points: z.number().int().refine((value) => value !== 0, {
+    message: "Points adjustment must be non-zero",
+  }),
   description: z.string().optional(),
   type: rewardTransactionTypeSchema,
 });
@@ -44,6 +47,7 @@ export async function getRewardStats(dateRange?: {
   error?: string;
 }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: transactions, error: txnError } = await supabaseAdmin
@@ -281,6 +285,7 @@ export async function getRewardTransactions(filters?: {
   endDate?: string;
 }): Promise<{ success: boolean; data?: RewardTransaction[]; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     let txnQuery = supabaseAdmin
@@ -413,6 +418,7 @@ export async function getRiderBalances(): Promise<{
   error?: string;
 }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: balances, error } = await supabaseAdmin
@@ -532,89 +538,30 @@ export async function adjustRiderPoints(
   data: z.infer<typeof adjustPointsSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = adjustPointsSchema.parse(data);
+    const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc(
+      "adjust_rider_points_atomic",
+      {
+        p_rider_id: validatedData.riderId,
+        p_points: validatedData.points,
+        p_description: validatedData.description ?? null,
+        p_type: validatedData.type,
+      },
+    );
 
-    const { data: balance, error: balanceError } = await supabaseAdmin
-      .from("rider_reward_balance")
-      .select("rider_id, points_balance, lifetime_points_earned")
-      .eq("rider_id", validatedData.riderId)
-      .single();
+    if (rpcError) {
+      return { success: false, error: rpcError.message };
+    }
 
-    if (balanceError || !balance) {
+    const row = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
+
+    if (!row?.success) {
       return {
         success: false,
-        error: balanceError?.message || "Rider balance not found",
+        error: row?.error_message || "Failed to adjust rider points",
       };
-    }
-
-    const currentBalance = Number(balance.points_balance ?? 0);
-    const rawPoints = Number(validatedData.points ?? 0);
-    const absPoints = Math.abs(rawPoints);
-    const isRedeem = validatedData.type === "redeemed";
-    const delta = isRedeem ? -absPoints : rawPoints;
-    const isDebit = delta < 0;
-    const newBalance = currentBalance + delta;
-
-    if (newBalance < 0) {
-      return {
-        success: false,
-        error: "Insufficient balance for adjustment",
-      };
-    }
-
-    if (validatedData.type === "redeemed") {
-      const { error: redemptionError } = await supabaseAdmin
-        .from("reward_redemptions")
-        .insert({
-          rider_id: validatedData.riderId,
-          points_spent: absPoints,
-          status: "approved",
-          requested_at: new Date().toISOString(),
-          approved_at: new Date().toISOString(),
-          metadata: {
-            description: validatedData.description ?? "Manual redemption",
-          },
-        });
-
-      if (redemptionError) {
-        return { success: false, error: redemptionError.message };
-      }
-    } else {
-      const source = validatedData.type === "awarded" ? "bonus" : "adjustment";
-
-      const { error: txnError } = await supabaseAdmin
-        .from("reward_transactions")
-        .insert({
-          rider_id: validatedData.riderId,
-          points_earned: absPoints,
-          source,
-          metadata: {
-            description: validatedData.description ?? "Manual adjustment",
-            adjustment_direction: isDebit ? "debit" : "credit",
-          },
-          created_at: new Date().toISOString(),
-        });
-
-      if (txnError) {
-        return { success: false, error: txnError.message };
-      }
-    }
-
-    const updatedLifetime =
-      Number(balance.lifetime_points_earned ?? 0) + (isDebit ? 0 : absPoints);
-
-    const { error: balanceUpdateError } = await supabaseAdmin
-      .from("rider_reward_balance")
-      .update({
-        points_balance: newBalance,
-        lifetime_points_earned: updatedLifetime,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("rider_id", validatedData.riderId);
-
-    if (balanceUpdateError) {
-      return { success: false, error: balanceUpdateError.message };
     }
 
     revalidatePath("/rewards");

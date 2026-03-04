@@ -48,12 +48,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/hooks/useToast";
-import {
-  createCampaign,
-} from "@/app/actions/campaigns";
-import {
-  getAdvertiserOptions,
-} from "@/app/actions/advertisers";
+import { createCampaign } from "@/app/actions/campaigns";
+import { getAdvertiserOptions } from "@/app/actions/advertisers";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useRouteData } from "@/hooks/useRouteData";
 import { Badge } from "@/components/ui/badge";
@@ -70,10 +66,16 @@ const createCampaignFormSchema = z
       .min(1, "Campaign name is required")
       .max(100, "Campaign name must be less than 100 characters"),
     description: z.string().optional(),
-    budget: z.number().min(0.01, "Budget must be greater than 0"),
+    budget: z.coerce
+      .number()
+      .positive("Budget must be greater than 0")
+      .min(0.01, "Budget must be greater than 0"),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
-    impressionGoal: z.number().min(1, "Impression goal must be at least 1"),
+    impressionGoal: z.coerce
+      .number()
+      .int("Impression goal must be a whole number")
+      .min(1, "Impression goal must be at least 1"),
     campaignType: z.enum(["destination_ride", "swarm"]),
     targetZones: z.array(z.string()).optional(),
     vehicleTypeRequired: z.enum(["bike", "e-bike", "cargo-bike"]),
@@ -116,10 +118,7 @@ export default function CreateCampaignPage() {
 
   // Fetch routes and advertiser data
   const { data: routes = [], isLoading: routesLoading } = useRouteData();
-  const {
-    data: advertisers = [],
-    isLoading: advertisersLoading,
-  } = useQuery({
+  const { data: advertisers = [], isLoading: advertisersLoading } = useQuery({
     queryKey: ["advertiser-profile-options"],
     queryFn: async () => {
       const result = await getAdvertiserOptions();
@@ -408,7 +407,7 @@ export default function CreateCampaignPage() {
                               </SelectItem>
                               <SelectItem value="swarm">
                                 <div className="flex flex-col">
-                                  <span className="font-medium">
+                                  <span className="font-medium self-start">
                                     Swarm
                                   </span>
                                   <span className="text-xs text-muted-foreground">
@@ -479,7 +478,8 @@ export default function CreateCampaignPage() {
                                 ))
                               ) : (
                                 <div className="px-2 py-3 text-sm text-muted-foreground">
-                                  No advertisers available. Add a new advertiser.
+                                  No advertisers available. Add a new
+                                  advertiser.
                                 </div>
                               )}
                             </SelectContent>
@@ -533,9 +533,7 @@ export default function CreateCampaignPage() {
                               placeholder="0.00"
                               className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
                               {...field}
-                              onChange={(e) =>
-                                field.onChange(parseFloat(e.target.value) || 0)
-                              }
+                              onChange={(e) => field.onChange(e.target.value)}
                             />
                           </FormControl>
                           <FormDescription className="text-xs">
@@ -561,9 +559,7 @@ export default function CreateCampaignPage() {
                               placeholder="0"
                               className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
                               {...field}
-                              onChange={(e) =>
-                                field.onChange(parseInt(e.target.value) || 0)
-                              }
+                              onChange={(e) => field.onChange(e.target.value)}
                             />
                           </FormControl>
                           <FormDescription className="text-xs">

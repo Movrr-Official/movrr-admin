@@ -83,7 +83,7 @@ const editAdvertiserSchema = z.object({
   timezone: z.string().default("UTC"),
   emailNotifications: z.boolean().default(true),
   campaignUpdates: z.boolean().default(true),
-  budget: z.number().min(0, "Budget cannot be negative").default(0),
+  budget: z.coerce.number().min(0, "Budget cannot be negative").default(0),
   status: z.enum(["active", "inactive", "pending"]),
 });
 
@@ -401,7 +401,7 @@ export function AdvertiserDetailsDrawer({
                                 step="0.01"
                                 value={field.value}
                                 onChange={(event) =>
-                                  field.onChange(Number(event.target.value) || 0)
+                                  field.onChange(event.target.value)
                                 }
                                 className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
                               />

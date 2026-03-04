@@ -103,7 +103,10 @@ export const campaignSchema = z.object({
 export const createCampaignSchema = z.object({
   name: z.string().min(1, "Campaign name is required").max(100),
   description: z.string().optional(),
-  budget: z.number().min(0.01, "Budget must be greater than 0"),
+  budget: z.coerce
+    .number()
+    .positive("Budget must be greater than 0")
+    .min(0.01, "Budget must be greater than 0"),
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
   routeIds: z.array(z.string()).min(1, "At least one route is required"),
@@ -131,7 +134,7 @@ export const updateCampaignSchema = createCampaignSchema.partial().extend({
   vehicleTypeRequired: z.enum(["bike", "e-bike", "cargo-bike"]).optional(),
   deliveryMode: z.enum(["manual", "automated"]).optional(),
   status: campaignStatusSchema.optional(),
-  impressionGoal: z.number().min(0).optional(),
+  impressionGoal: z.coerce.number().int().min(0).optional(),
 });
 
 export type Campaign = z.infer<typeof campaignSchema>;

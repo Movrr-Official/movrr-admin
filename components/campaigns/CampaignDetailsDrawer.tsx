@@ -93,10 +93,16 @@ const editCampaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
   advertiserId: z.string().min(1, "Advertiser is required"),
   description: z.string().optional(),
-  budget: z.number().min(0, "Budget must be positive"),
+  budget: z.coerce
+    .number()
+    .positive("Budget must be greater than 0")
+    .min(0.01, "Budget must be greater than 0"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
-  impressionGoal: z.number().min(0, "Impression goal must be positive"),
+  impressionGoal: z.coerce
+    .number()
+    .int("Impression goal must be a whole number")
+    .min(1, "Impression goal must be at least 1"),
   campaignType: campaignTypeSchema,
   targetZones: z.array(z.string()).optional(),
   vehicleTypeRequired: z.enum(["bike", "e-bike", "cargo-bike"]),
@@ -526,10 +532,11 @@ export function CampaignDetailsDrawer({
                                   <Input
                                     type="number"
                                     step="0.01"
+                                    min="0.01"
                                     placeholder="0.00"
                                     className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => field.onChange(e.target.value)}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -545,10 +552,11 @@ export function CampaignDetailsDrawer({
                                 <FormControl>
                                   <Input
                                     type="number"
+                                    min="1"
                                     placeholder="0"
                                     className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    onChange={(e) => field.onChange(e.target.value)}
                                   />
                                 </FormControl>
                                 <FormMessage />
