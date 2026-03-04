@@ -29,6 +29,11 @@ import { useCampaignsData } from "@/hooks/useCampaignsData";
 import { useRewardStats } from "@/hooks/useRewardsData";
 import { useAuditLogsData } from "@/hooks/useAuditLogsData";
 import {
+  buildCampaignPerformanceSeries,
+  buildCumulativeUserSeries,
+  buildPointsTrendSeries,
+} from "@/lib/dashboard/series";
+import {
   ClipboardCheck,
   Users,
   Bike,
@@ -37,10 +42,24 @@ import {
   FileText,
   Download,
   CheckSquare,
-  MoreVertical,
   ChevronRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+
+const DASHBOARD_LOCALE = "nl-NL";
+const DASHBOARD_TIMEZONE = "Europe/Amsterdam";
+const CHART_AXIS_FONT_SIZE = 12;
+const CHART_X_TICK_MARGIN = 10;
+const CHART_Y_TICK_MARGIN = 10;
+const MAX_MONTH_BUCKETS = 120;
+
+const toDisplayCase = (value: string) =>
+  value
+    .split(" ")
+    .map((part) =>
+      part.length ? part.charAt(0).toUpperCase() + part.slice(1) : part,
+    )
+    .join(" ");
 
 export default function DashboardOverview() {
   const [selectedRange, setSelectedRange] = useState<
@@ -98,12 +117,35 @@ export default function DashboardOverview() {
     return { from: start, to: end };
   };
 
+  const capRangeToMaxMonths = (range: { from: Date; to: Date }) => {
+    const monthSpan =
+      (range.to.getFullYear() - range.from.getFullYear()) * 12 +
+      (range.to.getMonth() - range.from.getMonth()) +
+      1;
+    if (monthSpan <= MAX_MONTH_BUCKETS) return range;
+
+    const from = new Date(range.to.getFullYear(), range.to.getMonth(), 1);
+    from.setMonth(from.getMonth() - (MAX_MONTH_BUCKETS - 1));
+    from.setHours(0, 0, 0, 0);
+    return { from, to: range.to };
+  };
+
+  const resolveMonthlyRange = (values: Array<string | null | undefined>) => {
+    if (activeDateRange) {
+      return capRangeToMaxMonths(activeDateRange);
+    }
+    const bounds = getDateBounds(values);
+    if (!bounds) return getFallbackRange(12);
+    return capRangeToMaxMonths(bounds);
+  };
+
   const buildMonthlyBuckets = (from: Date, to: Date) => {
     const start = new Date(from.getFullYear(), from.getMonth(), 1);
     const end = new Date(to.getFullYear(), to.getMonth(), 1);
-    const formatter = new Intl.DateTimeFormat("en-US", {
+    const formatter = new Intl.DateTimeFormat(DASHBOARD_LOCALE, {
       month: "short",
       year: "2-digit",
+      timeZone: DASHBOARD_TIMEZONE,
     });
 
     const buckets: Array<{
@@ -133,28 +175,19 @@ export default function DashboardOverview() {
     return buckets;
   };
 
-  const buildWeekBuckets = (from: Date, to: Date) => {
-    const start = new Date(from);
-    const end = new Date(to);
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
-
-    const totalDays =
-      Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000)) + 1;
-    const bucketSize = Math.max(1, Math.ceil(totalDays / 4));
-
-    return Array.from({ length: 4 }).map((_, index) => {
-      const bucketStart = new Date(start);
-      bucketStart.setDate(start.getDate() + index * bucketSize);
-      const bucketEnd = new Date(bucketStart);
-      bucketEnd.setDate(bucketStart.getDate() + bucketSize - 1);
-      bucketEnd.setHours(23, 59, 59, 999);
-      return {
-        label: `Week ${index + 1}`,
-        start: bucketStart,
-        end: bucketEnd,
-      };
+  const buildLabeledMonthlyBuckets = (from: Date, to: Date) => {
+    const buckets = buildMonthlyBuckets(from, to);
+    const crossesYears = from.getFullYear() !== to.getFullYear();
+    const formatter = new Intl.DateTimeFormat(DASHBOARD_LOCALE, {
+      month: "short",
+      ...(crossesYears ? { year: "2-digit" as const } : {}),
+      timeZone: DASHBOARD_TIMEZONE,
     });
+    return buckets.map((bucket) => ({
+      label: toDisplayCase(formatter.format(bucket.start)),
+      start: bucket.start,
+      end: bucket.end,
+    }));
   };
 
   const {
@@ -256,35 +289,12 @@ export default function DashboardOverview() {
   ];
 
   const usersCreated = users ?? [];
-  const userGrowthYear = activeDateRange?.to
-    ? activeDateRange.to.getFullYear()
-    : new Date().getFullYear();
-  const userGrowthBuckets = monthLabels.map((label, index) => {
-    if (!activeDateRange) {
-      return {
-        label,
-        monthIndex: index,
-        start: null as Date | null,
-        end: null as Date | null,
-      };
-    }
-    const monthStart = new Date(userGrowthYear, index, 1);
-    const monthEnd = new Date(userGrowthYear, index + 1, 0, 23, 59, 59, 999);
-    return {
-      label,
-      monthIndex: index,
-      start: monthStart,
-      end: monthEnd,
-    };
-  });
-
-  const campaignRange =
-    activeDateRange ??
-    getDateBounds(filteredCampaigns.map((campaign) => campaign.startDate)) ??
-    getFallbackRange(1);
-  const campaignBuckets = buildWeekBuckets(
-    campaignRange.from,
-    campaignRange.to,
+  const userGrowthRange = resolveMonthlyRange(
+    usersCreated.map((user) => user.createdAt),
+  );
+  const userGrowthBuckets = buildLabeledMonthlyBuckets(
+    userGrowthRange.from,
+    userGrowthRange.to,
   );
 
   const routeRange =
@@ -304,74 +314,35 @@ export default function DashboardOverview() {
       end: monthEnd,
     };
   });
-  const buildUserGrowthSeries = (role: "rider" | "advertiser") => {
-    return userGrowthBuckets.reduce<Array<{ name: string; value: number }>>(
-      (acc, bucket) => {
-        const createdCount = usersCreated.filter((user) => {
-          if (user.role !== role) return false;
-          const createdAt = new Date(user.createdAt);
-          if (Number.isNaN(createdAt.getTime())) return false;
-          if (!activeDateRange) {
-            return createdAt.getMonth() === bucket.monthIndex;
-          }
-          const monthStart = bucket.start;
-          const monthEnd = bucket.end;
-          if (!monthStart || !monthEnd) return false;
-          return createdAt >= monthStart && createdAt <= monthEnd;
-        }).length;
-        const previousTotal = acc.length ? acc[acc.length - 1].value : 0;
-        acc.push({ name: bucket.label, value: previousTotal + createdCount });
-        return acc;
-      },
-      [],
-    );
-  };
-  const userGrowthRiders = buildUserGrowthSeries("rider");
-  const userGrowthAdvertisers = buildUserGrowthSeries("advertiser");
+  const userGrowthRiders = buildCumulativeUserSeries(
+    usersCreated,
+    userGrowthBuckets,
+    "rider",
+  );
+  const userGrowthAdvertisers = buildCumulativeUserSeries(
+    usersCreated,
+    userGrowthBuckets,
+    "advertiser",
+  );
   const userGrowthSeries =
     userGrowthView === "riders" ? userGrowthRiders : userGrowthAdvertisers;
-  const userGrowthData = userGrowthBuckets.reduce<
-    Array<{ name: string; users: number }>
-  >((acc, bucket) => {
-    const createdCount = usersCreated.filter((user) => {
-      const createdAt = new Date(user.createdAt);
-      if (Number.isNaN(createdAt.getTime())) return false;
-      if (!activeDateRange) {
-        return createdAt.getMonth() === bucket.monthIndex;
-      }
-      const monthStart = bucket.start;
-      const monthEnd = bucket.end;
-      if (!monthStart || !monthEnd) return false;
-      return createdAt >= monthStart && createdAt <= monthEnd;
-    }).length;
-    const previousTotal = acc.length ? acc[acc.length - 1].users : 0;
-    acc.push({ name: bucket.label, users: previousTotal + createdCount });
-    return acc;
-  }, []);
+  const hasUserGrowthData = userGrowthSeries.some((item) => item.value > 0);
 
-  const campaignPerformanceData = campaignBuckets.map((bucket) => {
-    const monthStart = bucket.start;
-    const monthEnd = bucket.end;
-    const monthlyCampaigns = filteredCampaigns.filter((campaign) => {
-      const startDate = new Date(campaign.startDate);
-      return startDate >= monthStart && startDate <= monthEnd;
-    });
-    const impressions = monthlyCampaigns.reduce(
-      (sum, campaign) => sum + (campaign.impressions ?? 0),
-      0,
-    );
-    const revenue = monthlyCampaigns.reduce(
-      (sum, campaign) => sum + (campaign.spent ?? 0),
-      0,
-    );
-    return { name: bucket.label, impressions, revenue };
-  });
+  const campaignRange = resolveMonthlyRange(
+    filteredCampaigns.map((campaign) => campaign.startDate),
+  );
+  const campaignBuckets = buildLabeledMonthlyBuckets(
+    campaignRange.from,
+    campaignRange.to,
+  );
 
-  const campaignPerformanceChartData = campaignPerformanceData.map((item) => ({
-    name: item.name,
-    impressions: item.impressions,
-    revenue: item.revenue,
-  }));
+  const campaignPerformanceChartData = buildCampaignPerformanceSeries(
+    filteredCampaigns,
+    campaignBuckets,
+  );
+  const hasCampaignPerformanceData = campaignPerformanceChartData.some(
+    (item) => item.impressions > 0 || item.revenue > 0,
+  );
   const campaignPerformanceMax = campaignPerformanceChartData.reduce(
     (max, item) => Math.max(max, item.impressions, item.revenue),
     0,
@@ -380,25 +351,21 @@ export default function DashboardOverview() {
     10000,
     Math.ceil(campaignPerformanceMax / 5000) * 5000,
   );
+  const pointsRange = resolveMonthlyRange(
+    (rewardStats?.dailyTrends ?? []).map((trend) => trend.date),
+  );
+  const pointsBuckets = buildLabeledMonthlyBuckets(
+    pointsRange.from,
+    pointsRange.to,
+  );
 
-  const pointsYear = activeDateRange?.to
-    ? activeDateRange.to.getFullYear()
-    : new Date().getFullYear();
-  const pointsTrendData = monthLabels.map((label, index) => {
-    const monthStart = new Date(pointsYear, index, 1);
-    const monthEnd = new Date(pointsYear, index + 1, 0, 23, 59, 59, 999);
-    const trends = (rewardStats?.dailyTrends ?? []).filter((trend) => {
-      const date = new Date(trend.date);
-      return date >= monthStart && date <= monthEnd;
-    });
-    const awarded = trends.reduce((sum, trend) => sum + trend.awarded, 0);
-    const redeemed = trends.reduce((sum, trend) => sum + trend.redeemed, 0);
-    return {
-      name: label,
-      awarded,
-      redeemed,
-    };
-  });
+  const pointsTrendData = buildPointsTrendSeries(
+    rewardStats?.dailyTrends ?? [],
+    pointsBuckets,
+  );
+  const hasPointsData = pointsTrendData.some(
+    (item) => item.awarded > 0 || item.redeemed > 0,
+  );
 
   const pointsChartMax = pointsTrendData.reduce(
     (max, item) => Math.max(max, item.awarded, item.redeemed),
@@ -495,6 +462,7 @@ export default function DashboardOverview() {
       return {
         name: label,
         completionRate,
+        total,
       };
     });
   })();
@@ -536,6 +504,7 @@ export default function DashboardOverview() {
       return {
         name: formatHourLabel(hour),
         completionRate,
+        total,
       };
     });
   })();
@@ -565,6 +534,7 @@ export default function DashboardOverview() {
       return {
         name: bucket.label,
         completionRate,
+        total,
       };
     },
   );
@@ -575,6 +545,12 @@ export default function DashboardOverview() {
       : routeCompletionView === "daily"
         ? routeCompletionDailyData
         : routeCompletionMonthlyYearData;
+  const hasRouteCompletionData =
+    routeCompletionView === "monthly"
+      ? routeCompletionMonthlyYearData.some((item) => item.total > 0)
+      : routeCompletionView === "daily"
+        ? routeCompletionDailyData.some((item) => item.total > 0)
+        : routeCompletionWeeklyData.some((item) => item.total > 0);
 
   const routeCompletionBarSize =
     routeCompletionView === "weekly"
@@ -654,6 +630,13 @@ export default function DashboardOverview() {
     },
   ];
 
+  const renderChartEmptyState = (title: string, description: string) => (
+    <div className="h-full rounded-2xl border border-dashed border-border/70 bg-muted/20 px-4 py-6 flex flex-col items-center justify-center text-center">
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+    </div>
+  );
+
   return (
     <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
       <div className="space-y-6 md:space-y-8">
@@ -717,33 +700,41 @@ export default function DashboardOverview() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 md:gap-8">
           <Card className="glass-card border-0 lg:col-span-8">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <CardTitle className="text-xl font-bold">User Growth</CardTitle>
-                <div className="flex items-center gap-2 rounded-full bg-muted px-1 py-1">
-                  <button
-                    type="button"
-                    onClick={() => setUserGrowthView("riders")}
-                    className={
-                      "rounded-full px-3 py-1 text-xs font-semibold transition " +
-                      (userGrowthView === "riders"
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground")
-                    }
+                <div className="flex flex-wrap items-center gap-2">
+                  <div
+                    role="group"
+                    aria-label="User growth audience"
+                    className="flex items-center gap-2 rounded-full bg-muted px-1 py-1"
                   >
-                    Riders
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setUserGrowthView("advertisers")}
-                    className={
-                      "rounded-full px-3 py-1 text-xs font-semibold transition " +
-                      (userGrowthView === "advertisers"
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground")
-                    }
-                  >
-                    Advertisers
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setUserGrowthView("riders")}
+                      aria-pressed={userGrowthView === "riders"}
+                      className={
+                        "rounded-full px-3 py-1 text-xs font-semibold transition " +
+                        (userGrowthView === "riders"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground")
+                      }
+                    >
+                      Riders
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUserGrowthView("advertisers")}
+                      aria-pressed={userGrowthView === "advertisers"}
+                      className={
+                        "rounded-full px-3 py-1 text-xs font-semibold transition " +
+                        (userGrowthView === "advertisers"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground")
+                      }
+                    >
+                      Advertisers
+                    </button>
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -757,6 +748,11 @@ export default function DashboardOverview() {
                   <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                     Unable to load user growth.
                   </div>
+                ) : !hasUserGrowthData ? (
+                  renderChartEmptyState(
+                    "No user growth data",
+                    "No rider or advertiser signups were recorded for this period.",
+                  )
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsAreaChart data={userGrowthSeries}>
@@ -765,12 +761,14 @@ export default function DashboardOverview() {
                         dataKey="name"
                         tickLine={false}
                         axisLine={false}
-                        tickMargin={8}
+                        tickMargin={CHART_X_TICK_MARGIN}
+                        fontSize={CHART_AXIS_FONT_SIZE}
                       />
                       <YAxis
                         tickLine={false}
                         axisLine={false}
-                        tickMargin={8}
+                        tickMargin={CHART_Y_TICK_MARGIN}
+                        fontSize={CHART_AXIS_FONT_SIZE}
                         tickFormatter={(value) =>
                           value >= 1000 ? `${Math.round(value / 1000)}k` : value
                         }
@@ -902,20 +900,9 @@ export default function DashboardOverview() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 md:gap-8">
           <Card className="glass-card border-0">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between gap-3">
-                <CardTitle className="text-xl font-bold">
-                  Campaign Performance
-                </CardTitle>
-                {/* <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="-mr-2 h-8 w-8 text-muted-foreground"
-                  aria-label="Open menu"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button> */}
-              </div>
+              <CardTitle className="text-xl font-bold">
+                Campaign Performance
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-48">
@@ -927,6 +914,11 @@ export default function DashboardOverview() {
                   <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                     Unable to load campaign performance.
                   </div>
+                ) : !hasCampaignPerformanceData ? (
+                  renderChartEmptyState(
+                    "No campaign performance data",
+                    "No campaign impressions or revenue were recorded for this period.",
+                  )
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsBarChart
@@ -944,9 +936,9 @@ export default function DashboardOverview() {
                         dataKey="name"
                         tickLine={false}
                         axisLine
-                        tickMargin={10}
+                        tickMargin={CHART_X_TICK_MARGIN}
                         interval={0}
-                        fontSize={12}
+                        fontSize={CHART_AXIS_FONT_SIZE}
                       />
                       <YAxis
                         tickLine={false}
@@ -957,7 +949,7 @@ export default function DashboardOverview() {
                         tickFormatter={(value) =>
                           value === 0 ? "0" : `${Math.round(value / 1000)}k`
                         }
-                        fontSize={12}
+                        fontSize={CHART_AXIS_FONT_SIZE}
                       />
                       <Tooltip
                         content={
@@ -973,35 +965,34 @@ export default function DashboardOverview() {
                   </ResponsiveContainer>
                 )}
               </div>
-
-              <div className="mt-5 flex items-center gap-6 pl-12 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="h-3 w-3"
-                    style={{ backgroundColor: "#6D5BD0" }}
-                    aria-hidden="true"
-                  />
-                  <span>Impressions</span>
+              {!campaignsLoading && !campaignsError && hasCampaignPerformanceData && (
+                <div className="mt-5 flex items-center gap-6 pl-12 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-3 w-3"
+                      style={{ backgroundColor: "#6D5BD0" }}
+                      aria-hidden="true"
+                    />
+                    <span>Impressions</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-3 w-3"
+                      style={{ backgroundColor: "var(--chart-1)" }}
+                      aria-hidden="true"
+                    />
+                    <span>Revenue</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="h-3 w-3"
-                    style={{ backgroundColor: "var(--chart-1)" }}
-                    aria-hidden="true"
-                  />
-                  <span>Revenue</span>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
           <Card className="glass-card border-0">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between gap-3">
-                <CardTitle className="text-xl font-bold">
-                  Points Awarded vs Redeemed
-                </CardTitle>
-              </div>
+              <CardTitle className="text-xl font-bold">
+                Points Awarded vs Redeemed
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-48">
@@ -1013,6 +1004,11 @@ export default function DashboardOverview() {
                   <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                     Unable to load points trends.
                   </div>
+                ) : !hasPointsData ? (
+                  renderChartEmptyState(
+                    "No points data",
+                    "No points were awarded or redeemed for this period.",
+                  )
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsLineChart
@@ -1028,10 +1024,9 @@ export default function DashboardOverview() {
                         dataKey="name"
                         tickLine={false}
                         axisLine={{ stroke: "hsl(var(--border))" }}
-                        tickMargin={10}
+                        tickMargin={CHART_X_TICK_MARGIN}
                         interval="preserveStartEnd"
-                        fontSize={12}
-                        tickFormatter={(value) => String(value).slice(0, 3)}
+                        fontSize={CHART_AXIS_FONT_SIZE}
                       />
                       <YAxis
                         tickLine={false}
@@ -1042,12 +1037,12 @@ export default function DashboardOverview() {
                         tickFormatter={(value) =>
                           `${Math.round(Number(value) / 1000)}k`
                         }
-                        fontSize={12}
+                        fontSize={CHART_AXIS_FONT_SIZE}
                       />
                       <Tooltip
                         content={
                           <ChartTooltipContent
-                            seriesFormatMap={{ completionRate: "percent" }}
+                            seriesFormatMap={{ awarded: "number", redeemed: "number" }}
                           />
                         }
                       />
@@ -1073,25 +1068,26 @@ export default function DashboardOverview() {
                   </ResponsiveContainer>
                 )}
               </div>
-
-              <div className="mt-5 flex items-center gap-6 pl-12 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="h-0.5 w-8"
-                    style={{ backgroundColor: "var(--chart-2)" }}
-                    aria-hidden="true"
-                  />
-                  <span>Awarded</span>
+              {!rewardStatsLoading && !rewardStatsError && hasPointsData && (
+                <div className="mt-5 flex items-center gap-6 pl-12 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-0.5 w-8"
+                      style={{ backgroundColor: "var(--chart-2)" }}
+                      aria-hidden="true"
+                    />
+                    <span>Awarded</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-0.5 w-8"
+                      style={{ backgroundColor: "var(--chart-1)" }}
+                      aria-hidden="true"
+                    />
+                    <span>Redeemed</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="h-0.5 w-8"
-                    style={{ backgroundColor: "var(--chart-1)" }}
-                    aria-hidden="true"
-                  />
-                  <span>Redeemed</span>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -1105,10 +1101,15 @@ export default function DashboardOverview() {
                 <CardTitle className="text-xl font-bold">
                   Route Completion Rates
                 </CardTitle>
-                <div className="flex items-center gap-2 rounded-full bg-muted px-1 py-1">
+                <div
+                  role="group"
+                  aria-label="Route completion granularity"
+                  className="flex items-center gap-2 rounded-full bg-muted px-1 py-1"
+                >
                   <button
                     type="button"
                     onClick={() => setRouteCompletionView("daily")}
+                    aria-pressed={routeCompletionView === "daily"}
                     className={
                       "rounded-full px-3 py-1 text-xs font-semibold transition " +
                       (routeCompletionView === "daily"
@@ -1121,6 +1122,7 @@ export default function DashboardOverview() {
                   <button
                     type="button"
                     onClick={() => setRouteCompletionView("weekly")}
+                    aria-pressed={routeCompletionView === "weekly"}
                     className={
                       "rounded-full px-3 py-1 text-xs font-semibold transition  " +
                       (routeCompletionView === "weekly"
@@ -1133,6 +1135,7 @@ export default function DashboardOverview() {
                   <button
                     type="button"
                     onClick={() => setRouteCompletionView("monthly")}
+                    aria-pressed={routeCompletionView === "monthly"}
                     className={
                       "rounded-full px-3 py-1 text-xs font-semibold transition " +
                       (routeCompletionView === "monthly"
@@ -1155,6 +1158,11 @@ export default function DashboardOverview() {
                   <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                     Unable to load route completion.
                   </div>
+                ) : !hasRouteCompletionData ? (
+                  renderChartEmptyState(
+                    "No route completion data",
+                    "No route assignments were recorded for this period.",
+                  )
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsBarChart
@@ -1172,9 +1180,9 @@ export default function DashboardOverview() {
                         dataKey="name"
                         tickLine={false}
                         axisLine
-                        tickMargin={10}
+                        tickMargin={CHART_X_TICK_MARGIN}
                         interval={routeCompletionXAxisInterval}
-                        fontSize={12}
+                        fontSize={CHART_AXIS_FONT_SIZE}
                       />
                       <YAxis
                         tickLine={false}
@@ -1183,9 +1191,15 @@ export default function DashboardOverview() {
                         domain={[0, 100]}
                         ticks={[0, 20, 40, 60, 80, 100]}
                         tickFormatter={(value) => `${value}%`}
-                        fontSize={12}
+                        fontSize={CHART_AXIS_FONT_SIZE}
                       />
-                      <Tooltip content={<ChartTooltipContent />} />
+                      <Tooltip
+                        content={
+                          <ChartTooltipContent
+                            seriesFormatMap={{ completionRate: "percent" }}
+                          />
+                        }
+                      />
                       <Bar dataKey="completionRate" radius={0}>
                         {routeCompletionChartData.map((entry) => (
                           <Cell
@@ -1240,10 +1254,14 @@ export default function DashboardOverview() {
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {log.affectedEntity?.name ?? "System"} -{" "}
-                            {new Date(log.timestamp).toLocaleString("en-US", {
+                            {new Date(log.timestamp).toLocaleString(
+                              DASHBOARD_LOCALE,
+                              {
                               dateStyle: "medium",
                               timeStyle: "short",
-                            })}
+                              timeZone: DASHBOARD_TIMEZONE,
+                              },
+                            )}
                           </p>
                         </div>
                         <Badge variant="outline" className="text-xs">
