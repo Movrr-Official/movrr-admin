@@ -631,7 +631,7 @@ export default function DashboardOverview() {
   ];
 
   const renderChartEmptyState = (title: string, description: string) => (
-    <div className="h-full rounded-2xl border border-dashed border-border/70 bg-muted/20 px-4 py-6 flex flex-col items-center justify-center text-center">
+    <div className="h-full rounded-2xl border border-dashed border-border/60 bg-muted/40 px-4 py-6 flex flex-col items-center justify-center text-center">
       <p className="text-sm font-semibold text-foreground">{title}</p>
       <p className="mt-1 text-xs text-muted-foreground">{description}</p>
     </div>
@@ -965,26 +965,28 @@ export default function DashboardOverview() {
                   </ResponsiveContainer>
                 )}
               </div>
-              {!campaignsLoading && !campaignsError && hasCampaignPerformanceData && (
-                <div className="mt-5 flex items-center gap-6 pl-12 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-3 w-3"
-                      style={{ backgroundColor: "#6D5BD0" }}
-                      aria-hidden="true"
-                    />
-                    <span>Impressions</span>
+              {!campaignsLoading &&
+                !campaignsError &&
+                hasCampaignPerformanceData && (
+                  <div className="mt-5 flex items-center gap-6 pl-12 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-3 w-3"
+                        style={{ backgroundColor: "#6D5BD0" }}
+                        aria-hidden="true"
+                      />
+                      <span>Impressions</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-3 w-3"
+                        style={{ backgroundColor: "var(--chart-1)" }}
+                        aria-hidden="true"
+                      />
+                      <span>Revenue</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-3 w-3"
-                      style={{ backgroundColor: "var(--chart-1)" }}
-                      aria-hidden="true"
-                    />
-                    <span>Revenue</span>
-                  </div>
-                </div>
-              )}
+                )}
             </CardContent>
           </Card>
 
@@ -1042,7 +1044,10 @@ export default function DashboardOverview() {
                       <Tooltip
                         content={
                           <ChartTooltipContent
-                            seriesFormatMap={{ awarded: "number", redeemed: "number" }}
+                            seriesFormatMap={{
+                              awarded: "number",
+                              redeemed: "number",
+                            }}
                           />
                         }
                       />
@@ -1257,9 +1262,9 @@ export default function DashboardOverview() {
                             {new Date(log.timestamp).toLocaleString(
                               DASHBOARD_LOCALE,
                               {
-                              dateStyle: "medium",
-                              timeStyle: "short",
-                              timeZone: DASHBOARD_TIMEZONE,
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                                timeZone: DASHBOARD_TIMEZONE,
                               },
                             )}
                           </p>
