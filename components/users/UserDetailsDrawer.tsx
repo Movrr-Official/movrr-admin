@@ -235,11 +235,11 @@ export function UserDetailsDrawer({
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "admin":
-      case "super-admin":
+      case "super_admin":
         return (
           <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300">
             <Shield className="h-3 w-3 mr-1" />
-            {role === "super-admin" ? "Super Admin" : "Admin"}
+            {role === "super_admin" ? "Super Admin" : "Admin"}
           </Badge>
         );
       case "advertiser":
@@ -411,7 +411,7 @@ export function UserDetailsDrawer({
                                   <SelectItem value="rider">Rider</SelectItem>
                                   <SelectItem value="advertiser">Advertiser</SelectItem>
                                   <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="super-admin">Super Admin</SelectItem>
+                                  <SelectItem value="super_admin">Super Admin</SelectItem>
                                   <SelectItem value="moderator">Moderator</SelectItem>
                                   <SelectItem value="support">Support</SelectItem>
                                 </SelectContent>

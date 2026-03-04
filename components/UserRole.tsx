@@ -6,12 +6,12 @@ import { Badge } from "@/components/ui/badge";
 export const getRoleIcon = (role: AdminRole) => {
   switch (role) {
     case "super_admin":
-      return <ShieldAlert className="h-4 w-4 text-red-600" />;
+      return <ShieldAlert className="h-4 w-4 text-destructive" />;
     case "admin":
       return <ShieldCheck className="h-4 w-4 text-primary" />;
     case "moderator":
     case "support":
-      return <Shield className="h-4 w-4 text-blue-600" />;
+      return <Shield className="h-4 w-4 text-info" />;
     default:
       return <ShieldQuestion className="h-4 w-4 text-muted-foreground" />;
   }
@@ -22,8 +22,7 @@ export const getRoleBadge = (role: AdminRole) => {
 
   const variantConfig = {
     super_admin: {
-      className:
-        "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800",
+      className: "bg-destructive/10 text-destructive border-destructive/30",
       displayName: "SUPER ADMIN",
     },
     admin: {
@@ -31,13 +30,11 @@ export const getRoleBadge = (role: AdminRole) => {
       displayName: "ADMIN",
     },
     moderator: {
-      className:
-        "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800",
+      className: "bg-accent-alt/10 text-accent-alt border-accent-alt/30",
       displayName: "MODERATOR",
     },
     support: {
-      className:
-        "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800",
+      className: "bg-success/10 text-success border-success/30",
       displayName: "SUPPORT",
     },
   };

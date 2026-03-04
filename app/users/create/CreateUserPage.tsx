@@ -404,13 +404,13 @@ export default function CreateUserPage() {
                                   </span>
                                 </div>
                               </SelectItem>
-                              <SelectItem value="super-admin">
+                              <SelectItem value="super_admin">
                                 <div className="flex flex-col">
                                   <span className="font-medium self-start">
                                     Super Admin
                                   </span>
                                   <span className="text-xs text-muted-foreground">
-                                    {roleDescriptions["super-admin"]}
+                                    {roleDescriptions["super_admin"]}
                                   </span>
                                 </div>
                               </SelectItem>
@@ -708,9 +708,9 @@ export default function CreateUserPage() {
                         variant="outline"
                         className={`capitalize ${
                           watchedValues.status === "active"
-                            ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300"
+                            ? "bg-success/10 text-success border-success/30"
                             : watchedValues.status === "pending"
-                              ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
+                              ? "bg-warning/10 text-warning border-warning/30"
                               : "bg-muted text-muted-foreground border-border"
                         }`}
                       >

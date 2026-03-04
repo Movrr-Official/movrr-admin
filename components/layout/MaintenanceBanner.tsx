@@ -29,7 +29,7 @@ const MaintenanceBanner = () => {
   }
 
   return (
-    <div className="w-full bg-amber-500/15 text-amber-900 dark:text-amber-200 border-b border-amber-500/30">
+    <div className="w-full bg-warning/15 text-warning-foreground border-b border-warning/30">
       <div className="mx-auto w-full px-4 sm:px-6 py-1.5 text-xs flex items-center justify-between gap-3">
         <div className="flex items-center justify-center gap-2">
           <span className="font-semibold uppercase tracking-wide">
@@ -42,7 +42,7 @@ const MaintenanceBanner = () => {
         </div>
         <button
           type="button"
-          className="rounded px-2 py-0.5 text-[11px] font-semibold border border-amber-500/40 hover:bg-amber-500/20 transition"
+          className="rounded px-2 py-0.5 text-[11px] font-semibold border border-warning/40 hover:bg-warning/20 transition"
           onClick={() => {
             setDismissed(true);
             if (typeof window !== "undefined") {

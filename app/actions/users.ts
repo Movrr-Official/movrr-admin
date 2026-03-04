@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   User,
@@ -17,13 +18,13 @@ import PasswordResetEmail from "@/emails/password-reset";
 import { FROM_EMAIL, NEXT_PUBLIC_APP_URL, RESEND_API_KEY } from "@/lib/env";
 
 const mapUiRoleToDb = (role: string) => {
-  if (role === "super-admin") return "super_admin";
+  if (role === "super_admin") return "super_admin";
   return role;
 };
 
 const mapDbRoleToUi = (role: string | null | undefined) => {
   if (!role) return "rider";
-  if (role === "super_admin") return "super-admin";
+  if (role === "super_admin") return "super_admin";
   return role;
 };
 
@@ -59,7 +60,7 @@ const updateUserSchema = z.object({
   role: z
     .enum([
       "admin",
-      "super-admin",
+      "super_admin",
       "moderator",
       "support",
       "advertiser",
@@ -95,6 +96,7 @@ export async function getUsers(
   selectedAdvertiserIds: string[] = [],
 ): Promise<{ success: boolean; data?: User[]; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     let query = supabaseAdmin.from("user").select("*");
@@ -171,6 +173,7 @@ export async function createUser(
   data: z.infer<typeof createUserSchema>,
 ): Promise<{ success: boolean; error?: string; data?: User }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = createUserSchema.parse(data);
 
@@ -286,6 +289,7 @@ export async function updateUser(
   data: z.infer<typeof updateUserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateUserSchema.parse(data);
 
@@ -340,6 +344,7 @@ export async function updateUserRole(
   data: z.infer<typeof updateUserRoleSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateUserRoleSchema.parse(data);
 
@@ -375,6 +380,7 @@ export async function toggleUserStatus(
   data: z.infer<typeof toggleUserStatusSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = toggleUserStatusSchema.parse(data);
 
@@ -410,6 +416,7 @@ export async function sendPasswordResetEmail(
   email: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
@@ -472,6 +479,7 @@ export async function exportUserData(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     // Fetch user profile
@@ -587,6 +595,7 @@ export async function deleteUser(
   data: z.infer<typeof deleteUserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = deleteUserSchema.parse(data);
 
@@ -696,6 +705,7 @@ export async function bulkUpdateUserStatus(
   status: "active" | "inactive" | "pending",
 ): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin
@@ -733,6 +743,7 @@ export async function getUserActivityLogs(
   limit: number = 50,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin
@@ -767,6 +778,7 @@ export async function getUserRoutes(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin
@@ -808,6 +820,7 @@ export async function getUserCampaigns(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin
@@ -870,6 +883,7 @@ export async function getUserRewardTransactions(
   limit: number = 50,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin
@@ -914,6 +928,7 @@ export async function getUserPointsBalance(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin

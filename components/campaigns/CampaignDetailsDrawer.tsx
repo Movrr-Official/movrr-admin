@@ -130,7 +130,7 @@ export function CampaignDetailsDrawer({
       startDate: "",
       endDate: "",
       impressionGoal: 0,
-      campaignType: "branding",
+      campaignType: "destination_ride",
       targetZones: [],
       vehicleTypeRequired: "bike",
       deliveryMode: "manual",
@@ -401,18 +401,18 @@ export function CampaignDetailsDrawer({
 
   const getTypeBadge = (type: string) => {
     switch (type) {
-      case "branding":
+      case "destination_ride":
         return (
           <Badge className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300">
             <Megaphone className="h-3 w-3 mr-1" />
-            Branding
+            Destination Ride
           </Badge>
         );
-      case "conversion":
+      case "swarm":
         return (
           <Badge className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300">
             <Target className="h-3 w-3 mr-1" />
-            Conversion
+            Swarm
           </Badge>
         );
       default:
@@ -590,8 +590,8 @@ export function CampaignDetailsDrawer({
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="branding">Branding</SelectItem>
-                                    <SelectItem value="conversion">Conversion</SelectItem>
+                                    <SelectItem value="destination_ride">Destination Ride</SelectItem>
+                                    <SelectItem value="swarm">Swarm</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />

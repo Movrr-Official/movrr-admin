@@ -6,13 +6,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Calendar } from "lucide-react";
 
 interface DailyImpressionData {
@@ -27,7 +21,7 @@ interface CampaignDailyImpressionsChartProps {
 const chartConfig = {
   impressions: {
     label: "Impressions",
-    color: "hsl(270, 90%, 65%)",
+    color: "var(--chart-4)",
   },
 } satisfies Record<string, { label: string; color: string }>;
 
@@ -55,7 +49,7 @@ export function CampaignDailyImpressionsChart({
   // Calculate total for display
   const totalImpressions = data.reduce(
     (sum, item) => sum + item.impressions,
-    0
+    0,
   );
 
   return (

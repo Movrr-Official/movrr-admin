@@ -36,7 +36,7 @@ export function UsersTable({
         { value: "rider", label: "Rider" },
         { value: "advertiser", label: "Advertiser" },
         { value: "admin", label: "Admin" },
-        { value: "super-admin", label: "Super Admin" },
+        { value: "super_admin", label: "Super Admin" },
         { value: "moderator", label: "Moderator" },
         { value: "support", label: "Support" },
       ],

@@ -6,6 +6,7 @@ import "./globals.css";
 import { ReduxProvider } from "@/providers/ReduxProvider";
 import QueryClientProvider from "@/providers/QueryClientProvider";
 import { CountProvider } from "@/providers/CountProvider";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 import { Suspense } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -61,25 +62,28 @@ export default async function RootLayout({
         <html
           lang="en"
           className={`${inter.variable} ${jetbrainsMono.variable} antialiased scroll-smooth`}
+          suppressHydrationWarning
         >
           <body className="min-h-screen bg-background text-foreground">
-            <CountProvider>
-              <div className="flex h-screen">
-                <Sidebar currentRole={adminRole ?? null} />
-                <div className="flex-1 flex flex-col overflow-y-auto">
-                  <div className="flex-1 flex flex-col">
-                    <Navbar />
-                    <MaintenanceBanner />
-                    {/* Main content area with suspense for lazy loading */}
-                    <Suspense>
-                      <main className="flex-1">{children}</main>
-                    </Suspense>
-                    <Footer />
+            <ThemeProvider>
+              <CountProvider>
+                <div className="flex h-screen">
+                  <Sidebar currentRole={adminRole ?? null} />
+                  <div className="flex-1 flex flex-col overflow-y-auto">
+                    <div className="flex-1 flex flex-col">
+                      <Navbar />
+                      <MaintenanceBanner />
+                      {/* Main content area with suspense for lazy loading */}
+                      <Suspense>
+                        <main className="flex-1">{children}</main>
+                      </Suspense>
+                      <Footer />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CountProvider>
-            <Toaster />
+              </CountProvider>
+              <Toaster />
+            </ThemeProvider>
             <Analytics />
           </body>
         </html>

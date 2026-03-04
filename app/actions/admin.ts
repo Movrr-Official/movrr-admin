@@ -1,6 +1,42 @@
 "use server";
 
 import { getAuthenticatedUser } from "@/lib/admin";
+import type { AdminRole } from "@/types/auth";
+
+const rolePermissions: Record<AdminRole, string[]> = {
+  super_admin: ["*"],
+  admin: [
+    "dashboard:read",
+    "users:read",
+    "users:write",
+    "routes:read",
+    "routes:write",
+    "campaigns:read",
+    "campaigns:write",
+    "rewards:read",
+    "rewards:write",
+    "settings:read",
+    "settings:write",
+    "notifications:read",
+    "notifications:write",
+  ],
+  moderator: [
+    "dashboard:read",
+    "users:read",
+    "routes:read",
+    "campaigns:read",
+    "rewards:read",
+    "notifications:read",
+  ],
+  support: [
+    "dashboard:read",
+    "users:read",
+    "routes:read",
+    "campaigns:read",
+    "rewards:read",
+    "notifications:read",
+  ],
+};
 
 /**
  * Server action to get the current admin user
@@ -32,9 +68,13 @@ export async function checkPermission(permission: string) {
       return false;
     }
 
-    // You can integrate with your PermissionManager here
-    // For now, just return true for admin users
-    return true;
+    const normalizedPermission = permission.trim().toLowerCase();
+    if (!normalizedPermission) {
+      return false;
+    }
+
+    const permissions = rolePermissions[user.adminUser.role];
+    return permissions.includes("*") || permissions.includes(normalizedPermission);
   } catch (error) {
     console.error("checkPermission error:", error);
     return false;

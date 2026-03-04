@@ -52,7 +52,8 @@ const publicEnvSchema = z.object({
   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().optional(),
 });
 
-const serverEnvSchema = publicEnvSchema.extend({
+const serverEnvSchema = publicEnvSchema
+  .extend({
   // Database
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
@@ -69,18 +70,29 @@ const serverEnvSchema = publicEnvSchema.extend({
   ADMIN_EMAIL: z.string().email("Invalid ADMIN_EMAIL"),
   SYSTEM_EMAIL: z.string().email("Invalid SYSTEM_EMAIL"),
   SUPPORT_EMAIL: z.string().email("Invalid SUPPORT_EMAIL").optional(),
+  ERROR_WEBHOOK_URL: z.string().url("Invalid ERROR_WEBHOOK_URL").optional(),
 
   // Feature flags
   USE_MOCK_DATA: booleanDefaultFalse,
 
   // Route optimizer
-  ROUTE_OPTIMIZER_TOKEN: z.string().min(1, "ROUTE_OPTIMIZER_TOKEN is required"),
-  ROUTE_OPTIMIZER_KEY: z.string().min(1, "ROUTE_OPTIMIZER_KEY is required"),
+  ROUTE_OPTIMIZER_TOKEN: z.string().optional(),
+  ROUTE_OPTIMIZER_KEY: z.string().optional(),
   ROUTE_ALLOW_PREV_TOKEN: booleanDefaultFalse,
   ROUTE_OPTIMIZER_URL: z.string().url("Invalid ROUTE_OPTIMIZER_URL"),
   ROUTE_OPTIMIZER_PREV_TOKEN: z.string().optional(),
   ROUTE_OPTIMIZER_OLD_TOKEN: z.string().optional(),
-});
+  })
+  .superRefine((value, ctx) => {
+    if (!value.ROUTE_OPTIMIZER_TOKEN && !value.ROUTE_OPTIMIZER_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Either ROUTE_OPTIMIZER_TOKEN or ROUTE_OPTIMIZER_KEY is required",
+        path: ["ROUTE_OPTIMIZER_TOKEN"],
+      });
+    }
+  });
 
 type PublicEnv = z.infer<typeof publicEnvSchema>;
 type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -123,6 +135,7 @@ function getEnv(): PublicEnv | ServerEnv {
       ADMIN_EMAIL: process.env.ADMIN_EMAIL,
       SYSTEM_EMAIL: process.env.SYSTEM_EMAIL,
       SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
+      ERROR_WEBHOOK_URL: process.env.ERROR_WEBHOOK_URL,
       USE_MOCK_DATA: process.env.USE_MOCK_DATA,
       ROUTE_OPTIMIZER_TOKEN: process.env.ROUTE_OPTIMIZER_TOKEN,
       ROUTE_OPTIMIZER_KEY: process.env.ROUTE_OPTIMIZER_KEY,
@@ -161,6 +174,7 @@ export const WELCOME_EMAIL = serverEnv?.WELCOME_EMAIL || "welcome@movrr.nl";
 export const ADMIN_EMAIL = serverEnv?.ADMIN_EMAIL || "admin@movrr.nl";
 export const SYSTEM_EMAIL = serverEnv?.SYSTEM_EMAIL || "system@movrr.nl";
 export const SUPPORT_EMAIL = serverEnv?.SUPPORT_EMAIL || "support@movrr.nl";
+export const ERROR_WEBHOOK_URL = serverEnv?.ERROR_WEBHOOK_URL ?? "";
 export const NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS =
   env.NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS;
 export const NEXT_PUBLIC_USE_MOCK_DATA = env.NEXT_PUBLIC_USE_MOCK_DATA;

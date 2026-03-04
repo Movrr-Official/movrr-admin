@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   AdminNotification,
@@ -73,6 +74,7 @@ export async function getNotificationHistory(
   filters: NotificationFilters = notificationFiltersFallback,
 ): Promise<{ success: boolean; data?: AdminNotification[]; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedFilters = notificationFiltersSchema.parse(filters);
     const limit = validatedFilters.limit ?? 200;
@@ -159,6 +161,7 @@ export async function getNotificationStats(): Promise<{
   error?: string;
 }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { count: total, error: totalError } = await supabaseAdmin
@@ -228,6 +231,7 @@ export async function createNotifications(
   error?: string;
 }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedPayload = createNotificationSchema.parse(payload);
 

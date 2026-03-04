@@ -22,7 +22,7 @@ interface CampaignEngagementByCityChartProps {
 const chartConfig = {
   engagement: {
     label: "Engagement",
-    color: "hsl(210, 100%, 56%)",
+    color: "var(--chart-3)",
   },
 } satisfies Record<string, { label: string; color: string }>;
 
@@ -93,9 +93,9 @@ export function CampaignEngagementByCityChart({
         <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
           {sortedData.slice(0, 3).map((item) => (
             <div key={item.city} className="flex items-center gap-1.5">
-              <div 
-                className="h-1.5 w-1.5 rounded-full" 
-                style={{ backgroundColor: "hsl(210, 100%, 56%)" }}
+              <div
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: "var(--color-engagement)" }}
               />
               <span>
                 {item.city}: {item.engagement.toFixed(1)}%

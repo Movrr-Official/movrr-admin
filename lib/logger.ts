@@ -2,7 +2,12 @@
  * Enhanced logging utility for production
  */
 
-import { isProduction, NODE_ENV, NEXT_PUBLIC_APP_URL } from "./env";
+import {
+  ERROR_WEBHOOK_URL,
+  isProduction,
+  NODE_ENV,
+  NEXT_PUBLIC_APP_URL,
+} from "./env";
 
 export enum LogLevel {
   DEBUG = 0,
@@ -122,15 +127,33 @@ class Logger {
   }
 
   private sendToErrorTracking(
-    _message: string,
-    _error?: unknown,
-    _context?: LogContext,
+    message: string,
+    error?: unknown,
+    context?: LogContext,
   ): void {
-    // TODO: Integrate with error tracking service (Sentry, LogRocket, etc.)
-    // Example:
-    // if (typeof window !== 'undefined' && window.Sentry) {
-    //   window.Sentry.captureException(error, { extra: context });
-    // }
+    if (!ERROR_WEBHOOK_URL) return;
+
+    const payload = {
+      service: this.config.service,
+      environment: this.config.environment,
+      message,
+      context,
+      error:
+        error instanceof Error
+          ? {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            }
+          : error,
+      timestamp: new Date().toISOString(),
+    };
+
+    fetch(ERROR_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
   }
 }
 

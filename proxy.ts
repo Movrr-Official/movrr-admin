@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { applySecurityHeaders } from "@/lib/securityHeaders";
 import {
   NEXT_PUBLIC_SUPABASE_ANON_KEY,
   NEXT_PUBLIC_SUPABASE_URL,
@@ -30,10 +31,11 @@ export async function proxy(request: NextRequest) {
     }
   } catch (e) {
     console.error("proxy token check error", e);
-    return new NextResponse(JSON.stringify({ error: "unauthorized" }), {
+    const response = new NextResponse(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: { "content-type": "application/json" },
     });
+    return applySecurityHeaders(response, request);
   }
 
   const supabase = createServerClient(
@@ -71,9 +73,13 @@ export async function proxy(request: NextRequest) {
     };
 
     const log = async (data: any) => {
+      const cookie = request.headers.get("cookie");
       fetch(`${request.nextUrl.origin}/api/log-admin-access`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(cookie ? { cookie } : {}),
+        },
         body: JSON.stringify(data),
       }).catch(() => {});
     };
@@ -85,7 +91,7 @@ export async function proxy(request: NextRequest) {
       // Redirect to login with return URL
       const redirectUrl = new URL("/auth/signin", request.url);
       redirectUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
-      return NextResponse.redirect(redirectUrl);
+      return applySecurityHeaders(NextResponse.redirect(redirectUrl), request);
     }
 
     // Check if user is an admin
@@ -104,7 +110,10 @@ export async function proxy(request: NextRequest) {
       await log(logData);
 
       // Redirect to unauthorized page
-      return NextResponse.redirect(new URL("/unauthorized", request.url));
+      return applySecurityHeaders(
+        NextResponse.redirect(new URL("/unauthorized", request.url)),
+        request,
+      );
     }
 
     // Log successful access
@@ -114,7 +123,7 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  return supabaseResponse;
+  return applySecurityHeaders(supabaseResponse, request);
 }
 
 export const config = {

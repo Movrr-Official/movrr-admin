@@ -1,5 +1,6 @@
 "use server";
 
+import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { mockUsers } from "@/data/mockUsers";
@@ -17,6 +18,7 @@ export interface WaitlistCounts {
  * Server action to get all counts including waitlist
  */
 export async function getDashboardCounts(): Promise<WaitlistCounts> {
+  await requireAdmin();
   if (shouldUseMockData()) {
     return {
       totalWaitlist: 3,

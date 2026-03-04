@@ -13,6 +13,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import { UserProfile } from "../UserProfile";
 import useShouldHideComponent from "@/hooks/useShouldHideComponent";
 import Breadcrumb from "@/components/layout/Breadcrumb";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const Navbar = () => {
   const shouldHideNavbar = useShouldHideComponent();
@@ -68,6 +69,8 @@ const Navbar = () => {
           <div className="flex-1">
             <GlobalSearch />
           </div>
+
+          <ThemeToggle />
 
           {/* Menu Button - Visible only on mobile */}
           <Button

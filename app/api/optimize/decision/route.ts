@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   ROUTE_OPTIMIZER_KEY,
@@ -95,6 +96,25 @@ export async function POST(req: Request) {
   if (!admin) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+
+  const ip = getClientIp(req);
+  const rateLimit = checkRateLimit(
+    `optimize-decision:${admin.authUser.id}:${ip}`,
+    { max: 60, windowMs: 60_000 },
+  );
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "rate_limited" },
+      {
+        status: 429,
+        headers: {
+          "retry-after": String(rateLimit.retryAfterSeconds),
+          "x-ratelimit-remaining": String(rateLimit.remaining),
+        },
+      },
+    );
+  }
+
   if (!SERVICE_TOKEN) {
     return NextResponse.json(
       { error: "optimizer_unavailable" },

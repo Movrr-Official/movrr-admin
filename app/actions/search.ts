@@ -49,9 +49,10 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
     // Process riders with relevance scoring
     if (ridersResult.data) {
       ridersResult.data.forEach((rider) => {
+        const riderUser = Array.isArray(rider.user) ? rider.user[0] : rider.user;
         let relevance = 0;
-        const riderName = rider.user?.name ?? "";
-        const riderEmail = rider.user?.email ?? "";
+        const riderName = riderUser?.name ?? "";
+        const riderEmail = riderUser?.email ?? "";
         if (riderName.toLowerCase().includes(query.toLowerCase()))
           relevance += 3;
         if (riderEmail.toLowerCase().includes(query.toLowerCase()))
@@ -65,7 +66,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
           name: riderName || "Rider",
           email: riderEmail,
           route: rider.city,
-          avatarUrl: rider.user?.avatar_url,
+          avatarUrl: riderUser?.avatar_url,
           status: rider.status,
           relevance,
         });

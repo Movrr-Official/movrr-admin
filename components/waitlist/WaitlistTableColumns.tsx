@@ -40,7 +40,7 @@ const getBikeOwnershipBadge = (ownership: string) => {
       return (
         <Badge
           variant="outline"
-          className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 font-medium dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
+          className="bg-info/10 text-info border-info/30 hover:bg-info/20 font-medium"
         >
           Planning to Get
         </Badge>
@@ -88,7 +88,7 @@ export const getWaitlistTableColumns = ({
     cell: ({ row }) => (
       <Badge
         variant="outline"
-        className="bg-blue-50 text-blue-700 border-blue-200 font-medium dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
+        className="bg-info/10 text-info border-info/30 font-medium"
       >
         {row.getValue("city")}
       </Badge>
@@ -107,7 +107,7 @@ export const getWaitlistTableColumns = ({
       switch (status) {
         case "approved":
           return (
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 font-medium dark:bg-green-950 dark:text-green-300 dark:border-green-800">
+            <Badge className="bg-success/10 text-success border-success/30 hover:bg-success/20 font-medium">
               <CheckCircle className="h-3 w-3 mr-1" />
               Approved
             </Badge>
@@ -116,7 +116,7 @@ export const getWaitlistTableColumns = ({
           return (
             <Badge
               variant="outline"
-              className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 font-medium dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800"
+              className="bg-warning/10 text-warning border-warning/30 hover:bg-warning/20 font-medium"
             >
               <Clock className="h-3 w-3 mr-1" />
               Pending
@@ -126,7 +126,7 @@ export const getWaitlistTableColumns = ({
           return (
             <Badge
               variant="outline"
-              className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 font-medium dark:bg-red-950 dark:text-red-300 dark:border-red-800"
+              className="bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/20 font-medium"
             >
               <AlertCircle className="h-3 w-3 mr-1" />
               Rejected

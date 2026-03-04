@@ -40,8 +40,21 @@ export function CampaignRiderAllocationChart({
     );
   }
 
+  const palette = [
+    "var(--chart-1)",
+    "var(--chart-3)",
+    "var(--chart-2)",
+    "var(--destructive)",
+    "var(--chart-4)",
+  ];
+
+  const normalizedData = data.map((item, index) => ({
+    ...item,
+    color: item.color || palette[index % palette.length],
+  }));
+
   // Create chart config from data
-  const chartConfig = data.reduce(
+  const chartConfig = normalizedData.reduce(
     (acc, item) => {
       acc[item.name.toLowerCase().replace(/\s+/g, "")] = {
         label: item.name,
@@ -49,7 +62,7 @@ export function CampaignRiderAllocationChart({
       };
       return acc;
     },
-    {} as Record<string, { label: string; color: string }>
+    {} as Record<string, { label: string; color: string }>,
   );
 
   return (
@@ -69,9 +82,7 @@ export function CampaignRiderAllocationChart({
               className="h-[200px] w-[200px]"
             >
               <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                <ChartTooltip
-                  content={<ChartTooltipContent hideLabel />}
-                />
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                 <Pie
                   data={data}
                   dataKey="value"
@@ -82,7 +93,7 @@ export function CampaignRiderAllocationChart({
                   innerRadius={50}
                   paddingAngle={2}
                 >
-                  {data.map((entry, index) => (
+                  {normalizedData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -92,22 +103,23 @@ export function CampaignRiderAllocationChart({
 
           {/* Legend on the right */}
           <div className="flex flex-col gap-3">
-            {data.map((item) => {
+            {normalizedData.map((item) => {
               const key = item.name.toLowerCase().replace(/\s+/g, "");
               const itemConfig = chartConfig[key];
               return (
-                <div
-                  key={item.name}
-                  className="flex items-center gap-2"
-                >
+                <div key={item.name} className="flex items-center gap-2">
                   <div
                     className="h-2 w-2 shrink-0 rounded-full"
                     style={{ backgroundColor: item.color }}
                   />
                   <span className="text-sm text-muted-foreground">
-                    <span className="font-medium">{itemConfig?.label || item.name}</span>
+                    <span className="font-medium">
+                      {itemConfig?.label || item.name}
+                    </span>
                     {": "}
-                    <span className="font-semibold text-foreground">{item.value}</span>
+                    <span className="font-semibold text-foreground">
+                      {item.value}
+                    </span>
                   </span>
                 </div>
               );
@@ -118,4 +130,3 @@ export function CampaignRiderAllocationChart({
     </Card>
   );
 }
-

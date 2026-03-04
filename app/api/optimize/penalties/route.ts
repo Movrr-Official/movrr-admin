@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
@@ -55,6 +56,24 @@ export async function POST(req: Request) {
   const admin = await requireAdminOrDeny();
   if (!admin) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const ip = getClientIp(req);
+  const rateLimit = checkRateLimit(
+    `optimize-penalties:${admin.authUser.id}:${ip}`,
+    { max: 60, windowMs: 60_000 },
+  );
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "rate_limited" },
+      {
+        status: 429,
+        headers: {
+          "retry-after": String(rateLimit.retryAfterSeconds),
+          "x-ratelimit-remaining": String(rateLimit.remaining),
+        },
+      },
+    );
   }
 
   try {

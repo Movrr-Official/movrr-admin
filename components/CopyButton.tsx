@@ -34,12 +34,12 @@ export function CopyButton({
     >
       <span className="sr-only">Copy</span>
       {copied ? (
-        <Check className="w-4 h-4 text-green-500" />
+        <Check className="w-4 h-4 text-success" />
       ) : (
         <Copy className="w-4 h-4" />
       )}
       {copied && showText && (
-        <span className="text-xs text-green-500">Copied!</span>
+        <span className="text-xs text-success">Copied!</span>
       )}
     </button>
   );

@@ -238,7 +238,7 @@ export function StatsCard({
           {Icon && (
             <div
               className={cn(
-                "group-hover:scale-110 group-hover:rotate-3 transition-all duration-300",
+                "transition-all duration-300",
                 isGradient
                   ? "bg-primary-foreground/15"
                   : iconBgClasses[effectiveIconBg],

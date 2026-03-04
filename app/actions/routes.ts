@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { RiderRoute, routeStatusSchema } from "@/schemas";
 import { z } from "zod";
@@ -316,6 +317,19 @@ const toRouteStatus = (status?: TemplateStatus) => {
   }
 };
 
+async function resolveCanonicalRouteId(
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+  routeOrAssignmentId: string,
+) {
+  const { data: riderRoute } = await supabaseAdmin
+    .from("rider_route")
+    .select("route_id")
+    .eq("id", routeOrAssignmentId)
+    .maybeSingle();
+
+  return riderRoute?.route_id ?? routeOrAssignmentId;
+}
+
 /**
  * Server action to fetch routes for the dashboard.
  */
@@ -325,6 +339,7 @@ export async function getRoutes(): Promise<{
   error?: string;
 }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: riderRoutes, error } = await supabaseAdmin
@@ -431,6 +446,7 @@ export async function getRouteTemplates(): Promise<{
   error?: string;
 }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: routes, error } = await supabaseAdmin
@@ -516,6 +532,7 @@ export async function createRouteTemplate(
   data: z.infer<typeof routeTemplatePayloadSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = routeTemplatePayloadSchema.parse(data);
 
@@ -584,6 +601,7 @@ export async function duplicateRouteTemplate(
   data: z.infer<typeof duplicateRouteTemplateSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = duplicateRouteTemplateSchema.parse(data);
 
@@ -648,6 +666,7 @@ export async function assignRouteToRiders(
   error?: string;
 }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = assignRouteToRidersSchema.parse(data);
 
@@ -731,6 +750,7 @@ export async function createRoute(
   data: z.infer<typeof routePayloadSchema>,
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = routePayloadSchema.parse(data);
 
@@ -791,6 +811,7 @@ export async function createRouteStops(
   data: z.infer<typeof createRouteStopsSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = createRouteStopsSchema.parse(data);
 
@@ -839,6 +860,7 @@ export async function getRouteStops(routeId: string): Promise<{
   error?: string;
 }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const { data, error } = await supabaseAdmin
       .from("route_stop")
@@ -878,6 +900,7 @@ export async function upsertRouteStop(
   data: z.infer<typeof upsertRouteStopSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = upsertRouteStopSchema.parse(data);
 
@@ -931,6 +954,7 @@ export async function deleteRouteStop(
   data: z.infer<typeof deleteRouteStopSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = deleteRouteStopSchema.parse(data);
 
@@ -962,6 +986,7 @@ export async function unassignRouteAssignment(
   data: z.infer<typeof unassignRouteSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = unassignRouteSchema.parse(data);
 
@@ -996,6 +1021,7 @@ export async function updateRoute(
   data: z.infer<typeof routePayloadSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = routePayloadSchema.parse(data);
 
@@ -1061,6 +1087,7 @@ export async function approveRoute(
   routeId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { error } = await supabaseAdmin
@@ -1096,6 +1123,7 @@ export async function rejectRoute(
   reason?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { error } = await supabaseAdmin
@@ -1129,6 +1157,7 @@ export async function updateRouteStatus(
   data: z.infer<typeof updateRouteStatusSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateRouteStatusSchema.parse(data);
 
@@ -1176,6 +1205,7 @@ export async function deleteRoute(
   data: z.infer<typeof deleteRouteSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = deleteRouteSchema.parse(data);
 
@@ -1229,6 +1259,7 @@ export async function recalculateRouteCompliance(
   data: z.infer<typeof recalculateComplianceSchema>,
 ): Promise<{ success: boolean; compliance?: number; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = recalculateComplianceSchema.parse(data);
 
@@ -1336,13 +1367,15 @@ export async function getRouteGPSTracking(
   routeId: string,
 ): Promise<{ success: boolean; data?: any[]; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
+    const canonicalRouteId = await resolveCanonicalRouteId(supabaseAdmin, routeId);
 
     // Fetch GPS tracking data from route_tracking path
     const { data, error } = await supabaseAdmin
       .from("route_tracking")
       .select("path, created_at, updated_at")
-      .eq("route_id", routeId)
+      .eq("route_id", canonicalRouteId)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -1371,6 +1404,7 @@ export async function getRouteComplianceBreakdown(
   routeId: string,
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: riderRoute, error } = await supabaseAdmin
@@ -1458,12 +1492,14 @@ export async function getRoutePointsAwarded(
   routeId: string,
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
+    const canonicalRouteId = await resolveCanonicalRouteId(supabaseAdmin, routeId);
 
     const { data: trackingRows } = await supabaseAdmin
       .from("route_tracking")
       .select("id")
-      .eq("route_id", routeId);
+      .eq("route_id", canonicalRouteId);
 
     const trackingIds = (trackingRows ?? []).map((row) => row.id);
 
@@ -1480,8 +1516,11 @@ export async function getRoutePointsAwarded(
     }
 
     const totalPoints =
-      data?.reduce((sum, transaction) => sum + (transaction.points || 0), 0) ||
-      0;
+      data?.reduce(
+        (sum, transaction) =>
+          sum + (transaction.points_earned ?? transaction.points ?? 0),
+        0,
+      ) || 0;
 
     return {
       success: true,
@@ -1507,11 +1546,12 @@ export async function getRouteTimeline(
   routeId: string,
 ): Promise<{ success: boolean; data?: any[]; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: routeData, error: routeError } = await supabaseAdmin
       .from("rider_route")
-      .select("assigned_at, started_at, completed_at, updated_at, status")
+      .select("route_id, assigned_at, started_at, completed_at, updated_at, status")
       .eq("id", routeId)
       .single();
 
@@ -1522,7 +1562,7 @@ export async function getRouteTimeline(
     const { data: trackingRow } = await supabaseAdmin
       .from("route_tracking")
       .select("start_time, end_time, created_at, updated_at")
-      .eq("route_id", routeId)
+      .eq("route_id", routeData.route_id)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -1598,6 +1638,7 @@ export async function exportRouteData(
   data: z.infer<typeof exportRouteDataSchema>,
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = exportRouteDataSchema.parse(data);
 
@@ -1615,9 +1656,9 @@ export async function exportRouteData(
     // Fetch related data
     const [gpsData, complianceData, pointsData, timelineData] =
       await Promise.all([
-        getRouteGPSTracking(validatedData.routeId),
+        getRouteGPSTracking(routeData.route_id ?? validatedData.routeId),
         getRouteComplianceBreakdown(validatedData.routeId),
-        getRoutePointsAwarded(validatedData.routeId),
+        getRoutePointsAwarded(routeData.route_id ?? validatedData.routeId),
         getRouteTimeline(validatedData.routeId),
       ]);
 
@@ -1648,6 +1689,7 @@ export async function getRouteDetails(
   routeId: string,
 ): Promise<{ success: boolean; data?: RiderRoute; error?: string }> {
   try {
+    await requireAdmin();
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin

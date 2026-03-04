@@ -14,7 +14,7 @@ export default function AuditPage() {
     setResult(null);
     try {
       const res = await fetch(
-        `/api/optimize/audit/route?limit=${encodeURIComponent(String(limit))}`,
+        `/api/optimize/audit?limit=${encodeURIComponent(String(limit))}`,
       );
       if (res.ok) {
         const data = await res.json();
@@ -51,7 +51,7 @@ export default function AuditPage() {
         />
 
         <Button onClick={fetchAudit} disabled={loading}>
-          {loading ? "Loading…" : "Refresh"}
+          {loading ? "Loading..." : "Refresh"}
         </Button>
       </div>
 

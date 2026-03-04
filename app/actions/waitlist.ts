@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseServerClient } from "@/supabase/server";
 import { WaitlistEntry } from "@/types/types";
@@ -18,6 +19,7 @@ function generateRandomPassword(length = 12) {
 export async function getWaitlistData(
   searchValue?: string,
 ): Promise<WaitlistEntry[]> {
+  await requireAdmin();
   const supabase = await createSupabaseServerClient();
 
   try {
@@ -53,10 +55,12 @@ export async function updateWaitlistStatus(
   status: "pending" | "approved" | "rejected",
   reason?: string,
 ) {
+  await requireAdmin();
   const supabaseAdmin = createSupabaseAdminClient(); // for Auth + RLS-safe insert
   const supabase = await createSupabaseServerClient(); // for fetching waitlist and updates
 
   try {
+    let createdAuthUserId: string | null = null;
     // Fetches the waitlist entry
     const { data: waitlist, error: fetchError } = await supabase
       .from("waitlist")
@@ -99,6 +103,7 @@ export async function updateWaitlistStatus(
           authError?.message || "Database error creating new Auth user",
         );
       }
+      createdAuthUserId = authUser.user.id;
 
       // Insert into public.user with the correct ID (matches auth.users)
       const { error: profileError } = await supabaseAdmin.from("user").insert({
@@ -115,6 +120,9 @@ export async function updateWaitlistStatus(
       });
 
       if (profileError) {
+        if (createdAuthUserId) {
+          await supabaseAdmin.auth.admin.deleteUser(createdAuthUserId);
+        }
         throw new Error(profileError.message);
       }
 

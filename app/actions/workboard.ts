@@ -7,6 +7,8 @@ import { NEXT_PUBLIC_APP_URL, RESEND_API_KEY, FROM_EMAIL } from "@/lib/env";
 import { Resend } from "resend";
 
 const roleSchema = z.enum(["owner", "admin", "editor", "viewer"]);
+const workboardWriteRoles = new Set(["owner", "admin", "editor"]);
+const workboardAdminRoles = new Set(["owner", "admin"]);
 
 export type WorkboardBootstrap = {
   teamId: string;
@@ -277,10 +279,42 @@ export async function updateWorkboardMemberRole(input: {
   memberId: string;
   role: "owner" | "admin" | "editor" | "viewer";
 }) {
+  const auth = await requireAdmin();
   const supabase = createSupabaseAdminClient();
   const payload = z
     .object({ memberId: z.string().uuid(), role: roleSchema })
     .parse(input);
+
+  const { data: targetMember, error: targetMemberError } = await supabase
+    .from("workboard_team_members")
+    .select("team_id, role")
+    .eq("id", payload.memberId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (targetMemberError || !targetMember) {
+    throw new Error(targetMemberError?.message || "Member not found");
+  }
+
+  const { data: actorMembership } = await supabase
+    .from("workboard_team_members")
+    .select("role")
+    .eq("team_id", targetMember.team_id)
+    .eq("user_id", auth.authUser.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!actorMembership || !workboardAdminRoles.has(actorMembership.role)) {
+    throw new Error("Not authorized to update member roles");
+  }
+
+  if (payload.role === "owner" && actorMembership.role !== "owner") {
+    throw new Error("Only owners can assign owner role");
+  }
+
+  if (targetMember.role === "owner" && actorMembership.role !== "owner") {
+    throw new Error("Only owners can change owner roles");
+  }
 
   const { error } = await supabase
     .from("workboard_team_members")
@@ -295,7 +329,36 @@ export async function updateWorkboardMemberRole(input: {
 }
 
 export async function removeWorkboardMember(memberId: string) {
+  const auth = await requireAdmin();
   const supabase = createSupabaseAdminClient();
+
+  const { data: targetMember, error: targetMemberError } = await supabase
+    .from("workboard_team_members")
+    .select("team_id, role")
+    .eq("id", memberId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (targetMemberError || !targetMember) {
+    throw new Error(targetMemberError?.message || "Member not found");
+  }
+
+  const { data: actorMembership } = await supabase
+    .from("workboard_team_members")
+    .select("role")
+    .eq("team_id", targetMember.team_id)
+    .eq("user_id", auth.authUser.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!actorMembership || !workboardAdminRoles.has(actorMembership.role)) {
+    throw new Error("Not authorized to remove members");
+  }
+
+  if (targetMember.role === "owner" && actorMembership.role !== "owner") {
+    throw new Error("Only owners can remove owners");
+  }
+
   const { error } = await supabase
     .from("workboard_team_members")
     .update({ status: "inactive", updated_at: new Date().toISOString() })
@@ -345,7 +408,7 @@ export async function createWorkboardBoard(input: {
       role: "owner",
       status: "active",
     });
-  } else if (!roleSchema.safeParse(membership.role).success) {
+  } else if (!workboardWriteRoles.has(membership.role)) {
     throw new Error("Not authorized to create boards");
   }
 
@@ -420,7 +483,7 @@ export async function createWorkboardCard(input: {
       role: "owner",
       status: "active",
     });
-  } else if (!roleSchema.safeParse(membership.role).success) {
+  } else if (!workboardWriteRoles.has(membership.role)) {
     throw new Error("Not authorized to create cards");
   }
 

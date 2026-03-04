@@ -35,16 +35,16 @@ import { User } from "@/schemas";
 const getRoleBadge = (role: string) => {
   switch (role) {
     case "admin":
-    case "super-admin":
+    case "super_admin":
       return (
-        <Badge className="bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200 font-medium dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
+        <Badge className="bg-warning/10 text-warning border-warning/30 hover:bg-warning/20 font-medium">
           <Shield className="h-3 w-3 mr-1" />
-          {role === "super-admin" ? "Super Admin" : "Admin"}
+          {role === "super_admin" ? "Super Admin" : "Admin"}
         </Badge>
       );
     case "advertiser":
       return (
-        <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 font-medium dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
+        <Badge className="bg-info/10 text-info border-info/30 hover:bg-info/20 font-medium">
           <Building2 className="h-3 w-3 mr-1" />
           Advertiser
         </Badge>
@@ -58,14 +58,14 @@ const getRoleBadge = (role: string) => {
       );
     case "moderator":
       return (
-        <Badge className="bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200 font-medium dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800">
+        <Badge className="bg-accent-alt/10 text-accent-alt border-accent-alt/30 hover:bg-accent-alt/20 font-medium">
           <Shield className="h-3 w-3 mr-1" />
           Moderator
         </Badge>
       );
     case "support":
       return (
-        <Badge className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200 font-medium dark:bg-green-950 dark:text-green-300 dark:border-green-800">
+        <Badge className="bg-success/10 text-success border-success/30 hover:bg-success/20 font-medium">
           <Shield className="h-3 w-3 mr-1" />
           Support
         </Badge>
@@ -83,7 +83,7 @@ const getStatusBadge = (status: string) => {
   switch (status) {
     case "active":
       return (
-        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 font-medium dark:bg-green-950 dark:text-green-300 dark:border-green-800">
+        <Badge className="bg-success/10 text-success border-success/30 hover:bg-success/20 font-medium">
           <UserCheck className="h-3 w-3 mr-1" />
           Active
         </Badge>
@@ -92,7 +92,7 @@ const getStatusBadge = (status: string) => {
       return (
         <Badge
           variant="outline"
-          className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 font-medium dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800"
+          className="bg-warning/10 text-warning border-warning/30 hover:bg-warning/20 font-medium"
         >
           <UserX className="h-3 w-3 mr-1" />
           Inactive
@@ -102,7 +102,7 @@ const getStatusBadge = (status: string) => {
       return (
         <Badge
           variant="outline"
-          className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 font-medium dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800"
+          className="bg-info/10 text-info border-info/30 hover:bg-info/20 font-medium"
         >
           <Clock className="h-3 w-3 mr-1" />
           Pending
@@ -180,7 +180,7 @@ export const getUsersTableColumns = ({
               {isVerified && (
                 <Badge
                   variant="outline"
-                  className="h-4 px-1.5 text-xs bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300"
+                  className="h-4 px-1.5 text-xs bg-success/10 text-success border-success/30"
                 >
                   <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                   Verified
@@ -235,7 +235,7 @@ export const getUsersTableColumns = ({
       const date = new Date(lastLogin);
       const now = new Date();
       const diffDays = Math.floor(
-        (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+        (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
       );
 
       return (

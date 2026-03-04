@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import {
   ROUTE_OPTIMIZER_KEY,
   ROUTE_OPTIMIZER_TOKEN,
@@ -17,11 +18,28 @@ async function requireAdminOrDeny() {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const admin = await requireAdminOrDeny();
     if (!admin) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`optimize-health:${admin.authUser.id}:${ip}`, {
+      max: 120,
+      windowMs: 60_000,
+    });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "rate_limited" },
+        {
+          status: 429,
+          headers: {
+            "retry-after": String(rateLimit.retryAfterSeconds),
+            "x-ratelimit-remaining": String(rateLimit.remaining),
+          },
+        },
+      );
     }
     if (!SERVICE_TOKEN) {
       return NextResponse.json(

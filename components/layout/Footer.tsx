@@ -40,19 +40,19 @@ const DashboardFooter = () => {
       name: "Twitter",
       href: "https://twitter.com/movrr",
       icon: FaXTwitter,
-      color: "hover:text-gray-800 dark:hover:text-gray-300",
+      color: "hover:text-foreground",
     },
     {
       name: "LinkedIn",
       href: "https://linkedin.com/company/movrr",
       icon: FaLinkedin,
-      color: "hover:text-sky-600",
+      color: "hover:text-foreground",
     },
     {
       name: "Facebook",
       href: "https://facebook.com/movrr",
       icon: FaFacebook,
-      color: "hover:text-blue-500",
+      color: "hover:text-foreground",
     },
   ];
 
@@ -148,12 +148,12 @@ const DashboardFooter = () => {
                 <motion.div
                   className={`w-2 h-2 rounded-full ${
                     isError
-                      ? "bg-red-500"
+                      ? "bg-destructive"
                       : isLoading
-                        ? "bg-yellow-500"
+                        ? "bg-warning"
                         : data?.status === "operational"
-                          ? "bg-green-500"
-                          : "bg-orange-500"
+                          ? "bg-success"
+                          : "bg-warning"
                   }`}
                   animate={{
                     scale: [1, 1.2, 1],

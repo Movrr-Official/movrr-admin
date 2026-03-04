@@ -142,15 +142,13 @@ export default function CampaignsOverview() {
             badges={[
               {
                 label: `${activeCampaigns} active`,
-                className:
-                  "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300",
+                className: "bg-success/10 text-success border-success/30",
               },
               ...(pausedCampaigns > 0
                 ? [
                     {
                       label: `${pausedCampaigns} paused`,
-                      className:
-                        "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300",
+                      className: "bg-warning/10 text-warning border-warning/30",
                     },
                   ]
                 : []),
@@ -173,8 +171,7 @@ export default function CampaignsOverview() {
                 ? [
                     {
                       label: `${completedCampaigns} completed`,
-                      className:
-                        "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300",
+                      className: "bg-success/10 text-success border-success/30",
                     },
                   ]
                 : []),
@@ -219,13 +216,13 @@ export default function CampaignsOverview() {
                 label: "CTR",
                 value: `${averageCTR}%`,
                 icon: MousePointerClick,
-                iconColor: "text-blue-600",
+                iconColor: "text-info",
               },
               {
                 label: "Avg ROI",
                 value: `${averageROI}x`,
                 icon: TrendingUp,
-                iconColor: "text-green-600",
+                iconColor: "text-success",
               },
             ]}
             animationDelay="0.3s"
@@ -277,27 +274,27 @@ export default function CampaignsOverview() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 dark:bg-blue-950 rounded-lg">
-                        <Megaphone className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <div className="p-2 bg-info/10 rounded-lg">
+                        <Megaphone className="h-4 w-4 text-info" />
                       </div>
                       <span className="font-semibold text-foreground">
                         Destination Ride
                       </span>
                     </div>
-                    <Badge className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300">
+                    <Badge className="bg-info/10 text-info border-info/30">
                       {destinationRideCampaigns}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-green-100 dark:bg-green-950 rounded-lg">
-                        <Target className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <div className="p-2 bg-success/10 rounded-lg">
+                        <Target className="h-4 w-4 text-success" />
                       </div>
                       <span className="font-semibold text-foreground">
                         Swarm
                       </span>
                     </div>
-                    <Badge className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300">
+                    <Badge className="bg-success/10 text-success border-success/30">
                       {swarmCampaigns}
                     </Badge>
                   </div>

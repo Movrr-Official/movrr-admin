@@ -1485,12 +1485,12 @@ export function RouteDetailsDrawer({
                               <div
                                 className={`w-3 h-3 rounded-full ${
                                   event.type === "completed"
-                                    ? "bg-green-500"
+                                    ? "bg-success"
                                     : event.type === "cancelled"
-                                      ? "bg-red-500"
+                                      ? "bg-destructive"
                                       : event.type === "started"
-                                        ? "bg-amber-500"
-                                        : "bg-blue-500"
+                                        ? "bg-warning"
+                                        : "bg-info"
                                 }`}
                               />
                               {index < timeline.length - 1 && (

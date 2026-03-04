@@ -450,7 +450,7 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
 
   return (
     <Card
-      className="relative w-full h-full bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden glass-card border-0 animate-slide-up"
+      className="relative w-full h-full rounded-lg overflow-hidden glass-card border-0 animate-slide-up"
       style={{ animationDelay: "0.6s" }}
     >
       <CardHeader className="pb-4">

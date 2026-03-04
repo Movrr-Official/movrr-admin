@@ -77,10 +77,10 @@ export const getCampaignAnalytics = (seed: number = 1) => {
   ];
 
   const riderAllocation: RiderAllocation[] = [
-    { name: "Available", value: 10 + seed, color: "#10b981" },
-    { name: "Assigned", value: 20 + seed * 2, color: "#3b82f6" },
-    { name: "On Route", value: 8 + seed, color: "#f59e0b" },
-    { name: "Maintenance", value: 2 + seed, color: "#ef4444" },
+    { name: "Available", value: 10 + seed, color: "var(--chart-1)" },
+    { name: "Assigned", value: 20 + seed * 2, color: "var(--chart-3)" },
+    { name: "On Route", value: 8 + seed, color: "var(--chart-2)" },
+    { name: "Maintenance", value: 2 + seed, color: "var(--destructive)" },
   ];
 
   return {
@@ -92,7 +92,7 @@ export const getCampaignAnalytics = (seed: number = 1) => {
 };
 
 export const mergeCampaignAnalytics = (
-  analytics: CampaignAnalyticsData[]
+  analytics: CampaignAnalyticsData[],
 ): CampaignAnalyticsData => {
   if (analytics.length === 0) {
     return {
@@ -148,7 +148,7 @@ export const mergeCampaignAnalytics = (
       city,
       engagement: data.engagement,
       campaigns: data.campaigns,
-    })
+    }),
   );
 
   // Merge daily campaign impressions
@@ -161,7 +161,7 @@ export const mergeCampaignAnalytics = (
   });
 
   const dailyCampaignImpressions = Object.entries(
-    dailyCampaignImpressionsMap
+    dailyCampaignImpressionsMap,
   ).map(([date, impressions]) => ({ date, impressions }));
 
   // Merge rider allocation
@@ -180,7 +180,7 @@ export const mergeCampaignAnalytics = (
           .map((a) => a.riderAllocation.find((r) => r.name === name)?.color)
           .find((c) => c !== undefined) || "#000000";
       return { name, value, color };
-    }
+    },
   );
 
   return {

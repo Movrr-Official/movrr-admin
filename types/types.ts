@@ -24,6 +24,16 @@ export interface RiderAllocation {
   color: string; // hex code or CSS color string
 }
 
+export interface PerformanceChartDatum {
+  name: string;
+  impressions: number;
+  revenue: number;
+}
+
+export interface PerformanceChartProps {
+  data?: PerformanceChartDatum[];
+}
+
 interface StatCardChange {
   value: number;
   type: "increase" | "decrease";

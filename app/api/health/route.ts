@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { RESEND_API_KEY } from "@/lib/env";
 import { logger } from "@/lib/logger";
@@ -92,7 +94,34 @@ const aggregateStatus = (checks: HealthCheck[]): HealthStatus => {
   return "operational";
 };
 
-export async function GET() {
+export async function GET(request: Request) {
+  const ip = getClientIp(request);
+  const rateLimit = checkRateLimit(`health:${ip}`, { max: 120, windowMs: 60_000 });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "rate_limited" },
+      {
+        status: 429,
+        headers: {
+          "retry-after": String(rateLimit.retryAfterSeconds),
+          "x-ratelimit-remaining": String(rateLimit.remaining),
+        },
+      },
+    );
+  }
+
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json(
+      {
+        status: "operational",
+        timestamp: new Date().toISOString(),
+      },
+      { headers: { "cache-control": "no-store" } },
+    );
+  }
+
   const checks = await Promise.all([
     checkDatabase(),
     checkRewardsRpc(),
@@ -104,5 +133,5 @@ export async function GET() {
     status,
     checks,
     timestamp: new Date().toISOString(),
-  });
+  }, { headers: { "cache-control": "no-store" } });
 }

@@ -22,14 +22,22 @@
   --accent-foreground: oklch(0.21 0.034 264.665);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.669 0.1897 146.47);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.78 0.16 80);
+  --warning-foreground: oklch(0.2 0.07 80);
+  --info: oklch(0.62 0.16 250);
+  --info-foreground: oklch(1 0 0);
+  --accent-alt: oklch(0.62 0.18 300);
+  --accent-alt-foreground: oklch(1 0 0);
   --border: oklch(0.9 0.002 240);
   --input: oklch(85.982% 0.00773 260.87);
   --ring: oklch(0.6 0.15 142); /* Green ring with subtle transparency */
   --chart-1: oklch(0.669 0.1897 146.47); /* Brand green */
-  --chart-2: oklch(0.65 0.18 45); /* Energy orange */
-  --chart-3: oklch(0.15 0 0); /* Deep black */
-  --chart-4: oklch(0.45 0.005 240); /* Urban gray */
-  --chart-5: oklch(1 0 0); /* Pure white */
+  --chart-2: oklch(0.75 0.16 80); /* Energy orange */
+  --chart-3: oklch(0.62 0.16 250); /* Info blue */
+  --chart-4: oklch(0.62 0.18 300); /* Accent violet */
+  --chart-5: oklch(0.45 0.005 240); /* Urban gray */
   --radius: 0.75rem; /* Slightly larger radius for modern feel */
   --sidebar: oklch(0.98 0.002 240);
   --sidebar-foreground: oklch(0.15 0 0);
@@ -54,6 +62,64 @@
   --glass-bg: oklch(1 0 0 / 0.85);
   --glass-border: oklch(0.92 0.005 240 / 0.4);
   --glass-shadow: 0 8px 32px oklch(0.25 0.015 240 / 0.1);
+  color-scheme: light;
+}
+
+.dark {
+  --background: oklch(0.14 0.005 240);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.18 0.008 240);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.18 0.008 240);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.669 0.1897 146.47);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.24 0.01 240);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.24 0.01 240);
+  --muted-foreground: oklch(0.7 0.01 240);
+  --accent: oklch(0.26 0.02 260);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.62 0.23 27.325);
+  --destructive-foreground: oklch(0.98 0 0);
+  --success: oklch(0.72 0.18 146.47);
+  --success-foreground: oklch(0.98 0 0);
+  --warning: oklch(0.8 0.16 80);
+  --warning-foreground: oklch(0.2 0.07 80);
+  --info: oklch(0.7 0.16 250);
+  --info-foreground: oklch(0.98 0 0);
+  --accent-alt: oklch(0.68 0.18 300);
+  --accent-alt-foreground: oklch(0.98 0 0);
+  --border: oklch(0.28 0.01 240);
+  --input: oklch(0.24 0.01 240);
+  --ring: oklch(0.72 0.18 146.47);
+  --chart-1: oklch(0.72 0.18 146.47);
+  --chart-2: oklch(0.8 0.16 80);
+  --chart-3: oklch(0.7 0.16 250);
+  --chart-4: oklch(0.68 0.18 300);
+  --chart-5: oklch(0.86 0.005 240);
+  --sidebar: oklch(0.18 0.008 240);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.6 0.16 146.47);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.8 0.16 80);
+  --sidebar-accent-foreground: oklch(0.2 0.07 80);
+  --sidebar-border: oklch(0.28 0.01 240);
+  --sidebar-ring: oklch(0.6 0.16 146.47 / 0.35);
+  --gradient-primary: linear-gradient(
+    135deg,
+    oklch(0.16 0.01 240) 0%,
+    oklch(0.2 0.015 240) 100%
+  );
+  --gradient-accent: linear-gradient(
+    135deg,
+    oklch(0.6 0.16 146.47) 0%,
+    oklch(0.5 0.12 300) 100%
+  );
+  --glass-bg: oklch(0.18 0.008 240 / 0.85);
+  --glass-border: oklch(0.28 0.01 240 / 0.5);
+  --glass-shadow: 0 8px 32px oklch(0.05 0.01 240 / 0.35);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -78,6 +144,14 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-accent-alt: var(--accent-alt);
+  --color-accent-alt-foreground: var(--accent-alt-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
