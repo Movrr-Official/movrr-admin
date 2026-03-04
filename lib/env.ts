@@ -70,6 +70,7 @@ const serverEnvSchema = publicEnvSchema
   FROM_EMAIL: z.string().email("Invalid FROM_EMAIL"),
   WELCOME_EMAIL: z.string().email("Invalid WELCOME_EMAIL"),
   ADMIN_EMAIL: z.string().email("Invalid ADMIN_EMAIL"),
+  ADMIN_EMAILS: z.string().optional(),
   SYSTEM_EMAIL: z.string().email("Invalid SYSTEM_EMAIL"),
   SUPPORT_EMAIL: z.string().email("Invalid SUPPORT_EMAIL").optional(),
   ERROR_WEBHOOK_URL: z.string().url("Invalid ERROR_WEBHOOK_URL").optional(),
@@ -86,6 +87,21 @@ const serverEnvSchema = publicEnvSchema
   ROUTE_OPTIMIZER_OLD_TOKEN: z.string().optional(),
   })
   .superRefine((value, ctx) => {
+    if (value.ADMIN_EMAILS) {
+      const invalidEmails = value.ADMIN_EMAILS.split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .filter((recipient) => !z.string().email().safeParse(recipient).success);
+
+      if (invalidEmails.length > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Invalid ADMIN_EMAILS entries: ${invalidEmails.join(", ")}`,
+          path: ["ADMIN_EMAILS"],
+        });
+      }
+    }
+
     if (!value.ROUTE_OPTIMIZER_TOKEN && !value.ROUTE_OPTIMIZER_KEY) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -139,6 +155,7 @@ function getEnv(): PublicEnv | ServerEnv {
       FROM_EMAIL: process.env.FROM_EMAIL,
       WELCOME_EMAIL: process.env.WELCOME_EMAIL,
       ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+      ADMIN_EMAILS: process.env.ADMIN_EMAILS,
       SYSTEM_EMAIL: process.env.SYSTEM_EMAIL,
       SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
       ERROR_WEBHOOK_URL: process.env.ERROR_WEBHOOK_URL,
@@ -178,6 +195,7 @@ export const RESEND_API_KEY = serverEnv?.RESEND_API_KEY ?? "";
 export const FROM_EMAIL = serverEnv?.FROM_EMAIL || "hello@movrr.nl";
 export const WELCOME_EMAIL = serverEnv?.WELCOME_EMAIL || "welcome@movrr.nl";
 export const ADMIN_EMAIL = serverEnv?.ADMIN_EMAIL || "admin@movrr.nl";
+export const ADMIN_EMAILS = serverEnv?.ADMIN_EMAILS ?? "";
 export const SYSTEM_EMAIL = serverEnv?.SYSTEM_EMAIL || "system@movrr.nl";
 export const SUPPORT_EMAIL = serverEnv?.SUPPORT_EMAIL || "support@movrr.nl";
 export const ERROR_WEBHOOK_URL = serverEnv?.ERROR_WEBHOOK_URL ?? "";
