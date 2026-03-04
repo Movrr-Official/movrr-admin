@@ -69,7 +69,7 @@ const serverEnvSchema = publicEnvSchema
   RESEND_API_KEY: z.string().min(1, "Resend API key is required"),
   FROM_EMAIL: z.string().email("Invalid FROM_EMAIL"),
   WELCOME_EMAIL: z.string().email("Invalid WELCOME_EMAIL"),
-  ADMIN_EMAIL: z.string().email("Invalid ADMIN_EMAIL"),
+  ADMIN_EMAIL: z.string().email("Invalid ADMIN_EMAIL").optional(),
   ADMIN_EMAILS: z.string().optional(),
   SYSTEM_EMAIL: z.string().email("Invalid SYSTEM_EMAIL"),
   SUPPORT_EMAIL: z.string().email("Invalid SUPPORT_EMAIL").optional(),
@@ -100,6 +100,22 @@ const serverEnvSchema = publicEnvSchema
           path: ["ADMIN_EMAILS"],
         });
       }
+    }
+
+    const hasSingleAdminEmail = Boolean(value.ADMIN_EMAIL?.trim());
+    const hasAdminEmailList = Boolean(
+      value.ADMIN_EMAILS
+        ?.split(",")
+        .map((item) => item.trim())
+        .filter(Boolean).length,
+    );
+
+    if (!hasSingleAdminEmail && !hasAdminEmailList) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Provide ADMIN_EMAIL or ADMIN_EMAILS",
+        path: ["ADMIN_EMAIL"],
+      });
     }
 
     if (!value.ROUTE_OPTIMIZER_TOKEN && !value.ROUTE_OPTIMIZER_KEY) {
