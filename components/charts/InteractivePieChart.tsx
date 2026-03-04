@@ -84,7 +84,7 @@ const InteractivePieChart = () => {
             <Pie
               data={data}
               dataKey="riders"
-              nameKey="name"
+              nameKey="month"
               innerRadius={60}
               strokeWidth={5}
               activeIndex={activeIndex}

@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Campaign } from "@/schemas";
 import { format } from "date-fns";
+import { formatCurrencyEUR } from "@/lib/currency";
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -187,17 +188,17 @@ export function CampaignCard({
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Budget:</span>
               <span className="font-semibold">
-                €{typeof campaign.budget === "number" 
-                  ? campaign.budget.toLocaleString() 
-                  : "0"}
+                {formatCurrencyEUR(
+                  typeof campaign.budget === "number" ? campaign.budget : 0,
+                )}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Spent:</span>
               <span className="font-semibold">
-                €{typeof campaign.spent === "number" 
-                  ? campaign.spent.toLocaleString() 
-                  : "0"}
+                {formatCurrencyEUR(
+                  typeof campaign.spent === "number" ? campaign.spent : 0,
+                )}
               </span>
             </div>
             <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
@@ -313,3 +314,6 @@ export function CampaignCard({
       </Card>
   );
 }
+
+
+

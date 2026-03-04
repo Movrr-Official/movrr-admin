@@ -8,7 +8,7 @@ export const chartConfig = {
     label: "Impressions",
   },
   revenue: {
-    label: "Revenue (€)",
+    label: "Revenue (EUR)",
   },
   january: {
     label: "January",

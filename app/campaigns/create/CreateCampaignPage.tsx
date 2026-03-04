@@ -12,7 +12,6 @@ import {
   Plus,
   Info,
   Calendar,
-  DollarSign,
   Target,
   MapPin,
   Settings,
@@ -59,6 +58,10 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { useRouteData } from "@/hooks/useRouteData";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  formatCurrencyEUR,
+  formatCurrencyEURWithPrecision,
+} from "@/lib/currency";
 
 const createCampaignFormSchema = z
   .object({
@@ -171,9 +174,9 @@ export default function CreateCampaignPage() {
   // Calculate cost per impression
   const costPerImpression = useMemo(() => {
     if (watchedValues.budget > 0 && watchedValues.impressionGoal > 0) {
-      return (watchedValues.budget / watchedValues.impressionGoal).toFixed(4);
+      return watchedValues.budget / watchedValues.impressionGoal;
     }
-    return "0.0000";
+    return 0;
   }, [watchedValues.budget, watchedValues.impressionGoal]);
 
   const onSubmit = async (data: CreateCampaignFormData) => {
@@ -580,7 +583,10 @@ export default function CreateCampaignPage() {
                           <div className="flex items-center justify-between">
                             <span>Estimated cost per impression:</span>
                             <Badge variant="outline" className="font-semibold">
-                              €{costPerImpression}
+                              {formatCurrencyEURWithPrecision(
+                                costPerImpression,
+                                4,
+                              )}
                             </Badge>
                           </div>
                         </AlertDescription>
@@ -843,7 +849,7 @@ export default function CreateCampaignPage() {
                         Budget
                       </p>
                       <p className="text-base font-medium">
-                        €{watchedValues.budget.toLocaleString()}
+                        {formatCurrencyEUR(watchedValues.budget)}
                       </p>
                     </div>
                     <div className="space-y-2">

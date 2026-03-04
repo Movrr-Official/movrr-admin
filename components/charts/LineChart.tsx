@@ -40,7 +40,7 @@ const LineChartComponent = ({ data = [] }: PerformanceChartProps) => {
           stroke="var(--chart-2)"
           strokeWidth={2}
           dot={false}
-          name="Revenue (€)"
+          name="Revenue (EUR)"
         />
       </LineChart>
     </ResponsiveContainer>

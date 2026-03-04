@@ -10,7 +10,7 @@ import {
   X,
   Calendar,
   Clock,
-  DollarSign,
+  Euro,
   Target,
   Eye,
   MousePointerClick,
@@ -87,6 +87,7 @@ import {
 import {
   getAdvertiserOptions,
 } from "@/app/actions/advertisers";
+import { formatCurrencyEUR } from "@/lib/currency";
 
 const editCampaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -520,7 +521,7 @@ export function CampaignDetailsDrawer({
                             name="budget"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-semibold">Budget *</FormLabel>
+                          <FormLabel className="text-sm font-semibold">Budget *</FormLabel>
                                 <FormControl>
                                   <Input
                                     type="number"
@@ -840,18 +841,18 @@ export function CampaignDetailsDrawer({
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Total Budget</p>
                         <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-primary" />
+                          <Euro className="h-4 w-4 text-primary" />
                           <p className="text-lg font-bold text-foreground">
-                            ${campaign.budget.toLocaleString()}
+                            {formatCurrencyEUR(campaign.budget)}
                           </p>
                         </div>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Amount Spent</p>
                         <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-amber-600" />
+                          <Euro className="h-4 w-4 text-amber-600" />
                           <p className="text-lg font-bold text-foreground">
-                            ${campaign.spent.toLocaleString()}
+                            {formatCurrencyEUR(campaign.spent)}
                           </p>
                         </div>
                       </div>
@@ -870,7 +871,7 @@ export function CampaignDetailsDrawer({
                         ></div>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        ${(campaign.budget - campaign.spent).toLocaleString()} remaining
+                        {formatCurrencyEUR(campaign.budget - campaign.spent)} remaining
                       </p>
                     </div>
                   </CardContent>

@@ -10,7 +10,7 @@ import {
   Eye,
   Megaphone,
   Target,
-  DollarSign,
+  Euro,
   TrendingUp,
   Eye as EyeIcon,
   MousePointerClick,
@@ -29,6 +29,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Campaign } from "@/schemas";
+import { formatCurrencyEUR } from "@/lib/currency";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -157,12 +158,12 @@ export const getCampaignsTableColumns = ({
       return (
         <div className="flex flex-col gap-1 min-w-[120px]">
           <div className="flex items-center gap-2">
-            <DollarSign className="h-3 w-3 text-muted-foreground" />
+            <Euro className="h-3 w-3 text-muted-foreground" />
             <span className="font-semibold text-foreground">
-              ${spent.toLocaleString()}
+              {formatCurrencyEUR(spent)}
             </span>
             <span className="text-xs text-muted-foreground">
-              / ${budget.toLocaleString()}
+              / {formatCurrencyEUR(budget)}
             </span>
           </div>
           <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">

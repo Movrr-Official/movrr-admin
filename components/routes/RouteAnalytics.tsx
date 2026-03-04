@@ -109,7 +109,11 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
                   axisLine={false}
                   allowDecimals={false}
                 />
-                <Tooltip content={<ChartTooltipContent />} />
+                <Tooltip
+                  content={
+                    <ChartTooltipContent seriesLabelMap={{ value: "Routes" }} />
+                  }
+                />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="#3b82f6" />
               </BarChart>
             </ResponsiveContainer>
@@ -131,7 +135,11 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
         <CardContent className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Tooltip content={<ChartTooltipContent />} />
+              <Tooltip
+                content={
+                  <ChartTooltipContent seriesLabelMap={{ value: "Count" }} />
+                }
+              />
               <Legend verticalAlign="bottom" height={24} iconType="circle" />
               <Pie
                 data={statusCounts}
@@ -166,7 +174,11 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
               <CartesianGrid vertical={false} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} />
               <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
-              <Tooltip content={<ChartTooltipContent />} />
+              <Tooltip
+                content={
+                  <ChartTooltipContent seriesLabelMap={{ value: "Routes" }} />
+                }
+              />
               <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                 {performanceCounts.map((entry) => (
                   <Cell
@@ -204,7 +216,11 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
               <CartesianGrid vertical={false} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} />
               <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
-              <Tooltip content={<ChartTooltipContent />} />
+              <Tooltip
+                content={
+                  <ChartTooltipContent seriesLabelMap={{ value: "Routes" }} />
+                }
+              />
               <Area
                 type="monotone"
                 dataKey="value"

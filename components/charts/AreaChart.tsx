@@ -52,7 +52,7 @@ const AreaChart = ({ data = [] }: PerformanceChartProps) => {
           stroke="var(--chart-2)"
           strokeWidth={2}
           stackId="a"
-          name="Revenue (€)"
+          name="Revenue (EUR)"
         />
       </RechartsAreaChart>
     </ResponsiveContainer>

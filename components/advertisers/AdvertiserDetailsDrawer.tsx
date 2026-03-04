@@ -30,6 +30,7 @@ import {
 import { CompanyLogoUploadField } from "@/components/advertisers/CompanyLogoUploadField";
 import { CopyButton } from "@/components/CopyButton";
 import { NEXT_PUBLIC_ADVERTISER_LOGO_MAX_FILE_SIZE_MB } from "@/lib/env";
+import { formatCurrencyEUR } from "@/lib/currency";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -651,7 +652,7 @@ export function AdvertiserDetailsDrawer({
                       <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
                         <p className="text-xs text-muted-foreground">Budget</p>
                         <p className="text-xl font-bold text-foreground">
-                          {advertiser.budget.toLocaleString()}
+                          {formatCurrencyEUR(advertiser.budget)}
                         </p>
                       </div>
                     </CardContent>

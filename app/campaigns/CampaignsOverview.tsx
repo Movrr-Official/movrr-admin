@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Megaphone,
   TrendingUp,
-  DollarSign,
+  Euro,
   Target,
   PlayCircle,
   Eye,
@@ -21,6 +21,7 @@ import { CampaignEngagementByCityChart } from "@/components/campaigns/CampaignEn
 import { CampaignDailyImpressionsChart } from "@/components/campaigns/CampaignDailyImpressionsChart";
 import { CampaignRiderAllocationChart } from "@/components/campaigns/CampaignRiderAllocationChart";
 import { StatsCard } from "@/components/stats/StatsCard";
+import { formatCurrencyEUR, formatCurrencyEURCompact } from "@/lib/currency";
 
 export default function CampaignsOverview() {
   const router = useRouter();
@@ -189,9 +190,9 @@ export default function CampaignsOverview() {
 
           <StatsCard
             title="Budget Performance"
-            value={`$${totalSpent.toLocaleString()}`}
-            icon={DollarSign}
-            description={`of $${totalBudget.toLocaleString()} budget`}
+            value={formatCurrencyEURCompact(totalSpent)}
+            icon={Euro}
+            description={`of ${formatCurrencyEUR(totalBudget)} budget`}
             progress={{
               value: budgetUtilization,
               label: `${budgetUtilization}% utilized`,

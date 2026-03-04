@@ -370,10 +370,10 @@ export default function DashboardOverview() {
   const campaignPerformanceChartData = campaignPerformanceData.map((item) => ({
     name: item.name,
     impressions: item.impressions,
-    engagements: item.revenue,
+    revenue: item.revenue,
   }));
   const campaignPerformanceMax = campaignPerformanceChartData.reduce(
-    (max, item) => Math.max(max, item.impressions, item.engagements),
+    (max, item) => Math.max(max, item.impressions, item.revenue),
     0,
   );
   const campaignPerformanceDomainMax = Math.max(
@@ -775,7 +775,18 @@ export default function DashboardOverview() {
                           value >= 1000 ? `${Math.round(value / 1000)}k` : value
                         }
                       />
-                      <Tooltip content={<ChartTooltipContent />} />
+                      <Tooltip
+                        content={
+                          <ChartTooltipContent
+                            seriesLabelMap={{
+                              value:
+                                userGrowthView === "riders"
+                                  ? "Riders"
+                                  : "Advertisers",
+                            }}
+                          />
+                        }
+                      />
                       <defs>
                         <linearGradient
                           id="userGrowthFill"
@@ -948,13 +959,16 @@ export default function DashboardOverview() {
                         }
                         fontSize={12}
                       />
-                      <Tooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="impressions" fill="#6D5BD0" radius={0} />
-                      <Bar
-                        dataKey="engagements"
-                        fill="var(--chart-1)"
-                        radius={0}
+                      <Tooltip
+                        content={
+                          <ChartTooltipContent
+                            seriesLabelMap={{ revenue: "Revenue" }}
+                            seriesFormatMap={{ revenue: "currency" }}
+                          />
+                        }
                       />
+                      <Bar dataKey="impressions" fill="#6D5BD0" radius={0} />
+                      <Bar dataKey="revenue" fill="var(--chart-1)" radius={0} />
                     </RechartsBarChart>
                   </ResponsiveContainer>
                 )}
@@ -975,7 +989,7 @@ export default function DashboardOverview() {
                     style={{ backgroundColor: "var(--chart-1)" }}
                     aria-hidden="true"
                   />
-                  <span>Engagements</span>
+                  <span>Revenue</span>
                 </div>
               </div>
             </CardContent>
@@ -1030,7 +1044,13 @@ export default function DashboardOverview() {
                         }
                         fontSize={12}
                       />
-                      <Tooltip content={<ChartTooltipContent />} />
+                      <Tooltip
+                        content={
+                          <ChartTooltipContent
+                            seriesFormatMap={{ completionRate: "percent" }}
+                          />
+                        }
+                      />
                       <Line
                         type="monotone"
                         dataKey="awarded"
@@ -1219,7 +1239,7 @@ export default function DashboardOverview() {
                             {log.action}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {log.affectedEntity?.name ?? "System"} ·{" "}
+                            {log.affectedEntity?.name ?? "System"} -{" "}
                             {new Date(log.timestamp).toLocaleString("en-US", {
                               dateStyle: "medium",
                               timeStyle: "short",

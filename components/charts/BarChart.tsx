@@ -36,7 +36,7 @@ const BarChartComponent = ({ data = [] }: PerformanceChartProps) => {
           dataKey="revenue"
           fill="var(--chart-2)"
           radius={[4, 4, 0, 0]}
-          name="Revenue (€)"
+          name="Revenue (EUR)"
         />
       </BarChart>
     </ResponsiveContainer>
