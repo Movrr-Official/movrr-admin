@@ -63,7 +63,7 @@ export default function AuthLayout({
             <div>
               <h3 className="font-semibold">Real-time Analytics</h3>
               <p className="opacity-80">
-                Track performance and ROI in real-time
+                Track performance in real-time
               </p>
             </div>
           </div>

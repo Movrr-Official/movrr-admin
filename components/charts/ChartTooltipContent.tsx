@@ -59,7 +59,7 @@ function formatSeriesLabel(
   const mapped = seriesLabelMap?.[rawKey];
   if (mapped) return mapped;
 
-  const upperAcronyms = new Set(["cpi", "cpm", "ctr", "roi", "api", "kpi"]);
+  const upperAcronyms = new Set(["cpi", "cpm", "ctr", "api", "kpi"]);
   return rawKey
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .replace(/[_-]+/g, " ")

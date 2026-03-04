@@ -228,9 +228,9 @@ export async function getCampaigns(
     const mapped = (campaigns ?? []).map((campaign) => {
       const advertiser = advertiserById.get(campaign.advertiser_id);
       const impressions = Number(campaign.impressions ?? 0);
-      const clicks = Number(campaign.clicks ?? 0);
+      const qrScans = Number(campaign.qr_scans ?? 0);
       const conversions = Number(campaign.conversions ?? 0);
-      const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+      const scanRate = impressions > 0 ? (qrScans / impressions) * 100 : 0;
 
       return {
         id: campaign.id,
@@ -245,9 +245,9 @@ export async function getCampaigns(
         endDate: campaign.end_date,
         impressionGoal: Number(campaign.visibility_target ?? 0) || 0,
         impressions,
-        clicks,
-        ctr,
-        roi: Number(campaign.roi ?? 0),
+        qrScans,
+        conversions,
+        scanRate,
         progress: computeProgress(campaign.start_date, campaign.end_date),
         campaignType: normalizeCampaignType(campaign.campaign_type),
         targetZones: campaign.target_zones ?? [],
@@ -275,7 +275,7 @@ export async function getCampaigns(
         complianceStatus: "pending",
         _count: {
           impressions,
-          clicks,
+          qrScans,
           conversions,
         },
         createdAt: campaign.created_at ?? new Date().toISOString(),
@@ -287,7 +287,7 @@ export async function getCampaigns(
         vehicle: campaign.vehicle_type_required ?? "",
         zones: campaign.target_zones ?? [],
         engagementRate: Number(campaign.engagement_rate ?? 0),
-        clickRate: impressions > 0 ? (clicks / impressions) * 100 : 0,
+        scanRatePercent: impressions > 0 ? (qrScans / impressions) * 100 : 0,
         conversionRate: impressions > 0 ? (conversions / impressions) * 100 : 0,
         avgDuration:
           campaign.start_date && campaign.end_date
@@ -342,9 +342,8 @@ export async function createCampaign(
       visibility_target:
         data.impressionGoal !== undefined ? String(data.impressionGoal) : null,
       impressions: 0,
-      clicks: 0,
+      qr_scans: 0,
       conversions: 0,
-      roi: 0,
       campaign_type: mapUiCampaignTypeToDb(data.campaignType),
       target_zones: data.targetZones || [],
       vehicle_type_required: data.vehicleTypeRequired || "bike",
@@ -612,9 +611,8 @@ export async function duplicateCampaign(
       name: `${originalCampaign.name} (Copy)`,
       lifecycle_status: "draft",
       impressions: 0,
-      clicks: 0,
+      qr_scans: 0,
       conversions: 0,
-      roi: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

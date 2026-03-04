@@ -80,10 +80,7 @@ export const useUsersData = (filters?: UserFiltersSchema) => {
               (sum, c) => sum + c.impressions,
               0,
             );
-            const clicks = advCampaigns.reduce((sum, c) => sum + c.clicks, 0);
-            const roi =
-              advCampaigns.reduce((sum, c) => sum + c.roi, 0) /
-              (advCampaigns.length || 1);
+            const clicks = advCampaigns.reduce((sum, c) => sum + c.qrScans, 0);
 
             return {
               ...user,
@@ -93,7 +90,6 @@ export const useUsersData = (filters?: UserFiltersSchema) => {
                 completedCampaigns: completed,
                 impressions,
                 clicks,
-                roi: parseFloat(roi.toFixed(2)),
               },
             };
           }
@@ -134,10 +130,7 @@ export const useUsersData = (filters?: UserFiltersSchema) => {
             (sum, c) => sum + c.impressions,
             0,
           );
-          const clicks = advCampaigns.reduce((sum, c) => sum + c.clicks, 0);
-          const roi =
-            advCampaigns.reduce((sum, c) => sum + c.roi, 0) /
-            (advCampaigns.length || 1);
+          const clicks = advCampaigns.reduce((sum, c) => sum + c.qrScans, 0);
 
           return {
             ...user,
@@ -147,7 +140,6 @@ export const useUsersData = (filters?: UserFiltersSchema) => {
               completedCampaigns: completed,
               impressions,
               clicks,
-              roi: parseFloat(roi.toFixed(2)),
             },
           };
         }

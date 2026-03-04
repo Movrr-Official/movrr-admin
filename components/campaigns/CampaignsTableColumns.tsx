@@ -10,8 +10,6 @@ import {
   Eye,
   Megaphone,
   Target,
-  Euro,
-  TrendingUp,
   Eye as EyeIcon,
   MousePointerClick,
   Copy,
@@ -158,7 +156,6 @@ export const getCampaignsTableColumns = ({
       return (
         <div className="flex flex-col gap-1 min-w-[120px]">
           <div className="flex items-center gap-2">
-            <Euro className="h-3 w-3 text-muted-foreground" />
             <span className="font-semibold text-foreground">
               {formatCurrencyEUR(spent)}
             </span>
@@ -187,9 +184,8 @@ export const getCampaignsTableColumns = ({
     cell: ({ row }) => {
       const campaign = row.original;
       const impressions = campaign.impressions || 0;
-      const clicks = campaign.clicks || 0;
-      const ctr = campaign.ctr || 0;
-      const roi = campaign.roi || 0;
+      const scans = campaign.qrScans || 0;
+      const scanRate = campaign.scanRate || 0;
 
       return (
         <div className="flex flex-col gap-1 min-w-[140px]">
@@ -202,16 +198,10 @@ export const getCampaignsTableColumns = ({
           <div className="flex items-center gap-2">
             <MousePointerClick className="h-3 w-3 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">
-              {clicks.toLocaleString()}
+              {scans.toLocaleString()}
             </span>
             <span className="text-xs text-muted-foreground">
-              ({ctr.toFixed(1)}% CTR)
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-3 w-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">
-              ROI: {roi.toFixed(1)}x
+              ({scanRate.toFixed(1)}% Scan Rate)
             </span>
           </div>
         </div>

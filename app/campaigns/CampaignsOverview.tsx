@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { CampaignsTable } from "@/components/campaigns/CampaignsTable";
 import { useCampaignsData } from "@/hooks/useCampaignsData";
-import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { mergeCampaignAnalytics } from "@/lib/campaign";
 import { CampaignEngagementByCityChart } from "@/components/campaigns/CampaignEngagementByCityChart";
@@ -25,7 +24,13 @@ import { formatCurrencyEUR, formatCurrencyEURCompact } from "@/lib/currency";
 
 export default function CampaignsOverview() {
   const router = useRouter();
-  const { data: campaigns, isLoading, isFetching, error, refetch } = useCampaignsData();
+  const {
+    data: campaigns,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useCampaignsData();
 
   // Calculate comprehensive stats for campaign management
   const totalCampaigns = campaigns?.length ?? 0;
@@ -46,22 +51,14 @@ export default function CampaignsOverview() {
   const budgetUtilization =
     totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
 
-  // Calculate total impressions and clicks
+  // Calculate total impressions and QR scans
   const totalImpressions =
     campaigns?.reduce((sum, c) => sum + (c.impressions || 0), 0) ?? 0;
-  const totalClicks =
-    campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) ?? 0;
-  const averageCTR =
+  const totalScans =
+    campaigns?.reduce((sum, c) => sum + (c.qrScans || 0), 0) ?? 0;
+  const averageScanRate =
     totalImpressions > 0
-      ? ((totalClicks / totalImpressions) * 100).toFixed(2)
-      : "0.00";
-
-  // Calculate average ROI
-  const averageROI =
-    campaigns && campaigns.length > 0
-      ? (
-          campaigns.reduce((sum, c) => sum + (c.roi || 0), 0) / campaigns.length
-        ).toFixed(2)
+      ? ((totalScans / totalImpressions) * 100).toFixed(2)
       : "0.00";
 
   // Calculate campaigns created in last 7 days
@@ -214,14 +211,14 @@ export default function CampaignsOverview() {
                 iconColor: "text-primary",
               },
               {
-                label: "CTR",
-                value: `${averageCTR}%`,
+                label: "QR Scans",
+                value: totalScans.toLocaleString(),
                 icon: MousePointerClick,
                 iconColor: "text-info",
               },
               {
-                label: "Avg ROI",
-                value: `${averageROI}x`,
+                label: "Scan Rate",
+                value: `${averageScanRate}%`,
                 icon: TrendingUp,
                 iconColor: "text-success",
               },

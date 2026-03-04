@@ -218,7 +218,7 @@ export const workboardMockCards: WorkboardCard[] = [
     team_id: "local",
     board_id: "completed",
     title: "Campaign: Winter impact wrap-up",
-    description: "Deliver final report with impression totals + ROI summary.",
+    description: "Deliver final report with impression totals summary.",
     type: "Campaign",
     priority: "Low",
     due_date: "2026-03-18",

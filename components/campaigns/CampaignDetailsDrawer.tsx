@@ -14,7 +14,6 @@ import {
   Target,
   Eye,
   MousePointerClick,
-  TrendingUp,
   MapPin,
   Users,
   Bike,
@@ -84,9 +83,7 @@ import {
   deleteCampaign,
   duplicateCampaign,
 } from "@/app/actions/campaigns";
-import {
-  getAdvertiserOptions,
-} from "@/app/actions/advertisers";
+import { getAdvertiserOptions } from "@/app/actions/advertisers";
 import { formatCurrencyEUR } from "@/lib/currency";
 
 const editCampaignSchema = z.object({
@@ -150,18 +147,17 @@ export function CampaignDetailsDrawer({
     },
   });
 
-  const { data: advertisers = [], isLoading: advertisersLoading } =
-    useQuery({
-      queryKey: ["advertiser-profile-options"],
-      queryFn: async () => {
-        const result = await getAdvertiserOptions();
-        if (!result.success || !result.data) {
-          throw new Error(result.error || "Failed to load advertisers");
-        }
-        return result.data;
-      },
-      enabled: open,
-    });
+  const { data: advertisers = [], isLoading: advertisersLoading } = useQuery({
+    queryKey: ["advertiser-profile-options"],
+    queryFn: async () => {
+      const result = await getAdvertiserOptions();
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to load advertisers");
+      }
+      return result.data;
+    },
+    enabled: open,
+  });
 
   // Reset form when campaign changes or edit mode is enabled
   useEffect(() => {
@@ -261,7 +257,9 @@ export function CampaignDetailsDrawer({
     setIsEditMode(false);
   };
 
-  const handleStatusChange = async (newStatus: z.infer<typeof campaignStatusSchema>) => {
+  const handleStatusChange = async (
+    newStatus: z.infer<typeof campaignStatusSchema>,
+  ) => {
     if (!campaign) return;
 
     setIsLoading(true);
@@ -297,7 +295,10 @@ export function CampaignDetailsDrawer({
 
     setIsRunningSelection(true);
     try {
-      const result = await runCampaignSelection(campaign.id, "first_come_first_served");
+      const result = await runCampaignSelection(
+        campaign.id,
+        "first_come_first_served",
+      );
 
       if (!result.success) {
         throw new Error(result.error || "Failed to run campaign selection");
@@ -455,9 +456,10 @@ export function CampaignDetailsDrawer({
     }
   };
 
-  const budgetUtilization = campaign.budget > 0
-    ? Math.round((campaign.spent / campaign.budget) * 100)
-    : 0;
+  const budgetUtilization =
+    campaign.budget > 0
+      ? Math.round((campaign.spent / campaign.budget) * 100)
+      : 0;
 
   const startDate = new Date(campaign.startDate);
   const endDate = new Date(campaign.endDate);
@@ -483,7 +485,9 @@ export function CampaignDetailsDrawer({
           <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
             <DrawerHeader className="px-6 py-4 border-b glass-card border-0">
               <div className="flex items-center justify-between">
-                <DrawerTitle className="text-2xl font-bold">Campaign Details</DrawerTitle>
+                <DrawerTitle className="text-2xl font-bold">
+                  Campaign Details
+                </DrawerTitle>
                 <DrawerClose className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-muted transition-colors">
                   <X className="h-4 w-4" />
                   <span className="sr-only">Close</span>
@@ -500,9 +504,13 @@ export function CampaignDetailsDrawer({
                 <div className="flex-1">
                   {isEditMode ? (
                     <Form {...form}>
-                      <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+                      <form
+                        onSubmit={form.handleSubmit(handleSave)}
+                        className="space-y-4"
+                      >
                         <p className="text-xs text-muted-foreground">
-                          Brand is managed at the advertiser level and is read-only here.
+                          Brand is managed at the advertiser level and is
+                          read-only here.
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <FormField
@@ -510,7 +518,9 @@ export function CampaignDetailsDrawer({
                             name="name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-semibold">Campaign Name *</FormLabel>
+                                <FormLabel className="text-sm font-semibold">
+                                  Campaign Name *
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Campaign Name"
@@ -527,7 +537,9 @@ export function CampaignDetailsDrawer({
                             name="budget"
                             render={({ field }) => (
                               <FormItem>
-                          <FormLabel className="text-sm font-semibold">Budget *</FormLabel>
+                                <FormLabel className="text-sm font-semibold">
+                                  Budget *
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     type="number"
@@ -536,7 +548,9 @@ export function CampaignDetailsDrawer({
                                     placeholder="0.00"
                                     className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
                                     {...field}
-                                    onChange={(e) => field.onChange(e.target.value)}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.value)
+                                    }
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -548,7 +562,9 @@ export function CampaignDetailsDrawer({
                             name="impressionGoal"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-semibold">Impression Goal *</FormLabel>
+                                <FormLabel className="text-sm font-semibold">
+                                  Impression Goal *
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     type="number"
@@ -556,7 +572,9 @@ export function CampaignDetailsDrawer({
                                     placeholder="0"
                                     className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
                                     {...field}
-                                    onChange={(e) => field.onChange(e.target.value)}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.value)
+                                    }
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -568,7 +586,9 @@ export function CampaignDetailsDrawer({
                             name="startDate"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-semibold">Start Date *</FormLabel>
+                                <FormLabel className="text-sm font-semibold">
+                                  Start Date *
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     type="datetime-local"
@@ -585,7 +605,9 @@ export function CampaignDetailsDrawer({
                             name="endDate"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-semibold">End Date *</FormLabel>
+                                <FormLabel className="text-sm font-semibold">
+                                  End Date *
+                                </FormLabel>
                                 <FormControl>
                                   <Input
                                     type="datetime-local"
@@ -652,13 +674,15 @@ export function CampaignDetailsDrawer({
                                       ))
                                     ) : (
                                       <div className="px-2 py-3 text-sm text-muted-foreground">
-                                        No advertisers available. Add a new advertiser.
+                                        No advertisers available. Add a new
+                                        advertiser.
                                       </div>
                                     )}
                                   </SelectContent>
                                 </Select>
                                 <FormDescription className="text-xs">
-                                  Select an advertiser profile for this campaign.
+                                  Select an advertiser profile for this
+                                  campaign.
                                 </FormDescription>
                                 <FormMessage />
                               </FormItem>
@@ -669,7 +693,9 @@ export function CampaignDetailsDrawer({
                             name="campaignType"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-semibold">Campaign Type *</FormLabel>
+                                <FormLabel className="text-sm font-semibold">
+                                  Campaign Type *
+                                </FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
                                   value={field.value}
@@ -680,7 +706,9 @@ export function CampaignDetailsDrawer({
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="destination_ride">Destination Ride</SelectItem>
+                                    <SelectItem value="destination_ride">
+                                      Destination Ride
+                                    </SelectItem>
                                     <SelectItem value="swarm">Swarm</SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -693,7 +721,9 @@ export function CampaignDetailsDrawer({
                             name="vehicleTypeRequired"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-semibold">Vehicle Type *</FormLabel>
+                                <FormLabel className="text-sm font-semibold">
+                                  Vehicle Type *
+                                </FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
                                   value={field.value}
@@ -705,8 +735,12 @@ export function CampaignDetailsDrawer({
                                   </FormControl>
                                   <SelectContent>
                                     <SelectItem value="bike">Bike</SelectItem>
-                                    <SelectItem value="e-bike">E-Bike</SelectItem>
-                                    <SelectItem value="cargo-bike">Cargo Bike</SelectItem>
+                                    <SelectItem value="e-bike">
+                                      E-Bike
+                                    </SelectItem>
+                                    <SelectItem value="cargo-bike">
+                                      Cargo Bike
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -718,7 +752,9 @@ export function CampaignDetailsDrawer({
                             name="deliveryMode"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-semibold">Delivery Mode *</FormLabel>
+                                <FormLabel className="text-sm font-semibold">
+                                  Delivery Mode *
+                                </FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
                                   value={field.value}
@@ -729,8 +765,12 @@ export function CampaignDetailsDrawer({
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="manual">Manual</SelectItem>
-                                    <SelectItem value="automated">Automated</SelectItem>
+                                    <SelectItem value="manual">
+                                      Manual
+                                    </SelectItem>
+                                    <SelectItem value="automated">
+                                      Automated
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -743,7 +783,9 @@ export function CampaignDetailsDrawer({
                           name="description"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-semibold">Description</FormLabel>
+                              <FormLabel className="text-sm font-semibold">
+                                Description
+                              </FormLabel>
                               <FormControl>
                                 <Textarea
                                   placeholder="Campaign description..."
@@ -760,15 +802,21 @@ export function CampaignDetailsDrawer({
                   ) : (
                     <>
                       <div className="flex items-center gap-3 mb-2">
-                        <h2 className="text-2xl font-bold text-foreground">{campaign.name}</h2>
+                        <h2 className="text-2xl font-bold text-foreground">
+                          {campaign.name}
+                        </h2>
                         {getStatusBadge(campaign.status)}
                         {getTypeBadge(campaign.campaignType)}
                       </div>
                       {campaign.brand && (
-                        <p className="text-lg text-muted-foreground mb-2">{campaign.brand}</p>
+                        <p className="text-lg text-muted-foreground mb-2">
+                          {campaign.brand}
+                        </p>
                       )}
                       {campaign.description && (
-                        <p className="text-sm text-foreground">{campaign.description}</p>
+                        <p className="text-sm text-foreground">
+                          {campaign.description}
+                        </p>
                       )}
                     </>
                   )}
@@ -781,12 +829,16 @@ export function CampaignDetailsDrawer({
               {!isEditMode && (
                 <Card className="glass-card border-0">
                   <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-bold">Performance Metrics</CardTitle>
+                    <CardTitle className="text-lg font-bold">
+                      Performance Metrics
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Impressions</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Impressions
+                        </p>
                         <div className="flex items-center gap-2">
                           <Eye className="h-4 w-4 text-primary" />
                           <p className="text-lg font-bold text-foreground">
@@ -798,28 +850,23 @@ export function CampaignDetailsDrawer({
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Clicks</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          QR Scans
+                        </p>
                         <div className="flex items-center gap-2">
                           <MousePointerClick className="h-4 w-4 text-blue-600" />
                           <p className="text-lg font-bold text-foreground">
-                            {campaign.clicks.toLocaleString()}
+                            {campaign.qrScans.toLocaleString()}
                           </p>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          CTR: {campaign.ctr.toFixed(2)}%
+                          Scan Rate: {campaign.scanRate.toFixed(2)}%
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">ROI</p>
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-green-600" />
-                          <p className="text-lg font-bold text-foreground">
-                            {campaign.roi.toFixed(2)}x
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Progress</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Progress
+                        </p>
                         <div className="flex items-center gap-2">
                           <Target className="h-4 w-4 text-primary" />
                           <p className="text-lg font-bold text-foreground">
@@ -842,12 +889,16 @@ export function CampaignDetailsDrawer({
               {!isEditMode && (
                 <Card className="glass-card border-0">
                   <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-bold">Budget Information</CardTitle>
+                    <CardTitle className="text-lg font-bold">
+                      Budget Information
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Total Budget</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Total Budget
+                        </p>
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-primary" />
                           <p className="text-lg font-bold text-foreground">
@@ -856,7 +907,9 @@ export function CampaignDetailsDrawer({
                         </div>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Amount Spent</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Amount Spent
+                        </p>
                         <div className="flex items-center gap-2">
                           <Euro className="h-4 w-4 text-amber-600" />
                           <p className="text-lg font-bold text-foreground">
@@ -867,7 +920,9 @@ export function CampaignDetailsDrawer({
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm text-muted-foreground">Budget Utilization</p>
+                        <p className="text-sm text-muted-foreground">
+                          Budget Utilization
+                        </p>
                         <p className="text-sm font-semibold text-foreground">
                           {budgetUtilization}%
                         </p>
@@ -875,11 +930,14 @@ export function CampaignDetailsDrawer({
                       <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
                         <div
                           className="bg-gradient-to-r from-primary to-primary/80 h-3 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min(100, budgetUtilization)}%` }}
+                          style={{
+                            width: `${Math.min(100, budgetUtilization)}%`,
+                          }}
                         ></div>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {formatCurrencyEUR(campaign.budget - campaign.spent)} remaining
+                        {formatCurrencyEUR(campaign.budget - campaign.spent)}{" "}
+                        remaining
                       </p>
                     </div>
                   </CardContent>
@@ -889,12 +947,16 @@ export function CampaignDetailsDrawer({
               {/* Campaign Details */}
               <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-bold">Campaign Details</CardTitle>
+                  <CardTitle className="text-lg font-bold">
+                    Campaign Details
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Campaign ID</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Campaign ID
+                      </p>
                       <div className="flex items-center gap-2">
                         <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
                           {campaign.id}
@@ -903,7 +965,9 @@ export function CampaignDetailsDrawer({
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Advertiser ID</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Advertiser ID
+                      </p>
                       <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
                         {campaign.advertiserId}
                       </code>
@@ -911,7 +975,9 @@ export function CampaignDetailsDrawer({
                     {!isEditMode && (
                       <>
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">Start Date</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Start Date
+                          </p>
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <p className="text-sm font-medium text-foreground">
@@ -920,7 +986,9 @@ export function CampaignDetailsDrawer({
                           </div>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">End Date</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            End Date
+                          </p>
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
                             <p className="text-sm font-medium text-foreground">
@@ -929,7 +997,9 @@ export function CampaignDetailsDrawer({
                           </div>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">Vehicle Type</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Vehicle Type
+                          </p>
                           <div className="flex items-center gap-2">
                             <Bike className="h-4 w-4 text-primary" />
                             <p className="text-sm font-medium text-foreground capitalize">
@@ -938,27 +1008,31 @@ export function CampaignDetailsDrawer({
                           </div>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">Delivery Mode</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Delivery Mode
+                          </p>
                           <Badge variant="outline" className="capitalize">
                             {campaign.deliveryMode}
                           </Badge>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">Compliance Status</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Compliance Status
+                          </p>
                           <Badge
                             className={
                               campaign.complianceStatus === "approved"
                                 ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300"
                                 : campaign.complianceStatus === "pending"
-                                ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
-                                : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300"
+                                  ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
+                                  : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300"
                             }
                           >
                             {campaign.complianceStatus === "approved"
                               ? "Approved"
                               : campaign.complianceStatus === "pending"
-                              ? "Pending"
-                              : "Under Review"}
+                                ? "Pending"
+                                : "Under Review"}
                           </Badge>
                         </div>
                       </>
@@ -968,38 +1042,46 @@ export function CampaignDetailsDrawer({
               </Card>
 
               {/* Target Zones */}
-              {!isEditMode && campaign.targetZones && campaign.targetZones.length > 0 && (
-                <Card className="glass-card border-0">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-bold">Target Zones</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {campaign.targetZones.map((zone) => (
-                        <Badge
-                          key={zone}
-                          variant="outline"
-                          className="bg-primary/10 text-primary border-primary/20"
-                        >
-                          <MapPin className="h-3 w-3 mr-1" />
-                          {zone}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {!isEditMode &&
+                campaign.targetZones &&
+                campaign.targetZones.length > 0 && (
+                  <Card className="glass-card border-0">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-bold">
+                        Target Zones
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {campaign.targetZones.map((zone) => (
+                          <Badge
+                            key={zone}
+                            variant="outline"
+                            className="bg-primary/10 text-primary border-primary/20"
+                          >
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {zone}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
               {/* Riders & Routes */}
               {!isEditMode && (
                 <Card className="glass-card border-0">
                   <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-bold">Riders & Routes</CardTitle>
+                    <CardTitle className="text-lg font-bold">
+                      Riders & Routes
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Riders Assigned</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Riders Assigned
+                        </p>
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4 text-primary" />
                           <p className="text-sm font-medium text-foreground">
@@ -1008,7 +1090,9 @@ export function CampaignDetailsDrawer({
                         </div>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Routes</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Routes
+                        </p>
                         <div className="flex items-center gap-2">
                           <Target className="h-4 w-4 text-primary" />
                           <p className="text-sm font-medium text-foreground">
@@ -1019,14 +1103,18 @@ export function CampaignDetailsDrawer({
                     </div>
                     {campaign.routes && campaign.routes.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-sm font-semibold text-foreground">Route Details</p>
+                        <p className="text-sm font-semibold text-foreground">
+                          Route Details
+                        </p>
                         <div className="space-y-1">
                           {campaign.routes.map((route) => (
                             <div
                               key={route.id}
                               className="flex items-center justify-between p-2 bg-muted/30 rounded-lg"
                             >
-                              <span className="text-sm text-foreground">{route.name}</span>
+                              <span className="text-sm text-foreground">
+                                {route.name}
+                              </span>
                               <Badge
                                 variant="outline"
                                 className={
@@ -1050,25 +1138,37 @@ export function CampaignDetailsDrawer({
               {!isEditMode && (
                 <Card className="glass-card border-0">
                   <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-bold">Activity Timeline</CardTitle>
+                    <CardTitle className="text-lg font-bold">
+                      Activity Timeline
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Created</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Created
+                        </p>
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
                           <p className="text-sm font-medium text-foreground">
-                            {format(new Date(campaign.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                            {format(
+                              new Date(campaign.createdAt),
+                              "MMM d, yyyy 'at' h:mm a",
+                            )}
                           </p>
                         </div>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Last Updated</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Last Updated
+                        </p>
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
                           <p className="text-sm font-medium text-foreground">
-                            {format(new Date(campaign.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+                            {format(
+                              new Date(campaign.updatedAt),
+                              "MMM d, yyyy 'at' h:mm a",
+                            )}
                           </p>
                         </div>
                       </div>
@@ -1169,7 +1269,11 @@ export function CampaignDetailsDrawer({
                       variant="outline"
                       size="sm"
                       onClick={() => setShowRunSelectionDialog(true)}
-                      disabled={isLoading || campaign.status === "completed" || campaign.status === "cancelled"}
+                      disabled={
+                        isLoading ||
+                        campaign.status === "completed" ||
+                        campaign.status === "cancelled"
+                      }
                     >
                       <RefreshCw className="mr-2 h-4 w-4" />
                       Run Selection
@@ -1207,7 +1311,10 @@ export function CampaignDetailsDrawer({
       </Drawer>
 
       {/* Run Selection Dialog */}
-      <AlertDialog open={showRunSelectionDialog} onOpenChange={setShowRunSelectionDialog}>
+      <AlertDialog
+        open={showRunSelectionDialog}
+        onOpenChange={setShowRunSelectionDialog}
+      >
         <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-2">
@@ -1220,8 +1327,11 @@ export function CampaignDetailsDrawer({
             </div>
             <AlertDialogDescription className="text-muted-foreground">
               This will run the selection process for{" "}
-              <span className="font-semibold text-foreground">{campaign.name}</span>.
-              Riders will be selected based on the configured selection strategy.
+              <span className="font-semibold text-foreground">
+                {campaign.name}
+              </span>
+              . Riders will be selected based on the configured selection
+              strategy.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
@@ -1233,7 +1343,9 @@ export function CampaignDetailsDrawer({
                 </p>
                 <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                   <li>Selection algorithm will process all signups</li>
-                  <li>Riders will be selected based on capacity and strategy</li>
+                  <li>
+                    Riders will be selected based on capacity and strategy
+                  </li>
                   <li>Selected riders will be notified</li>
                   <li>Rejected riders will receive a notification</li>
                 </ul>
@@ -1241,13 +1353,17 @@ export function CampaignDetailsDrawer({
             </div>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isRunningSelection}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isRunningSelection}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRunSelection}
               disabled={isRunningSelection}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              {isRunningSelection && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isRunningSelection && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               {isRunningSelection ? "Running..." : "Run Selection"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1268,8 +1384,11 @@ export function CampaignDetailsDrawer({
             </div>
             <AlertDialogDescription className="text-muted-foreground">
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-foreground">{campaign.name}</span>? This action
-              cannot be undone and will permanently remove the campaign and all associated data.
+              <span className="font-semibold text-foreground">
+                {campaign.name}
+              </span>
+              ? This action cannot be undone and will permanently remove the
+              campaign and all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
@@ -1302,7 +1421,10 @@ export function CampaignDetailsDrawer({
       </AlertDialog>
 
       {/* Duplicate Campaign Dialog */}
-      <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+      <AlertDialog
+        open={showDuplicateDialog}
+        onOpenChange={setShowDuplicateDialog}
+      >
         <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-2">
@@ -1315,8 +1437,10 @@ export function CampaignDetailsDrawer({
             </div>
             <AlertDialogDescription className="text-muted-foreground">
               This will create a copy of{" "}
-              <span className="font-semibold text-foreground">{campaign.name}</span> with all
-              settings. The new campaign will be created as a draft.
+              <span className="font-semibold text-foreground">
+                {campaign.name}
+              </span>{" "}
+              with all settings. The new campaign will be created as a draft.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
