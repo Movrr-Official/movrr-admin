@@ -10,6 +10,7 @@ import { mockRoutes } from "@/data/mockRoutes";
 export interface WaitlistCounts {
   totalWaitlist: number;
   totalUsers: number;
+  totalRiders: number;
   totalAdvertisers: number;
   totalCampaigns: number;
   totalRoutes: number;
@@ -24,6 +25,7 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
     return {
       totalWaitlist: 3,
       totalUsers: mockUsers.length,
+      totalRiders: mockUsers.filter((user) => user.role === "rider").length,
       totalAdvertisers: mockUsers.filter((user) => user.role === "advertiser")
         .length,
       totalCampaigns: mockCampaigns.length,
@@ -36,6 +38,7 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
     const [
       waitlistResult,
       usersResult,
+      ridersResult,
       advertisersResult,
       campaignsResult,
       routesResult,
@@ -45,6 +48,8 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
         supabase.from("waitlist").select("id", { count: "exact", head: true }),
         // Users count
         supabase.from("user").select("id", { count: "exact", head: true }),
+        // Riders count
+        supabase.from("rider").select("id", { count: "exact", head: true }),
         // Advertisers count
         supabase.from("advertiser").select("id", { count: "exact", head: true }),
         // Campaigns count
@@ -55,6 +60,7 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
     return {
       totalWaitlist: waitlistResult.count || 0,
       totalUsers: usersResult.count || 0,
+      totalRiders: ridersResult.count || 0,
       totalAdvertisers: advertisersResult.count || 0,
       totalCampaigns: campaignsResult.count || 0,
       totalRoutes: routesResult.count || 0,
@@ -65,6 +71,7 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
     return {
       totalWaitlist: 0,
       totalUsers: 0,
+      totalRiders: 0,
       totalAdvertisers: 0,
       totalCampaigns: 0,
       totalRoutes: 0,

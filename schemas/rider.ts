@@ -31,7 +31,9 @@ export const vehicleSchema = z.object({
 });
 
 export const riderFiltersSchema = z.object({
-  status: z.enum(["all", "active", "inactive", "suspended"]).optional(),
+  status: z
+    .enum(["all", "active", "inactive", "pending", "suspended"])
+    .optional(),
   vehicleType: z.enum(["all", "bike", "e-bike", "cargo", "scooter"]).optional(),
   minRating: z.enum(["all", "3", "4", "4.5"]).optional(),
   searchQuery: z.string().optional(),
@@ -41,12 +43,20 @@ export const riderSchema = userSchema.extend({
   id: z.string(),
   userId: z.string(),
   status: riderStatusSchema,
+  city: z.string().optional(),
+  country: z.string().optional(),
   isCertified: z.boolean().default(false),
   lastActive: z.string().datetime().optional(),
+  lastActivityAt: z.string().datetime().optional(),
+  profileCompleteness: z.number().min(0).max(100).optional(),
 
   // Performance metrics
   impressionsDelivered: z.number().default(0),
   campaignsCompleted: z.number().default(0),
+  activeCampaignsCount: z.number().int().min(0).optional(),
+  activeRoutesCount: z.number().int().min(0).optional(),
+  pointsBalance: z.number().optional(),
+  lifetimePointsEarned: z.number().optional(),
   rating: z.number().min(1).max(5).default(3),
   weeklyEarnings: z.number().default(0),
   totalEarnings: z.number().default(0),
@@ -71,6 +81,7 @@ export const riderSchema = userSchema.extend({
 
   // Equipment
   vehicle: vehicleSchema,
+  vehicleType: vehicleTypeSchema.optional(),
   hasHelmet: z.boolean().default(false),
   gearCertified: z.boolean().default(false),
   inspectionStatus: z.enum(["passed", "failed", "pending"]).optional(),
@@ -95,8 +106,13 @@ export const updateRiderSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   status: riderStatusSchema.optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  languagePreference: z.string().optional(),
+  accountNotes: z.string().optional(),
   isCertified: z.boolean().optional(),
   avatarUrl: z.string().optional(),
+  vehicleType: vehicleTypeSchema.optional(),
   availability: availabilitySchema.optional(),
   vehicle: vehicleSchema.optional(),
   contact: riderContactSchema.optional(),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -122,12 +122,27 @@ const languageOptions = [
 
 export default function CreateUserPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formStep, setFormStep] = useState<"basic" | "details" | "review">(
     "basic",
   );
+  const initialRole = useMemo(() => {
+    const requestedRole = searchParams.get("role");
+    if (
+      requestedRole === "rider" ||
+      requestedRole === "admin" ||
+      requestedRole === "super_admin" ||
+      requestedRole === "moderator" ||
+      requestedRole === "support" ||
+      requestedRole === "government"
+    ) {
+      return requestedRole;
+    }
+    return "rider";
+  }, [searchParams]);
 
   const form = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserFormSchema),
@@ -135,7 +150,7 @@ export default function CreateUserPage() {
       email: "",
       name: "",
       phone: "",
-      role: "rider",
+      role: initialRole,
       status: "active",
       organization: "",
       languagePreference: "en",

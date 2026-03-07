@@ -13,6 +13,7 @@ export const DASHBOARD_COUNTS_QUERY_KEY = ["dashboardCounts"] as const;
 type CountContextType = {
   totalWaitlist: number;
   totalUsers: number;
+  totalRiders: number;
   totalAdvertisers: number;
   totalCampaigns: number;
   totalRoutes: number;
@@ -50,6 +51,7 @@ export const CountProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     totalWaitlist: data?.totalWaitlist || 0,
     totalUsers: data?.totalUsers || 0,
+    totalRiders: data?.totalRiders || 0,
     totalAdvertisers: data?.totalAdvertisers || 0,
     totalCampaigns: data?.totalCampaigns || 0,
     totalRoutes: data?.totalRoutes || 0,
