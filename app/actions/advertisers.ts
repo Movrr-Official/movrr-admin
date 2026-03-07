@@ -641,6 +641,7 @@ export async function createAdvertiserProfile(
         isVerified: false,
         accountNotes: "Created from advertiser operations.",
         sendWelcomeEmail: validatedData.sendWelcomeEmail,
+        allowAdvertiserBootstrap: true,
       });
 
       if (!createUserResult.success || !createUserResult.data) {

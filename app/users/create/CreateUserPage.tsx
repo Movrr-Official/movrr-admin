@@ -78,6 +78,25 @@ const createUserFormSchema = z.object({
   isVerified: z.boolean().default(false),
   accountNotes: z.string().optional(),
   sendWelcomeEmail: z.boolean().default(true),
+  city: z.string().optional(),
+  country: z.string().optional(),
+}).superRefine((value, ctx) => {
+  if (value.role === "rider") {
+    if (!value.city?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "City is required for rider accounts",
+        path: ["city"],
+      });
+    }
+    if (!value.country?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Country is required for rider accounts",
+        path: ["country"],
+      });
+    }
+  }
 });
 
 type CreateUserFormData = z.infer<typeof createUserFormSchema>;
@@ -87,7 +106,6 @@ const roleDescriptions: Record<string, string> = {
   super_admin: "Super administrator with elevated privileges",
   moderator: "Content and user moderation access",
   support: "Customer support and assistance access",
-  advertiser: "Campaign creation and management access",
   rider: "Rider with route and campaign participation",
   government: "Government or regulatory access",
 };
@@ -121,6 +139,8 @@ export default function CreateUserPage() {
       isVerified: false,
       accountNotes: "",
       sendWelcomeEmail: true,
+      city: "",
+      country: "",
     },
     mode: "onChange",
   });
@@ -138,7 +158,9 @@ export default function CreateUserPage() {
 
       toast({
         title: "User Created Successfully",
-        description: `User "${data.name}" has been created and is ready to use.`,
+        description: data.sendWelcomeEmail
+          ? `User "${data.name}" has been created and received an account setup email.`
+          : `User "${data.name}" has been created successfully.`,
       });
 
       router.push("/users");
@@ -157,6 +179,7 @@ export default function CreateUserPage() {
   };
 
   const selectedRoleDescription = roleDescriptions[watchedValues.role] || "";
+  const isRiderRole = watchedValues.role === "rider";
 
   return (
     <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
@@ -333,6 +356,54 @@ export default function CreateUserPage() {
                       )}
                     />
                   </div>
+                  {isRiderRole && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-semibold flex items-center gap-2">
+                              City <span className="text-destructive">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Amsterdam"
+                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Required for rider profile creation.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-semibold flex items-center gap-2">
+                              Country <span className="text-destructive">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Netherlands"
+                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Required for rider profile creation.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -381,16 +452,6 @@ export default function CreateUserPage() {
                                   </span>
                                   <span className="text-xs text-muted-foreground">
                                     {roleDescriptions.rider}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="advertiser">
-                                <div className="flex flex-col">
-                                  <span className="font-medium self-start">
-                                    Advertiser
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {roleDescriptions.advertiser}
                                   </span>
                                 </div>
                               </SelectItem>
@@ -587,14 +648,22 @@ export default function CreateUserPage() {
                               Send Welcome Email
                             </FormLabel>
                             <FormDescription className="text-xs">
-                              Send a welcome email with account setup
-                              instructions
+                              Send an account setup email with a secure password
+                              creation link
                             </FormDescription>
                           </div>
                         </FormItem>
                       )}
                     />
                   </div>
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      Advertiser accounts are created from the Advertisers
+                      module so the linked advertiser business profile is created
+                      at the same time.
+                    </AlertDescription>
+                  </Alert>
                 </CardContent>
               </Card>
             )}
@@ -778,9 +847,21 @@ export default function CreateUserPage() {
                     type="button"
                     onClick={() => {
                       if (formStep === "basic") {
-                        form.trigger(["name", "email"]);
+                        const fields: (keyof CreateUserFormData)[] = [
+                          "name",
+                          "email",
+                        ];
+                        if (isRiderRole) {
+                          fields.push("city", "country");
+                        }
+                        form.trigger(fields);
                         const basicErrors = form.formState.errors;
-                        if (!basicErrors.name && !basicErrors.email) {
+                        if (
+                          !basicErrors.name &&
+                          !basicErrors.email &&
+                          !basicErrors.city &&
+                          !basicErrors.country
+                        ) {
                           setFormStep("details");
                         }
                       } else if (formStep === "details") {

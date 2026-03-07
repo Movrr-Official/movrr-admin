@@ -30,6 +30,9 @@ If your change touches route optimization:
 - Prefer explicit table/field mapping in server actions.
 - Keep role checks and auth boundaries explicit (`requireAdmin`, `AuthWrapper`).
 - Avoid silent behavior changes in data contracts used by hooks/components.
+- Treat the auth bootstrap trigger as the owner of initial `public.user` creation after `auth.users` inserts.
+- When adding or changing user creation flows, pass metadata that matches the trigger contract instead of adding parallel bootstrap inserts in app code.
+- Keep role onboarding canonical: advertisers through the Advertisers module, public self-signup for riders only, and admin-created users through the admin user flow.
 
 ## Schema and migration changes
 
@@ -79,6 +82,7 @@ Each PR should include:
 - `lib/env.ts` (env contract changes).
 - `proxy.ts` and auth wrappers (access control).
 - `app/actions/users.ts` delete/creation flows.
+- shared auth bootstrap trigger and any server action that creates `auth.users`.
 - `app/actions/routes.ts` status/compliance/export logic.
 - `app/actions/rewards.ts` balance and adjustment logic.
 - `app/api/optimize/*` token forwarding and audit persistence.

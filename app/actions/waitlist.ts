@@ -1,10 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Resend } from "resend";
 import { requireAdmin } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseServerClient } from "@/supabase/server";
 import { WaitlistEntry } from "@/types/types";
+import AccountSetupEmail from "@/emails/account-setup";
+import { FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
 
 // Utility function to generate a secure random password
 function generateRandomPassword(length = 12) {
@@ -15,6 +18,53 @@ function generateRandomPassword(length = 12) {
     () => chars[Math.floor(Math.random() * chars.length)],
   ).join("");
 }
+
+const getResendClient = () => {
+  if (!RESEND_API_KEY) return null;
+  return new Resend(RESEND_API_KEY);
+};
+
+const getSenderEmail = () =>
+  FROM_EMAIL ? `Movrr <${FROM_EMAIL}>` : "Movrr <no-reply@movrr.nl>";
+
+const delay = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+const waitForBootstrappedUserProfile = async (
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+  maxAttempts: number = 10,
+): Promise<boolean> => {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const { data, error } = await supabaseAdmin
+      .from("user")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (data?.id) {
+      return true;
+    }
+
+    await delay(150);
+  }
+
+  return false;
+};
+
+const cleanupCreatedUser = async (
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+) => {
+  await supabaseAdmin.from("rider").delete().eq("user_id", userId);
+  await supabaseAdmin.from("advertiser").delete().eq("user_id", userId);
+  await supabaseAdmin.from("user").delete().eq("id", userId);
+  await supabaseAdmin.auth.admin.deleteUser(userId);
+};
 
 export async function getWaitlistData(
   searchValue?: string,
@@ -72,21 +122,7 @@ export async function updateWaitlistStatus(
       throw new Error(fetchError?.message || "Waitlist entry not found");
     }
 
-    // Updates the waitlist status first
-    const { data: updatedWaitlist, error: updateError } = await supabase
-      .from("waitlist")
-      .update({
-        status,
-        status_reason: reason,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (updateError) {
-      throw new Error(updateError.message);
-    }
+    let updatedWaitlist = waitlist;
 
     // If approved and not yet converted → creates Auth user + public.user
     if (status === "approved" && !waitlist.converted_to_user) {
@@ -96,6 +132,11 @@ export async function updateWaitlistStatus(
           email: waitlist.email,
           password: generateRandomPassword(),
           email_confirm: true, // mark email verified
+          user_metadata: {
+            full_name: waitlist.name,
+            city: waitlist.city ?? undefined,
+            server_assigned_role: "rider",
+          },
         });
 
       if (authError || !authUser) {
@@ -105,9 +146,21 @@ export async function updateWaitlistStatus(
       }
       createdAuthUserId = authUser.user.id;
 
-      // Insert into public.user with the correct ID (matches auth.users)
-      const { error: profileError } = await supabaseAdmin.from("user").insert({
-        id: authUser.user.id,
+      const hasBootstrappedProfile = await waitForBootstrappedUserProfile(
+        supabaseAdmin,
+        authUser.user.id,
+      );
+
+      if (!hasBootstrappedProfile) {
+        if (createdAuthUserId) {
+          await cleanupCreatedUser(supabaseAdmin, createdAuthUserId);
+        }
+        throw new Error(
+          "User bootstrap profile was not created by the auth trigger. Check the database trigger configuration.",
+        );
+      }
+
+      const { error: profileError } = await supabaseAdmin.from("user").update({
         email: authUser.user.email,
         name: waitlist.name,
         role: "rider",
@@ -115,29 +168,96 @@ export async function updateWaitlistStatus(
         is_verified: false,
         email_verified: true,
         verification_level: "basic",
-        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      });
+      }).eq("id", authUser.user.id);
 
       if (profileError) {
         if (createdAuthUserId) {
-          await supabaseAdmin.auth.admin.deleteUser(createdAuthUserId);
+          await cleanupCreatedUser(supabaseAdmin, createdAuthUserId);
         }
         throw new Error(profileError.message);
       }
 
-      // Mark waitlist entry as converted
-      const { error: waitlistConvertedError } = await supabase
+      const { data: recoveryData, error: recoveryError } =
+        await supabaseAdmin.auth.admin.generateLink({
+          type: "recovery",
+          email: waitlist.email,
+        });
+
+      if (recoveryError || !recoveryData?.properties?.action_link) {
+        if (createdAuthUserId) {
+          await cleanupCreatedUser(supabaseAdmin, createdAuthUserId);
+        }
+        throw new Error(
+          recoveryError?.message ||
+            "Failed to generate rider account setup link",
+        );
+      }
+
+      const resend = getResendClient();
+      if (!resend) {
+        if (createdAuthUserId) {
+          await cleanupCreatedUser(supabaseAdmin, createdAuthUserId);
+        }
+        throw new Error(
+          "RESEND_API_KEY is not configured; cannot send rider setup email",
+        );
+      }
+
+      const { error: emailError } = await resend.emails.send({
+        from: getSenderEmail(),
+        to: waitlist.email,
+        subject: "Set up your Movrr account",
+        react: AccountSetupEmail({
+          name: waitlist.name,
+          setupUrl: recoveryData.properties.action_link,
+        }),
+      });
+
+      if (emailError) {
+        if (createdAuthUserId) {
+          await cleanupCreatedUser(supabaseAdmin, createdAuthUserId);
+        }
+        throw new Error(
+          `Failed to send rider setup email. ${emailError.message || ""}`.trim(),
+        );
+      }
+
+      const { data: finalizedWaitlist, error: waitlistConvertedError } =
+        await supabase
         .from("waitlist")
         .update({
+          status: "approved",
+          status_reason: reason,
           converted_to_user: true,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", id);
+        .eq("id", id)
+        .select()
+        .single();
 
       if (waitlistConvertedError) {
         throw new Error(waitlistConvertedError.message);
       }
+
+      updatedWaitlist = finalizedWaitlist;
+    } else {
+      const { data: nextWaitlist, error: updateError } = await supabase
+        .from("waitlist")
+        .update({
+          status,
+          status_reason: reason,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      updatedWaitlist = nextWaitlist;
     }
 
     // Revalidate waitlist page to reflect changes

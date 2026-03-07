@@ -57,6 +57,14 @@ Role model used in code:
 - Auth user lifecycle handled through Supabase Admin API in `app/actions/users.ts`.
 - Admin membership via `admin_users`.
 
+Identity bootstrap rule:
+
+- `auth.users` creation triggers bootstrap `public.user` and role-dependent shell rows (`rider`, `advertiser`) through the database trigger.
+- Application code may enrich or update those rows after creation, but it must not perform a second direct bootstrap insert for the same auth user.
+- Auth creation metadata must match the trigger contract, especially `server_assigned_role`, `full_name`, and any role-specific fields that are available at creation time.
+- Workflow-specific completeness requirements belong in application validation, not in the shared auth trigger.
+- Advertiser onboarding is a dedicated domain flow and should not be bootstrapped from the generic admin user creation page.
+
 ### Waitlist and onboarding
 
 - Waitlist lifecycle in `app/actions/waitlist.ts`.

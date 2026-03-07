@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useTransition, useState } from "react";
+import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { ImSpinner8 } from "react-icons/im";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -203,6 +204,17 @@ export function SignInForm() {
                 "Sign In"
               )}
             </Button>
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <Link href="/auth/signup" className="text-primary hover:underline">
+                Rider sign up
+              </Link>
+              <Link
+                href="/auth/reset-password"
+                className="text-primary hover:underline"
+              >
+                Reset password
+              </Link>
+            </div>
           </>
         )}
       </form>

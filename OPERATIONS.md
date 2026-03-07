@@ -101,6 +101,14 @@ Notable scripts:
 
 Apply scripts in controlled environments via your migration process (do not run ad-hoc in production without review).
 
+Identity bootstrap scripts and constraints:
+
+- `scripts/auth_user_trigger_hardening.sql` must be applied anywhere the shared `auth.users` trigger is used.
+- The trigger is expected to create the initial `public.user` record and role-dependent child shell rows.
+- Operationally, app actions should update those rows after bootstrap instead of inserting competing profile records.
+- If user creation starts failing with generic Supabase auth database errors, inspect trigger logs and verify trigger assumptions still match app metadata and table constraints.
+- Admin-created users and approved waitlist riders should receive account setup links through the recovery-link flow, not rely on generated passwords being communicated manually.
+
 ## Health checks and monitoring
 
 ### App health

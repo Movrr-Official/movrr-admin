@@ -13,9 +13,9 @@ import {
 } from "@/schemas";
 import { z } from "zod";
 import { Resend } from "resend";
-import UserWelcomeEmail from "@/emails/user-welcome";
+import AccountSetupEmail from "@/emails/account-setup";
 import PasswordResetEmail from "@/emails/password-reset";
-import { FROM_EMAIL, NEXT_PUBLIC_APP_URL, RESEND_API_KEY } from "@/lib/env";
+import { FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
 
 const mapUiRoleToDb = (role: string) => {
   if (role === "super_admin") return "super_admin";
@@ -50,6 +50,34 @@ const createUserSchema = z.object({
   isVerified: z.boolean().default(false),
   accountNotes: z.string().optional(),
   sendWelcomeEmail: z.boolean().default(true),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  allowAdvertiserBootstrap: z.boolean().optional(),
+}).superRefine((value, ctx) => {
+  if (value.role === "advertiser" && !value.allowAdvertiserBootstrap) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        "Advertiser accounts must be created from the Advertisers module.",
+      path: ["role"],
+    });
+  }
+  if (value.role === "rider") {
+    if (!value.city?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "City is required for rider accounts",
+        path: ["city"],
+      });
+    }
+    if (!value.country?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Country is required for rider accounts",
+        path: ["country"],
+      });
+    }
+  }
 });
 
 const updateUserSchema = z.object({
@@ -87,6 +115,45 @@ const getResendClient = () => {
 
 const getSenderEmail = () =>
   FROM_EMAIL ? `Movrr <${FROM_EMAIL}>` : "Movrr <no-reply@movrr.nl>";
+
+const delay = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+const waitForBootstrappedUserProfile = async (
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+  maxAttempts: number = 10,
+): Promise<boolean> => {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const { data, error } = await supabaseAdmin
+      .from("user")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (data?.id) {
+      return true;
+    }
+
+    await delay(150);
+  }
+
+  return false;
+};
+
+const cleanupCreatedUser = async (
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+) => {
+  await supabaseAdmin.from("rider").delete().eq("user_id", userId);
+  await supabaseAdmin.from("advertiser").delete().eq("user_id", userId);
+  await supabaseAdmin.from("user").delete().eq("id", userId);
+  await supabaseAdmin.auth.admin.deleteUser(userId);
+};
 
 /**
  * Server action to fetch users for the dashboard.
@@ -195,8 +262,13 @@ export async function createUser(
         password: generateRandomPassword(),
         email_confirm: validatedData.isVerified,
         user_metadata: {
-          name: validatedData.name,
-          role: validatedData.role,
+          full_name: validatedData.name,
+          phone: validatedData.phone?.trim() || undefined,
+          city: validatedData.city?.trim() || undefined,
+          country: validatedData.country?.trim() || undefined,
+          companyName: validatedData.organization?.trim() || undefined,
+          language: validatedData.languagePreference,
+          server_assigned_role: mapUiRoleToDb(validatedData.role),
         },
       });
 
@@ -208,9 +280,21 @@ export async function createUser(
       };
     }
 
-    // Insert into public.user with the correct ID (matches auth.users)
+    const hasBootstrappedProfile = await waitForBootstrappedUserProfile(
+      supabaseAdmin,
+      authUser.user.id,
+    );
+
+    if (!hasBootstrappedProfile) {
+      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
+      return {
+        success: false,
+        error:
+          "User bootstrap profile was not created by the auth trigger. Check the database trigger configuration.",
+      };
+    }
+
     const userData: Record<string, any> = {
-      id: authUser.user.id,
       email: validatedData.email,
       name: validatedData.name,
       role: mapUiRoleToDb(validatedData.role),
@@ -231,7 +315,8 @@ export async function createUser(
 
     const { data: user, error: profileError } = await supabaseAdmin
       .from("user")
-      .insert(userData)
+      .update(userData)
+      .eq("id", authUser.user.id)
       .select()
       .single();
 
@@ -245,29 +330,48 @@ export async function createUser(
       };
     }
 
-    // Send welcome email if requested
+    // Admin-created accounts should receive a setup link, not rely on an unknown generated password.
     if (validatedData.sendWelcomeEmail) {
       try {
         const resend = getResendClient();
         if (!resend) {
           console.warn(
-            "RESEND_API_KEY is not configured; skipping welcome email.",
+            "RESEND_API_KEY is not configured; skipping account setup email.",
           );
         } else {
-          const dashboardUrl = NEXT_PUBLIC_APP_URL || "https://admin.movrr.nl";
+          const { data: recoveryData, error: recoveryError } =
+            await supabaseAdmin.auth.admin.generateLink({
+              type: "recovery",
+              email: validatedData.email,
+            });
+
+          if (recoveryError || !recoveryData?.properties?.action_link) {
+            throw new Error(
+              recoveryError?.message ||
+                "Failed to generate account setup link",
+            );
+          }
+
           await resend.emails.send({
             from: getSenderEmail(),
             to: validatedData.email,
-            subject: "Welcome to Movrr Admin",
-            react: UserWelcomeEmail({
+            subject: "Set up your Movrr account",
+            react: AccountSetupEmail({
               name: validatedData.name,
-              role: validatedData.role,
-              dashboardUrl,
+              setupUrl: recoveryData.properties.action_link,
             }),
           });
         }
       } catch (emailError) {
-        console.error("Welcome email failed:", emailError);
+        console.error("Account setup email failed:", emailError);
+        await cleanupCreatedUser(supabaseAdmin, authUser.user.id);
+        return {
+          success: false,
+          error:
+            emailError instanceof Error
+              ? emailError.message
+              : "Failed to send account setup email",
+        };
       }
     }
 
