@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Building2, Loader2, UserPlus } from "lucide-react";
 
 import { createAdvertiserProfile } from "@/app/actions/advertisers";
@@ -32,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/useToast";
 import { NEXT_PUBLIC_ADVERTISER_LOGO_MAX_FILE_SIZE_MB } from "@/lib/env";
+import { DASHBOARD_COUNTS_QUERY_KEY } from "@/providers/CountProvider";
 
 const createAdvertiserFormSchema = z.object({
   companyName: z.string().min(2, "Company name is required"),
@@ -56,6 +58,7 @@ type CreateAdvertiserFormData = z.infer<typeof createAdvertiserFormSchema>;
 
 export default function CreateAdvertiserPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -105,6 +108,9 @@ export default function CreateAdvertiserPage() {
       toast({
         title: "Advertiser Created",
         description: `${data.companyName} has been added successfully.`,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: DASHBOARD_COUNTS_QUERY_KEY,
       });
       router.push(returnTo);
     } catch (error) {

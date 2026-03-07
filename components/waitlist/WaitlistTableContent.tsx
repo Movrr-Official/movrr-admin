@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Bike, List, MapPin, Users } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ActiveFiltersDisplay } from "../filters/ActiveFiltersDisplay";
 import { getWaitlistTableColumns } from "./WaitlistTableColumns";
@@ -16,6 +17,7 @@ import { StatusUpdateDialog } from "../StatusUpdateDialog";
 import { useDataTable } from "@/context/DataTableContext";
 import { useToast } from "@/hooks/useToast";
 import { updateWaitlistStatus } from "@/app/actions/waitlist";
+import { DASHBOARD_COUNTS_QUERY_KEY } from "@/providers/CountProvider";
 
 interface WaitlistTableProps {
   entries: WaitlistEntry[];
@@ -45,6 +47,7 @@ export default function WaitlistTableContent({
   const [selectedEntry, setSelectedEntry] = useState<WaitlistEntry | null>(
     null
   );
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const {
@@ -79,6 +82,9 @@ export default function WaitlistTableContent({
       }
 
       refetchData?.();
+      await queryClient.invalidateQueries({
+        queryKey: DASHBOARD_COUNTS_QUERY_KEY,
+      });
 
       toast({
         title: "Status Updated",

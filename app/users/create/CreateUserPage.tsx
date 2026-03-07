@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Loader2,
   ArrowLeft,
@@ -55,6 +56,7 @@ import { useToast } from "@/hooks/useToast";
 import { createUser } from "@/app/actions/users";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DASHBOARD_COUNTS_QUERY_KEY } from "@/providers/CountProvider";
 
 const createUserFormSchema = z.object({
   email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -120,6 +122,7 @@ const languageOptions = [
 
 export default function CreateUserPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formStep, setFormStep] = useState<"basic" | "details" | "review">(
@@ -163,6 +166,9 @@ export default function CreateUserPage() {
           : `User "${data.name}" has been created successfully.`,
       });
 
+      await queryClient.invalidateQueries({
+        queryKey: DASHBOARD_COUNTS_QUERY_KEY,
+      });
       router.push("/users");
     } catch (error) {
       toast({

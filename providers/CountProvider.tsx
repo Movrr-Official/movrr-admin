@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
 import { getDashboardCounts } from "@/app/actions/count";
 
+export const DASHBOARD_COUNTS_QUERY_KEY = ["dashboardCounts"] as const;
+
 type CountContextType = {
   totalWaitlist: number;
   totalUsers: number;
@@ -27,7 +29,7 @@ export const CountProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
-    queryKey: ["dashboardCounts"],
+    queryKey: DASHBOARD_COUNTS_QUERY_KEY,
     queryFn: async () => {
       try {
         const counts = await getDashboardCounts();
