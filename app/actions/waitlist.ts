@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/supabase/server";
 import { WaitlistEntry } from "@/types/types";
 import AccountSetupEmail from "@/emails/account-setup";
 import { APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
+import { getPlatformOperationalPolicies } from "@/lib/platformSettings";
 
 // Utility function to generate a secure random password
 function generateRandomPassword(length = 12) {
@@ -110,6 +111,18 @@ export async function updateWaitlistStatus(
   reason?: string,
 ) {
   await requireAdminRoles(ADMIN_ONLY_ROLES);
+  return updateWaitlistStatusInternal(id, status, reason);
+}
+
+export async function autoApproveWaitlistEntry(id: string, reason?: string) {
+  return updateWaitlistStatusInternal(id, "approved", reason);
+}
+
+async function updateWaitlistStatusInternal(
+  id: string,
+  status: "pending" | "approved" | "rejected",
+  reason?: string,
+) {
   const supabaseAdmin = createSupabaseAdminClient(); // for Auth + RLS-safe insert
   const supabase = await createSupabaseServerClient(); // for fetching waitlist and updates
 
@@ -180,6 +193,26 @@ export async function updateWaitlistStatus(
           await cleanupCreatedUser(supabaseAdmin, createdAuthUserId);
         }
         throw new Error(profileError.message);
+      }
+
+      const policies = await getPlatformOperationalPolicies();
+      const allowAccountSetupLinks =
+        policies.security.allowAccountSetupLinks !== false;
+      const setupEmailEnabled = policies.onboarding.setupEmailEnabled !== false;
+      const setupNotificationsEnabled =
+        policies.notifications.onboardingSetupNotificationsEnabled !== false;
+
+      if (!allowAccountSetupLinks || !setupEmailEnabled || !setupNotificationsEnabled) {
+        if (createdAuthUserId) {
+          await cleanupCreatedUser(supabaseAdmin, createdAuthUserId);
+        }
+        throw new Error(
+          !allowAccountSetupLinks
+            ? "Account setup links are disabled by the current security policy."
+            : !setupEmailEnabled
+              ? "Waitlist approval setup emails are disabled by the onboarding policy."
+              : "Onboarding setup notifications are disabled by the notification policy.",
+        );
       }
 
       const { data: recoveryData, error: recoveryError } =

@@ -6,7 +6,10 @@ import useShouldHideComponent from "@/hooks/useShouldHideComponent";
 
 const MaintenanceBanner = () => {
   const shouldHide = useShouldHideComponent();
-  const { data } = useSettingsData({ refetchInterval: 1000 * 60 });
+  const { data } = useSettingsData({
+    refetchInterval: 1000 * 60,
+    enabled: !shouldHide,
+  });
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -16,15 +19,15 @@ const MaintenanceBanner = () => {
   }, []);
 
   useEffect(() => {
-    if (!data?.system?.maintenanceMode) {
+    if (!data?.values?.general?.maintenanceMode) {
       setDismissed(false);
       if (typeof window !== "undefined") {
         window.sessionStorage.removeItem("adminMaintenanceBanner");
       }
     }
-  }, [data?.system?.maintenanceMode]);
+  }, [data?.values?.general?.maintenanceMode]);
 
-  if (shouldHide || !data?.system?.maintenanceMode || dismissed) {
+  if (shouldHide || !data?.values?.general?.maintenanceMode || dismissed) {
     return null;
   }
 

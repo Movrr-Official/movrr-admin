@@ -11,7 +11,7 @@ import { useSettingsData } from "@/hooks/useSettingsData";
 
 const DashboardFooter = () => {
   const shouldHideFooter = useShouldHideComponent();
-  const { data: settingsData } = useSettingsData();
+  const { data: settingsData } = useSettingsData({ enabled: !shouldHideFooter });
   const { data, isLoading, isError } = useQuery({
     queryKey: ["systemHealth"],
     queryFn: async () => {
@@ -27,6 +27,7 @@ const DashboardFooter = () => {
     staleTime: 1000 * 30,
     refetchInterval: 1000 * 60,
     retry: 1,
+    enabled: !shouldHideFooter,
   });
 
   if (shouldHideFooter) {
@@ -141,9 +142,9 @@ const DashboardFooter = () => {
               variants={itemVariants}
               className="flex items-center gap-3"
             >
-              <Badge variant="outline" className="text-xs font-mono">
-                v{settingsData?.system?.appVersion ?? "1.0.0"}
-              </Badge>
+                <Badge variant="outline" className="text-xs font-mono">
+                  v{settingsData?.values?.general?.appVersion ?? "0.1.0"}
+                </Badge>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <motion.div
                   className={`w-2 h-2 rounded-full ${

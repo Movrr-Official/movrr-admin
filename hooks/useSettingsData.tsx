@@ -2,44 +2,157 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getAdminSettings } from "@/app/actions/settings";
-import { settings } from "@/schemas/settings";
+import {
+  type AdminSettingsResponse,
+  type AdminSettingsValues,
+  adminSettingsValuesSchema,
+} from "@/schemas/settings";
 import { shouldUseMockData } from "@/lib/dataSource";
 
-const fallbackSettings: settings = {
-  system: {
+export const ADMIN_SETTINGS_QUERY_KEY = ["adminSettings"] as const;
+
+const fallbackValues: AdminSettingsValues = adminSettingsValuesSchema.parse({
+  general: {
     supportEmail: "support@movrr.nl",
+    publicSupportEmail: "support@movrr.nl",
+    publicSupportContactName: "Movrr Support",
     defaultRegion: "NL",
     timezone: "Europe/Amsterdam",
-    appVersion: "1.0.0",
+    defaultLanguage: "en",
+    defaultCurrency: "EUR",
+    appVersion: "0.1.0",
     maintenanceMode: false,
-    allowSelfSignup: true,
   },
-  points: {
+  onboarding: {
+    riderOnboardingMode: "open",
+    requireCity: true,
+    requireCountry: true,
+    autoApproveWaitlist: false,
+    setupEmailEnabled: true,
+    defaultRiderLanguage: "en",
+    defaultRiderTimezone: "Europe/Amsterdam",
+  },
+  rewards: {
     basePointsPerMinute: 1,
     dailyCap: 120,
     weeklyCap: 600,
     campaignMaxRewardCap: 1000,
     minVerifiedMinutes: 1,
   },
-  campaignDefaults: {
+  campaigns: {
     defaultMultiplier: 1,
     defaultDurationDays: 30,
     defaultSignupDeadlineDays: 7,
     defaultMaxRiders: 50,
     requireApproval: false,
   },
-  featureFlags: {
+  features: {
     rewardsShopEnabled: true,
     routeTemplatesEnabled: true,
     autoAssignmentEnabled: false,
     realtimeTrackingEnabled: true,
     emailNotificationsEnabled: true,
   },
+  notifications: {
+    operationsEmailEnabled: true,
+    maintenanceNotificationsEnabled: true,
+    waitlistNotificationsEnabled: true,
+    onboardingSetupNotificationsEnabled: true,
+    digestFrequency: "daily",
+    alertRouting: "support_and_admin",
+  },
+  security: {
+    enforceAdminMfa: false,
+    adminSessionTimeoutMinutes: 60,
+    auditRetentionDays: 365,
+    allowPasswordResetLinks: true,
+    allowAccountSetupLinks: true,
+    inviteDomainAllowlist: [],
+  },
+  integrations: {
+    routeOptimizerDashboardUrl: "",
+    mapsProviderLabel: "MapLibre",
+    mediaCdnBaseUrl: "",
+    webhookStatusPageUrl: "",
+  },
+  organization: {
+    displayName: "Movrr Media",
+    legalCompanyName: "Movrr Media",
+    supportContactName: "Movrr Support",
+    billingContactEmail: "",
+    vatId: "",
+    businessAddress: "",
+    brandPrimaryLogoUrl: "",
+  },
+  privacy: {
+    waitlistRetentionDays: 180,
+    auditRetentionVisibilityDays: 365,
+    exportRequestResponseHours: 72,
+    deletionPolicyText: "",
+    privacyContactEmail: "",
+  },
+  billing: {
+    connectionStatus: "not_connected",
+    planName: "Not connected",
+    planStatus: "inactive",
+    invoiceContactEmail: "",
+    billingPortalUrl: "",
+    usageSummary: "Billing integration has not been connected yet.",
+    entitlements: [],
+  },
+});
+
+const fallbackSettings: AdminSettingsResponse = {
+  values: fallbackValues,
+  metadata: {
+    general: { source: "database", managedBy: "admin", readOnly: false },
+    onboarding: { source: "database", managedBy: "admin", readOnly: false },
+    rewards: { source: "database", managedBy: "admin", readOnly: false },
+    campaigns: { source: "database", managedBy: "admin", readOnly: false },
+    features: { source: "database", managedBy: "admin", readOnly: false },
+    notifications: { source: "database", managedBy: "admin", readOnly: false },
+    security: { source: "database", managedBy: "admin", readOnly: false },
+    integrations: { source: "hybrid", managedBy: "hybrid", readOnly: false },
+    organization: { source: "database", managedBy: "admin", readOnly: false },
+    privacy: { source: "database", managedBy: "admin", readOnly: false },
+    billing: { source: "derived", managedBy: "system", readOnly: true },
+  },
+  runtime: {
+    integrationStatus: [],
+    adminNotificationRecipients: ["admin@movrr.nl"],
+    envManagedFields: {
+      general: ["appVersion"],
+      onboarding: [],
+      rewards: [],
+      campaigns: [],
+      features: [],
+      notifications: [],
+      security: [],
+      integrations: [],
+      organization: [],
+      privacy: [],
+      billing: [
+        "connectionStatus",
+        "planName",
+        "planStatus",
+        "usageSummary",
+        "entitlements",
+      ],
+    },
+    billing: {
+      available: false,
+      message:
+        "Billing is not connected in MOVRR Admin yet. Use your billing provider portal or internal finance process.",
+    },
+  },
 };
 
-export const useSettingsData = (options?: { refetchInterval?: number }) => {
-  return useQuery<settings>({
-    queryKey: ["adminSettings"],
+export const useSettingsData = (options?: {
+  refetchInterval?: number;
+  enabled?: boolean;
+}) =>
+  useQuery<AdminSettingsResponse>({
+    queryKey: ADMIN_SETTINGS_QUERY_KEY,
     queryFn: async () => {
       if (shouldUseMockData()) {
         return fallbackSettings;
@@ -55,5 +168,5 @@ export const useSettingsData = (options?: { refetchInterval?: number }) => {
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60,
     refetchInterval: options?.refetchInterval,
+    enabled: options?.enabled ?? true,
   });
-};

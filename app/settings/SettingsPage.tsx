@@ -1,455 +1,393 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState } from "react";
-import { z } from "zod";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { AlertCircle, Mail } from "lucide-react";
+import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BillingSection } from "@/components/settings/BillingSection";
+import { SETTINGS_FIELDS, SETTINGS_SECTIONS } from "@/components/settings/config";
+import { IntegrationStatusCards } from "@/components/settings/IntegrationStatusCards";
+import { SettingsAuditPanel } from "@/components/settings/SettingsAuditPanel";
+import { SettingsSectionForm } from "@/components/settings/SettingsSectionForm";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/useToast";
-import { useSettingsData } from "@/hooks/useSettingsData";
-import { updateSettings } from "@/app/actions/settings";
-import { shouldUseMockData } from "@/lib/dataSource";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  getSettingsAudit,
+  recheckIntegrationStatus,
+  updateSettingsSection,
+} from "@/app/actions/settings";
+import { ADMIN_SETTINGS_QUERY_KEY, useSettingsData } from "@/hooks/useSettingsData";
+import {
+  type SettingsAuditEntry,
+  type SettingsSectionId,
+  campaignSettingsSchema,
+  featureSettingsSchema,
+  generalSettingsSchema,
+  integrationsSettingsSchema,
+  notificationSettingsSchema,
+  onboardingSettingsSchema,
+  organizationSettingsSchema,
+  privacySettingsSchema,
+  rewardsSettingsSchema,
+  securitySettingsSchema,
+} from "@/schemas/settings";
 
-const toNumber = (schema: z.ZodNumber) =>
-  z.preprocess((value) => Number(value), schema);
+const SECTION_SCHEMAS = {
+  general: generalSettingsSchema,
+  onboarding: onboardingSettingsSchema,
+  rewards: rewardsSettingsSchema,
+  campaigns: campaignSettingsSchema,
+  features: featureSettingsSchema,
+  notifications: notificationSettingsSchema,
+  security: securitySettingsSchema,
+  integrations: integrationsSettingsSchema,
+  organization: organizationSettingsSchema,
+  privacy: privacySettingsSchema,
+  billing: z.object({}),
+} as const;
 
-const settingsFormSchema = z.object({
-  system: z.object({
-    supportEmail: z.string().email().optional(),
-    defaultRegion: z.string().min(2),
-    timezone: z.string().min(1),
-    appVersion: z.string().min(1),
-    maintenanceMode: z.boolean(),
-    allowSelfSignup: z.boolean(),
-  }),
-  points: z.object({
-    basePointsPerMinute: toNumber(z.number().int().min(0)),
-    dailyCap: toNumber(z.number().int().min(0)),
-    weeklyCap: toNumber(z.number().int().min(0)),
-    campaignMaxRewardCap: toNumber(z.number().int().min(0)),
-    minVerifiedMinutes: toNumber(z.number().int().min(0)),
-  }),
-  campaignDefaults: z.object({
-    defaultMultiplier: toNumber(z.number().min(0)),
-    defaultDurationDays: toNumber(z.number().int().min(1)),
-    defaultSignupDeadlineDays: toNumber(z.number().int().min(1)),
-    defaultMaxRiders: toNumber(z.number().int().min(1)),
-    requireApproval: z.boolean(),
-  }),
-  featureFlags: z.object({
-    rewardsShopEnabled: z.boolean(),
-    routeTemplatesEnabled: z.boolean(),
-    autoAssignmentEnabled: z.boolean(),
-    realtimeTrackingEnabled: z.boolean(),
-    emailNotificationsEnabled: z.boolean(),
-  }),
-});
-
-type SettingsFormValues = z.infer<typeof settingsFormSchema>;
+const DEFAULT_SECTION: SettingsSectionId = "general";
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
-  const useMockData = shouldUseMockData();
-  const { data, isLoading, refetch } = useSettingsData();
+  const { data: settings, isLoading, error } = useSettingsData();
   const [isSaving, setIsSaving] = useState(false);
+  const [isRecheckingIntegrations, setIsRecheckingIntegrations] = useState(false);
+  const [pendingConfirmation, setPendingConfirmation] = useState<{
+    values: Record<string, unknown>;
+    riskyChanges: string[];
+  } | null>(null);
 
-  const form = useForm<SettingsFormValues>({
-    resolver: zodResolver(settingsFormSchema),
-    defaultValues: data,
+  const sectionParam = searchParams.get("section");
+  const section = (
+    SETTINGS_SECTIONS.some((candidate) => candidate.id === sectionParam)
+      ? sectionParam
+      : DEFAULT_SECTION
+  ) as SettingsSectionId;
+
+  const sectionConfig =
+    SETTINGS_SECTIONS.find((candidate) => candidate.id === section) ??
+    SETTINGS_SECTIONS[0];
+  const schema = SECTION_SCHEMAS[section];
+  const values = settings?.values[section] ?? {};
+  const metadata = settings?.metadata[section];
+  const fields = SETTINGS_FIELDS[section];
+
+  const form = useForm<Record<string, unknown>>({
+    resolver: zodResolver(schema),
+    values,
   });
 
   useEffect(() => {
-    if (data) {
-      form.reset(data);
-    }
-  }, [data, form]);
+    form.reset(values);
+  }, [form, values, section]);
 
-  const onSubmit = async (values: SettingsFormValues) => {
-    if (useMockData) {
+  const { data: auditEntries = [] } = useQuery<SettingsAuditEntry[]>({
+    queryKey: ["settingsAudit", section],
+    enabled: Boolean(settings),
+    queryFn: async () => {
+      const result = await getSettingsAudit(section);
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to load settings audit history");
+      }
+      return result.data;
+    },
+  });
+
+  const validationSummary = useMemo(
+    () =>
+      Object.entries(form.formState.errors).map(([key, value]) => ({
+        key,
+        message: value?.message ? String(value.message) : "Invalid value",
+      })),
+    [form.formState.errors],
+  );
+
+  const setSection = (nextSection: SettingsSectionId) => {
+    if (nextSection === section) return;
+
+    if (form.formState.isDirty) {
       toast({
-        title: "Mock mode",
-        description:
-          "Settings updates are disabled while mock data is enabled.",
+        title: "Unsaved changes",
+        description: "Save or discard the current section before switching.",
       });
       return;
     }
 
-    setIsSaving(true);
-    const result = await updateSettings(values);
-    setIsSaving(false);
-
-    if (!result.success) {
-      toast({
-        title: "Save failed",
-        description: result.error ?? "Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Settings updated",
-      description: "Settings have been saved successfully.",
-    });
-    await refetch();
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.set("section", nextSection);
+    router.replace(`/settings?${nextParams.toString()}`);
   };
 
-  const isDisabled = isLoading || isSaving;
+  const saveSection = async (
+    nextValues: Record<string, unknown>,
+    confirmedRiskyChanges = false,
+  ) => {
+    setIsSaving(true);
+    try {
+      const result = await updateSettingsSection({
+        section,
+        data: nextValues,
+        confirmedRiskyChanges,
+      });
 
-  return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+      if (result.requiresConfirmation && result.riskyChanges?.length) {
+        setPendingConfirmation({
+          values: nextValues,
+          riskyChanges: result.riskyChanges,
+        });
+        return;
+      }
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save settings section");
+      }
+
+      setPendingConfirmation(null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: ["settingsAudit", section] }),
+      ]);
+      toast({
+        title: "Section saved",
+        description: `${sectionConfig.title} settings were updated successfully.`,
+      });
+    } catch (saveError) {
+      toast({
+        title: "Unable to save section",
+        description:
+          saveError instanceof Error
+            ? saveError.message
+            : "Failed to save settings section.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleIntegrationRecheck = async () => {
+    setIsRecheckingIntegrations(true);
+    try {
+      const result = await recheckIntegrationStatus();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to refresh integration checks");
+      }
+      await queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_QUERY_KEY });
+      toast({
+        title: "Integrations refreshed",
+        description: "Integration health has been rechecked.",
+      });
+    } catch (refreshError) {
+      toast({
+        title: "Unable to refresh integrations",
+        description:
+          refreshError instanceof Error
+            ? refreshError.message
+            : "Failed to refresh integration status.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRecheckingIntegrations(false);
+    }
+  };
+
+  if (isLoading || !settings) {
+    return (
+      <div className="space-y-6">
         <PageHeader
           title="Settings"
-          description="Configure system-wide defaults, points logic, and feature flags for Movrr."
+          description="Global platform configuration for MOVRR Admin."
         />
+        <Card className="glass-card border-0">
+          <CardContent className="p-6 text-sm text-muted-foreground">
+            Loading settings...
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Card className="glass-card border-0">
-              <CardHeader>
-                <CardTitle>System Configuration</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="system.supportEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Support email</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="support@movrr.nl" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="system.defaultRegion"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Default region</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="NL" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="system.timezone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Timezone</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Europe/Amsterdam" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="system.appVersion"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>App version</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="v1.0.0" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="system.maintenanceMode"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-                          <div>
-                            <FormLabel className="text-sm">
-                              Maintenance mode (Admin dashboard)
-                            </FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              Shows a banner to admins only. Riders are not
-                              affected.
-                            </p>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="system.allowSelfSignup"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-                          <div>
-                            <FormLabel className="text-sm">
-                              Allow self signup
-                            </FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              Enable rider self-registration.
-                            </p>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Settings"
+          description="Global platform configuration for MOVRR Admin."
+        />
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Unable to load settings</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Failed to load settings."}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
-            <Card className="glass-card border-0">
-              <CardHeader>
-                <CardTitle>Points Configuration</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="points.basePointsPerMinute"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Base points / min</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={0} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="points.minVerifiedMinutes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Min verified minutes</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={0} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="points.campaignMaxRewardCap"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Campaign max cap</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={0} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="points.dailyCap"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Daily cap</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={0} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="points.weeklyCap"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Weekly cap</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={0} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Settings"
+        description="Global platform configuration, policy enforcement, and operational diagnostics for MOVRR Admin."
+      />
 
-            <Card className="glass-card border-0">
-              <CardHeader>
-                <CardTitle>Campaign Defaults</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="campaignDefaults.defaultMultiplier"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Default multiplier</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={0} step="0.1" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="campaignDefaults.defaultDurationDays"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Default duration (days)</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={1} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="campaignDefaults.defaultSignupDeadlineDays"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Signup deadline (days)</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={1} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="campaignDefaults.defaultMaxRiders"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Default max riders</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={1} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="campaignDefaults.requireApproval"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+      <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
+        <Card className="glass-card border-0">
+          <CardContent className="p-4">
+            <div className="space-y-2">
+              {SETTINGS_SECTIONS.map((entry) => {
+                const Icon = entry.icon;
+                const isActive = entry.id === section;
+                return (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    onClick={() => setSection(entry.id)}
+                    className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                      isActive
+                        ? "border-primary/50 bg-primary/10"
+                        : "border-border/60 bg-background/30 hover:bg-background/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="h-4 w-4" />
                       <div>
-                        <FormLabel className="text-sm">
-                          Require approval
-                        </FormLabel>
-                        <p className="text-xs text-muted-foreground">
-                          Require manual approval for campaign creation.
-                        </p>
+                        <div className="font-medium text-foreground">{entry.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {entry.description}
+                        </div>
                       </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
+          <Card className="glass-card border-0">
+            <CardContent className="p-6">
+              <div className="space-y-1">
+                <div className="text-lg font-semibold text-foreground">
+                  {sectionConfig.title}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {sectionConfig.description}
+                </div>
+                <div className="pt-2 text-xs text-muted-foreground">
+                  {metadata?.updatedAt
+                    ? `Last updated ${new Date(metadata.updatedAt).toLocaleString()}`
+                    : "No saved updates yet."}
+                  {metadata?.updatedBy
+                    ? ` by ${metadata.updatedBy.name} (${metadata.updatedBy.role})`
+                    : ""}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {validationSummary.length > 0 ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Section validation issues</AlertTitle>
+              <AlertDescription>
+                {validationSummary
+                  .map((item) => `${item.key}: ${item.message}`)
+                  .join(" • ")}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          {section === "notifications" ? (
+            <Alert>
+              <Mail className="h-4 w-4" />
+              <AlertTitle>Env-managed Admin Recipients</AlertTitle>
+              <AlertDescription>
+                {settings.runtime.adminNotificationRecipients.length > 0
+                  ? settings.runtime.adminNotificationRecipients.join(", ")
+                  : "No admin recipients configured."}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          {section === "integrations" ? (
+            <IntegrationStatusCards
+              integrations={settings.runtime.integrationStatus}
+              isRefreshing={isRecheckingIntegrations}
+              onRefresh={handleIntegrationRecheck}
+            />
+          ) : null}
+
+          {section === "billing" ? (
+            <BillingSection settings={settings} />
+          ) : (
+            <Card className="glass-card border-0">
+              <CardContent className="space-y-6 p-6">
+                <SettingsSectionForm
+                  form={form}
+                  fields={fields}
+                  values={values}
+                  isSaving={isSaving}
+                  isSectionReadOnly={Boolean(metadata?.readOnly)}
+                  onSubmit={saveSection}
                 />
               </CardContent>
             </Card>
+          )}
 
-            <Card className="glass-card border-0">
-              <CardHeader>
-                <CardTitle>Feature Flags</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {(
-                    [
-                      { key: "rewardsShopEnabled", label: "Rewards shop" },
-                      {
-                        key: "routeTemplatesEnabled",
-                        label: "Route templates",
-                      },
-                      {
-                        key: "autoAssignmentEnabled",
-                        label: "Auto assignment",
-                      },
-                      {
-                        key: "realtimeTrackingEnabled",
-                        label: "Realtime tracking",
-                      },
-                      {
-                        key: "emailNotificationsEnabled",
-                        label: "Email notifications",
-                      },
-                    ] as const
-                  ).map((flag) => (
-                    <FormField
-                      key={flag.key}
-                      control={form.control}
-                      name={`featureFlags.${flag.key}`}
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-                          <FormLabel className="text-sm">
-                            {flag.label}
-                          </FormLabel>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isDisabled}>
-                {isSaving ? "Saving..." : "Save settings"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+          <SettingsAuditPanel entries={auditEntries} />
+        </div>
       </div>
+
+      <AlertDialog
+        open={Boolean(pendingConfirmation)}
+        onOpenChange={(open) => {
+          if (!open) setPendingConfirmation(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm high-impact changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              The following settings affect live platform behavior: {pendingConfirmation?.riskyChanges.join(", ")}.
+              Confirm to persist these changes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingConfirmation) {
+                  void saveSection(pendingConfirmation.values, true);
+                }
+              }}
+            >
+              Confirm changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

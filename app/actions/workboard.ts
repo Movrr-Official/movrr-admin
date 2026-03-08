@@ -5,6 +5,7 @@ import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
 import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { APP_URL, RESEND_API_KEY, FROM_EMAIL } from "@/lib/env";
+import { getPlatformSecurityPolicy, isInviteDomainAllowed } from "@/lib/platformSettings";
 import { Resend } from "resend";
 
 const roleSchema = z.enum(["owner", "admin", "editor", "viewer"]);
@@ -182,6 +183,15 @@ export async function inviteWorkboardMember(input: {
       role: roleSchema,
     })
     .parse(input);
+
+  const securityPolicy = await getPlatformSecurityPolicy();
+  if (
+    !isInviteDomainAllowed(payload.email, securityPolicy.inviteDomainAllowlist)
+  ) {
+    throw new Error(
+      "This invite email domain is not allowed by the current security policy.",
+    );
+  }
 
   const membership = await requireWorkboardMembership(
     supabase,

@@ -77,6 +77,7 @@ const serverEnvSchema = publicEnvSchema
   SYSTEM_EMAIL: z.string().email("Invalid SYSTEM_EMAIL"),
   SUPPORT_EMAIL: z.string().email("Invalid SUPPORT_EMAIL").optional(),
   ERROR_WEBHOOK_URL: z.string().url("Invalid ERROR_WEBHOOK_URL").optional(),
+  MAINTENANCE_JOB_TOKEN: z.string().optional(),
 
   // Feature flags
   USE_MOCK_DATA: booleanDefaultFalse,
@@ -179,6 +180,7 @@ function getEnv(): PublicEnv | ServerEnv {
       SYSTEM_EMAIL: process.env.SYSTEM_EMAIL,
       SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
       ERROR_WEBHOOK_URL: process.env.ERROR_WEBHOOK_URL,
+      MAINTENANCE_JOB_TOKEN: process.env.MAINTENANCE_JOB_TOKEN,
       USE_MOCK_DATA: process.env.USE_MOCK_DATA,
       ROUTE_OPTIMIZER_TOKEN: process.env.ROUTE_OPTIMIZER_TOKEN,
       ROUTE_OPTIMIZER_KEY: process.env.ROUTE_OPTIMIZER_KEY,
@@ -220,6 +222,8 @@ export const ADMIN_EMAILS = serverEnv?.ADMIN_EMAILS ?? "";
 export const SYSTEM_EMAIL = serverEnv?.SYSTEM_EMAIL || "system@movrr.nl";
 export const SUPPORT_EMAIL = serverEnv?.SUPPORT_EMAIL || "support@movrr.nl";
 export const ERROR_WEBHOOK_URL = serverEnv?.ERROR_WEBHOOK_URL ?? "";
+export const MAINTENANCE_JOB_TOKEN =
+  serverEnv?.MAINTENANCE_JOB_TOKEN ?? "";
 export const NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS =
   env.NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS;
 export const NEXT_PUBLIC_USE_MOCK_DATA = env.NEXT_PUBLIC_USE_MOCK_DATA;

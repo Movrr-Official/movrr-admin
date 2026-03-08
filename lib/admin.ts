@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from "./supabase-admin";
 import { headers } from "next/headers";
 import { normalizeAdminRole } from "@/lib/authPermissions";
 import { logger } from "@/lib/logger";
+import { getPlatformSecurityPolicy } from "@/lib/platformSettings";
 import {
   type AdminUser,
   type AuthenticatedUser,
@@ -42,6 +43,43 @@ const shouldResolveRoleForPath = (pathname?: string) => {
   return !EXCLUDED_PATHS.some((path) => pathname.startsWith(path));
 };
 
+const enforceSecurityPolicy = async (
+  authUser: {
+    last_sign_in_at?: string | null;
+    app_metadata?: Record<string, unknown>;
+    user_metadata?: Record<string, unknown>;
+  },
+) => {
+  const policy = await getPlatformSecurityPolicy();
+  const lastSignInAt = authUser.last_sign_in_at
+    ? new Date(authUser.last_sign_in_at).getTime()
+    : null;
+  const ageMinutes =
+    lastSignInAt === null ? null : Math.max(0, (Date.now() - lastSignInAt) / 60_000);
+  const aal =
+    typeof authUser.app_metadata?.aal === "string"
+      ? authUser.app_metadata.aal
+      : typeof authUser.user_metadata?.aal === "string"
+        ? authUser.user_metadata.aal
+        : undefined;
+
+  if (policy.enforceAdminMfa && aal && aal !== "aal2") {
+    throw new Error("Admin MFA is required by the current security policy.");
+  }
+
+  if (
+    ageMinutes !== null &&
+    ageMinutes > policy.adminSessionTimeoutMinutes
+  ) {
+    throw new Error("Admin session has expired under the current security policy.");
+  }
+
+  return {
+    policy,
+    sessionState: { ageMinutes, aal },
+  };
+};
+
 /**
  * Returns the authenticated admin user with role information
  */
@@ -76,6 +114,8 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
       console.warn(`Invalid admin role: ${role} for user ${authUser.id}`);
       return null;
     }
+
+    await enforceSecurityPolicy(authUser);
 
     return {
       authUser,

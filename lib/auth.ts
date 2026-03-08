@@ -6,8 +6,8 @@ type RiderSignupInput = {
   email: string;
   password: string;
   fullName: string;
-  city: string;
-  country: string;
+  city?: string;
+  country?: string;
   phone?: string;
 };
 
@@ -30,8 +30,8 @@ export const signUpWithEmail = async ({
       emailRedirectTo: `${window.location.origin}/auth/callback`,
       data: {
         full_name: fullName.trim(),
-        city: city.trim(),
-        country: country.trim(),
+        city: city?.trim() || undefined,
+        country: country?.trim() || undefined,
         phone: phone?.trim() || undefined,
         server_assigned_role: "rider",
       },

@@ -1,8 +1,7 @@
-import { createSupabaseServerClient } from "@/supabase/server";
 import { redirect } from "next/navigation";
 import type { UserRole } from "@/schemas";
-import { normalizeAdminRole } from "@/lib/authPermissions";
-import { logger } from "@/lib/logger";
+import { requireAdminRoles } from "@/lib/admin";
+import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -13,45 +12,15 @@ export default async function AuthWrapper({
   children,
   allowedRoles,
 }: AuthWrapperProps) {
-  const supabase = await createSupabaseServerClient();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    logger.warn("Supabase getUser failed in AuthWrapper", {
-      message: userError.message,
-    });
-  }
-
-  if (!user) {
-    redirect("/auth/signin?redirectTo=/");
-  }
-
-  const { data: adminUser, error: adminUserError } = await supabase
-    .from("admin_users")
-    .select("role, email")
-    .eq("user_id", user.id)
-    .single();
-
-  if (adminUserError) {
-    logger.warn("Admin role lookup failed in AuthWrapper", {
-      message: adminUserError.message,
-      userId: user.id,
-    });
-  }
-
-  const rawRole =
-    typeof adminUser?.role === "string" ? adminUser.role : undefined;
-  const adminRole = normalizeAdminRole(rawRole);
-
-  if (!adminRole) {
-    redirect("/unauthorized");
-  }
-
-  if (allowedRoles && !allowedRoles.includes(adminRole)) {
+  try {
+    await requireAdminRoles(allowedRoles ?? DASHBOARD_ACCESS_ROLES);
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.toLowerCase().includes("authentication required")
+    ) {
+      redirect("/auth/signin?redirectTo=/");
+    }
     redirect("/unauthorized");
   }
 

@@ -17,6 +17,12 @@ import { Resend } from "resend";
 import AccountSetupEmail from "@/emails/account-setup";
 import PasswordResetEmail from "@/emails/password-reset";
 import { APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
+import {
+  getPlatformOperationalPolicies,
+  getPlatformPrivacyPolicy,
+  getPlatformSecurityPolicy,
+  isInviteDomainAllowed,
+} from "@/lib/platformSettings";
 
 const mapUiRoleToDb = (role: string) => {
   if (role === "super_admin") return "super_admin";
@@ -296,6 +302,20 @@ export async function createUser(
     const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = createUserSchema.parse(data);
+    const policies = await getPlatformOperationalPolicies();
+
+    if (
+      !isInviteDomainAllowed(
+        validatedData.email,
+        policies.security.inviteDomainAllowlist,
+      )
+    ) {
+      return {
+        success: false,
+        error:
+          "This email domain is not allowed by the current invite domain policy.",
+      };
+    }
 
     // Generate a random password (user will need to reset it)
     const generateRandomPassword = () => {
@@ -402,9 +422,26 @@ export async function createUser(
       };
     }
 
+    const allowAccountSetupLinks =
+      policies.security.allowAccountSetupLinks !== false;
+    const allowSetupNotifications =
+      policies.notifications.onboardingSetupNotificationsEnabled !== false;
+
     // Admin-created accounts should receive a setup link, not rely on an unknown generated password.
     if (validatedData.sendWelcomeEmail) {
       try {
+        if (!allowAccountSetupLinks) {
+          throw new Error(
+            "Account setup links are disabled by the current security policy.",
+          );
+        }
+
+        if (!allowSetupNotifications) {
+          throw new Error(
+            "Account setup notifications are disabled by the current notification policy.",
+          );
+        }
+
         const resend = getResendClient();
         if (!resend) {
           console.warn(
@@ -708,6 +745,16 @@ export async function sendPasswordResetEmail(
   try {
     await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
+    const securityPolicy = await getPlatformSecurityPolicy();
+    const allowPasswordResetLinks =
+      securityPolicy.allowPasswordResetLinks !== false;
+
+    if (!allowPasswordResetLinks) {
+      return {
+        success: false,
+        error: "Password reset links are disabled by the current security policy.",
+      };
+    }
 
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
@@ -849,8 +896,14 @@ export async function exportUserData(
       .limit(100);
 
     // Compile all data
+    const privacyPolicy = await getPlatformPrivacyPolicy();
     const exportData = {
       exportedAt: new Date().toISOString(),
+      privacyPolicy: {
+        privacyContactEmail: privacyPolicy.privacyContactEmail,
+        deletionPolicyText: privacyPolicy.deletionPolicyText,
+        exportRequestResponseHours: privacyPolicy.exportRequestResponseHours,
+      },
       user: {
         profile: user,
         auth: authUser?.user
