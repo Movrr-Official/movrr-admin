@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useTransition, useState } from "react";
 import Link from "next/link";
@@ -205,7 +205,10 @@ export function SignInForm() {
               )}
             </Button>
             <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <Link href="/auth/signup" className="text-primary hover:underline">
+              <Link
+                href={process.env.NEXT_PUBLIC_CUSTOMER_APP_URL || "https://app.movrr.nl/signup"}
+                className="text-primary hover:underline"
+              >
                 Rider sign up
               </Link>
               <Link
@@ -221,3 +224,4 @@ export function SignInForm() {
     </Form>
   );
 }
+

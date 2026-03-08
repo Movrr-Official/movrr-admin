@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Environment variable validation and configuration
  * Ensures all required environment variables are present at runtime
  */
@@ -34,6 +34,10 @@ const publicEnvSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z
     .string()
     .url("Invalid NEXT_PUBLIC_SITE_URL")
+    .optional(),
+  NEXT_PUBLIC_CUSTOMER_APP_URL: z
+    .string()
+    .url("Invalid NEXT_PUBLIC_CUSTOMER_APP_URL")
     .optional(),
   NEXT_PUBLIC_MAP_STYLE_URL: z
     .string()
@@ -148,6 +152,7 @@ function getEnv(): PublicEnv | ServerEnv {
       NODE_ENV: process.env.NODE_ENV,
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
       NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+      NEXT_PUBLIC_CUSTOMER_APP_URL: process.env.NEXT_PUBLIC_CUSTOMER_APP_URL,
       NEXT_PUBLIC_MAP_STYLE_URL: process.env.NEXT_PUBLIC_MAP_STYLE_URL,
       NEXT_PUBLIC_MAP_STYLE_HOT_ZONES:
         process.env.NEXT_PUBLIC_MAP_STYLE_HOT_ZONES,
@@ -195,7 +200,7 @@ function getEnv(): PublicEnv | ServerEnv {
         .map((e) => `${e.path.join(".")}: ${e.message}`)
         .join("\n");
       throw new Error(
-        `❌ Invalid environment variables:\n${missingVars}\n\nPlease check your .env file or environment configuration.`,
+        `âŒ Invalid environment variables:\n${missingVars}\n\nPlease check your .env file or environment configuration.`,
       );
     }
     throw error;
@@ -232,6 +237,26 @@ export const NODE_ENV = env.NODE_ENV || "development";
 export const NEXT_PUBLIC_APP_URL = env.NEXT_PUBLIC_APP_URL;
 export const NEXT_PUBLIC_SITE_URL =
   env.NEXT_PUBLIC_SITE_URL || env.NEXT_PUBLIC_APP_URL;
+
+function deriveCustomerAppUrl() {
+  const explicitCustomerUrl = env.NEXT_PUBLIC_CUSTOMER_APP_URL;
+  if (explicitCustomerUrl) return explicitCustomerUrl;
+
+  try {
+    const adminUrl = new URL(APP_URL);
+    if (adminUrl.hostname.startsWith("admin.")) {
+      adminUrl.hostname = adminUrl.hostname.replace(/^admin\./, "app.");
+      return adminUrl.toString().replace(/\/$/, "");
+    }
+  } catch {
+    // Fall through to stable default below.
+  }
+
+  return "https://app.movrr.nl";
+}
+
+export const CUSTOMER_APP_URL = deriveCustomerAppUrl();
+export const CUSTOMER_APP_SIGNUP_URL = `${CUSTOMER_APP_URL.replace(/\/$/, "")}/signup`;
 export const NEXT_PUBLIC_MAP_STYLE_URL = env.NEXT_PUBLIC_MAP_STYLE_URL;
 export const NEXT_PUBLIC_MAP_STYLE_HOT_ZONES =
   env.NEXT_PUBLIC_MAP_STYLE_HOT_ZONES;
@@ -260,3 +285,5 @@ export const ROUTE_OPTIMIZER_OLD_TOKEN =
 export const isProduction = NODE_ENV === "production";
 export const isDevelopment = NODE_ENV === "development";
 export const isTest = NODE_ENV === "test";
+
+

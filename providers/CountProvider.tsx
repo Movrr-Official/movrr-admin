@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ReactNode, createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
+import useShouldHideComponent from "@/hooks/useShouldHideComponent";
 import { getDashboardCounts } from "@/app/actions/count";
 
 export const DASHBOARD_COUNTS_QUERY_KEY = ["dashboardCounts"] as const;
@@ -28,6 +29,7 @@ const CountContext = createContext<CountContextType | undefined>(undefined);
 
 export const CountProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
+  const shouldDisableCounts = useShouldHideComponent();
 
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: DASHBOARD_COUNTS_QUERY_KEY,
@@ -44,7 +46,8 @@ export const CountProvider = ({ children }: { children: ReactNode }) => {
         throw err;
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !shouldDisableCounts,
+    staleTime: 1000 * 60 * 5,
     retry: 2,
   });
 
