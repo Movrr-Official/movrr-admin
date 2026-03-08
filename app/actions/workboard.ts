@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { requireAdmin } from "@/lib/admin";
+import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { APP_URL, RESEND_API_KEY, FROM_EMAIL } from "@/lib/env";
 import { Resend } from "resend";
@@ -9,6 +10,27 @@ import { Resend } from "resend";
 const roleSchema = z.enum(["owner", "admin", "editor", "viewer"]);
 const workboardWriteRoles = new Set(["owner", "admin", "editor"]);
 const workboardAdminRoles = new Set(["owner", "admin"]);
+const workboardReadableRoles = new Set(["owner", "admin", "editor", "viewer"]);
+
+const requireWorkboardMembership = async (
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  teamId: string,
+  userId: string,
+) => {
+  const { data: membership } = await supabase
+    .from("workboard_team_members")
+    .select("id, role")
+    .eq("team_id", teamId)
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!membership || !workboardReadableRoles.has(membership.role)) {
+    throw new Error("Not authorized to access this team");
+  }
+
+  return membership;
+};
 
 export type WorkboardBootstrap = {
   teamId: string;
@@ -17,7 +39,7 @@ export type WorkboardBootstrap = {
 };
 
 export async function bootstrapWorkboardTeam(): Promise<WorkboardBootstrap> {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const { data: existingMember } = await supabase
@@ -39,6 +61,21 @@ export async function bootstrapWorkboardTeam(): Promise<WorkboardBootstrap> {
       teamName: team?.name ?? "MOVRR HQ",
       role: existingMember.role as WorkboardBootstrap["role"],
     };
+  }
+
+  const { data: existingTeam } = await supabase
+    .from("workboard_teams")
+    .select("id, name")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingTeam?.id) {
+    throw new Error("Not authorized to access this workboard team");
+  }
+
+  if (!["super_admin", "admin"].includes(auth.adminUser.role)) {
+    throw new Error("Not authorized to bootstrap a workboard team");
   }
 
   const { data: newTeam, error: teamError } = await supabase
@@ -69,25 +106,10 @@ export async function bootstrapWorkboardTeam(): Promise<WorkboardBootstrap> {
 }
 
 export async function getWorkboardMembers(teamId: string) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
-  const { data: membership } = await supabase
-    .from("workboard_team_members")
-    .select("id")
-    .eq("team_id", teamId)
-    .eq("user_id", auth.authUser.id)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (!membership) {
-    await supabase.from("workboard_team_members").upsert({
-      team_id: teamId,
-      user_id: auth.authUser.id,
-      role: "owner",
-      status: "active",
-    });
-  }
+  await requireWorkboardMembership(supabase, teamId, auth.authUser.id);
 
   const { data: members = [] } = await supabase
     .from("workboard_team_members")
@@ -116,25 +138,10 @@ export async function getWorkboardMembers(teamId: string) {
 }
 
 export async function getWorkboardBoards(teamId: string) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
-  const { data: membership } = await supabase
-    .from("workboard_team_members")
-    .select("id")
-    .eq("team_id", teamId)
-    .eq("user_id", auth.authUser.id)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (!membership) {
-    await supabase.from("workboard_team_members").upsert({
-      team_id: teamId,
-      user_id: auth.authUser.id,
-      role: "owner",
-      status: "active",
-    });
-  }
+  await requireWorkboardMembership(supabase, teamId, auth.authUser.id);
 
   const { data: boards = [] } = await supabase
     .from("workboard_boards")
@@ -146,25 +153,10 @@ export async function getWorkboardBoards(teamId: string) {
 }
 
 export async function getWorkboardCards(teamId: string) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
-  const { data: membership } = await supabase
-    .from("workboard_team_members")
-    .select("id")
-    .eq("team_id", teamId)
-    .eq("user_id", auth.authUser.id)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (!membership) {
-    await supabase.from("workboard_team_members").upsert({
-      team_id: teamId,
-      user_id: auth.authUser.id,
-      role: "owner",
-      status: "active",
-    });
-  }
+  await requireWorkboardMembership(supabase, teamId, auth.authUser.id);
 
   const { data: cards = [] } = await supabase
     .from("workboard_cards")
@@ -180,7 +172,7 @@ export async function inviteWorkboardMember(input: {
   email: string;
   role: "owner" | "admin" | "editor" | "viewer";
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -190,6 +182,16 @@ export async function inviteWorkboardMember(input: {
       role: roleSchema,
     })
     .parse(input);
+
+  const membership = await requireWorkboardMembership(
+    supabase,
+    payload.teamId,
+    auth.authUser.id,
+  );
+
+  if (!workboardAdminRoles.has(membership.role)) {
+    throw new Error("Not authorized to invite members");
+  }
 
   const token = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
@@ -227,7 +229,7 @@ export async function inviteWorkboardMember(input: {
 }
 
 export async function acceptWorkboardInvite(token: string) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const { data: invite, error } = await supabase
@@ -279,7 +281,7 @@ export async function updateWorkboardMemberRole(input: {
   memberId: string;
   role: "owner" | "admin" | "editor" | "viewer";
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
   const payload = z
     .object({ memberId: z.string().uuid(), role: roleSchema })
@@ -329,7 +331,7 @@ export async function updateWorkboardMemberRole(input: {
 }
 
 export async function removeWorkboardMember(memberId: string) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const { data: targetMember, error: targetMemberError } = await supabase
@@ -379,7 +381,7 @@ export async function createWorkboardBoard(input: {
   statusKey: string;
   position: number;
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -402,12 +404,7 @@ export async function createWorkboardBoard(input: {
     .maybeSingle();
 
   if (!membership) {
-    await supabase.from("workboard_team_members").upsert({
-      team_id: payload.teamId,
-      user_id: auth.authUser.id,
-      role: "owner",
-      status: "active",
-    });
+    throw new Error("Not authorized to create boards");
   } else if (!workboardWriteRoles.has(membership.role)) {
     throw new Error("Not authorized to create boards");
   }
@@ -445,7 +442,7 @@ export async function createWorkboardCard(input: {
   effort?: string | null;
   position: number;
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -477,12 +474,7 @@ export async function createWorkboardCard(input: {
     .maybeSingle();
 
   if (!membership) {
-    await supabase.from("workboard_team_members").upsert({
-      team_id: payload.teamId,
-      user_id: auth.authUser.id,
-      role: "owner",
-      status: "active",
-    });
+    throw new Error("Not authorized to create cards");
   } else if (!workboardWriteRoles.has(membership.role)) {
     throw new Error("Not authorized to create cards");
   }
@@ -518,7 +510,7 @@ export async function updateWorkboardBoard(input: {
   title: string;
   helper?: string | null;
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -564,7 +556,7 @@ export async function archiveWorkboardBoard(input: {
   teamId: string;
   boardId: string;
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -604,7 +596,7 @@ export async function updateWorkboardBoardOrder(input: {
   teamId: string;
   boards: { id: string; position: number }[];
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -664,7 +656,7 @@ export async function updateWorkboardCard(input: {
   dueDate?: string | null;
   effort?: string | null;
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -724,7 +716,7 @@ export async function updateWorkboardCardPositions(input: {
   teamId: string;
   updates: { id: string; boardId: string; position: number }[];
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -780,7 +772,7 @@ export async function archiveWorkboardCard(input: {
   teamId: string;
   cardId: string;
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -820,7 +812,7 @@ export async function deleteWorkboardCard(input: {
   teamId: string;
   cardId: string;
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -856,7 +848,7 @@ export async function deleteWorkboardBoard(input: {
   teamId: string;
   boardId: string;
 }) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z

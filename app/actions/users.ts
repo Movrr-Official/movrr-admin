@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/admin";
+import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   User,
@@ -122,6 +123,55 @@ const getRecoveryRedirectUrl = () =>
 const delay = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+const ADMIN_ACCESS_ROLES = new Set([
+  "super_admin",
+  "admin",
+  "moderator",
+  "support",
+]);
+
+const syncAdminAccessRecord = async (
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+  input: {
+    userId: string;
+    email: string;
+    role?: string | null;
+    createdBy?: string | null;
+  },
+) => {
+  const normalizedRole = input.role ? mapUiRoleToDb(input.role) : undefined;
+  const shouldHaveAdminAccess = Boolean(
+    normalizedRole && ADMIN_ACCESS_ROLES.has(normalizedRole),
+  );
+
+  if (!shouldHaveAdminAccess) {
+    const { error } = await supabaseAdmin
+      .from("admin_users")
+      .delete()
+      .eq("user_id", input.userId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    return;
+  }
+
+  const { error } = await supabaseAdmin.from("admin_users").upsert(
+    {
+      user_id: input.userId,
+      email: input.email,
+      role: normalizedRole,
+      created_by: input.createdBy ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+};
+
 const waitForBootstrappedUserProfile = async (
   supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
   userId: string,
@@ -166,7 +216,7 @@ export async function getUsers(
   selectedAdvertiserIds: string[] = [],
 ): Promise<{ success: boolean; data?: User[]; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     let query = supabaseAdmin.from("user").select("*");
@@ -243,7 +293,7 @@ export async function createUser(
   data: z.infer<typeof createUserSchema>,
 ): Promise<{ success: boolean; error?: string; data?: User }> {
   try {
-    await requireAdmin();
+    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = createUserSchema.parse(data);
 
@@ -333,6 +383,25 @@ export async function createUser(
       };
     }
 
+    try {
+      await syncAdminAccessRecord(supabaseAdmin, {
+        userId: authUser.user.id,
+        email: validatedData.email,
+        role: validatedData.role,
+        createdBy: auth.authUser.id,
+      });
+    } catch (adminAccessError) {
+      console.error("Create user admin access sync error:", adminAccessError);
+      await cleanupCreatedUser(supabaseAdmin, authUser.user.id);
+      return {
+        success: false,
+        error:
+          adminAccessError instanceof Error
+            ? adminAccessError.message
+            : "Failed to provision admin dashboard access",
+      };
+    }
+
     // Admin-created accounts should receive a setup link, not rely on an unknown generated password.
     if (validatedData.sendWelcomeEmail) {
       try {
@@ -399,7 +468,7 @@ export async function updateUser(
   data: z.infer<typeof updateUserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateUserSchema.parse(data);
 
@@ -436,6 +505,46 @@ export async function updateUser(
       return { success: false, error: error.message };
     }
 
+    const adminEmail =
+      validatedData.email ??
+      (
+        await supabaseAdmin
+          .from("user")
+          .select("email, role")
+          .eq("id", validatedData.id)
+          .single()
+      ).data?.email;
+    const adminRole =
+      validatedData.role ??
+      mapDbRoleToUi(
+        (
+          await supabaseAdmin
+            .from("user")
+            .select("role")
+            .eq("id", validatedData.id)
+            .single()
+        ).data?.role,
+      );
+
+    if (adminEmail) {
+      try {
+        await syncAdminAccessRecord(supabaseAdmin, {
+          userId: validatedData.id,
+          email: adminEmail,
+          role: adminRole,
+        });
+      } catch (adminAccessError) {
+        console.error("Update user admin access sync error:", adminAccessError);
+        return {
+          success: false,
+          error:
+            adminAccessError instanceof Error
+              ? adminAccessError.message
+              : "Failed to sync admin dashboard access",
+        };
+      }
+    }
+
     revalidatePath("/users");
     return { success: true };
   } catch (error) {
@@ -454,7 +563,7 @@ export async function updateUserRole(
   data: z.infer<typeof updateUserRoleSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateUserRoleSchema.parse(data);
 
@@ -469,6 +578,36 @@ export async function updateUserRole(
     if (error) {
       console.error("Update user role error:", error);
       return { success: false, error: error.message };
+    }
+
+    const { data: userRow, error: userLookupError } = await supabaseAdmin
+      .from("user")
+      .select("email")
+      .eq("id", validatedData.userId)
+      .single();
+
+    if (userLookupError || !userRow?.email) {
+      return {
+        success: false,
+        error: userLookupError?.message || "User email not found",
+      };
+    }
+
+    try {
+      await syncAdminAccessRecord(supabaseAdmin, {
+        userId: validatedData.userId,
+        email: userRow.email,
+        role: validatedData.role,
+      });
+    } catch (adminAccessError) {
+      console.error("Update user role admin access sync error:", adminAccessError);
+      return {
+        success: false,
+        error:
+          adminAccessError instanceof Error
+            ? adminAccessError.message
+            : "Failed to sync admin dashboard access",
+      };
     }
 
     revalidatePath("/users");
@@ -490,7 +629,7 @@ export async function toggleUserStatus(
   data: z.infer<typeof toggleUserStatusSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = toggleUserStatusSchema.parse(data);
 
@@ -505,6 +644,47 @@ export async function toggleUserStatus(
     if (error) {
       console.error("Toggle user status error:", error);
       return { success: false, error: error.message };
+    }
+
+    if (validatedData.status !== "active") {
+      const { error: adminAccessDeleteError } = await supabaseAdmin
+        .from("admin_users")
+        .delete()
+        .eq("user_id", validatedData.userId);
+
+      if (adminAccessDeleteError) {
+        return { success: false, error: adminAccessDeleteError.message };
+      }
+    } else {
+      const { data: userRow, error: userLookupError } = await supabaseAdmin
+        .from("user")
+        .select("email, role")
+        .eq("id", validatedData.userId)
+        .single();
+
+      if (userLookupError || !userRow?.email) {
+        return {
+          success: false,
+          error: userLookupError?.message || "User email not found",
+        };
+      }
+
+      try {
+        await syncAdminAccessRecord(supabaseAdmin, {
+          userId: validatedData.userId,
+          email: userRow.email,
+          role: mapDbRoleToUi(userRow.role),
+        });
+      } catch (adminAccessError) {
+        console.error("Toggle user status admin access sync error:", adminAccessError);
+        return {
+          success: false,
+          error:
+            adminAccessError instanceof Error
+              ? adminAccessError.message
+              : "Failed to sync admin dashboard access",
+        };
+      }
     }
 
     revalidatePath("/users");
@@ -526,7 +706,7 @@ export async function sendPasswordResetEmail(
   email: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
@@ -592,7 +772,7 @@ export async function exportUserData(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     // Fetch user profile
@@ -708,7 +888,7 @@ export async function deleteUser(
   data: z.infer<typeof deleteUserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = deleteUserSchema.parse(data);
 
@@ -818,7 +998,7 @@ export async function bulkUpdateUserStatus(
   status: "active" | "inactive" | "pending",
 ): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin
@@ -856,7 +1036,7 @@ export async function getUserActivityLogs(
   limit: number = 50,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin
@@ -891,7 +1071,7 @@ export async function getUserRoutes(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin
@@ -933,7 +1113,7 @@ export async function getUserCampaigns(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin
@@ -996,7 +1176,7 @@ export async function getUserRewardTransactions(
   limit: number = 50,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin
@@ -1041,7 +1221,7 @@ export async function getUserPointsBalance(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireAdmin } from "@/lib/admin";
+import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { Rider, RiderFiltersSchema, updateRiderSchema } from "@/schemas";
 import { z } from "zod";
@@ -225,7 +226,7 @@ export async function getRiders(
   filters?: RiderFiltersSchema,
 ): Promise<{ success: boolean; data?: Rider[]; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     let query = supabaseAdmin.from("rider").select("*");
@@ -406,7 +407,7 @@ export async function updateRiderProfile(
   data: z.infer<typeof updateRiderSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateRiderSchema.parse(data);
 

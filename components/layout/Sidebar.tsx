@@ -105,7 +105,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         name: "Overview",
         href: "/",
         icon: LayoutDashboard,
-        roles: ["admin", "super_admin"],
+        roles: ["admin", "super_admin", "moderator", "support"],
         badge: null,
       },
       {

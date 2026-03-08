@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   RewardCatalogFilters,
@@ -80,6 +82,7 @@ export async function getRewardCatalog(
   filters?: RewardCatalogFilters,
 ): Promise<{ success: boolean; data?: RewardCatalogItem[]; error?: string }> {
   try {
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     let query = supabaseAdmin
       .from("reward_catalog")
@@ -126,6 +129,7 @@ export async function upsertRewardCatalog(
   data: z.infer<typeof upsertRewardCatalogSchema>,
 ): Promise<{ success: boolean; data?: RewardCatalogItem; error?: string }> {
   try {
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = upsertRewardCatalogSchema.parse(data);
 
@@ -199,6 +203,7 @@ export async function updateRewardCatalogStatus(
   data: z.infer<typeof publishRewardSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = publishRewardSchema.parse(data);
 
@@ -235,6 +240,7 @@ export async function toggleRewardFeatured(
   data: z.infer<typeof toggleFeaturedSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = toggleFeaturedSchema.parse(data);
 

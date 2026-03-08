@@ -1,5 +1,7 @@
 "use server";
 
+import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export interface SearchResult {
@@ -20,6 +22,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
   }
 
   try {
+    await requireAdminRoles(DASHBOARD_ACCESS_ROLES);
     const supabase = createSupabaseAdminClient();
     const searchTerm = `%${query.trim()}%`;
 

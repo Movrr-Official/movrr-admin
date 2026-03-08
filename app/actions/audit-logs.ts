@@ -1,5 +1,7 @@
 "use server";
 
+import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { AuditFilters, AuditLog } from "@/schemas";
 
@@ -84,6 +86,7 @@ export async function getAuditLogs(
   filters?: AuditFilters,
 ): Promise<{ success: boolean; data?: AuditLog[]; error?: string }> {
   try {
+    await requireAdminRoles(DASHBOARD_ACCESS_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const tryFetch = async (tableName: string) => {

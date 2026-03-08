@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
-import { requireAdmin } from "@/lib/admin";
+import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseServerClient } from "@/supabase/server";
 import { WaitlistEntry } from "@/types/types";
@@ -72,7 +73,7 @@ const cleanupCreatedUser = async (
 export async function getWaitlistData(
   searchValue?: string,
 ): Promise<WaitlistEntry[]> {
-  await requireAdmin();
+  await requireAdminRoles(ADMIN_ONLY_ROLES);
   const supabase = await createSupabaseServerClient();
 
   try {
@@ -108,7 +109,7 @@ export async function updateWaitlistStatus(
   status: "pending" | "approved" | "rejected",
   reason?: string,
 ) {
-  await requireAdmin();
+  await requireAdminRoles(ADMIN_ONLY_ROLES);
   const supabaseAdmin = createSupabaseAdminClient(); // for Auth + RLS-safe insert
   const supabase = await createSupabaseServerClient(); // for fetching waitlist and updates
 

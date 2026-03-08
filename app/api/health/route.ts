@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin";
+import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { RESEND_API_KEY } from "@/lib/env";
@@ -111,14 +112,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    await requireAdmin();
+    await requireAdminRoles(DASHBOARD_ACCESS_ROLES);
   } catch {
     return NextResponse.json(
-      {
-        status: "operational",
-        timestamp: new Date().toISOString(),
-      },
-      { headers: { "cache-control": "no-store" } },
+      { error: "unauthorized" },
+      { status: 401, headers: { "cache-control": "no-store" } },
     );
   }
 

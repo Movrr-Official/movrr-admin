@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/admin";
+import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { logger } from "@/lib/logger";
 import { settings, adminSettingsSchema } from "@/schemas/settings";
@@ -65,7 +66,7 @@ export async function getAdminSettings(): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const { data, error } = await supabaseAdmin
       .from("admin_settings")
@@ -95,7 +96,7 @@ export async function updateSettings(
   payload: settings,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validated = adminSettingsSchema.parse(payload);
 

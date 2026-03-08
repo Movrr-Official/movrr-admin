@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 
-import { requireAdmin } from "@/lib/admin";
+import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { createUser } from "@/app/actions/users";
@@ -123,7 +124,7 @@ export async function getAdvertiserOptions(): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
 
     if (shouldUseMockData()) {
       const options = mockUsers
@@ -219,7 +220,7 @@ export async function getAdvertisers(
   };
 }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const page = clampPageNumber(filters?.page);
     const pageSize = clampPageSize(filters?.pageSize);
 
@@ -453,7 +454,7 @@ export async function getAdvertiserById(
   id: string,
 ): Promise<{ success: boolean; data?: Advertiser; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
 
     if (shouldUseMockData()) {
       const result = await getAdvertisers({ page: 1, pageSize: 1000 });
@@ -573,7 +574,7 @@ export async function createAdvertiserProfile(
   data: z.infer<typeof createAdvertiserSchema>,
 ): Promise<{ success: boolean; data?: AdvertiserOption; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const validatedData = createAdvertiserSchema.parse(data);
 
     if (shouldUseMockData()) {
@@ -785,7 +786,7 @@ export async function updateAdvertiserProfile(
   data: z.infer<typeof updateAdvertiserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const validatedData = updateAdvertiserSchema.parse(data);
 
     if (shouldUseMockData()) {
@@ -958,7 +959,7 @@ export async function deleteAdvertiserProfile(
   data: z.infer<typeof deleteAdvertiserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
     const validatedData = deleteAdvertiserSchema.parse(data);
 
     if (shouldUseMockData()) {

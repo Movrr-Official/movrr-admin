@@ -103,6 +103,18 @@ export async function requireAdmin(): Promise<AuthenticatedUser> {
   return user;
 }
 
+export async function requireAdminRoles(
+  allowedRoles: readonly string[],
+): Promise<AuthenticatedUser> {
+  const user = await requireAdmin();
+
+  if (!allowedRoles.includes(user.adminUser.role)) {
+    throw new Error("Not authorized");
+  }
+
+  return user;
+}
+
 export async function getAdminRoleForLayout(): Promise<AdminRole | undefined> {
   const pathname = await resolvePathnameFromHeaders();
   const shouldResolveRole = shouldResolveRoleForPath(pathname);
