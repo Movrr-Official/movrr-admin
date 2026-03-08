@@ -7,7 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseServerClient } from "@/supabase/server";
 import { WaitlistEntry } from "@/types/types";
 import AccountSetupEmail from "@/emails/account-setup";
-import { FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
+import { APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
 
 // Utility function to generate a secure random password
 function generateRandomPassword(length = 12) {
@@ -26,6 +26,9 @@ const getResendClient = () => {
 
 const getSenderEmail = () =>
   FROM_EMAIL ? `Movrr <${FROM_EMAIL}>` : "Movrr <no-reply@movrr.nl>";
+
+const getRecoveryRedirectUrl = () =>
+  new URL("/auth/callback?next=/auth/reset-password", APP_URL).toString();
 
 const delay = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -182,6 +185,9 @@ export async function updateWaitlistStatus(
         await supabaseAdmin.auth.admin.generateLink({
           type: "recovery",
           email: waitlist.email,
+          options: {
+            redirectTo: getRecoveryRedirectUrl(),
+          },
         });
 
       if (recoveryError || !recoveryData?.properties?.action_link) {

@@ -14,6 +14,7 @@ Required keys are validated in `lib/env.ts`.
 
 Core keys:
 
+- `APP_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -108,6 +109,7 @@ Identity bootstrap scripts and constraints:
 - Operationally, app actions should update those rows after bootstrap instead of inserting competing profile records.
 - If user creation starts failing with generic Supabase auth database errors, inspect trigger logs and verify trigger assumptions still match app metadata and table constraints.
 - Admin-created users and approved waitlist riders should receive account setup links through the recovery-link flow, not rely on generated passwords being communicated manually.
+- Server-generated links (setup, reset, workboard invites) must use `APP_URL` as the canonical base URL. Do not rely on `NEXT_PUBLIC_*` values or Supabase default site URL for security-sensitive email links.
 
 ## Health checks and monitoring
 

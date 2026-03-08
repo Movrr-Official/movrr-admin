@@ -15,7 +15,7 @@ import { z } from "zod";
 import { Resend } from "resend";
 import AccountSetupEmail from "@/emails/account-setup";
 import PasswordResetEmail from "@/emails/password-reset";
-import { FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
+import { APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
 
 const mapUiRoleToDb = (role: string) => {
   if (role === "super_admin") return "super_admin";
@@ -115,6 +115,9 @@ const getResendClient = () => {
 
 const getSenderEmail = () =>
   FROM_EMAIL ? `Movrr <${FROM_EMAIL}>` : "Movrr <no-reply@movrr.nl>";
+
+const getRecoveryRedirectUrl = () =>
+  new URL("/auth/callback?next=/auth/reset-password", APP_URL).toString();
 
 const delay = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -343,6 +346,9 @@ export async function createUser(
             await supabaseAdmin.auth.admin.generateLink({
               type: "recovery",
               email: validatedData.email,
+              options: {
+                redirectTo: getRecoveryRedirectUrl(),
+              },
             });
 
           if (recoveryError || !recoveryData?.properties?.action_link) {
@@ -526,6 +532,9 @@ export async function sendPasswordResetEmail(
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email,
+      options: {
+        redirectTo: getRecoveryRedirectUrl(),
+      },
     });
 
     if (error) {

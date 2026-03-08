@@ -108,7 +108,7 @@ Environment is validated in `lib/env.ts` with Zod. Required server-side values i
 
 - Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 - Database/email: `DATABASE_URL`, `RESEND_API_KEY`, sender/admin emails.
-- App config: `NEXT_PUBLIC_APP_URL`, map style URL(s).
+- App config: `APP_URL`, `NEXT_PUBLIC_APP_URL`, map style URL(s).
 - Optimizer: `ROUTE_OPTIMIZER_URL`, `ROUTE_OPTIMIZER_TOKEN` (or `ROUTE_OPTIMIZER_KEY`), optional previous-token settings.
 
 ## Local development

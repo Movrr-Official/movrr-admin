@@ -56,6 +56,9 @@ const publicEnvSchema = z.object({
 
 const serverEnvSchema = publicEnvSchema
   .extend({
+  // Canonical server-side application URL
+  APP_URL: z.string().url("Invalid APP_URL"),
+
   // Database
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
@@ -165,6 +168,7 @@ function getEnv(): PublicEnv | ServerEnv {
     return serverEnvSchema.parse({
       ...publicValues,
       DATABASE_URL: process.env.DATABASE_URL,
+      APP_URL: process.env.APP_URL,
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
       RESEND_API_KEY: process.env.RESEND_API_KEY,
@@ -202,6 +206,7 @@ const serverEnv = !isBrowser ? (env as ServerEnv) : undefined;
 
 // Export individual variables for convenience with defaults
 export const DATABASE_URL = serverEnv?.DATABASE_URL ?? "";
+export const APP_URL = serverEnv?.APP_URL || env.NEXT_PUBLIC_APP_URL;
 export const NEXT_PUBLIC_SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL;
 export const NEXT_PUBLIC_SUPABASE_ANON_KEY = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 export const SUPABASE_URL = serverEnv?.SUPABASE_URL ?? "";
