@@ -5,9 +5,11 @@ import {
   sendUserConfirmationEmail,
   sendAdminNotificationEmail,
 } from "@/lib/email";
-import { getPublicOnboardingSettings } from "@/app/actions/settings";
 import { autoApproveWaitlistEntry } from "@/app/actions/waitlist";
-import { getPlatformOperationalPolicies } from "@/lib/platformSettings";
+import {
+  getPlatformOperationalPolicies,
+  getPublicOnboardingPolicyValues,
+} from "@/lib/platformSettings";
 import { createSupabaseServerClient } from "@/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -38,14 +40,11 @@ export type WaitlistFormData = z.infer<typeof waitlistSchema>;
 export async function submitWaitlistForm(data: WaitlistFormData) {
   try {
     const [onboarding, policies] = await Promise.all([
-      getPublicOnboardingSettings(),
+      getPublicOnboardingPolicyValues(),
       getPlatformOperationalPolicies(),
     ]);
-    if (!onboarding.success || !onboarding.data) {
-      throw new Error(onboarding.error || "Failed to load onboarding policy");
-    }
 
-    if (onboarding.data.riderOnboardingMode === "closed") {
+    if (onboarding.riderOnboardingMode === "closed") {
       return {
         success: false,
         message:

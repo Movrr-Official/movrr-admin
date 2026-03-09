@@ -204,24 +204,16 @@ export function SignInForm() {
                 "Sign In"
               )}
             </Button>
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <Link
-                href={process.env.NEXT_PUBLIC_CUSTOMER_APP_URL || "https://app.movrr.nl/signup"}
-                className="text-primary hover:underline"
-              >
-                Rider sign up
-              </Link>
-              <Link
-                href="/auth/reset-password"
-                className="text-primary hover:underline"
-              >
-                Reset password
-              </Link>
-            </div>
+            <p className="text-sm text-muted-foreground text-center">
+              Admin access is provisioned internally. If you cannot sign in,
+              contact the Movrr platform owner or support team.
+            </p>
           </>
         )}
       </form>
     </Form>
   );
 }
+
+
 

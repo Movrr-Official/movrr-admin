@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Bike } from "lucide-react";
 
 export default function AuthLayout({
   children,
@@ -12,7 +11,6 @@ export default function AuthLayout({
 }>) {
   return (
     <div className="min-h-screen flex">
-      {/* Left side - Branding */}
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
@@ -36,52 +34,51 @@ export default function AuthLayout({
             <span className="text-2xl uppercase font-bold">Movrr</span>
           </div>
           <h1 className="text-4xl font-bold mb-4">
-            Route & Ad Optimization Platform
+            MOVRR Admin Operations Portal
           </h1>
           <p className="text-xl opacity-90">
-            Maximize your advertising impact with intelligent bike-based
-            campaigns and real-time analytics.
+            Internal access for campaign operations, rider oversight, route
+            coordination, and platform administration.
           </p>
         </div>
 
         <div className="space-y-8 mb-16">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl">🚴</span>
+              <span className="text-lg font-semibold">A</span>
             </div>
             <div>
-              <h3 className="font-semibold">Smart Route Planning</h3>
+              <h3 className="font-semibold">Admin-Gated Access</h3>
               <p className="opacity-80">
-                AI-powered optimization for maximum visibility
+                Dashboard access is provisioned internally for authorized team members.
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl">📊</span>
+              <span className="text-lg font-semibold">O</span>
             </div>
             <div>
-              <h3 className="font-semibold">Real-time Analytics</h3>
+              <h3 className="font-semibold">Operations Control</h3>
               <p className="opacity-80">
-                Track performance in real-time
+                Manage riders, advertisers, campaigns, rewards, and routes from one surface.
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl">🎯</span>
+              <span className="text-lg font-semibold">S</span>
             </div>
             <div>
-              <h3 className="font-semibold">Targeted Campaigns</h3>
+              <h3 className="font-semibold">Security-Scoped Sessions</h3>
               <p className="opacity-80">
-                Reach the right audience at the right time
+                Authentication, authorization, and audit controls are enforced for internal operators.
               </p>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Right side - Auth form */}
       <motion.div
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}

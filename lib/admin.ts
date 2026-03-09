@@ -43,6 +43,26 @@ const shouldResolveRoleForPath = (pathname?: string) => {
   return !EXCLUDED_PATHS.some((path) => pathname.startsWith(path));
 };
 
+const resolveTrustedAdminSessionStartedAt = (authUser: {
+  app_metadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
+}) => {
+  const candidates = [
+    authUser.app_metadata?.admin_session_started_at,
+    authUser.user_metadata?.admin_session_started_at,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate !== "string" || !candidate.trim()) continue;
+    const timestamp = new Date(candidate).getTime();
+    if (!Number.isNaN(timestamp)) {
+      return timestamp;
+    }
+  }
+
+  return null;
+};
+
 const enforceSecurityPolicy = async (
   authUser: {
     last_sign_in_at?: string | null;
@@ -51,11 +71,11 @@ const enforceSecurityPolicy = async (
   },
 ) => {
   const policy = await getPlatformSecurityPolicy();
-  const lastSignInAt = authUser.last_sign_in_at
-    ? new Date(authUser.last_sign_in_at).getTime()
-    : null;
+  const trustedSessionStartedAt = resolveTrustedAdminSessionStartedAt(authUser);
   const ageMinutes =
-    lastSignInAt === null ? null : Math.max(0, (Date.now() - lastSignInAt) / 60_000);
+    trustedSessionStartedAt === null
+      ? null
+      : Math.max(0, (Date.now() - trustedSessionStartedAt) / 60_000);
   const aal =
     typeof authUser.app_metadata?.aal === "string"
       ? authUser.app_metadata.aal
@@ -67,16 +87,21 @@ const enforceSecurityPolicy = async (
     throw new Error("Admin MFA is required by the current security policy.");
   }
 
-  if (
-    ageMinutes !== null &&
-    ageMinutes > policy.adminSessionTimeoutMinutes
-  ) {
+  // Do not treat auth.users.last_sign_in_at as an active admin-session timer.
+  // It is not a reliable signal for server-rendered dashboard requests and can
+  // incorrectly expire valid sessions. Enforce timeout only when a dedicated,
+  // trusted admin-session start marker exists.
+  if (ageMinutes !== null && ageMinutes > policy.adminSessionTimeoutMinutes) {
     throw new Error("Admin session has expired under the current security policy.");
   }
 
   return {
     policy,
-    sessionState: { ageMinutes, aal },
+    sessionState: {
+      ageMinutes,
+      aal,
+      timeoutEnforced: trustedSessionStartedAt !== null,
+    },
   };
 };
 

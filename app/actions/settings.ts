@@ -1077,49 +1077,6 @@ export async function updateSettingsSection(input: {
   }
 }
 
-export async function getPublicOnboardingSettings(): Promise<{
-  success: boolean;
-  data?: {
-    riderOnboardingMode: ReturnType<typeof onboardingModeSchema.parse>;
-    requireCity: boolean;
-    requireCountry: boolean;
-    supportEmail: string;
-    defaultLanguage: string;
-    defaultTimezone: string;
-    maintenanceMode: boolean;
-    appUrl: string;
-  };
-  error?: string;
-}> {
-  try {
-    const rows = await loadSettingsRows();
-    const values = mergeRows(rows);
-
-    return {
-      success: true,
-      data: {
-        riderOnboardingMode: values.onboarding.riderOnboardingMode,
-        requireCity: values.onboarding.requireCity,
-        requireCountry: values.onboarding.requireCountry,
-        supportEmail: values.general.publicSupportEmail || values.general.supportEmail,
-        defaultLanguage: values.onboarding.defaultRiderLanguage,
-        defaultTimezone: values.onboarding.defaultRiderTimezone,
-        maintenanceMode: values.general.maintenanceMode,
-        appUrl: APP_URL,
-      },
-    };
-  } catch (error) {
-    logger.error("Failed to load public onboarding settings", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to load public onboarding settings",
-    };
-  }
-}
-
 export async function getLegacySettingsCompatibility() {
   const result = await getAdminSettings();
   if (!result.success || !result.data) {
