@@ -10,6 +10,7 @@ import {
   rewardTransactionTypeSchema,
 } from "@/schemas";
 import { z } from "zod";
+import { writeUserActivity } from "@/lib/userActivity";
 
 const adjustPointsSchema = z.object({
   riderId: z.string(),
@@ -539,7 +540,7 @@ export async function adjustRiderPoints(
   data: z.infer<typeof adjustPointsSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = adjustPointsSchema.parse(data);
     const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc(
@@ -563,6 +564,34 @@ export async function adjustRiderPoints(
         success: false,
         error: row?.error_message || "Failed to adjust rider points",
       };
+    }
+
+    const { data: riderRow } = await supabaseAdmin
+      .from("rider")
+      .select("user_id")
+      .eq("id", validatedData.riderId)
+      .maybeSingle();
+
+    if (riderRow?.user_id) {
+      await writeUserActivity(supabaseAdmin, {
+        user_id: riderRow.user_id,
+        actor_user_id: auth.authUser.id,
+        source: "reward",
+        action:
+          validatedData.points >= 0 ? "Points awarded" : "Points adjusted",
+        description:
+          validatedData.description ||
+          `${validatedData.points >= 0 ? "Awarded" : "Debited"} ${Math.abs(validatedData.points)} points.`,
+        related_entity_type: "rider",
+        related_entity_id: validatedData.riderId,
+        metadata: {
+          riderId: validatedData.riderId,
+          points: validatedData.points,
+          type: validatedData.type,
+        },
+      }).catch((activityError) => {
+        console.warn("Adjust rider points activity write failed:", activityError);
+      });
     }
 
     revalidatePath("/rewards");

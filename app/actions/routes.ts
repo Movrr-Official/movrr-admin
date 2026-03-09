@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
 import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { writeUserActivities } from "@/lib/userActivity";
 import { RiderRoute, routeStatusSchema } from "@/schemas";
 import { z } from "zod";
 
@@ -667,7 +668,7 @@ export async function assignRouteToRiders(
   error?: string;
 }> {
   try {
-    await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+    const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = assignRouteToRidersSchema.parse(data);
 
@@ -725,6 +726,34 @@ export async function assignRouteToRiders(
     if (error) {
       return { success: false, error: error.message };
     }
+
+    const { data: assignedRiders } = await supabaseAdmin
+      .from("rider")
+      .select("id, user_id")
+      .in("id", riderIdsToAssign);
+
+    await writeUserActivities(
+      supabaseAdmin,
+      (assignedRiders ?? [])
+        .filter((row) => row.user_id)
+        .map((row) => ({
+          user_id: row.user_id,
+          actor_user_id: auth.authUser.id,
+          source: "route",
+          action: "Route assigned",
+          description: "A route assignment was created for this rider.",
+          related_entity_type: "route",
+          related_entity_id: validatedData.routeId,
+          metadata: {
+            routeId: validatedData.routeId,
+            riderId: row.id,
+            campaignId: route.campaign_id ?? null,
+          },
+          occurred_at: now,
+        })),
+    ).catch((activityError) => {
+      console.warn("Assign route activity write failed:", activityError);
+    });
 
     revalidatePath("/routes");
     return {
@@ -987,9 +1016,15 @@ export async function unassignRouteAssignment(
   data: z.infer<typeof unassignRouteSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+    const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = unassignRouteSchema.parse(data);
+
+    const { data: assignmentRow } = await supabaseAdmin
+      .from("rider_route")
+      .select("id, rider_id, route_id")
+      .eq("id", validatedData.riderRouteId)
+      .maybeSingle();
 
     const { error } = await supabaseAdmin
       .from("rider_route")
@@ -1001,6 +1036,33 @@ export async function unassignRouteAssignment(
 
     if (error) {
       return { success: false, error: error.message };
+    }
+
+    if (assignmentRow?.rider_id) {
+      const { data: riderRow } = await supabaseAdmin
+        .from("rider")
+        .select("user_id")
+        .eq("id", assignmentRow.rider_id)
+        .maybeSingle();
+
+      if (riderRow?.user_id) {
+        await writeUserActivities(supabaseAdmin, [
+          {
+            user_id: riderRow.user_id,
+            actor_user_id: auth.authUser.id,
+            source: "route",
+            action: "Route unassigned",
+            description: "A route assignment was cancelled or unassigned.",
+            related_entity_type: "route",
+            related_entity_id: assignmentRow.route_id ?? validatedData.riderRouteId,
+            metadata: {
+              riderRouteId: validatedData.riderRouteId,
+            },
+          },
+        ]).catch((activityError) => {
+          console.warn("Unassign route activity write failed:", activityError);
+        });
+      }
     }
 
     revalidatePath("/routes");
@@ -1158,9 +1220,14 @@ export async function updateRouteStatus(
   data: z.infer<typeof updateRouteStatusSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+    const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateRouteStatusSchema.parse(data);
+    const { data: assignmentRow } = await supabaseAdmin
+      .from("rider_route")
+      .select("id, rider_id, route_id")
+      .eq("id", validatedData.routeId)
+      .maybeSingle();
 
     const updateData: Record<string, any> = {
       status: validatedData.status,
@@ -1183,6 +1250,46 @@ export async function updateRouteStatus(
     if (error) {
       console.error("Error updating route status:", error);
       return { success: false, error: error.message };
+    }
+
+    if (assignmentRow?.rider_id) {
+      const { data: riderRow } = await supabaseAdmin
+        .from("rider")
+        .select("user_id")
+        .eq("id", assignmentRow.rider_id)
+        .maybeSingle();
+
+      if (riderRow?.user_id) {
+        const action =
+          validatedData.status === "completed"
+            ? "Route completed"
+            : validatedData.status === "in-progress"
+              ? "Route started"
+              : "Route status updated";
+        const description =
+          validatedData.reason?.trim()
+            ? `Route status changed to ${validatedData.status}. Reason: ${validatedData.reason}`
+            : `Route status changed to ${validatedData.status}.`;
+
+        await writeUserActivities(supabaseAdmin, [
+          {
+            user_id: riderRow.user_id,
+            actor_user_id: auth.authUser.id,
+            source: "route",
+            action,
+            description,
+            related_entity_type: "route",
+            related_entity_id: assignmentRow.route_id ?? validatedData.routeId,
+            metadata: {
+              riderRouteId: validatedData.routeId,
+              status: validatedData.status,
+              reason: validatedData.reason ?? null,
+            },
+          },
+        ]).catch((activityError) => {
+          console.warn("Update route status activity write failed:", activityError);
+        });
+      }
     }
 
     revalidatePath("/routes");

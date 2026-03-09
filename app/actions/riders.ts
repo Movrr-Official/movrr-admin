@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
 import { requireAdminRoles } from "@/lib/admin";
+import {
+  fetchLatestUserActivitySignalMap,
+  resolveLatestIsoTimestamp,
+} from "@/lib/activitySignals";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { Rider, RiderFiltersSchema, updateRiderSchema } from "@/schemas";
 import { z } from "zod";
@@ -135,7 +139,11 @@ const mapRiderRow = ({
     user?.updated_at ??
     rider.created_at ??
     new Date().toISOString();
-  const lastActivityAt = user?.last_login ?? rider.updated_at ?? createdAt;
+  const lastActivityAt = resolveLatestIsoTimestamp(
+    user?.last_login ?? undefined,
+    rider.updated_at ?? undefined,
+    createdAt,
+  );
   const routeProgress = Number(rider.route_progress ?? 0);
   const vehicleType = toVehicleType(rider.vehicle_type);
 
@@ -246,6 +254,10 @@ export async function getRiders(
     const riders = (riderRows ?? []) as RiderRow[];
     const userIds = riders.map((rider) => rider.user_id).filter(Boolean);
     const riderIds = riders.map((rider) => rider.id);
+    const lastActivitySignalMap = await fetchLatestUserActivitySignalMap(
+      supabaseAdmin,
+      userIds,
+    );
 
     const [
       { data: users },
@@ -346,10 +358,19 @@ export async function getRiders(
       ).length;
 
       const balance = balanceByRider.get(rider.id);
+      const lastActive = resolveLatestIsoTimestamp(
+        lastActivitySignalMap.get(rider.user_id),
+        user?.last_login ?? undefined,
+      );
 
-      return mapRiderRow({
+      const mappedRider = mapRiderRow({
         rider,
-        user,
+        user: user
+          ? {
+              ...user,
+              last_login: lastActive ?? user.last_login,
+            }
+          : undefined,
         currentRoute,
         activeRoutesCount: activeRoutes.length,
         campaignsCompleted: Number(rider.total_campaigns ?? allCampaigns.length),
@@ -357,6 +378,16 @@ export async function getRiders(
         pointsBalance: balance?.pointsBalance ?? 0,
         lifetimePointsEarned: balance?.lifetimePointsEarned ?? 0,
       });
+
+      return {
+        ...mappedRider,
+        lastActive,
+        lastActivityAt: resolveLatestIsoTimestamp(
+          lastActive,
+          rider.updated_at ?? undefined,
+          mappedRider.createdAt,
+        ),
+      };
     });
 
     if (filters?.status && filters.status !== "all") {

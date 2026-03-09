@@ -131,7 +131,7 @@ export const riderUserSchema = z.object({
   status: z.enum(["active", "inactive", "pending"]),
   assignedRoute: z.string().optional(),
   impressionsDelivered: z.number().default(0),
-  lastLogin: z.string().optional(),
+  lastActive: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
   onRoute: z.boolean().default(false),

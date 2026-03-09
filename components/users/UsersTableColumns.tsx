@@ -218,11 +218,11 @@ export const getUsersTableColumns = ({
     cell: ({ row }) => getStatusBadge(row.getValue("status")),
   },
   {
-    accessorKey: "lastLogin",
+    accessorKey: "lastActive",
     header: "Last Active",
     cell: ({ row }) => {
-      const lastLogin = row.getValue("lastLogin") as string | undefined;
-      if (!lastLogin) {
+      const lastActive = row.getValue("lastActive") as string | undefined;
+      if (!lastActive) {
         return (
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground/50" />
@@ -232,21 +232,11 @@ export const getUsersTableColumns = ({
           </div>
         );
       }
-      const date = new Date(lastLogin);
-      const now = new Date();
-      const diffDays = Math.floor(
-        (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
-      );
+      const date = new Date(lastActive);
 
       return (
         <div className="text-muted-foreground font-medium">
-          {diffDays === 0
-            ? "Today"
-            : diffDays === 1
-              ? "Yesterday"
-              : diffDays < 7
-                ? `${diffDays} days ago`
-                : format(date, "MMM d, yyyy")}
+          {formatDistanceToNow(date, { addSuffix: true })}
         </div>
       );
     },

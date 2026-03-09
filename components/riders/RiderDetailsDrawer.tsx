@@ -591,7 +591,7 @@ export function RiderDetailsDrawer({
                     <CardContent className="space-y-3">
                       <div className="flex items-center gap-3"><UserRound className="h-4 w-4 text-muted-foreground" /><span className="text-sm text-foreground">Linked user ID: {rider.userId}</span></div>
                       <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground" /><span className="text-sm text-foreground">Created: {format(new Date(rider.createdAt), "MMM d, yyyy")}</span></div>
-                      <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground" /><span className="text-sm text-foreground">Updated: {format(new Date(rider.updatedAt), "MMM d, yyyy")}</span></div>
+                      <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground" /><span className="text-sm text-foreground">Last Active: {rider.lastActivityAt ? format(new Date(rider.lastActivityAt), "MMM d, yyyy 'at' h:mm a") : "Never"}</span></div>
                     </CardContent>
                   </Card>
                 </>

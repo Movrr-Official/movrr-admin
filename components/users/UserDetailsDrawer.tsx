@@ -669,12 +669,12 @@ export function UserDetailsDrawer({
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Last Login</p>
+                    <p className="text-sm text-muted-foreground mb-1">Last Active</p>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <p className="text-sm font-medium text-foreground">
-                        {user.lastLogin
-                          ? format(new Date(user.lastLogin), "MMM d, yyyy 'at' h:mm a")
+                        {user.lastActive
+                          ? format(new Date(user.lastActive), "MMM d, yyyy 'at' h:mm a")
                           : "Never"}
                       </p>
                     </div>

@@ -160,17 +160,36 @@ export const getRidersTableColumns = ({
     },
   },
   {
-    accessorKey: "updatedAt",
-    header: "Updated",
+    accessorKey: "lastActivityAt",
+    header: "Last Active",
     cell: ({ row }) => {
-      const updatedAt = new Date(row.original.updatedAt);
+      const lastActivityAt = row.original.lastActivityAt ?? row.original.lastActive;
+      if (!lastActivityAt) {
+        return (
+          <div className="min-w-[130px]">
+            <p className="text-sm font-medium text-muted-foreground">Never</p>
+            <p className="text-xs text-muted-foreground">No recorded activity</p>
+          </div>
+        );
+      }
+
+      const activityDate = new Date(lastActivityAt);
+      if (Number.isNaN(activityDate.getTime())) {
+        return (
+          <div className="min-w-[130px]">
+            <p className="text-sm font-medium text-muted-foreground">Unknown</p>
+            <p className="text-xs text-muted-foreground">Invalid activity timestamp</p>
+          </div>
+        );
+      }
+
       return (
         <div className="min-w-[130px]">
           <p className="text-sm font-medium text-foreground">
-            {format(updatedAt, "MMM d, yyyy")}
+            {format(activityDate, "MMM d, yyyy")}
           </p>
           <p className="text-xs text-muted-foreground">
-            {formatDistanceToNow(updatedAt, { addSuffix: true })}
+            {formatDistanceToNow(activityDate, { addSuffix: true })}
           </p>
         </div>
       );

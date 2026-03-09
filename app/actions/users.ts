@@ -23,6 +23,15 @@ import {
   getPlatformSecurityPolicy,
   isInviteDomainAllowed,
 } from "@/lib/platformSettings";
+import {
+  fetchLatestUserActivitySignalMap,
+  resolveLatestIsoTimestamp,
+} from "@/lib/activitySignals";
+import {
+  fetchUserActivityFeed,
+  writeUserActivity,
+  writeUserActivities,
+} from "@/lib/userActivity";
 
 const mapUiRoleToDb = (role: string) => {
   if (role === "super_admin") return "super_admin";
@@ -214,6 +223,19 @@ const cleanupCreatedUser = async (
   await supabaseAdmin.auth.admin.deleteUser(userId);
 };
 
+type UserActivityEntry = {
+  id: string;
+  action: string;
+  description: string;
+  created_at: string;
+  source:
+    | "admin_access"
+    | "route"
+    | "campaign"
+    | "reward"
+    | "account";
+};
+
 /**
  * Server action to fetch users for the dashboard.
  */
@@ -258,6 +280,12 @@ export async function getUsers(
       return { success: false, error: error.message };
     }
 
+    const userIds = (data ?? []).map((row) => row.id);
+    const lastActivitySignalMap = await fetchLatestUserActivitySignalMap(
+      supabaseAdmin,
+      userIds,
+    );
+
     let users = (data ?? []).map((row) => ({
       id: row.id,
       email: row.email,
@@ -267,6 +295,10 @@ export async function getUsers(
       status: mapDbStatusToUi(row.status),
       createdAt: row.created_at ?? new Date().toISOString(),
       updatedAt: row.updated_at ?? new Date().toISOString(),
+      lastActive: resolveLatestIsoTimestamp(
+        lastActivitySignalMap.get(row.id),
+        row.last_login ?? undefined,
+      ),
       lastLogin: row.last_login ?? undefined,
       avatarUrl: row.avatar_url ?? undefined,
       organization: row.organization ?? undefined,
@@ -487,6 +519,23 @@ export async function createUser(
       }
     }
 
+    await writeUserActivity(supabaseAdmin, {
+      user_id: authUser.user.id,
+      actor_user_id: auth.authUser.id,
+      source: "account",
+      action: "Account created",
+      description: `Account created with role ${validatedData.role}.`,
+      related_entity_type: "user",
+      related_entity_id: authUser.user.id,
+      metadata: {
+        role: validatedData.role,
+        status: validatedData.status,
+        sendWelcomeEmail: validatedData.sendWelcomeEmail,
+      },
+    }).catch((activityError) => {
+      console.warn("Create user activity write failed:", activityError);
+    });
+
     revalidatePath("/users");
     return { success: true, data: user as unknown as User };
   } catch (error) {
@@ -505,7 +554,7 @@ export async function updateUser(
   data: z.infer<typeof updateUserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateUserSchema.parse(data);
 
@@ -582,6 +631,21 @@ export async function updateUser(
       }
     }
 
+    await writeUserActivity(supabaseAdmin, {
+      user_id: validatedData.id,
+      actor_user_id: auth.authUser.id,
+      source: "account",
+      action: "Account updated",
+      description: "User profile details were updated by an administrator.",
+      related_entity_type: "user",
+      related_entity_id: validatedData.id,
+      metadata: {
+        fields: Object.keys(updateData).filter((key) => key !== "updated_at"),
+      },
+    }).catch((activityError) => {
+      console.warn("Update user activity write failed:", activityError);
+    });
+
     revalidatePath("/users");
     return { success: true };
   } catch (error) {
@@ -600,7 +664,7 @@ export async function updateUserRole(
   data: z.infer<typeof updateUserRoleSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateUserRoleSchema.parse(data);
 
@@ -647,6 +711,19 @@ export async function updateUserRole(
       };
     }
 
+    await writeUserActivity(supabaseAdmin, {
+      user_id: validatedData.userId,
+      actor_user_id: auth.authUser.id,
+      source: "account",
+      action: "Role updated",
+      description: `User role changed to ${validatedData.role}.`,
+      related_entity_type: "user",
+      related_entity_id: validatedData.userId,
+      metadata: { role: validatedData.role },
+    }).catch((activityError) => {
+      console.warn("Update user role activity write failed:", activityError);
+    });
+
     revalidatePath("/users");
     return { success: true };
   } catch (error) {
@@ -666,7 +743,7 @@ export async function toggleUserStatus(
   data: z.infer<typeof toggleUserStatusSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = toggleUserStatusSchema.parse(data);
 
@@ -724,6 +801,19 @@ export async function toggleUserStatus(
       }
     }
 
+    await writeUserActivity(supabaseAdmin, {
+      user_id: validatedData.userId,
+      actor_user_id: auth.authUser.id,
+      source: "account",
+      action: "Status updated",
+      description: `User status changed to ${validatedData.status}.`,
+      related_entity_type: "user",
+      related_entity_id: validatedData.userId,
+      metadata: { status: validatedData.status },
+    }).catch((activityError) => {
+      console.warn("Toggle user status activity write failed:", activityError);
+    });
+
     revalidatePath("/users");
     return { success: true };
   } catch (error) {
@@ -743,7 +833,7 @@ export async function sendPasswordResetEmail(
   email: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const securityPolicy = await getPlatformSecurityPolicy();
     const allowPasswordResetLinks =
@@ -797,6 +887,27 @@ export async function sendPasswordResetEmail(
         resetUrl: resetLink,
       }),
     });
+
+    const { data: userRow } = await supabaseAdmin
+      .from("user")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (userRow?.id) {
+      await writeUserActivity(supabaseAdmin, {
+        user_id: userRow.id,
+        actor_user_id: auth.authUser.id,
+        source: "account",
+        action: "Password reset sent",
+        description: "A password reset or account setup email was sent.",
+        related_entity_type: "user",
+        related_entity_id: userRow.id,
+        metadata: { email },
+      }).catch((activityError) => {
+        console.warn("Password reset activity write failed:", activityError);
+      });
+    }
 
     return { success: true };
   } catch (error) {
@@ -941,11 +1052,16 @@ export async function deleteUser(
   data: z.infer<typeof deleteUserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = deleteUserSchema.parse(data);
 
     const userId = validatedData.userId;
+    const { data: targetUser } = await supabaseAdmin
+      .from("user")
+      .select("id, name, email")
+      .eq("id", userId)
+      .maybeSingle();
 
     const { data: rider } = await supabaseAdmin
       .from("rider")
@@ -1029,6 +1145,18 @@ export async function deleteUser(
     }
 
     await supabaseAdmin.from("admin_users").delete().eq("user_id", userId);
+    await writeUserActivity(supabaseAdmin, {
+      user_id: userId,
+      actor_user_id: auth.authUser.id,
+      source: "account",
+      action: "Account deleted",
+      description: `Account ${targetUser?.email ?? userId} was deleted by an administrator.`,
+      related_entity_type: "user",
+      related_entity_id: userId,
+      metadata: { name: targetUser?.name ?? null, email: targetUser?.email ?? null },
+    }).catch((activityError) => {
+      console.warn("Delete user activity write failed:", activityError);
+    });
     await supabaseAdmin.from("user").delete().eq("id", userId);
     await supabaseAdmin.auth.admin.deleteUser(userId);
 
@@ -1086,25 +1214,217 @@ export async function bulkUpdateUserStatus(
  */
 export async function getUserActivityLogs(
   userId: string,
-  limit: number = 50,
+  limit: number = 12,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
     await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
-
-    const { data, error } = await supabaseAdmin
-      .from("admin_access_logs")
-      .select("*")
-      .or(`user_id.eq.${userId}`)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      console.error("Get user activity logs error:", error);
-      return { success: false, error: error.message };
+    const canonicalFeed = await fetchUserActivityFeed(supabaseAdmin, userId, limit);
+    if (canonicalFeed.available && canonicalFeed.data.length > 0) {
+      return { success: true, data: canonicalFeed.data };
     }
 
-    return { success: true, data: data || [] };
+    const { data: profile } = await supabaseAdmin
+      .from("user")
+      .select("id, email, created_at, updated_at, last_login")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!profile) {
+      return { success: true, data: [] };
+    }
+
+    const { data: rider } = await supabaseAdmin
+      .from("rider")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const riderId = rider?.id ?? null;
+
+    const [
+      adminAccessResult,
+      routeResult,
+      rewardResult,
+      campaignAssignmentResult,
+      campaignSignupResult,
+    ] = await Promise.all([
+      supabaseAdmin
+        .from("admin_access_logs")
+        .select("id, action, success, created_at")
+        .or(`user_id.eq.${userId},email.eq.${profile.email}`)
+        .eq("success", true)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      riderId
+        ? supabaseAdmin
+            .from("rider_route")
+            .select("id, route_id, assigned_at, completed_at, created_at")
+            .eq("rider_id", riderId)
+            .order("created_at", { ascending: false })
+            .limit(10)
+        : Promise.resolve({ data: [], error: null }),
+      riderId
+        ? supabaseAdmin
+            .from("reward_transactions")
+            .select("id, type, description, created_at, points_amount")
+            .eq("rider_id", riderId)
+            .order("created_at", { ascending: false })
+            .limit(10)
+        : Promise.resolve({ data: [], error: null }),
+      riderId
+        ? supabaseAdmin
+            .from("campaign_assignment")
+            .select("id, campaign_id, created_at, assigned_at, selected_at, confirmed_at")
+            .eq("rider_id", riderId)
+            .order("created_at", { ascending: false })
+            .limit(10)
+        : Promise.resolve({ data: [], error: null }),
+      riderId
+        ? supabaseAdmin
+            .from("campaign_signup")
+            .select("id, campaign_id, created_at")
+            .eq("rider_id", riderId)
+            .order("created_at", { ascending: false })
+            .limit(10)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    const errors = [
+      adminAccessResult.error,
+      routeResult.error,
+      rewardResult.error,
+      campaignAssignmentResult.error,
+      campaignSignupResult.error,
+    ].filter(Boolean);
+
+    if (errors.length > 0) {
+      console.error("Get user activity logs error:", errors[0]);
+      return {
+        success: false,
+        error:
+          errors[0] instanceof Error
+            ? errors[0].message
+            : "Failed to get user activity logs",
+      };
+    }
+
+    const entries: UserActivityEntry[] = [];
+
+    if (profile.created_at) {
+      entries.push({
+        id: `account-created-${profile.id}`,
+        action: "Account created",
+        description: "User account was created in MOVRR Admin.",
+        created_at: profile.created_at,
+        source: "account",
+      });
+    }
+
+    if (profile.updated_at && profile.updated_at !== profile.created_at) {
+      entries.push({
+        id: `account-updated-${profile.id}`,
+        action: "Account updated",
+        description: "User profile details were updated.",
+        created_at: profile.updated_at,
+        source: "account",
+      });
+    }
+
+    (adminAccessResult.data ?? []).forEach((log) => {
+      entries.push({
+        id: `admin-access-${log.id}`,
+        action: "Admin dashboard access",
+        description: "User successfully accessed the admin dashboard.",
+        created_at: log.created_at,
+        source: "admin_access",
+      });
+    });
+
+    (routeResult.data ?? []).forEach((route) => {
+      if (route.completed_at) {
+        entries.push({
+          id: `route-completed-${route.id}`,
+          action: "Route completed",
+          description: `Completed route ${route.route_id ?? "assignment"}.`,
+          created_at: route.completed_at,
+          source: "route",
+        });
+      } else if (route.assigned_at || route.created_at) {
+        entries.push({
+          id: `route-assigned-${route.id}`,
+          action: "Route assigned",
+          description: `Assigned to route ${route.route_id ?? "assignment"}.`,
+          created_at: route.assigned_at ?? route.created_at,
+          source: "route",
+        });
+      }
+    });
+
+    (campaignAssignmentResult.data ?? []).forEach((assignment) => {
+      const timestamp =
+        assignment.confirmed_at ??
+        assignment.selected_at ??
+        assignment.assigned_at ??
+        assignment.created_at;
+
+      if (!timestamp) return;
+
+      entries.push({
+        id: `campaign-assignment-${assignment.id}`,
+        action: assignment.confirmed_at
+          ? "Campaign confirmed"
+          : assignment.selected_at
+            ? "Campaign selected"
+            : "Campaign assigned",
+        description: `Campaign ${assignment.campaign_id ?? "assignment"} progressed in the rider workflow.`,
+        created_at: timestamp,
+        source: "campaign",
+      });
+    });
+
+    (campaignSignupResult.data ?? []).forEach((signup) => {
+      if (!signup.created_at) return;
+      entries.push({
+        id: `campaign-signup-${signup.id}`,
+        action: "Campaign signup",
+        description: `Signed up for campaign ${signup.campaign_id ?? "campaign"}.`,
+        created_at: signup.created_at,
+        source: "campaign",
+      });
+    });
+
+    (rewardResult.data ?? []).forEach((transaction) => {
+      if (!transaction.created_at) return;
+      const amount = Number(transaction.points_amount ?? 0);
+      entries.push({
+        id: `reward-${transaction.id}`,
+        action: amount >= 0 ? "Points awarded" : "Points redeemed",
+        description:
+          transaction.description ||
+          `${amount >= 0 ? "Awarded" : "Redeemed"} ${Math.abs(amount)} points.`,
+        created_at: transaction.created_at,
+        source: "reward",
+      });
+    });
+
+    const curatedEntries = entries
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )
+      .filter(
+        (entry, index, collection) =>
+          collection.findIndex(
+            (candidate) =>
+              candidate.action === entry.action &&
+              candidate.created_at === entry.created_at &&
+              candidate.description === entry.description,
+          ) === index,
+      )
+      .slice(0, limit);
+
+    return { success: true, data: curatedEntries };
   } catch (error) {
     console.error("Get user activity logs error:", error);
     return {

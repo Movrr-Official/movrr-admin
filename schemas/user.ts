@@ -26,6 +26,7 @@ export const userSchema = z.object({
   status: userStatusSchema,
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  lastActive: z.string().datetime().optional(),
   lastLogin: z.string().datetime().optional(),
   avatarUrl: z.string().url().optional(),
   organization: z.string().optional(),

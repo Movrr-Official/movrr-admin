@@ -10,6 +10,7 @@ import { WaitlistEntry } from "@/types/types";
 import AccountSetupEmail from "@/emails/account-setup";
 import { APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
 import { getPlatformOperationalPolicies } from "@/lib/platformSettings";
+import { writeUserActivity } from "@/lib/userActivity";
 
 // Utility function to generate a secure random password
 function generateRandomPassword(length = 12) {
@@ -123,6 +124,7 @@ async function updateWaitlistStatusInternal(
   status: "pending" | "approved" | "rejected",
   reason?: string,
 ) {
+  const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
   const supabaseAdmin = createSupabaseAdminClient(); // for Auth + RLS-safe insert
   const supabase = await createSupabaseServerClient(); // for fetching waitlist and updates
 
@@ -281,6 +283,22 @@ async function updateWaitlistStatusInternal(
       }
 
       updatedWaitlist = finalizedWaitlist;
+
+      await writeUserActivity(supabaseAdmin, {
+        user_id: authUser.user.id,
+        actor_user_id: auth.authUser.id,
+        source: "waitlist",
+        action: "Waitlist approved",
+        description: "Waitlist entry was approved and converted into a rider account.",
+        related_entity_type: "waitlist",
+        related_entity_id: id,
+        metadata: {
+          waitlistId: id,
+          reason: reason ?? null,
+        },
+      }).catch((activityError) => {
+        console.warn("Waitlist approval activity write failed:", activityError);
+      });
     } else {
       const { data: nextWaitlist, error: updateError } = await supabase
         .from("waitlist")

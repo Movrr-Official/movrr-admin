@@ -57,7 +57,7 @@ export default function UsersOverview() {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const recentlyActiveUsers =
     users?.filter(
-      (user) => user.lastLogin && new Date(user.lastLogin) >= thirtyDaysAgo,
+      (user) => user.lastActive && new Date(user.lastActive) >= thirtyDaysAgo,
     ).length ?? 0;
 
   // Calculate daily average
