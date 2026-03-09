@@ -17,7 +17,7 @@ export default function SignInPage() {
           Welcome Back
         </CardTitle>
         <CardDescription className="text-lg">
-          Sign in to access the internal admin dashboard. Access is provisioned by Movrr operations.
+          Sign in to access the internal admin dashboard.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -28,4 +28,3 @@ export default function SignInPage() {
     </Card>
   );
 }
-
