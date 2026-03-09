@@ -1,6 +1,4 @@
-import { NextResponse } from "next/server";
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+﻿import { NextResponse } from "next/server";
 import { MAINTENANCE_JOB_TOKEN } from "@/lib/env";
 import { executePrivacyRetentionJob } from "@/app/actions/settings";
 
@@ -16,7 +14,10 @@ const isAuthorizedJobRequest = (request: Request) => {
 export async function POST(request: Request) {
   try {
     if (!isAuthorizedJobRequest(request)) {
-      await requireAdminRoles(ADMIN_ONLY_ROLES);
+      return NextResponse.json(
+        { success: false, error: "unauthorized" },
+        { status: 401, headers: { "cache-control": "no-store" } },
+      );
     }
 
     const result = await executePrivacyRetentionJob();
@@ -32,7 +33,14 @@ export async function POST(request: Request) {
             ? error.message
             : "Failed to execute privacy retention job",
       },
-      { status: 401, headers: { "cache-control": "no-store" } },
+      { status: 500, headers: { "cache-control": "no-store" } },
     );
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: { Allow: "POST, OPTIONS" },
+  });
 }

@@ -14,7 +14,19 @@ export async function GET(request: Request) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(new URL(next, url.origin));
+      const response = NextResponse.redirect(new URL(next, url.origin));
+      if (next === "/auth/reset-password") {
+        response.cookies.set({
+          name: "movrr-admin-password-recovery",
+          value: "1",
+          httpOnly: true,
+          sameSite: "lax",
+          secure: url.protocol === "https:",
+          path: "/auth/reset-password",
+          maxAge: 60 * 15,
+        });
+      }
+      return response;
     }
   }
 
@@ -26,7 +38,19 @@ export async function GET(request: Request) {
 
     if (!error) {
       const redirectPath = type === "recovery" ? "/auth/reset-password" : next;
-      return NextResponse.redirect(new URL(redirectPath, url.origin));
+      const response = NextResponse.redirect(new URL(redirectPath, url.origin));
+      if (type === "recovery") {
+        response.cookies.set({
+          name: "movrr-admin-password-recovery",
+          value: "1",
+          httpOnly: true,
+          sameSite: "lax",
+          secure: url.protocol === "https:",
+          path: "/auth/reset-password",
+          maxAge: 60 * 15,
+        });
+      }
+      return response;
     }
   }
 
