@@ -51,11 +51,11 @@ export default function RidersOverview() {
             icon={Route}
             badges={[
               {
-                label: `${ridersOnCampaigns} on campaigns`,
+                label: `${ridersOnCampaigns} on campaign rides`,
                 className: "bg-primary/10 text-primary border-primary/30",
               },
             ]}
-            description="Riders currently assigned to routes"
+            description="Riders with active route assignments"
             animationDelay="0.1s"
           />
           <StatsCard

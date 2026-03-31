@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 
@@ -27,10 +27,10 @@ const toAvailability = (isAvailable: boolean) => ({
 
 const toVehicleType = (value?: string | null): Rider["vehicle"]["type"] => {
   const normalized = value?.toLowerCase();
-  if (normalized === "e-bike" || normalized === "ebike") return "e-bike";
-  if (normalized === "cargo" || normalized === "cargo-bike") return "cargo";
-  if (normalized === "scooter") return "scooter";
-  return "bike";
+  if (normalized === "e_bike" || normalized === "e-bike" || normalized === "ebike") return "e_bike";
+  if (normalized === "fat_bike" || normalized === "fat-bike" || normalized === "cargo" || normalized === "cargo-bike") return "fat_bike";
+  if (normalized === "standard_bike" || normalized === "bike") return "standard_bike";
+  return "unknown";
 };
 
 const mapDbStatusToUi = (value?: string | null): Rider["status"] => {
@@ -91,7 +91,6 @@ type RiderRow = {
   availability?: boolean | null;
   vehicle_type?: string | null;
   route_progress?: number | null;
-  impressions_delivered?: number | null;
   total_campaigns?: number | null;
   rating?: number | null;
   current_campaign?: string | null;
@@ -121,6 +120,7 @@ const mapRiderRow = ({
     is_verified?: boolean | null;
     status?: string | null;
     last_login?: string | null;
+    last_active_at?: string | null;
     account_notes?: string | null;
     created_at?: string | null;
     updated_at?: string | null;
@@ -140,6 +140,7 @@ const mapRiderRow = ({
     rider.created_at ??
     new Date().toISOString();
   const lastActivityAt = resolveLatestIsoTimestamp(
+    user?.last_active_at ?? undefined,
     user?.last_login ?? undefined,
     rider.updated_at ?? undefined,
     createdAt,
@@ -162,7 +163,10 @@ const mapRiderRow = ({
     isCertified: Boolean(rider.is_certified),
     createdAt,
     updatedAt,
-    lastActive: user?.last_login ?? undefined,
+    lastActive: resolveLatestIsoTimestamp(
+      user?.last_active_at ?? undefined,
+      user?.last_login ?? undefined,
+    ),
     lastActivityAt,
     profileCompleteness: computeProfileCompleteness(rider, user),
     languagePreference: user?.language_preference ?? "en",
@@ -194,7 +198,6 @@ const mapRiderRow = ({
         }
       : undefined,
     routeProgress: routeProgress || undefined,
-    impressionsDelivered: Number(rider.impressions_delivered ?? 0),
     campaignsCompleted,
     activeCampaignsCount,
     activeRoutesCount,
@@ -270,7 +273,7 @@ export async function getRiders(
         ? supabaseAdmin
             .from("user")
             .select(
-              "id, name, email, phone, avatar_url, language_preference, is_verified, status, last_login, account_notes, created_at, updated_at",
+              "id, name, email, phone, avatar_url, language_preference, is_verified, status, last_login, last_active_at, account_notes, created_at, updated_at",
             )
             .in("id", userIds)
         : Promise.resolve({ data: [] as any[] }),
@@ -360,7 +363,8 @@ export async function getRiders(
       const balance = balanceByRider.get(rider.id);
       const lastActive = resolveLatestIsoTimestamp(
         lastActivitySignalMap.get(rider.user_id),
-        user?.last_login ?? undefined,
+        user?.last_active_at ?? undefined,
+    user?.last_login ?? undefined,
       );
 
       const mappedRider = mapRiderRow({
@@ -529,3 +533,5 @@ export async function updateRiderProfile(
     };
   }
 }
+
+

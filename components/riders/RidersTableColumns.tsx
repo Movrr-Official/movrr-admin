@@ -133,9 +133,9 @@ export const getRidersTableColumns = ({
             <Route className="h-3.5 w-3.5 text-primary" />
             <span>{rider.activeRoutesCount} active routes</span>
           </div>
-          <div className="flex items-center gap-2 text-foreground">
-            <Bike className="h-3.5 w-3.5 text-primary" />
-            <span>{rider.activeCampaignsCount} active campaigns</span>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Bike className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs">{rider.activeCampaignsCount} campaign rides</span>
           </div>
         </div>
       );
@@ -153,7 +153,7 @@ export const getRidersTableColumns = ({
             <span className="font-semibold">{rider.pointsBalance}</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            {rider.campaignsCompleted} campaigns completed
+            {rider.totalRides} total rides
           </p>
         </div>
       );

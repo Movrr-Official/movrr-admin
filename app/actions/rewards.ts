@@ -34,6 +34,10 @@ export async function getRewardStats(dateRange?: {
     totalPointsRedeemed: number;
     totalPointsOutstanding: number;
     totalTransactions: number;
+    /** Points earned via Free Rides (source = standard_ride) */
+    standardRidePoints: number;
+    /** Points earned via Campaign Rides (source = ad_boost | campaign_ride) */
+    campaignRidePoints: number;
     pointsByCampaign: Array<{
       campaignId: string;
       campaignName: string;
@@ -156,6 +160,23 @@ export async function getRewardStats(dateRange?: {
       pointsByRider.set(txn.rider_id, current + Number(txn.points_earned ?? 0));
     });
 
+    // Ride mode split — Free Ride vs Campaign Ride points
+    const standardRidePoints = filteredTransactions.reduce((sum, txn) => {
+      const direction = txn.metadata?.adjustment_direction as string | undefined;
+      if (direction === "debit") return sum;
+      return txn.source === "standard_ride"
+        ? sum + Number(txn.points_earned ?? 0)
+        : sum;
+    }, 0);
+
+    const campaignRidePoints = filteredTransactions.reduce((sum, txn) => {
+      const direction = txn.metadata?.adjustment_direction as string | undefined;
+      if (direction === "debit") return sum;
+      return txn.source === "ad_boost" || txn.source === "campaign_ride"
+        ? sum + Number(txn.points_earned ?? 0)
+        : sum;
+    }, 0);
+
     const dailyMap = new Map<string, { awarded: number; redeemed: number }>();
     const days = Math.max(
       1,
@@ -249,6 +270,8 @@ export async function getRewardStats(dateRange?: {
         totalPointsOutstanding,
         totalTransactions:
           filteredTransactions.length + filteredRedemptions.length,
+        standardRidePoints,
+        campaignRidePoints,
         pointsByCampaign: Array.from(pointsByCampaign.entries()).map(
           ([campaignId, points]) => ({
             campaignId,
@@ -364,7 +387,10 @@ export async function getRewardTransactions(filters?: {
         riderId: txn.rider_id,
         campaignId: txn.campaign_id ?? undefined,
         routeId: txn.route_tracking_id ?? undefined,
+        rideSessionId: txn.metadata?.rideSessionId ?? undefined,
         type,
+        source: txn.source ?? undefined,
+        earningMode: txn.metadata?.earningMode ?? undefined,
         points,
         description: txn.metadata?.description ?? undefined,
         balanceAfter: balanceByRider.get(txn.rider_id) ?? 0,

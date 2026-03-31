@@ -53,10 +53,10 @@ export function RidersTable({
       type: "multi-select",
       key: "vehicleType",
       options: [
-        { value: "bike", label: "Bike" },
-        { value: "e-bike", label: "E-Bike" },
-        { value: "cargo", label: "Cargo" },
-        { value: "scooter", label: "Scooter" },
+        { value: "standard_bike", label: "Standard Bike" },
+        { value: "e_bike", label: "E-Bike" },
+        { value: "fat_bike", label: "Fat Bike" },
+        { value: "unknown", label: "Unknown" },
       ],
     },
     ...(cityOptions.length

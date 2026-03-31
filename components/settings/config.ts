@@ -139,11 +139,15 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
     { name: "defaultRiderTimezone", label: "Default Rider Timezone", type: "text" },
   ],
   rewards: [
-    { name: "basePointsPerMinute", label: "Base Points / Minute", type: "number", min: 0 },
+    { name: "basePointsPerMinute", label: "Base Points / Minute (Free Ride)", type: "number", min: 0 },
     { name: "dailyCap", label: "Daily Cap", type: "number", min: 0 },
     { name: "weeklyCap", label: "Weekly Cap", type: "number", min: 0 },
-    { name: "campaignMaxRewardCap", label: "Campaign Reward Cap", type: "number", min: 0 },
+    { name: "campaignMaxRewardCap", label: "Per-Ride Reward Cap", type: "number", min: 0, description: "Maximum points awarded per verified ride session, regardless of mode." },
     { name: "minVerifiedMinutes", label: "Minimum Verified Minutes", type: "number", min: 0 },
+    { name: "standardBikeMultiplier", label: "Standard Bike Multiplier", type: "number", min: 0, description: "Points multiplier for standard_bike riders (default 1.0)." },
+    { name: "eBikeMultiplier", label: "E-Bike Multiplier", type: "number", min: 0, description: "Points multiplier for e_bike riders." },
+    { name: "fatBikeMultiplier", label: "Fat Bike Multiplier", type: "number", min: 0, description: "Points multiplier for fat_bike riders." },
+    { name: "campaignRideMultiplier", label: "Campaign Ride Multiplier", type: "number", min: 0, description: "Additional multiplier applied to points earned on campaign-assigned rides (default 1.5)." },
   ],
   campaigns: [
     { name: "defaultMultiplier", label: "Default Multiplier", type: "number", min: 0 },

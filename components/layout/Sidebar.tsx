@@ -19,6 +19,7 @@ import {
   Bell,
   Building2,
   Bike,
+  Timer,
 } from "lucide-react";
 import { FaRoute } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -155,6 +156,20 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
+        name: "Ride Sessions",
+        href: "/ride-sessions",
+        icon: Timer,
+        roles: ["admin", "super_admin"],
+        badge: null,
+      },
+      {
+        name: "Rewards",
+        href: "/rewards",
+        icon: Coins,
+        roles: ["admin", "super_admin"],
+        badge: null,
+      },
+      {
         name: "Advertisers",
         href: "/advertisers",
         icon: Building2,
@@ -192,13 +207,6 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
             isError={isError}
           />
         ),
-      },
-      {
-        name: "Rewards",
-        href: "/rewards",
-        icon: Coins,
-        roles: ["admin", "super_admin"],
-        badge: null,
       },
       {
         name: "Notifications",

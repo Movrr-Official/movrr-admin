@@ -16,6 +16,7 @@ import {
   Gift,
   History,
   KeyRound,
+  Timer,
   Loader2,
   Mail,
   MapPin,
@@ -107,7 +108,7 @@ export function RiderDetailsDrawer({
       languagePreference: "en",
       accountNotes: "",
       isCertified: false,
-      vehicleType: "bike",
+      vehicleType: "standard_bike",
       contact: { phone: "", emergencyContact: "", emergencyPhone: "" },
       availability: {
         monday: true,
@@ -375,10 +376,10 @@ export function RiderDetailsDrawer({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="bike">Bike</SelectItem>
-                                <SelectItem value="e-bike">E-Bike</SelectItem>
-                                <SelectItem value="cargo">Cargo</SelectItem>
-                                <SelectItem value="scooter">Scooter</SelectItem>
+                                <SelectItem value="standard_bike">Standard Bike</SelectItem>
+                                <SelectItem value="e_bike">E-Bike</SelectItem>
+                                <SelectItem value="fat_bike">Fat Bike</SelectItem>
+                                <SelectItem value="unknown">Unknown</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -513,7 +514,7 @@ export function RiderDetailsDrawer({
                   <Card className="glass-card border-0">
                     <CardHeader className="pb-4"><CardTitle className="text-lg font-bold">Operations Snapshot</CardTitle></CardHeader>
                     <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {[["Profile", `${rider.profileCompleteness}%`], ["Routes", String(rider.activeRoutesCount)], ["Campaigns", String(rider.activeCampaignsCount)], ["Points", String(rider.pointsBalance)]].map(([label, value]) => (
+                      {[["Profile", `${rider.profileCompleteness}%`], ["Routes", String(rider.activeRoutesCount)], ["Rides", String(rider.totalRides)], ["Points", String(rider.pointsBalance)]].map(([label, value]) => (
                         <div key={label} className="p-3 rounded-lg bg-muted/30 border border-border/50">
                           <p className="text-xs text-muted-foreground">{label}</p>
                           <p className="text-xl font-bold text-foreground">{value}</p>
@@ -526,8 +527,9 @@ export function RiderDetailsDrawer({
                     <CardHeader className="pb-4"><CardTitle className="text-lg font-bold">Additional Information</CardTitle></CardHeader>
                     <CardContent>
                       <Tabs defaultValue="activity" className="w-full">
-                        <TabsList className="grid w-full grid-cols-5">
+                        <TabsList className="grid w-full grid-cols-6">
                           <TabsTrigger value="activity"><History className="mr-2 h-4 w-4" />Activity</TabsTrigger>
+                          <TabsTrigger value="ride-sessions"><Timer className="mr-2 h-4 w-4" />Rides</TabsTrigger>
                           <TabsTrigger value="routes"><Route className="mr-2 h-4 w-4" />Routes ({routes.length})</TabsTrigger>
                           <TabsTrigger value="campaigns"><Megaphone className="mr-2 h-4 w-4" />Campaigns ({campaigns.length})</TabsTrigger>
                           <TabsTrigger value="rewards"><Gift className="mr-2 h-4 w-4" />Rewards</TabsTrigger>
@@ -538,6 +540,7 @@ export function RiderDetailsDrawer({
                         ) : (
                           <>
                             <TabsContent value="activity" className="mt-4">{activityLogs.length ? activityLogs.map((log, index) => <div key={`${log.id ?? log.created_at ?? index}`} className="rounded-lg border border-border/50 bg-muted/30 p-3 mb-2"><p className="text-sm font-semibold text-foreground">{log.action || "Activity"}</p><p className="text-xs text-muted-foreground mt-1">{log.description || "No description"}</p></div>) : <div className="text-center py-8 text-muted-foreground"><History className="h-8 w-8 mx-auto mb-2 opacity-50" /><p className="text-sm">No activity logs found</p></div>}</TabsContent>
+                            <TabsContent value="ride-sessions" className="mt-4"><div className="text-center py-8 text-muted-foreground"><Timer className="h-8 w-8 mx-auto mb-2 opacity-50" /><p className="text-sm font-medium">Ride session history</p><p className="text-xs mt-1">View full ride session history on the <a href="/ride-sessions" className="text-primary underline underline-offset-2">Ride Sessions</a> page.</p></div></TabsContent>
                             <TabsContent value="routes" className="mt-4">{routes.length ? routes.map((route) => <div key={route.id} className="rounded-lg border border-border/50 bg-muted/30 p-3 mb-2"><p className="text-sm font-semibold text-foreground">{route.name || `Route ${route.id}`}</p><p className="text-xs text-muted-foreground">{route.status || "Unknown status"}</p></div>) : <div className="text-center py-8 text-muted-foreground"><Route className="h-8 w-8 mx-auto mb-2 opacity-50" /><p className="text-sm">No routes found</p></div>}</TabsContent>
                             <TabsContent value="campaigns" className="mt-4">{campaigns.length ? campaigns.map((campaign) => <div key={campaign.id} className="rounded-lg border border-border/50 bg-muted/30 p-3 mb-2"><p className="text-sm font-semibold text-foreground">{campaign.name || `Campaign ${campaign.id}`}</p><p className="text-xs text-muted-foreground">{campaign.lifecycle_status || campaign.status || "Unknown status"}</p></div>) : <div className="text-center py-8 text-muted-foreground"><Megaphone className="h-8 w-8 mx-auto mb-2 opacity-50" /><p className="text-sm">No campaigns found</p></div>}</TabsContent>
                             <TabsContent value="rewards" className="mt-4">{rewardTransactions.length ? rewardTransactions.map((transaction) => <div key={transaction.id} className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 p-3 mb-2"><div><p className="text-sm font-semibold text-foreground">{transaction.source || "Transaction"}</p><p className="text-xs text-muted-foreground">{format(new Date(transaction.created_at), "MMM d, yyyy")}</p></div><p className="text-sm font-semibold text-foreground">{transaction.points_earned > 0 ? "+" : ""}{transaction.points_earned || 0} pts</p></div>) : <div className="text-center py-8 text-muted-foreground"><Gift className="h-8 w-8 mx-auto mb-2 opacity-50" /><p className="text-sm">No reward transactions found</p></div>}</TabsContent>

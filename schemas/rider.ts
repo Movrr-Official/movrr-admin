@@ -20,7 +20,7 @@ export const riderStatusSchema = z.enum([
   "pending",
   "suspended",
 ]);
-export const vehicleTypeSchema = z.enum(["bike", "e-bike", "cargo", "scooter"]);
+export const vehicleTypeSchema = z.enum(["standard_bike", "e_bike", "fat_bike", "unknown"]);
 
 export const vehicleSchema = z.object({
   type: vehicleTypeSchema,
@@ -34,7 +34,7 @@ export const riderFiltersSchema = z.object({
   status: z
     .enum(["all", "active", "inactive", "pending", "suspended"])
     .optional(),
-  vehicleType: z.enum(["all", "bike", "e-bike", "cargo", "scooter"]).optional(),
+  vehicleType: z.enum(["all", "standard_bike", "e_bike", "fat_bike", "unknown"]).optional(),
   minRating: z.enum(["all", "3", "4", "4.5"]).optional(),
   searchQuery: z.string().optional(),
 });
@@ -51,7 +51,6 @@ export const riderSchema = userSchema.extend({
   profileCompleteness: z.number().min(0).max(100).optional(),
 
   // Performance metrics
-  impressionsDelivered: z.number().default(0),
   campaignsCompleted: z.number().default(0),
   activeCampaignsCount: z.number().int().min(0).optional(),
   activeRoutesCount: z.number().int().min(0).optional(),
@@ -130,7 +129,6 @@ export const riderUserSchema = z.object({
   avatarUrl: z.string().optional(),
   status: z.enum(["active", "inactive", "pending"]),
   assignedRoute: z.string().optional(),
-  impressionsDelivered: z.number().default(0),
   lastActive: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),

@@ -9,6 +9,10 @@ import {
   User,
   Megaphone,
   Route,
+  ShieldCheck,
+  Clock,
+  ShieldX,
+  AlertCircle,
 } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -94,6 +98,83 @@ export function getRewardsTableColumns({
       accessorKey: "type",
       header: "Type",
       cell: ({ row }) => getTransactionTypeBadge(row.original.type),
+    },
+    {
+      accessorKey: "source",
+      header: "Ride Mode",
+      cell: ({ row }) => {
+        const source = row.original.source;
+        if (source === "standard_ride") {
+          return (
+            <Badge className="bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100 font-medium dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800">
+              Free Ride
+            </Badge>
+          );
+        }
+        if (source === "ad_boost" || source === "campaign_ride") {
+          return (
+            <Badge className="bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100 font-medium dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800">
+              Campaign Ride
+            </Badge>
+          );
+        }
+        if (source === "bonus") {
+          return (
+            <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 font-medium dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
+              Bonus
+            </Badge>
+          );
+        }
+        if (source === "redemption") {
+          return (
+            <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 font-medium dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
+              Redemption
+            </Badge>
+          );
+        }
+        return <span className="text-muted-foreground">—</span>;
+      },
+    },
+    {
+      accessorKey: "verificationStatus",
+      header: "Verification",
+      cell: ({ row }) => {
+        const status = row.original.verificationStatus;
+        if (!status) return <span className="text-muted-foreground">—</span>;
+        if (status === "verified") {
+          return (
+            <Badge className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 font-medium dark:bg-green-950 dark:text-green-300 dark:border-green-800">
+              <ShieldCheck className="h-3 w-3 mr-1" />
+              Verified
+            </Badge>
+          );
+        }
+        if (status === "pending") {
+          return (
+            <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 font-medium dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
+              <Clock className="h-3 w-3 mr-1" />
+              Pending
+            </Badge>
+          );
+        }
+        if (status === "rejected") {
+          return (
+            <Badge className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 font-medium dark:bg-red-950 dark:text-red-300 dark:border-red-800">
+              <ShieldX className="h-3 w-3 mr-1" />
+              Rejected
+            </Badge>
+          );
+        }
+        if (status === "manual_review") {
+          return (
+            <Badge className="bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100 font-medium dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              Review
+            </Badge>
+          );
+        }
+        return <Badge variant="secondary">{status}</Badge>;
+      },
     },
     {
       accessorKey: "points",

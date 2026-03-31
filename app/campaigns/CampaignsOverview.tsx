@@ -205,7 +205,7 @@ export default function CampaignsOverview() {
             icon={Target}
             metrics={[
               {
-                label: "Impressions",
+                label: "Campaign Impressions",
                 value: totalImpressions,
                 icon: Eye,
                 iconColor: "text-primary",

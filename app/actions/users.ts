@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
@@ -297,6 +297,7 @@ export async function getUsers(
       updatedAt: row.updated_at ?? new Date().toISOString(),
       lastActive: resolveLatestIsoTimestamp(
         lastActivitySignalMap.get(row.id),
+        row.last_active_at ?? undefined,
         row.last_login ?? undefined,
       ),
       lastLogin: row.last_login ?? undefined,
@@ -1226,7 +1227,7 @@ export async function getUserActivityLogs(
 
     const { data: profile } = await supabaseAdmin
       .from("user")
-      .select("id, email, created_at, updated_at, last_login")
+      .select("id, email, created_at, updated_at, last_login, last_active_at")
       .eq("id", userId)
       .maybeSingle();
 
@@ -1631,3 +1632,4 @@ export async function getUserPointsBalance(
     };
   }
 }
+

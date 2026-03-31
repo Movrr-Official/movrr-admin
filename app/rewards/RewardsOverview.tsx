@@ -6,9 +6,11 @@ import {
   Coins,
   TrendingDown,
   Users,
-  Megaphone,
+  BarChart3,
   Activity,
   Target,
+  Bike,
+  Megaphone,
 } from "lucide-react";
 import { RewardsTable } from "@/components/rewards/RewardsTable";
 import { RiderBalanceTable } from "@/components/rewards/RiderBalanceTable";
@@ -151,7 +153,23 @@ export default function RewardsOverview() {
               title="Total Transactions"
               value={totalTransactions}
               icon={Activity}
-              // description={`${recentTransactions} in last 7 days`}
+              size="mini"
+            />
+
+            {/* Ride Mode Split — Free Ride vs Campaign Ride */}
+            <StatsCard
+              title="Free Ride Points"
+              value={(stats?.standardRidePoints ?? 0).toLocaleString()}
+              icon={Bike}
+              description="Earned via standard rides"
+              size="mini"
+            />
+
+            <StatsCard
+              title="Campaign Ride Points"
+              value={(stats?.campaignRidePoints ?? 0).toLocaleString()}
+              icon={Megaphone}
+              description="Earned via campaign assignments"
               size="mini"
             />
           </div>
@@ -159,9 +177,12 @@ export default function RewardsOverview() {
           <Card className="glass-card border-0 animate-slide-up xl:col-span-3 xl:row-span-2 h-full">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Megaphone className="h-5 w-5" />
-                Top Campaigns by Points
+                <BarChart3 className="h-5 w-5" />
+                Points by Campaign Ride
               </CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Points earned via campaign assignments
+              </p>
             </CardHeader>
             <CardContent>
               {topCampaigns.length > 0 ? (

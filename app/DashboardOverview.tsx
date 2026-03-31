@@ -598,6 +598,16 @@ export default function DashboardOverview() {
 
   const quickActions = [
     {
+      label: "View rewards",
+      href: "/rewards",
+      icon: FileText,
+    },
+    {
+      label: "Manage riders",
+      href: "/riders",
+      icon: Bike,
+    },
+    {
       label: "Create campaign",
       href: "/campaigns/create",
       icon: Plus,
@@ -608,20 +618,10 @@ export default function DashboardOverview() {
       icon: CheckSquare,
     },
     {
-      label: "Manage users",
-      href: "/users",
-      icon: Users,
-    },
-    {
       label: "Export data",
       onClick: handleExportData,
       disabled: !campaigns?.length,
       icon: Download,
-    },
-    {
-      label: "View rewards",
-      href: "/rewards",
-      icon: FileText,
     },
     {
       label: "View pending approvals",
@@ -664,9 +664,14 @@ export default function DashboardOverview() {
                 ),
             },
             {
+              label: "View Riders",
+              href: "/riders",
+            },
+            {
               label: "Create Campaign",
               href: "/campaigns/create",
               icon: <Plus className="mr-2 h-4 w-4" />,
+              variant: "outline" as const,
             },
           ]}
         />
@@ -684,15 +689,15 @@ export default function DashboardOverview() {
             animationDelay="0.1s"
           />
           <StatsCard
-            title="Active Campaigns"
-            value={statsLoading ? "—" : statsError ? "N/A" : activeCampaigns}
-            icon={ClipboardCheck}
-            animationDelay="0.2s"
-          />
-          <StatsCard
             title="Points Awarded"
             value={statsLoading ? "—" : statsError ? "N/A" : totalPointsAwarded}
             icon={Award}
+            animationDelay="0.2s"
+          />
+          <StatsCard
+            title="Active Campaigns"
+            value={statsLoading ? "—" : statsError ? "N/A" : activeCampaigns}
+            icon={ClipboardCheck}
             animationDelay="0.3s"
           />
         </div>
@@ -901,7 +906,7 @@ export default function DashboardOverview() {
           <Card className="glass-card border-0">
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-bold">
-                Campaign Performance
+                Campaign Impact
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -975,7 +980,7 @@ export default function DashboardOverview() {
                         style={{ backgroundColor: "#6D5BD0" }}
                         aria-hidden="true"
                       />
-                      <span>Impressions</span>
+                      <span>Ad Impressions</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span
@@ -1104,11 +1109,11 @@ export default function DashboardOverview() {
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between gap-3">
                 <CardTitle className="text-xl font-bold">
-                  Route Completion Rates
+                  Ride Completion Rates
                 </CardTitle>
                 <div
                   role="group"
-                  aria-label="Route completion granularity"
+                  aria-label="Ride completion granularity"
                   className="flex items-center gap-2 rounded-full bg-muted px-1 py-1"
                 >
                   <button

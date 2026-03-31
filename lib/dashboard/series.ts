@@ -65,6 +65,39 @@ export function buildCampaignPerformanceSeries(
   });
 }
 
+interface RideModeTrendLike {
+  date?: string | null;
+  /** Points from standard_ride (Free Ride) */
+  standardRide: number;
+  /** Points from ad_boost | campaign_ride (Campaign Ride) */
+  campaignRide: number;
+}
+
+/**
+ * Build a time-series for the Ride Mode split chart (Free Ride vs Campaign Ride points).
+ * Mirrors buildPointsTrendSeries — aggregate by bucket, not cumulative.
+ */
+export function buildRideModeSeries(
+  trends: RideModeTrendLike[],
+  buckets: TimeBucket[],
+): Array<{ name: string; standardRide: number; campaignRide: number }> {
+  return buckets.map((bucket) => {
+    const periodTrends = trends.filter((trend) => {
+      const date = parseDate(trend.date);
+      return date ? date >= bucket.start && date <= bucket.end : false;
+    });
+    const standardRide = periodTrends.reduce(
+      (sum, trend) => sum + trend.standardRide,
+      0,
+    );
+    const campaignRide = periodTrends.reduce(
+      (sum, trend) => sum + trend.campaignRide,
+      0,
+    );
+    return { name: bucket.label, standardRide, campaignRide };
+  });
+}
+
 export function buildPointsTrendSeries(
   trends: PointsTrendLike[],
   buckets: TimeBucket[],

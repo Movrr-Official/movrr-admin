@@ -10,3 +10,4 @@ export * from "./shared";
 export * from "./user";
 export * from "./notification";
 export * from "./advertiser";
+export * from "./rideSession";
