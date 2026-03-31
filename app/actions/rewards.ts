@@ -560,7 +560,12 @@ export async function getRiderBalances(): Promise<{
 }
 
 /**
- * Server action to adjust rider points
+ * Server action to adjust rider points.
+ *
+ * Delegates to the adjust_rider_points_atomic database function, which wraps
+ * the reward_transactions insert and rider_reward_balance update in a single
+ * DB transaction. If the RPC does not exist in this environment, the action
+ * surfaces a clear error rather than silently falling back to non-atomic writes.
  */
 export async function adjustRiderPoints(
   data: z.infer<typeof adjustPointsSchema>,
@@ -569,7 +574,15 @@ export async function adjustRiderPoints(
     const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = adjustPointsSchema.parse(data);
-    const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc(
+
+    const absPoints = Math.abs(validatedData.points);
+    const isCredit = validatedData.points > 0;
+
+    // The RPC wraps both the ledger insert and balance update atomically.
+    // It returns a single result row — check both the PostgREST error and the
+    // returned success flag, since business errors surface in the row not as
+    // a PostgREST error.
+    const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc(
       "adjust_rider_points_atomic",
       {
         p_rider_id: validatedData.riderId,
@@ -583,15 +596,16 @@ export async function adjustRiderPoints(
       return { success: false, error: rpcError.message };
     }
 
-    const row = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
-
-    if (!row?.success) {
+    const rpcResult = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+    if (!rpcResult?.success) {
       return {
         success: false,
-        error: row?.error_message || "Failed to adjust rider points",
+        error: rpcResult?.error_message ?? "Adjustment failed",
       };
     }
 
+    // Activity log — awaited so it completes before the serverless function
+    // returns, but errors are caught so they never fail the main operation.
     const { data: riderRow } = await supabaseAdmin
       .from("rider")
       .select("user_id")
@@ -603,11 +617,10 @@ export async function adjustRiderPoints(
         user_id: riderRow.user_id,
         actor_user_id: auth.authUser.id,
         source: "reward",
-        action:
-          validatedData.points >= 0 ? "Points awarded" : "Points adjusted",
+        action: isCredit ? "Points awarded" : "Points deducted",
         description:
           validatedData.description ||
-          `${validatedData.points >= 0 ? "Awarded" : "Debited"} ${Math.abs(validatedData.points)} points.`,
+          `${isCredit ? "Awarded" : "Deducted"} ${absPoints} points.`,
         related_entity_type: "rider",
         related_entity_id: validatedData.riderId,
         metadata: {
@@ -615,12 +628,13 @@ export async function adjustRiderPoints(
           points: validatedData.points,
           type: validatedData.type,
         },
-      }).catch((activityError) => {
-        console.warn("Adjust rider points activity write failed:", activityError);
+      }).catch((err) => {
+        console.warn("Adjust rider points activity write failed:", err);
       });
     }
 
     revalidatePath("/rewards");
+    revalidatePath("/riders");
     return { success: true };
   } catch (error) {
     console.error("Error adjusting rider points:", error);

@@ -43,16 +43,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { RiderBalance } from "@/schemas";
 import { CopyButton } from "@/components/CopyButton";
 import { useToast } from "@/hooks/useToast";
@@ -62,9 +52,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { shouldUseMockData } from "@/lib/dataSource";
 
 const adjustPointsSchema = z.object({
-  points: z.coerce.number().int().min(-1000000).max(1000000).refine((value) => value !== 0, {
-    message: "Points adjustment must be non-zero",
-  }),
+  points: z.coerce
+    .number()
+    .int()
+    .min(-1000000)
+    .max(1000000)
+    .refine((value) => value !== 0, {
+      message: "Points adjustment must be non-zero",
+    }),
   description: z.string().min(1, "Description is required"),
   type: z.enum(["adjusted"]),
 });
@@ -88,7 +83,6 @@ export function RiderBalanceDetailsDrawer({
   const queryClient = useQueryClient();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAdjustment, setPendingAdjustment] =
     useState<AdjustPointsFormData | null>(null);
   const isMockData = shouldUseMockData();
@@ -127,7 +121,6 @@ export function RiderBalanceDetailsDrawer({
     }
 
     setPendingAdjustment(data);
-    setShowConfirmDialog(true);
   };
 
   const handleConfirmAdjustment = async () => {
@@ -151,7 +144,6 @@ export function RiderBalanceDetailsDrawer({
         description: `Successfully ${pendingAdjustment.points >= 0 ? "added" : "deducted"} ${Math.abs(pendingAdjustment.points)} points for ${balance.riderName}.`,
       });
 
-      setShowConfirmDialog(false);
       setPendingAdjustment(null);
       setIsEditMode(false);
       form.reset();
@@ -326,7 +318,62 @@ export function RiderBalanceDetailsDrawer({
                       </div>
                     </CardHeader>
                     <CardContent>
-                      {isEditMode ? (
+                      {pendingAdjustment ? (
+                        <div className="space-y-4">
+                          <div className="rounded-lg bg-muted/40 p-4 space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Action</span>
+                              <span className="font-medium">
+                                {pendingAdjustment.points >= 0 ? "Add" : "Deduct"}{" "}
+                                {Math.abs(pendingAdjustment.points).toLocaleString()} points
+                              </span>
+                            </div>
+                            <Separator />
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Current Balance</span>
+                              <span className="font-medium">{balance.currentBalance.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">New Balance</span>
+                              <span className="font-semibold text-primary">
+                                {Math.max(0, balance.currentBalance + pendingAdjustment.points).toLocaleString()}
+                              </span>
+                            </div>
+                            <Separator />
+                            <div className="flex justify-between gap-4">
+                              <span className="text-muted-foreground shrink-0">Reason</span>
+                              <span className="font-medium text-right">{pendingAdjustment.description}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={handleConfirmAdjustment}
+                              disabled={isLoading}
+                              className="flex-1"
+                            >
+                              {isLoading ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Adjusting...
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="mr-2 h-4 w-4" />
+                                  Confirm Adjustment
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setPendingAdjustment(null)}
+                              disabled={isLoading}
+                            >
+                              Back
+                            </Button>
+                          </div>
+                        </div>
+                      ) : isEditMode ? (
                         <Form {...form}>
                           <form
                             onSubmit={form.handleSubmit(handleSave)}
@@ -343,7 +390,13 @@ export function RiderBalanceDetailsDrawer({
                                       type="number"
                                       placeholder="Enter points (positive to add, negative to deduct)"
                                       {...field}
-                                      onChange={(e) => field.onChange(e.target.value)}
+                                      onChange={(e) =>
+                                        field.onChange(
+                                          e.target.value === ""
+                                            ? ""
+                                            : Number(e.target.value),
+                                        )
+                                      }
                                     />
                                   </FormControl>
                                   <FormDescription>
@@ -374,26 +427,16 @@ export function RiderBalanceDetailsDrawer({
                             <div className="flex gap-2">
                               <Button
                                 type="submit"
-                                disabled={isLoading || isMockData}
+                                disabled={isMockData}
                                 className="flex-1"
                               >
-                                {isLoading ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Saving...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Save className="mr-2 h-4 w-4" />
-                                    Save Adjustment
-                                  </>
-                                )}
+                                <Save className="mr-2 h-4 w-4" />
+                                Review Adjustment
                               </Button>
                               <Button
                                 type="button"
                                 variant="outline"
                                 onClick={handleCancel}
-                                disabled={isLoading}
                               >
                                 Cancel
                               </Button>
@@ -514,48 +557,6 @@ export function RiderBalanceDetailsDrawer({
         </DrawerContent>
       </Drawer>
 
-      {/* Confirmation Dialog */}
-      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Points Adjustment</AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingAdjustment && (
-                <>
-                  You are about to{" "}
-                  {pendingAdjustment.points >= 0 ? "add" : "deduct"}{" "}
-                  {Math.abs(pendingAdjustment.points).toLocaleString()} points
-                  for {balance?.riderName}.
-                  <br />
-                  <br />
-                  <strong>Current Balance:</strong>{" "}
-                  {balance?.currentBalance.toLocaleString()}
-                  <br />
-                  <strong>New Balance:</strong>{" "}
-                  {(balance?.currentBalance || 0) + pendingAdjustment.points >=
-                  0
-                    ? (balance?.currentBalance || 0) + pendingAdjustment.points
-                    : 0}
-                  <br />
-                  <br />
-                  <strong>Reason:</strong> {pendingAdjustment.description}
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmAdjustment}
-              disabled={isLoading}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "Adjusting..." : "Confirm Adjustment"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
