@@ -46,26 +46,25 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
       campaignsResult,
       routesResult,
       communityRidesResult,
-    ] =
-      await Promise.all([
-        // Waitlist count
-        supabase.from("waitlist").select("id", { count: "exact", head: true }),
-        // Users count
-        supabase.from("user").select("id", { count: "exact", head: true }),
-        // Riders count
-        supabase.from("rider").select("id", { count: "exact", head: true }),
-        // Advertisers count
-        supabase.from("advertiser").select("id", { count: "exact", head: true }),
-        // Campaigns count
-        supabase.from("campaign").select("id", { count: "exact", head: true }),
-        // Routes count
-        supabase.from("route").select("id", { count: "exact", head: true }),
-        // Community rides count
-        supabase
-          .from("community_ride")
-          .select("id", { count: "exact", head: true })
-          .in("status", ["upcoming", "active"]),
-      ]);
+    ] = await Promise.all([
+      // Waitlist count
+      supabase.from("waitlist").select("id", { count: "exact", head: true }),
+      // Users count
+      supabase.from("user").select("id", { count: "exact", head: true }),
+      // Riders count
+      supabase.from("rider").select("id", { count: "exact", head: true }),
+      // Advertisers count
+      supabase.from("advertiser").select("id", { count: "exact", head: true }),
+      // Campaigns count
+      supabase.from("campaign").select("id", { count: "exact", head: true }),
+      // Routes count
+      supabase.from("route").select("id", { count: "exact", head: true }),
+      // Community rides count
+      supabase
+        .from("community_ride")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["upcoming", "active"]),
+    ]);
     return {
       totalWaitlist: waitlistResult.count || 0,
       totalUsers: usersResult.count || 0,
@@ -85,6 +84,7 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
       totalAdvertisers: 0,
       totalCampaigns: 0,
       totalRoutes: 0,
+      totalCommunityRides: 0,
     };
   }
 }
