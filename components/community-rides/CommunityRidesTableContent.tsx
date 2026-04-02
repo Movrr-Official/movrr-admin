@@ -88,7 +88,7 @@ export default function CommunityRidesTableContent({
   });
 
   if (isLoading) {
-    return <DataTableSkeleton columns={6} rows={8} />;
+    return <DataTableSkeleton columnCount={6} rowCount={8} />;
   }
 
   return (
@@ -96,25 +96,27 @@ export default function CommunityRidesTableContent({
       <div className="space-y-4">
         {toolbar && (
           <DataTableToolbar
-            refetchData={refetchData}
-            isRefetching={isRefetching}
-            filterConfig={filterConfig}
-            activeFilterCount={activeFilterCount}
+            refresh={{
+              enabled: true,
+              onRefresh: refetchData,
+              isLoading: isRefetching,
+            }}
           />
         )}
 
         {activeFilterCount > 0 && (
           <ActiveFiltersDisplay
-            filters={activeFilters}
+            activeFilters={activeFilters}
             filterConfig={filterConfig}
-            onClearFilter={clearFilter}
-            onClearAll={clearAllFilters}
+            clearFilter={clearFilter}
+            clearAllFilters={clearAllFilters}
           />
         )}
 
         <FilterSummary
-          totalCount={filteredData.length}
-          filteredCount={filteredData.length}
+          filteredDataLength={filteredData.length}
+          totalDataLength={filteredData.length}
+          activeFilterCount={activeFilterCount}
           entityName="ride"
         />
 
