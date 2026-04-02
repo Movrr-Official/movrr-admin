@@ -1,6 +1,7 @@
 "use client";
 
 interface FilterSummaryProps {
+  entityName?: string;
   filteredDataLength: number;
   totalDataLength: number;
   activeFilterCount: number;
@@ -8,6 +9,7 @@ interface FilterSummaryProps {
 }
 
 export function FilterSummary({
+  entityName,
   filteredDataLength,
   totalDataLength,
   activeFilterCount,
@@ -21,7 +23,7 @@ export function FilterSummary({
     <div className="p-3 bg-muted/50 border border-border rounded-lg">
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold">
-          Showing {filteredDataLength} of {totalDataLength} results
+          Showing {filteredDataLength} of {totalDataLength} {entityName} results
           {isLoading && (
             <span className="ml-2 animate-pulse">• Filtering...</span>
           )}

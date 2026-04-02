@@ -18,6 +18,7 @@ type CountContextType = {
   totalAdvertisers: number;
   totalCampaigns: number;
   totalRoutes: number;
+  totalCommunityRides: number;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -58,6 +59,7 @@ export const CountProvider = ({ children }: { children: ReactNode }) => {
     totalAdvertisers: data?.totalAdvertisers || 0,
     totalCampaigns: data?.totalCampaigns || 0,
     totalRoutes: data?.totalRoutes || 0,
+    totalCommunityRides: data?.totalCommunityRides || 0,
     isLoading,
     isError,
     error,

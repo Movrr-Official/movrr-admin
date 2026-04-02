@@ -21,22 +21,28 @@ export const fetchAuthLastSignInMap = async (
 ) => {
   if (userIds.length === 0) return new Map<string, string>();
 
-  const { data, error } = await supabaseAdmin
-    .schema("auth")
-    .from("users")
-    .select("id, last_sign_in_at")
-    .in("id", userIds);
+  // auth.users is not accessible via PostgREST (.schema("auth") is blocked).
+  // Use the Auth Admin API instead, which is available on the service-role client.
+  const idSet = new Set(userIds);
+  const map = new Map<string, string>();
+
+  const { data, error } = await supabaseAdmin.auth.admin.listUsers({
+    perPage: 1000,
+    page: 1,
+  });
 
   if (error) {
     console.warn("Fetch auth last sign-in map error:", error.message);
-    return new Map<string, string>();
+    return map;
   }
 
-  return new Map(
-    (data ?? [])
-      .filter((row) => row.id && row.last_sign_in_at)
-      .map((row) => [row.id as string, row.last_sign_in_at as string]),
-  );
+  for (const user of data.users) {
+    if (idSet.has(user.id) && user.last_sign_in_at) {
+      map.set(user.id, user.last_sign_in_at);
+    }
+  }
+
+  return map;
 };
 
 export const fetchRecentAdminAccessMap = async (

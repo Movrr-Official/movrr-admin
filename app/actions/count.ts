@@ -15,6 +15,7 @@ export interface WaitlistCounts {
   totalAdvertisers: number;
   totalCampaigns: number;
   totalRoutes: number;
+  totalCommunityRides: number;
 }
 
 /**
@@ -31,6 +32,7 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
         .length,
       totalCampaigns: mockCampaigns.length,
       totalRoutes: mockRoutes.length,
+      totalCommunityRides: 5,
     };
   }
   try {
@@ -43,6 +45,7 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
       advertisersResult,
       campaignsResult,
       routesResult,
+      communityRidesResult,
     ] =
       await Promise.all([
         // Waitlist count
@@ -57,6 +60,11 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
         supabase.from("campaign").select("id", { count: "exact", head: true }),
         // Routes count
         supabase.from("route").select("id", { count: "exact", head: true }),
+        // Community rides count
+        supabase
+          .from("community_ride")
+          .select("id", { count: "exact", head: true })
+          .in("status", ["upcoming", "active"]),
       ]);
     return {
       totalWaitlist: waitlistResult.count || 0,
@@ -65,6 +73,7 @@ export async function getDashboardCounts(): Promise<WaitlistCounts> {
       totalAdvertisers: advertisersResult.count || 0,
       totalCampaigns: campaignsResult.count || 0,
       totalRoutes: routesResult.count || 0,
+      totalCommunityRides: communityRidesResult.count || 0,
     };
   } catch (error) {
     console.error("Error fetching dashboard counts:", error);

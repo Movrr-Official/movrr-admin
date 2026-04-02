@@ -4,7 +4,6 @@ import { requireAdmin } from "@/lib/admin";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { logger } from "@/lib/logger";
-import { writeUserActivity } from "@/lib/userActivity";
 
 const supabase = createSupabaseAdminClient();
 const accessLogSchema = z.object({
@@ -41,24 +40,6 @@ export async function POST(request: Request) {
       ...data,
       user_id: admin.authUser.id,
       email: admin.adminUser.email,
-    });
-    await writeUserActivity(supabase, {
-      user_id: admin.authUser.id,
-      actor_user_id: admin.authUser.id,
-      source: "admin_access",
-      action: "Admin dashboard access",
-      description: data.action,
-      related_entity_type: "admin_access",
-      related_entity_id: admin.authUser.id,
-      metadata: {
-        success: data.success,
-        ip_address: data.ip_address ?? ip,
-        user_agent: data.user_agent ?? null,
-      },
-    }).catch((activityError) => {
-      logger.warn("User activity write failed during admin access logging", {
-        error: activityError instanceof Error ? activityError.message : String(activityError),
-      });
     });
     return NextResponse.json({ success: true });
   } catch (error) {

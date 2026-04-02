@@ -11,3 +11,5 @@ export * from "./user";
 export * from "./notification";
 export * from "./advertiser";
 export * from "./rideSession";
+export * from "./communityRide";
+export * from "./proTip";

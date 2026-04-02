@@ -20,6 +20,8 @@ import {
   Building2,
   Bike,
   Timer,
+  CalendarClock,
+  Lightbulb,
 } from "lucide-react";
 import { FaRoute } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -60,6 +62,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
     totalAdvertisers,
     totalCampaigns,
     totalRoutes,
+    totalCommunityRides,
     isLoading,
     isError,
   } = useCounts();
@@ -209,6 +212,26 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
+        name: "Community Rides",
+        href: "/community-rides",
+        icon: CalendarClock,
+        roles: ["admin", "super_admin"],
+        badge: (
+          <CountDisplay
+            count={totalCommunityRides}
+            isLoading={isLoading}
+            isError={isError}
+          />
+        ),
+      },
+      {
+        name: "Pro Tips",
+        href: "/pro-tips",
+        icon: Lightbulb,
+        roles: ["admin", "super_admin"],
+        badge: null,
+      },
+      {
         name: "Notifications",
         href: "/notifications",
         icon: Bell,
@@ -232,6 +255,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
       totalRoutes,
       totalUsers,
       totalWaitlist,
+      totalCommunityRides,
     ],
   );
 
