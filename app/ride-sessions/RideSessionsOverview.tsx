@@ -7,11 +7,14 @@ import {
   Timer,
   Coins,
   Megaphone,
+  ShieldAlert,
 } from "lucide-react";
 
 import { RideSessionsTable } from "@/components/ride-sessions/RideSessionsTable";
 import { StatsCard } from "@/components/stats/StatsCard";
 import { useRideSessionsData } from "@/hooks/useRideSessionsData";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 export default function RideSessionsOverview() {
   const {
@@ -144,15 +147,51 @@ export default function RideSessionsOverview() {
           />
         </div>
 
-        {/* Table */}
-        <RideSessionsTable
-          sessions={sessions ?? []}
-          isLoading={isLoading}
-          isRefetching={isFetching}
-          toolbar={true}
-          searchBar={false}
-          refetchData={refetch}
-        />
+        {/* Tabs: All Sessions | Verification Queue */}
+        <Tabs defaultValue="all">
+          <TabsList>
+            <TabsTrigger value="all">
+              All Sessions
+              <Badge variant="secondary" className="ml-2 text-xs">{total}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="queue">
+              <ShieldAlert className="h-3.5 w-3.5 mr-1.5" />
+              Verification Queue
+              {(pending + rejected + manualReview) > 0 && (
+                <Badge className="ml-2 text-xs bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300">
+                  {pending + rejected + manualReview}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-4">
+            <RideSessionsTable
+              sessions={sessions ?? []}
+              isLoading={isLoading}
+              isRefetching={isFetching}
+              toolbar={true}
+              searchBar={false}
+              refetchData={refetch}
+            />
+          </TabsContent>
+
+          <TabsContent value="queue" className="mt-4">
+            <RideSessionsTable
+              sessions={(sessions ?? []).filter(
+                (s) =>
+                  s.verificationStatus === "pending" ||
+                  s.verificationStatus === "rejected" ||
+                  s.verificationStatus === "manual_review",
+              )}
+              isLoading={isLoading}
+              isRefetching={isFetching}
+              toolbar={true}
+              searchBar={false}
+              refetchData={refetch}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

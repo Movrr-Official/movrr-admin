@@ -9,6 +9,7 @@ import {
   resolveLatestIsoTimestamp,
 } from "@/lib/activitySignals";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { writeUserActivity } from "@/lib/userActivity";
 import { Rider, RiderFiltersSchema, updateRiderSchema } from "@/schemas";
 import { z } from "zod";
 
@@ -424,6 +425,72 @@ export async function getRiders(
   }
 }
 
+/**
+ * Bulk status update — suspend or activate multiple riders atomically.
+ * Each rider update is attempted independently; partial failures are reported.
+ */
+export async function bulkUpdateRiderStatus(
+  riderIds: string[],
+  status: "active" | "inactive",
+): Promise<{ success: boolean; updated: number; failed: number; error?: string }> {
+  try {
+    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const supabaseAdmin = createSupabaseAdminClient();
+    const dbStatus = mapUiStatusToDb(status);
+
+    const { data: riderRows, error: lookupError } = await supabaseAdmin
+      .from("rider")
+      .select("id, user_id")
+      .in("id", riderIds);
+
+    if (lookupError) return { success: false, updated: 0, failed: riderIds.length, error: lookupError.message };
+
+    const rows = riderRows ?? [];
+    const userIds = rows.map((r) => r.user_id).filter(Boolean) as string[];
+
+    const [{ error: riderError }, { error: userError }] = await Promise.all([
+      supabaseAdmin.from("rider").update({ status: dbStatus, updated_at: new Date().toISOString() }).in("id", riderIds),
+      userIds.length
+        ? supabaseAdmin.from("user").update({ status: dbStatus, updated_at: new Date().toISOString() }).in("id", userIds)
+        : Promise.resolve({ error: null }),
+    ]);
+
+    if (riderError || userError) {
+      return { success: false, updated: 0, failed: riderIds.length, error: riderError?.message ?? userError?.message };
+    }
+
+    // Audit trail for each rider
+    const action = dbStatus === "suspended" ? "Rider suspended" : "Rider activated";
+    await Promise.all(
+      rows.map((row) =>
+        row.user_id
+          ? writeUserActivity(supabaseAdmin, {
+              user_id: row.user_id,
+              actor_user_id: auth.authUser.id,
+              source: "account",
+              action: `${action} (bulk)`,
+              description: `${action} in a bulk operation by admin.`,
+              related_entity_type: "rider",
+              related_entity_id: row.id,
+              metadata: { riderId: row.id, newStatus: dbStatus, bulk: true },
+            }).catch(() => undefined)
+          : Promise.resolve(),
+      ),
+    );
+
+    revalidatePath("/riders");
+    return { success: true, updated: rows.length, failed: 0 };
+  } catch (error) {
+    console.error("bulkUpdateRiderStatus error:", error);
+    return {
+      success: false,
+      updated: 0,
+      failed: riderIds.length,
+      error: error instanceof Error ? error.message : "Failed to bulk update riders",
+    };
+  }
+}
+
 export async function getRiderById(
   riderId: string,
 ): Promise<{ success: boolean; data?: Rider | null; error?: string }> {
@@ -442,7 +509,7 @@ export async function updateRiderProfile(
   data: z.infer<typeof updateRiderSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateRiderSchema.parse(data);
 
@@ -520,6 +587,25 @@ export async function updateRiderProfile(
         success: false,
         error: userError?.message || riderError?.message || "Failed to update rider",
       };
+    }
+
+    // Audit trail — record status changes (suspension/activation) to user_activity
+    if (validatedData.status !== undefined && riderRow.user_id) {
+      const dbStatus = mapUiStatusToDb(validatedData.status);
+      const action =
+        dbStatus === "suspended" ? "Rider suspended" :
+        dbStatus === "active" ? "Rider activated" :
+        `Rider status changed to ${dbStatus}`;
+      await writeUserActivity(supabaseAdmin, {
+        user_id: riderRow.user_id,
+        actor_user_id: auth.authUser.id,
+        source: "account",
+        action,
+        description: `${action} by admin.`,
+        related_entity_type: "rider",
+        related_entity_id: validatedData.id,
+        metadata: { riderId: validatedData.id, newStatus: dbStatus },
+      }).catch((err) => console.warn("Rider status change activity write failed:", err));
     }
 
     revalidatePath("/riders");

@@ -61,7 +61,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
     totalRiders,
     totalAdvertisers,
     totalCampaigns,
-    totalRoutes,
+    totalPlannedRoutes,
     totalCommunityRides,
     isLoading,
     isError,
@@ -199,13 +199,13 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
-        name: "Routes",
+        name: "Planned Routes",
         href: "/routes",
         icon: FaRoute,
         roles: ["admin", "super_admin", "moderator"],
         badge: (
           <CountDisplay
-            count={totalRoutes}
+            count={totalPlannedRoutes}
             isLoading={isLoading}
             isError={isError}
           />
@@ -252,7 +252,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
       totalCampaigns,
       totalAdvertisers,
       totalRiders,
-      totalRoutes,
+      totalPlannedRoutes,
       totalUsers,
       totalWaitlist,
       totalCommunityRides,

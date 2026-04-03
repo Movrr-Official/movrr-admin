@@ -375,27 +375,44 @@ export async function getRewardTransactions(filters?: {
     });
 
     const mappedTransactions = (transactions ?? []).map((txn) => {
-      const direction = txn.metadata?.adjustment_direction as
-        | string
-        | undefined;
+      const meta = txn.metadata as Record<string, unknown> | null | undefined;
+      const direction = meta?.adjustment_direction as string | undefined;
       const isDebit = direction === "debit";
       const points = Number(txn.points_earned ?? 0) * (isDebit ? -1 : 1);
       const type = txn.source === "adjustment" ? "adjusted" : "awarded";
+
+      // Extract bonus breakdown from metadata — mirrors mobile's bonusBreakdown field
+      const rawBreakdown = meta?.bonusBreakdown as unknown[] | undefined;
+      const bonusBreakdown = Array.isArray(rawBreakdown)
+        ? rawBreakdown.map((entry: any) => ({
+            type: String(entry?.type ?? ""),
+            label: entry?.label ? String(entry.label) : undefined,
+            multiplier: entry?.multiplier != null ? Number(entry.multiplier) : undefined,
+            addedPoints: entry?.addedPoints != null ? Number(entry.addedPoints) : undefined,
+          }))
+        : undefined;
 
       return {
         id: txn.id,
         riderId: txn.rider_id,
         campaignId: txn.campaign_id ?? undefined,
         routeId: txn.route_tracking_id ?? undefined,
-        rideSessionId: txn.metadata?.rideSessionId ?? undefined,
+        rideSessionId: (meta?.rideSessionId as string | undefined) ?? undefined,
         type,
         source: txn.source ?? undefined,
-        earningMode: txn.metadata?.earningMode ?? undefined,
+        earningMode: (meta?.earningMode as string | undefined) ?? undefined,
         points,
-        description: txn.metadata?.description ?? undefined,
+        description: (meta?.description as string | undefined) ?? undefined,
         balanceAfter: balanceByRider.get(txn.rider_id) ?? 0,
         createdAt: txn.created_at ?? new Date().toISOString(),
-        createdBy: txn.metadata?.created_by ?? undefined,
+        createdBy: (meta?.created_by as string | undefined) ?? undefined,
+        // Bonus + cap detail
+        basePoints: meta?.basePoints != null ? Number(meta.basePoints) : undefined,
+        multiplier: meta?.multiplier != null ? Number(meta.multiplier) : undefined,
+        campaignBoostMultiplier: meta?.campaignBoostMultiplier != null ? Number(meta.campaignBoostMultiplier) : undefined,
+        wasCapped: meta?.wasCapped != null ? Boolean(meta.wasCapped) : undefined,
+        verifiedMinutes: meta?.verifiedMinutes != null ? Number(meta.verifiedMinutes) : undefined,
+        bonusBreakdown,
       } as RewardTransaction;
     });
 

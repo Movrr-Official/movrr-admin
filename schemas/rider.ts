@@ -8,6 +8,30 @@ import {
 import { routeSchema } from "./route";
 import { userSchema } from "./user";
 
+export const riderTrendDirectionSchema = z.enum([
+  "improving",
+  "stable",
+  "declining",
+  "insufficient_data",
+  "unavailable",
+]);
+
+/** Mirrors the mobile app's RiderPerformanceModel — computed server-side from ride_session data */
+export const riderPerformanceMetricsSchema = z.object({
+  /** Completed sessions / total sessions (last 90 days) */
+  completionRate: z.number().min(0).max(100),
+  /** Verified sessions / completed sessions */
+  verificationSuccessRate: z.number().min(0).max(100),
+  /** Average ride quality score across verified sessions */
+  avgQualityScore: z.number().min(0).max(100).optional(),
+  /** 7-day moving avg vs 30-day baseline direction */
+  trendDirection: riderTrendDirectionSchema,
+  /** Total sessions in the sample window */
+  totalSessions: z.number().int().min(0),
+  /** Sessions with quality data available */
+  qualityDataAvailable: z.boolean(),
+});
+
 export const riderContactSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 characters"),
   emergencyContact: z.string().optional(),
@@ -142,3 +166,5 @@ export type Rider = z.infer<typeof riderSchema>;
 export type RiderStatus = z.infer<typeof riderStatusSchema>;
 export type RiderUser = z.infer<typeof riderUserSchema>;
 export type VehicleType = z.infer<typeof vehicleTypeSchema>;
+export type RiderPerformanceMetrics = z.infer<typeof riderPerformanceMetricsSchema>;
+export type RiderTrendDirection = z.infer<typeof riderTrendDirectionSchema>;

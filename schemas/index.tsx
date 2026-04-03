@@ -13,3 +13,4 @@ export * from "./advertiser";
 export * from "./rideSession";
 export * from "./communityRide";
 export * from "./proTip";
+export * from "./badge";

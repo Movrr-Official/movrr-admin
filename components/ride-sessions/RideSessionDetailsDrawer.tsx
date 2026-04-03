@@ -6,13 +6,16 @@ import {
   Bike,
   Clock,
   Coins,
+  Gauge,
   MapPin,
   Megaphone,
   ShieldCheck,
   ShieldX,
   Timer,
+  TrendingUp,
   User,
   X,
+  Zap,
 } from "lucide-react";
 
 import { RideSession } from "@/schemas";
@@ -157,6 +160,41 @@ export function RideSessionDetailsDrawer({
                   <p className="text-xs text-muted-foreground">Total Duration</p>
                 </div>
                 <p className="text-2xl font-bold">{duration} min</p>
+              </div>
+            )}
+            {session.movingTime != null && (
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">Moving Time</p>
+                </div>
+                <p className="text-2xl font-bold">{session.movingTime} min</p>
+              </div>
+            )}
+            {session.rideQualityPercent != null && (
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <Gauge className={`h-4 w-4 ${session.rideQualityPercent >= 70 ? "text-green-600" : session.rideQualityPercent >= 40 ? "text-amber-600" : "text-red-600"}`} />
+                  <p className="text-xs text-muted-foreground">Quality Score</p>
+                </div>
+                <p className={`text-2xl font-bold ${session.rideQualityPercent >= 70 ? "text-green-600" : session.rideQualityPercent >= 40 ? "text-amber-600" : "text-red-600"}`}>
+                  {session.rideQualityPercent}%
+                </p>
+              </div>
+            )}
+            {session.bikeType && (
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-2 mb-1">
+                  {session.bikeType === "e_bike" ? (
+                    <Zap className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Bike className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <p className="text-xs text-muted-foreground">Bike Type</p>
+                </div>
+                <p className="text-sm font-semibold capitalize">
+                  {session.bikeType === "e_bike" ? "E-Bike" : session.bikeType === "fat_bike" ? "Fat Bike" : session.bikeType === "standard_bike" ? "Standard Bike" : "Unknown"}
+                </p>
               </div>
             )}
           </div>

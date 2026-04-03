@@ -2,15 +2,18 @@
 
 import React from "react";
 import {
+  AlertTriangle,
   Calendar,
   Coins,
   Edit,
   Megaphone,
   Route,
+  Timer,
   TrendingDown,
   TrendingUp,
   User,
   X,
+  Zap,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -230,6 +233,72 @@ export function RiderTransactionsDetailsDrawer({
               </CardContent>
             </Card>
           </div>
+
+          {/* Earning breakdown — shown for ride-based transactions that have metadata */}
+          {(transaction.basePoints != null || transaction.verifiedMinutes != null || transaction.wasCapped != null || (transaction.bonusBreakdown && transaction.bonusBreakdown.length > 0)) && (
+            <Card className="glass-card border-0">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-amber-500" />
+                  Earning Breakdown
+                  {transaction.wasCapped && (
+                    <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-950 dark:text-orange-300">
+                      <AlertTriangle className="h-3 w-3" />
+                      Daily cap hit
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {transaction.verifiedMinutes != null && (
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Timer className="h-3.5 w-3.5" />
+                      Verified minutes
+                    </div>
+                    <span className="font-medium">{transaction.verifiedMinutes} min</span>
+                  </div>
+                )}
+                {transaction.basePoints != null && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Base points</span>
+                    <span className="font-medium">+{transaction.basePoints}</span>
+                  </div>
+                )}
+                {transaction.multiplier != null && transaction.multiplier !== 1 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Earning multiplier</span>
+                    <span className="font-medium">{transaction.multiplier}×</span>
+                  </div>
+                )}
+                {transaction.campaignBoostMultiplier != null && transaction.campaignBoostMultiplier !== 1 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Campaign boost</span>
+                    <span className="font-medium text-violet-600">{transaction.campaignBoostMultiplier}×</span>
+                  </div>
+                )}
+                {transaction.bonusBreakdown && transaction.bonusBreakdown.length > 0 && (
+                  <>
+                    <Separator />
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bonuses</p>
+                    {transaction.bonusBreakdown.map((bonus, i) => (
+                      <div key={i} className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">{bonus.label ?? bonus.type}</span>
+                        <span className="font-medium text-green-600">
+                          {bonus.addedPoints != null ? `+${bonus.addedPoints}` : bonus.multiplier != null ? `${bonus.multiplier}×` : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </>
+                )}
+                {transaction.wasCapped && (
+                  <div className="mt-2 rounded-lg bg-orange-50 dark:bg-orange-950 px-3 py-2 text-xs text-orange-700 dark:text-orange-300">
+                    This transaction was reduced because the rider reached their daily earning cap. Some points were not awarded.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <DrawerFooter className="border-t border-border/50 flex flex-row items-center justify-end gap-2">

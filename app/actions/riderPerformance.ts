@@ -1,0 +1,138 @@
+"use server";
+
+import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles } from "@/lib/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { RiderPerformanceMetrics } from "@/schemas";
+
+/**
+ * Compute rider performance metrics from ride_session and ride_verification data.
+ * Mirrors the mobile app's RiderPerformanceModel — used in the admin rider details drawer.
+ *
+ * Sample window: last 90 days to keep computation bounded.
+ */
+export async function getRiderPerformanceMetrics(
+  riderId: string,
+): Promise<{ success: boolean; data?: RiderPerformanceMetrics; error?: string }> {
+  try {
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const supabase = createSupabaseAdminClient();
+
+    const windowStart = new Date();
+    windowStart.setDate(windowStart.getDate() - 90);
+
+    // Fetch sessions in the 90-day window
+    const { data: sessions, error: sessionsError } = await supabase
+      .from("ride_session")
+      .select("id, ride_quality_percent, created_at")
+      .eq("rider_id", riderId)
+      .gte("created_at", windowStart.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(200);
+
+    if (sessionsError) return { success: false, error: sessionsError.message };
+
+    const rows = sessions ?? [];
+    const totalSessions = rows.length;
+
+    if (totalSessions === 0) {
+      return {
+        success: true,
+        data: {
+          completionRate: 0,
+          verificationSuccessRate: 0,
+          avgQualityScore: undefined,
+          trendDirection: "insufficient_data",
+          totalSessions: 0,
+          qualityDataAvailable: false,
+        },
+      };
+    }
+
+    const sessionIds = rows.map((r) => r.id);
+
+    // Fetch verification results for these sessions
+    const { data: verRows } = await supabase
+      .from("ride_verification")
+      .select("ride_session_id, status")
+      .in("ride_session_id", sessionIds);
+
+    const verMap = new Map<string, string>();
+    (verRows ?? []).forEach((v) => {
+      if (v.ride_session_id) verMap.set(v.ride_session_id, v.status ?? "pending");
+    });
+
+    const verifiedCount = sessionIds.filter(
+      (id) => verMap.get(id) === "verified",
+    ).length;
+    const completedCount = sessionIds.filter((id) => {
+      const status = verMap.get(id);
+      return status === "verified" || status === "rejected" || status === "manual_review";
+    }).length;
+
+    const completionRate =
+      totalSessions > 0 ? Math.round((completedCount / totalSessions) * 100) : 0;
+    const verificationSuccessRate =
+      completedCount > 0 ? Math.round((verifiedCount / completedCount) * 100) : 0;
+
+    // Quality score — average from sessions that have ride_quality_percent
+    const qualityRows = rows.filter((r) => r.ride_quality_percent != null);
+    const qualityDataAvailable = qualityRows.length > 0;
+    const avgQualityScore = qualityDataAvailable
+      ? Math.round(
+          qualityRows.reduce((sum, r) => sum + Number(r.ride_quality_percent), 0) /
+            qualityRows.length,
+        )
+      : undefined;
+
+    // Trend: compare 7-day verified rate vs 30-day verified rate
+    let trendDirection: RiderPerformanceMetrics["trendDirection"] = "insufficient_data";
+    if (totalSessions >= 5) {
+      const now = Date.now();
+      const sevenDayMs = 7 * 24 * 60 * 60 * 1000;
+      const thirtyDayMs = 30 * 24 * 60 * 60 * 1000;
+
+      const recent7 = rows.filter(
+        (r) => now - new Date(r.created_at).getTime() <= sevenDayMs,
+      );
+      const recent30 = rows.filter(
+        (r) => now - new Date(r.created_at).getTime() <= thirtyDayMs,
+      );
+
+      if (recent7.length >= 2 && recent30.length >= 5) {
+        const rate7 =
+          recent7.filter((r) => verMap.get(r.id) === "verified").length /
+          recent7.length;
+        const rate30 =
+          recent30.filter((r) => verMap.get(r.id) === "verified").length /
+          recent30.length;
+
+        const delta = rate7 - rate30;
+        if (delta > 0.05) trendDirection = "improving";
+        else if (delta < -0.05) trendDirection = "declining";
+        else trendDirection = "stable";
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        completionRate,
+        verificationSuccessRate,
+        avgQualityScore,
+        trendDirection,
+        totalSessions,
+        qualityDataAvailable,
+      },
+    };
+  } catch (error) {
+    console.error("getRiderPerformanceMetrics error:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to compute performance metrics",
+    };
+  }
+}

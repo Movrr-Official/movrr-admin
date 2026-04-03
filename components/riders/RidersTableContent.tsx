@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Bike, Plus } from "lucide-react";
+import { Bike, Download, Loader2, Plus, ShieldOff, UserCheck } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Rider } from "@/schemas";
@@ -11,8 +11,12 @@ import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
 import { FilterSummary } from "@/components/filters/FilterSummary";
+import { Button } from "@/components/ui/button";
 import { RiderDetailsDrawer } from "./RiderDetailsDrawer";
 import { getRidersTableColumns } from "./RidersTableColumns";
+import { bulkUpdateRiderStatus } from "@/app/actions/riders";
+import { useToast } from "@/hooks/useToast";
+import { exportToCSV } from "@/lib/export";
 
 interface RidersTableContentProps {
   isLoading: boolean;
@@ -36,6 +40,9 @@ export default function RidersTableContent({
   const searchParams = useSearchParams();
   const [selectedRider, setSelectedRider] = useState<Rider | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<Rider[]>([]);
+  const [isBulkPending, setIsBulkPending] = useState(false);
+  const { toast } = useToast();
 
   const {
     data: riders,
@@ -109,6 +116,46 @@ export default function RidersTableContent({
     }
   };
 
+  const handleBulkStatusChange = async (status: "active" | "inactive") => {
+    if (!selectedRows.length) return;
+    setIsBulkPending(true);
+    try {
+      const result = await bulkUpdateRiderStatus(
+        selectedRows.map((r) => r.id),
+        status,
+      );
+      if (result.success) {
+        toast({
+          title: `${result.updated} rider${result.updated !== 1 ? "s" : ""} ${status === "active" ? "activated" : "suspended"}`,
+        });
+        setSelectedRows([]);
+        refetchData?.();
+      } else {
+        toast({ title: "Bulk action failed", description: result.error, variant: "destructive" });
+      }
+    } finally {
+      setIsBulkPending(false);
+    }
+  };
+
+  const handleBulkExport = () => {
+    if (!selectedRows.length) return;
+    const rows = selectedRows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      status: r.status,
+      city: r.city ?? "",
+      country: r.country ?? "",
+      vehicleType: r.vehicleType ?? "",
+      isCertified: r.isCertified,
+      pointsBalance: r.pointsBalance ?? 0,
+      totalRides: r.totalRides ?? 0,
+      lastActive: r.lastActivityAt ?? r.lastActive ?? "",
+    }));
+    exportToCSV(rows, { filename: `riders_bulk_export_${new Date().toISOString().split("T")[0]}`, format: "csv" });
+  };
+
   const columns = useMemo(
     () =>
       getRidersTableColumns({
@@ -167,6 +214,45 @@ export default function RidersTableContent({
           </div>
         )}
 
+        {selectedRows.length > 0 && (
+          <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-muted/40 px-4 py-2.5">
+            <span className="text-sm font-medium text-foreground">
+              {selectedRows.length} rider{selectedRows.length !== 1 ? "s" : ""} selected
+            </span>
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleBulkExport}
+                disabled={isBulkPending}
+              >
+                <Download className="mr-1.5 h-3.5 w-3.5" />
+                Export
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleBulkStatusChange("active")}
+                disabled={isBulkPending}
+                className="text-green-700 border-green-300 hover:bg-green-50"
+              >
+                {isBulkPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <UserCheck className="mr-1.5 h-3.5 w-3.5" />}
+                Activate
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleBulkStatusChange("inactive")}
+                disabled={isBulkPending}
+                className="text-amber-700 border-amber-300 hover:bg-amber-50"
+              >
+                {isBulkPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <ShieldOff className="mr-1.5 h-3.5 w-3.5" />}
+                Suspend
+              </Button>
+            </div>
+          </div>
+        )}
+
         <DataTable
           columns={columns}
           data={filteredData}
@@ -181,6 +267,8 @@ export default function RidersTableContent({
           className={className}
           onRowClick={handleRowClick}
           searchBar={searchBar}
+          enableRowSelection
+          onSelectionChange={setSelectedRows}
         />
       </div>
 

@@ -5,6 +5,7 @@ import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
 import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { shouldUseMockData } from "@/lib/dataSource";
+import { writeUserActivity } from "@/lib/userActivity";
 import { mockCommunityRides } from "@/data/mockCommunityRides";
 import {
   CommunityRide,
@@ -241,7 +242,7 @@ export async function getCommunityRideById(
 export async function updateCommunityRide(
   input: UpdateCommunityRideFormData,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     revalidatePath("/community-rides");
@@ -250,6 +251,14 @@ export async function updateCommunityRide(
 
   try {
     const supabase = createSupabaseAdminClient();
+
+    // Fetch current status before updating so we can detect status transitions
+    const { data: currentRow } = await supabase
+      .from("community_ride")
+      .select("status, organizer_rider_id")
+      .eq("id", input.id)
+      .maybeSingle();
+
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (input.status !== undefined) updates.status = input.status;
     if (input.title !== undefined) updates.title = input.title;
@@ -262,6 +271,37 @@ export async function updateCommunityRide(
       .eq("id", input.id);
 
     if (error) throw error;
+
+    // Audit log — write for status transitions only (most significant admin action)
+    if (input.status !== undefined && input.status !== currentRow?.status) {
+      // Resolve organiser's user_id for the activity log
+      const organizerRiderId = currentRow?.organizer_rider_id as string | undefined;
+      if (organizerRiderId) {
+        const { data: riderRow } = await supabase
+          .from("rider")
+          .select("user_id")
+          .eq("id", organizerRiderId)
+          .maybeSingle();
+
+        if (riderRow?.user_id) {
+          await writeUserActivity(supabase, {
+            user_id: riderRow.user_id,
+            actor_user_id: auth.authUser.id,
+            source: "system",
+            action: `Community ride ${input.status}`,
+            description: `Community ride status changed from "${currentRow?.status ?? "unknown"}" to "${input.status}" by admin.`,
+            related_entity_type: "community_ride",
+            related_entity_id: input.id,
+            metadata: {
+              rideId: input.id,
+              previousStatus: currentRow?.status ?? null,
+              newStatus: input.status,
+            },
+          }).catch((err) => console.warn("Community ride status audit write failed:", err));
+        }
+      }
+    }
+
     revalidatePath("/community-rides");
     return { success: true };
   } catch (err) {

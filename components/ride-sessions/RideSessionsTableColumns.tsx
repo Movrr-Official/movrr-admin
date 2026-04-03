@@ -6,6 +6,7 @@ import {
   Clock,
   Coins,
   Eye,
+  Gauge,
   MapPin,
   Megaphone,
   MoreHorizontal,
@@ -13,6 +14,7 @@ import {
   ShieldX,
   Timer,
   User,
+  Zap,
 } from "lucide-react";
 
 import { RideSession } from "@/schemas";
@@ -166,6 +168,39 @@ export function getRideSessionsTableColumns({
           <div className="flex items-center gap-2">
             <Megaphone className="h-3 w-3 text-muted-foreground" />
             <span className="text-sm">{campaignName ?? campaignId.slice(0, 8)}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "bikeType",
+      header: "Bike",
+      cell: ({ row }) => {
+        const { bikeType, rideQualityPercent } = row.original;
+        return (
+          <div className="flex flex-col gap-0.5">
+            {bikeType ? (
+              <div className="flex items-center gap-1.5">
+                {bikeType === "e_bike" ? (
+                  <Zap className="h-3 w-3 text-violet-500" />
+                ) : (
+                  <Bike className="h-3 w-3 text-muted-foreground" />
+                )}
+                <span className="text-sm">
+                  {bikeType === "e_bike" ? "E-Bike" : bikeType === "fat_bike" ? "Fat Bike" : bikeType === "standard_bike" ? "Standard" : "Unknown"}
+                </span>
+              </div>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
+            {rideQualityPercent != null && (
+              <div className="flex items-center gap-1">
+                <Gauge className={`h-3 w-3 ${rideQualityPercent >= 70 ? "text-green-600" : rideQualityPercent >= 40 ? "text-amber-500" : "text-red-500"}`} />
+                <span className={`text-xs font-medium ${rideQualityPercent >= 70 ? "text-green-600" : rideQualityPercent >= 40 ? "text-amber-500" : "text-red-500"}`}>
+                  {rideQualityPercent}%
+                </span>
+              </div>
+            )}
           </div>
         );
       },

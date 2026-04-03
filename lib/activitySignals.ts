@@ -23,23 +23,32 @@ export const fetchAuthLastSignInMap = async (
 
   // auth.users is not accessible via PostgREST (.schema("auth") is blocked).
   // Use the Auth Admin API instead, which is available on the service-role client.
+  // Paginate in batches of 1000 until all users are fetched.
   const idSet = new Set(userIds);
   const map = new Map<string, string>();
+  const perPage = 1000;
+  let page = 1;
 
-  const { data, error } = await supabaseAdmin.auth.admin.listUsers({
-    perPage: 1000,
-    page: 1,
-  });
+  while (true) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({
+      perPage,
+      page,
+    });
 
-  if (error) {
-    console.warn("Fetch auth last sign-in map error:", error.message);
-    return map;
-  }
-
-  for (const user of data.users) {
-    if (idSet.has(user.id) && user.last_sign_in_at) {
-      map.set(user.id, user.last_sign_in_at);
+    if (error) {
+      console.warn("Fetch auth last sign-in map error:", error.message);
+      break;
     }
+
+    for (const user of data.users) {
+      if (idSet.has(user.id) && user.last_sign_in_at) {
+        map.set(user.id, user.last_sign_in_at);
+      }
+    }
+
+    // Stop if we've matched all requested users or this page was the last one
+    if (data.users.length < perPage || map.size >= idSet.size) break;
+    page += 1;
   }
 
   return map;

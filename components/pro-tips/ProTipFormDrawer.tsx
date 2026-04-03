@@ -32,6 +32,16 @@ import {
 import { useToast } from "@/hooks/useToast";
 import { useCreateProTip, useUpdateProTip } from "@/hooks/useProTipsData";
 import { ProTip, createProTipSchema, CreateProTipFormData } from "@/schemas";
+import { useWatch } from "react-hook-form";
+
+const CATEGORY_COLORS: Record<string, string> = {
+  earning: "bg-green-100 text-green-700",
+  timing: "bg-blue-100 text-blue-700",
+  compliance: "bg-red-100 text-red-700",
+  performance: "bg-violet-100 text-violet-700",
+  technical: "bg-slate-100 text-slate-700",
+  planning: "bg-amber-100 text-amber-700",
+};
 
 interface ProTipFormDrawerProps {
   tip: ProTip | null;
@@ -107,6 +117,11 @@ export function ProTipFormDrawer({
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  const previewIcon = useWatch({ control: form.control, name: "icon" });
+  const previewText = useWatch({ control: form.control, name: "text" });
+  const previewCategory = useWatch({ control: form.control, name: "category" });
+  const previewActive = useWatch({ control: form.control, name: "isActive" });
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -238,6 +253,51 @@ export function ProTipFormDrawer({
                   </FormItem>
                 )}
               />
+
+              {/* Mobile preview */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Mobile Preview
+                </p>
+                {/* Phone frame */}
+                <div className="mx-auto w-[240px] rounded-[2rem] border-4 border-foreground/10 bg-background shadow-lg overflow-hidden">
+                  {/* Status bar mockup */}
+                  <div className="bg-muted/40 px-4 py-1.5 flex justify-between items-center">
+                    <span className="text-[9px] font-semibold text-muted-foreground">9:41</span>
+                    <div className="flex gap-1">
+                      <div className="w-2.5 h-1.5 rounded-sm bg-muted-foreground/50" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
+                    </div>
+                  </div>
+                  {/* Tip card — mirrors the mobile ProTipCard layout */}
+                  <div className="p-3">
+                    <div
+                      className={`rounded-2xl p-3 flex items-start gap-3 shadow-sm ${!previewActive ? "opacity-40" : ""}`}
+                      style={{ background: "var(--color-surface, hsl(var(--muted)/0.4))" }}
+                    >
+                      {/* Icon bubble */}
+                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-lg leading-none">
+                        {previewIcon || "💡"}
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        {previewCategory && (
+                          <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[previewCategory] ?? "bg-muted text-muted-foreground"}`}>
+                            {previewCategory}
+                          </span>
+                        )}
+                        <p className="text-[11px] text-foreground leading-snug line-clamp-4">
+                          {previewText || <span className="text-muted-foreground italic">Tip text will appear here…</span>}
+                        </p>
+                      </div>
+                    </div>
+                    {!previewActive && (
+                      <p className="text-center text-[9px] text-muted-foreground mt-2">
+                        Inactive — not shown to riders
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="px-6 py-4 border-t border-border flex gap-2">

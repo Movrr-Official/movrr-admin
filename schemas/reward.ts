@@ -27,6 +27,14 @@ export const rewardTransactionSourceSchema = z.enum([
  */
 export const earningModeSchema = z.enum(["standard_ride", "ad_enhanced_ride"]);
 
+/** Breakdown of a single bonus or modifier entry — mirrors mobile's RewardBonusEntry */
+export const rewardBonusEntrySchema = z.object({
+  type: z.string(),
+  label: z.string().optional(),
+  multiplier: z.number().optional(),
+  addedPoints: z.number().optional(),
+});
+
 export const rewardTransactionSchema = z.object({
   id: z.string(),
   riderId: z.string(),
@@ -46,6 +54,19 @@ export const rewardTransactionSchema = z.object({
   balanceAfter: z.number(),
   createdAt: z.string().datetime(),
   createdBy: z.string().optional(), // Admin who created adjustment
+  // --- Bonus + cap detail sourced from metadata ---
+  /** Base points before multipliers */
+  basePoints: z.number().optional(),
+  /** Combined earning multiplier applied */
+  multiplier: z.number().optional(),
+  /** Campaign boost multiplier, if applicable */
+  campaignBoostMultiplier: z.number().optional(),
+  /** Whether the daily cap was hit for this transaction */
+  wasCapped: z.boolean().optional(),
+  /** Verified ride minutes that produced this transaction */
+  verifiedMinutes: z.number().optional(),
+  /** Itemised bonus entries */
+  bonusBreakdown: z.array(rewardBonusEntrySchema).optional(),
 });
 
 export const riderBalanceSchema = z.object({
@@ -63,3 +84,4 @@ export type RewardTransactionType = z.infer<typeof rewardTransactionTypeSchema>;
 export type RewardTransactionSource = z.infer<typeof rewardTransactionSourceSchema>;
 export type EarningMode = z.infer<typeof earningModeSchema>;
 export type RiderBalance = z.infer<typeof riderBalanceSchema>;
+export type RewardBonusEntry = z.infer<typeof rewardBonusEntrySchema>;
