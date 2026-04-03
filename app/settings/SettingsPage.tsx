@@ -269,214 +269,216 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Settings"
-        description="Global platform configuration, policy enforcement, and operational diagnostics for MOVRR Admin."
-      />
+    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+      <div className="space-y-6 md:space-y-8">
+        <PageHeader
+          title="Settings"
+          description="Global platform configuration, policy enforcement, and operational diagnostics for MOVRR Admin."
+        />
 
-      <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
-        <Card className="glass-card border-0">
-          <CardContent className="p-4">
-            <div className="space-y-2">
-              {SETTINGS_SECTIONS.map((entry) => {
-                const Icon = entry.icon;
-                const isActive = entry.id === section;
-                return (
-                  <button
-                    key={entry.id}
-                    type="button"
-                    onClick={() => setSection(entry.id)}
-                    className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                      isActive
-                        ? "border-primary/50 bg-primary/10"
-                        : "border-border/60 bg-background/30 hover:bg-background/50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4" />
-                          <div className="font-medium text-foreground">
-                            {entry.title}
+        <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
+          <Card className="glass-card border-0">
+            <CardContent className="p-4">
+              <div className="space-y-2">
+                {SETTINGS_SECTIONS.map((entry) => {
+                  const Icon = entry.icon;
+                  const isActive = entry.id === section;
+                  return (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      onClick={() => setSection(entry.id)}
+                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                        isActive
+                          ? "border-primary/50 bg-primary/10"
+                          : "border-border/60 bg-background/30 hover:bg-background/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            <div className="font-medium text-foreground">
+                              {entry.title}
+                            </div>
+                          </div>
+
+                          <div className="text-xs text-muted-foreground ml-6">
+                            {entry.description}
                           </div>
                         </div>
-
-                        <div className="text-xs text-muted-foreground ml-6">
-                          {entry.description}
-                        </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card className="glass-card border-0">
-            <CardContent className="p-6">
-              <div className="space-y-1">
-                <div className="text-lg font-semibold text-foreground">
-                  {sectionConfig.title}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {sectionConfig.description}
-                </div>
-                <div className="pt-2 text-xs text-muted-foreground">
-                  {metadata?.updatedAt
-                    ? `Last updated ${new Date(metadata.updatedAt).toLocaleString()}`
-                    : "No saved updates yet."}
-                  {metadata?.updatedBy
-                    ? ` by ${metadata.updatedBy.name} (${metadata.updatedBy.role})`
-                    : ""}
-                </div>
+                    </button>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
 
-          {validationSummary.length > 0 ? (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Section validation issues</AlertTitle>
-              <AlertDescription>
-                {validationSummary
-                  .map((item) => `${item.key}: ${item.message}`)
-                  .join(" • ")}
-              </AlertDescription>
-            </Alert>
-          ) : null}
-
-          {section === "notifications" ? (
-            <Alert>
-              <Mail className="h-4 w-4" />
-              <AlertTitle>Env-managed Admin Recipients</AlertTitle>
-              <AlertDescription>
-                {settings.runtime.adminNotificationRecipients.length > 0
-                  ? settings.runtime.adminNotificationRecipients.join(", ")
-                  : "No admin recipients configured."}
-              </AlertDescription>
-            </Alert>
-          ) : null}
-
-          {section === "integrations" ? (
-            <IntegrationStatusCards
-              integrations={settings.runtime.integrationStatus}
-              isRefreshing={isRecheckingIntegrations}
-              onRefresh={handleIntegrationRecheck}
-            />
-          ) : null}
-
-          {isReadOnlyRole && (
-            <Alert>
-              <Eye className="h-4 w-4" />
-              <AlertTitle>Read-only access</AlertTitle>
-              <AlertDescription>
-                Your role ({adminUser?.role?.replace("_", " ")}) has read-only
-                access to platform settings. Contact an administrator to request
-                changes.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {section === "billing" ? (
-            <BillingSection settings={settings} />
-          ) : (
+          <div className="space-y-6">
             <Card className="glass-card border-0">
-              <CardContent className="space-y-6 p-6">
-                <SettingsSectionForm
-                  form={form}
-                  fields={fields}
-                  values={values}
-                  isSaving={isSaving}
-                  isSectionReadOnly={
-                    Boolean(metadata?.readOnly) || isReadOnlyRole
-                  }
-                  onSubmit={saveSection}
-                />
+              <CardContent className="p-6">
+                <div className="space-y-1">
+                  <div className="text-lg font-semibold text-foreground">
+                    {sectionConfig.title}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {sectionConfig.description}
+                  </div>
+                  <div className="pt-2 text-xs text-muted-foreground">
+                    {metadata?.updatedAt
+                      ? `Last updated ${new Date(metadata.updatedAt).toLocaleString()}`
+                      : "No saved updates yet."}
+                    {metadata?.updatedBy
+                      ? ` by ${metadata.updatedBy.name} (${metadata.updatedBy.role})`
+                      : ""}
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          )}
 
-          <SettingsAuditPanel entries={auditEntries} />
+            {validationSummary.length > 0 ? (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Section validation issues</AlertTitle>
+                <AlertDescription>
+                  {validationSummary
+                    .map((item) => `${item.key}: ${item.message}`)
+                    .join(" • ")}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
+            {section === "notifications" ? (
+              <Alert>
+                <Mail className="h-4 w-4" />
+                <AlertTitle>Env-managed Admin Recipients</AlertTitle>
+                <AlertDescription>
+                  {settings.runtime.adminNotificationRecipients.length > 0
+                    ? settings.runtime.adminNotificationRecipients.join(", ")
+                    : "No admin recipients configured."}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
+            {section === "integrations" ? (
+              <IntegrationStatusCards
+                integrations={settings.runtime.integrationStatus}
+                isRefreshing={isRecheckingIntegrations}
+                onRefresh={handleIntegrationRecheck}
+              />
+            ) : null}
+
+            {isReadOnlyRole && (
+              <Alert>
+                <Eye className="h-4 w-4" />
+                <AlertTitle>Read-only access</AlertTitle>
+                <AlertDescription>
+                  Your role ({adminUser?.role?.replace("_", " ")}) has read-only
+                  access to platform settings. Contact an administrator to
+                  request changes.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {section === "billing" ? (
+              <BillingSection settings={settings} />
+            ) : (
+              <Card className="glass-card border-0">
+                <CardContent className="space-y-6 p-6">
+                  <SettingsSectionForm
+                    form={form}
+                    fields={fields}
+                    values={values}
+                    isSaving={isSaving}
+                    isSectionReadOnly={
+                      Boolean(metadata?.readOnly) || isReadOnlyRole
+                    }
+                    onSubmit={saveSection}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            <SettingsAuditPanel entries={auditEntries} />
+          </div>
         </div>
-      </div>
 
-      <AlertDialog
-        open={Boolean(pendingConfirmation)}
-        onOpenChange={(open) => {
-          if (!open) setPendingConfirmation(null);
-        }}
-      >
-        <AlertDialogContent className="max-w-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm high-impact changes</AlertDialogTitle>
-            <AlertDialogDescription>
-              These settings affect live platform behavior. Review each change
-              carefully before confirming.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+        <AlertDialog
+          open={Boolean(pendingConfirmation)}
+          onOpenChange={(open) => {
+            if (!open) setPendingConfirmation(null);
+          }}
+        >
+          <AlertDialogContent className="max-w-lg">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm high-impact changes</AlertDialogTitle>
+              <AlertDialogDescription>
+                These settings affect live platform behavior. Review each change
+                carefully before confirming.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
 
-          {pendingConfirmation && (
-            <div className="space-y-2 py-1">
-              {pendingConfirmation.riskyChanges.map((fieldName) => {
-                const fieldConfig = fields.find((f) => f.name === fieldName);
-                const label = fieldConfig?.label ?? fieldName;
-                const description = fieldConfig?.description;
-                const oldVal = pendingConfirmation.currentValues[fieldName];
-                const newVal = pendingConfirmation.values[fieldName];
+            {pendingConfirmation && (
+              <div className="space-y-2 py-1">
+                {pendingConfirmation.riskyChanges.map((fieldName) => {
+                  const fieldConfig = fields.find((f) => f.name === fieldName);
+                  const label = fieldConfig?.label ?? fieldName;
+                  const description = fieldConfig?.description;
+                  const oldVal = pendingConfirmation.currentValues[fieldName];
+                  const newVal = pendingConfirmation.values[fieldName];
 
-                const fmt = (v: unknown): string => {
-                  if (v === null || v === undefined) return "—";
-                  if (typeof v === "boolean") return v ? "on" : "off";
-                  if (Array.isArray(v))
-                    return v.length === 0 ? "(empty)" : v.join(", ");
-                  return String(v);
-                };
+                  const fmt = (v: unknown): string => {
+                    if (v === null || v === undefined) return "—";
+                    if (typeof v === "boolean") return v ? "on" : "off";
+                    if (Array.isArray(v))
+                      return v.length === 0 ? "(empty)" : v.join(", ");
+                    return String(v);
+                  };
 
-                return (
-                  <div
-                    key={fieldName}
-                    className="rounded-lg border border-border/60 bg-background/60 p-3"
-                  >
-                    <p className="text-sm font-semibold text-foreground">
-                      {label}
-                    </p>
-                    <div className="mt-1.5 flex items-center gap-2 text-xs">
-                      <span className="rounded bg-destructive/10 px-1.5 py-0.5 font-mono text-destructive/80 line-through">
-                        {fmt(oldVal)}
-                      </span>
-                      <span className="text-muted-foreground">→</span>
-                      <span className="rounded bg-green-500/10 px-1.5 py-0.5 font-mono text-green-600 dark:text-green-400">
-                        {fmt(newVal)}
-                      </span>
-                    </div>
-                    {description && (
-                      <p className="mt-1.5 text-xs text-muted-foreground">
-                        {description}
+                  return (
+                    <div
+                      key={fieldName}
+                      className="rounded-lg border border-border/60 bg-background/60 p-3"
+                    >
+                      <p className="text-sm font-semibold text-foreground">
+                        {label}
                       </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                      <div className="mt-1.5 flex items-center gap-2 text-xs">
+                        <span className="rounded bg-destructive/10 px-1.5 py-0.5 font-mono text-destructive/80 line-through">
+                          {fmt(oldVal)}
+                        </span>
+                        <span className="text-muted-foreground">→</span>
+                        <span className="rounded bg-green-500/10 px-1.5 py-0.5 font-mono text-green-600 dark:text-green-400">
+                          {fmt(newVal)}
+                        </span>
+                      </div>
+                      {description && (
+                        <p className="mt-1.5 text-xs text-muted-foreground">
+                          {description}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (pendingConfirmation) {
-                  void saveSection(pendingConfirmation.values, true);
-                }
-              }}
-            >
-              Confirm changes
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (pendingConfirmation) {
+                    void saveSection(pendingConfirmation.values, true);
+                  }
+                }}
+              >
+                Confirm changes
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
