@@ -2,13 +2,16 @@
 
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@/supabase/client";
+import { ADMIN_USER_QUERY_KEY } from "@/hooks/useAdminUser";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function SignOutButton() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const handleSignOut = async () => {
     setIsLoading(true);
@@ -16,6 +19,11 @@ export function SignOutButton() {
     try {
       const supabase = createSupabaseBrowserClient();
       await supabase.auth.signOut();
+      queryClient.setQueryData(ADMIN_USER_QUERY_KEY, null);
+      queryClient.removeQueries({
+        queryKey: ADMIN_USER_QUERY_KEY,
+        exact: true,
+      });
       router.push("/auth/signin");
       router.refresh();
     } catch (error) {

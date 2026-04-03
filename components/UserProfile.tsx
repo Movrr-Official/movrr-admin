@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { User, LogOut, LifeBuoy } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { AdminRole } from "@/types/auth";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getRoleBadge } from "./UserRole";
 import { signOut } from "@/lib/auth";
+import { ADMIN_USER_QUERY_KEY } from "@/hooks/useAdminUser";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 
@@ -24,6 +26,7 @@ interface UserProfileProps {
 export function UserProfile({ email, role }: UserProfileProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const handleSupport = () => {
     window.open("mailto:admin@movrr.nl", "_blank");
@@ -33,6 +36,11 @@ export function UserProfile({ email, role }: UserProfileProps) {
     startTransition(async () => {
       try {
         await signOut();
+        queryClient.setQueryData(ADMIN_USER_QUERY_KEY, null);
+        queryClient.removeQueries({
+          queryKey: ADMIN_USER_QUERY_KEY,
+          exact: true,
+        });
         toast({
           title: "Signed out",
           description: "You have been successfully signed out.",

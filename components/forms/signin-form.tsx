@@ -1,17 +1,18 @@
 ﻿"use client";
 
-import React, { useTransition, useState } from "react";
-import Link from "next/link";
+import { useTransition, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { ImSpinner8 } from "react-icons/im";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import z from "zod";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/supabase/client";
+import { ADMIN_USER_QUERY_KEY } from "@/hooks/useAdminUser";
 import {
   Form,
   FormControl,
@@ -41,6 +42,7 @@ export function SignInForm() {
   const [error, setError] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const redirectTo = searchParams.get("redirectTo") || "/";
   const authReason = searchParams.get("reason");
 
@@ -89,6 +91,10 @@ export function SignInForm() {
         if (error) {
           setError(error.message);
         } else {
+          queryClient.removeQueries({
+            queryKey: ADMIN_USER_QUERY_KEY,
+            exact: true,
+          });
           router.push(redirectTo);
           router.refresh();
         }

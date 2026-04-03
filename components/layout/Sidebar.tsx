@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,7 @@ import { JSX, useEffect, useMemo, useState, useTransition } from "react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { signOut } from "@/lib/auth";
+import { ADMIN_USER_QUERY_KEY } from "@/hooks/useAdminUser";
 import { CountDisplay, useCounts } from "@/providers/CountProvider";
 import { UserRole } from "@/schemas";
 import { useToast } from "@/hooks/useToast";
@@ -53,6 +55,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const {
@@ -268,6 +271,11 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
     startTransition(async () => {
       try {
         await signOut();
+        queryClient.setQueryData(ADMIN_USER_QUERY_KEY, null);
+        queryClient.removeQueries({
+          queryKey: ADMIN_USER_QUERY_KEY,
+          exact: true,
+        });
         toast({
           title: "Signed out",
           description: "You have been successfully signed out.",

@@ -2,14 +2,20 @@
 
 import { getCurrentAdminUser } from "@/app/actions/admin";
 import { useQuery } from "@tanstack/react-query";
+import useShouldHideComponent from "@/hooks/useShouldHideComponent";
 
-export function useAdminUser() {
+export const ADMIN_USER_QUERY_KEY = ["adminUser"] as const;
+
+export function useAdminUser(options?: { enabled?: boolean }) {
+  const shouldHideComponent = useShouldHideComponent();
+
   return useQuery({
-    queryKey: ["adminUser"],
+    queryKey: ADMIN_USER_QUERY_KEY,
     queryFn: getCurrentAdminUser,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1,
     refetchOnWindowFocus: false,
+    enabled: !shouldHideComponent && (options?.enabled ?? true),
   });
 }
 
