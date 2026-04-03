@@ -58,7 +58,8 @@ Examples:
 - `auth.users` (Supabase-managed)
 - `user` (application profile)
 - `admin_users` (admin role membership)
-- `admin_access_logs` (access audit)
+- `user_activity` (canonical activity stream)
+- `audit_log` (security and ops audit trail)
 
 ### Rider and route execution
 

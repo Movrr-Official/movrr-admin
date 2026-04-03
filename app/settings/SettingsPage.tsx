@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { AlertCircle, Mail } from "lucide-react";
+import { AlertCircle, Eye, Mail } from "lucide-react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { BillingSection } from "@/components/settings/BillingSection";
@@ -13,6 +13,7 @@ import { SETTINGS_FIELDS, SETTINGS_SECTIONS } from "@/components/settings/config
 import { IntegrationStatusCards } from "@/components/settings/IntegrationStatusCards";
 import { SettingsAuditPanel } from "@/components/settings/SettingsAuditPanel";
 import { SettingsSectionForm } from "@/components/settings/SettingsSectionForm";
+import { useAdminUser } from "@/hooks/useAdminUser";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -38,12 +39,14 @@ import {
   campaignSettingsSchema,
   featureSettingsSchema,
   generalSettingsSchema,
+  impactSettingsSchema,
   integrationsSettingsSchema,
   notificationSettingsSchema,
   onboardingSettingsSchema,
   organizationSettingsSchema,
   privacySettingsSchema,
   rewardsSettingsSchema,
+  rideVerificationSettingsSchema,
   securitySettingsSchema,
 } from "@/schemas/settings";
 
@@ -51,6 +54,8 @@ const SECTION_SCHEMAS = {
   general: generalSettingsSchema,
   onboarding: onboardingSettingsSchema,
   rewards: rewardsSettingsSchema,
+  rideVerification: rideVerificationSettingsSchema,
+  impact: impactSettingsSchema,
   campaigns: campaignSettingsSchema,
   features: featureSettingsSchema,
   notifications: notificationSettingsSchema,
@@ -69,10 +74,14 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: settings, isLoading, error } = useSettingsData();
+  const { data: adminUser } = useAdminUser();
+  const isReadOnlyRole =
+    adminUser?.role === "compliance_officer" || adminUser?.role === "government";
   const [isSaving, setIsSaving] = useState(false);
   const [isRecheckingIntegrations, setIsRecheckingIntegrations] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<{
     values: Record<string, unknown>;
+    currentValues: Record<string, unknown>;
     riskyChanges: string[];
   } | null>(null);
 
@@ -152,6 +161,7 @@ export default function SettingsPage() {
       if (result.requiresConfirmation && result.riskyChanges?.length) {
         setPendingConfirmation({
           values: nextValues,
+          currentValues: values,
           riskyChanges: result.riskyChanges,
         });
         return;
@@ -339,6 +349,18 @@ export default function SettingsPage() {
             />
           ) : null}
 
+          {isReadOnlyRole && (
+            <Alert>
+              <Eye className="h-4 w-4" />
+              <AlertTitle>Read-only access</AlertTitle>
+              <AlertDescription>
+                Your role ({adminUser?.role?.replace("_", " ")}) has read-only
+                access to platform settings. Contact an administrator to request
+                changes.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {section === "billing" ? (
             <BillingSection settings={settings} />
           ) : (
@@ -349,7 +371,7 @@ export default function SettingsPage() {
                   fields={fields}
                   values={values}
                   isSaving={isSaving}
-                  isSectionReadOnly={Boolean(metadata?.readOnly)}
+                  isSectionReadOnly={Boolean(metadata?.readOnly) || isReadOnlyRole}
                   onSubmit={saveSection}
                 />
               </CardContent>
@@ -366,14 +388,57 @@ export default function SettingsPage() {
           if (!open) setPendingConfirmation(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm high-impact changes</AlertDialogTitle>
             <AlertDialogDescription>
-              The following settings affect live platform behavior: {pendingConfirmation?.riskyChanges.join(", ")}.
-              Confirm to persist these changes.
+              These settings affect live platform behavior. Review each change
+              carefully before confirming.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          {pendingConfirmation && (
+            <div className="space-y-2 py-1">
+              {pendingConfirmation.riskyChanges.map((fieldName) => {
+                const fieldConfig = fields.find((f) => f.name === fieldName);
+                const label = fieldConfig?.label ?? fieldName;
+                const description = fieldConfig?.description;
+                const oldVal = pendingConfirmation.currentValues[fieldName];
+                const newVal = pendingConfirmation.values[fieldName];
+
+                const fmt = (v: unknown): string => {
+                  if (v === null || v === undefined) return "—";
+                  if (typeof v === "boolean") return v ? "on" : "off";
+                  if (Array.isArray(v)) return v.length === 0 ? "(empty)" : v.join(", ");
+                  return String(v);
+                };
+
+                return (
+                  <div
+                    key={fieldName}
+                    className="rounded-lg border border-border/60 bg-background/60 p-3"
+                  >
+                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                    <div className="mt-1.5 flex items-center gap-2 text-xs">
+                      <span className="rounded bg-destructive/10 px-1.5 py-0.5 font-mono text-destructive/80 line-through">
+                        {fmt(oldVal)}
+                      </span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className="rounded bg-green-500/10 px-1.5 py-0.5 font-mono text-green-600 dark:text-green-400">
+                        {fmt(newVal)}
+                      </span>
+                    </div>
+                    {description && (
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        {description}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction

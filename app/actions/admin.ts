@@ -43,6 +43,13 @@ const rolePermissions: Record<AdminRole, string[]> = {
     "rewards:read",
     "notifications:read",
   ],
+  government: [
+    "dashboard:read",
+    "users:read",
+    "campaigns:read",
+    "rewards:read",
+    "notifications:read",
+  ],
 };
 
 /**

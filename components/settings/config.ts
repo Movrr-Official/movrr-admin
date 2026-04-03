@@ -1,9 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Activity,
   Building2,
   CreditCard,
   Database,
   Globe,
+  Leaf,
   Mail,
   Settings2,
   Shield,
@@ -46,6 +48,18 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
     title: "Rewards",
     icon: Sparkles,
     description: "Global points and rewards operating defaults.",
+  },
+  {
+    id: "rideVerification",
+    title: "Ride Verification",
+    icon: Activity,
+    description: "Movement thresholds and speed limits used to verify ride sessions.",
+  },
+  {
+    id: "impact",
+    title: "Impact & Reporting",
+    icon: Leaf,
+    description: "Distance unit and CO\u2082 savings factor for rider impact calculations.",
   },
   {
     id: "campaigns",
@@ -99,6 +113,7 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
 
 export const SETTINGS_OPTIONS = {
   riderOnboardingMode: ["open", "waitlist_only", "closed"],
+  maintenanceScope: ["global", "rewards_only", "onboarding_only", "sessions_only"],
   digestFrequency: ["off", "daily", "weekly"],
   alertRouting: ["support_only", "support_and_admin", "admin_only"],
   distanceUnit: ["km", "mi"],
@@ -122,21 +137,23 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
       name: "maintenanceMode",
       label: "Maintenance Mode",
       type: "switch",
-      description: "Blocks normal platform use for maintenance windows.",
+      description:
+        "Enables maintenance state. The mobile app blocks new ride sessions based on the scope below.",
     },
     {
-      name: "distanceUnit",
-      label: "Distance Unit",
+      name: "maintenanceScope",
+      label: "Maintenance Scope",
       type: "select",
-      options: ["km", "mi"],
-      description: "Unit used for distance display across the platform.",
+      options: ["global", "rewards_only", "onboarding_only", "sessions_only"],
+      description:
+        "Scope of the maintenance block. 'global' blocks all rider activity. 'sessions_only' blocks new rides but allows browsing.",
     },
     {
-      name: "co2KgPerKm",
-      label: "CO₂ Savings Factor (kg/km)",
-      type: "number",
-      min: 0,
-      description: "Average CO₂ saved per km cycled vs. car equivalent. Used for lifetime impact calculations.",
+      name: "maintenanceMessage",
+      label: "Maintenance Message",
+      type: "textarea",
+      description:
+        "Message displayed to riders in the mobile app when maintenance is active.",
     },
   ],
   onboarding: [
@@ -163,10 +180,29 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
     { name: "eBikeMultiplier", label: "E-Bike Multiplier", type: "number", min: 0, description: "Points multiplier for e_bike riders (default 0.9)." },
     { name: "fatBikeMultiplier", label: "Fat Bike Multiplier", type: "number", min: 0, description: "Points multiplier for fat_bike riders (default 0.75)." },
     { name: "campaignRideMultiplier", label: "Campaign Ride Multiplier", type: "number", min: 0, description: "Multiplier applied to points earned on campaign-assigned rides (default 1.5)." },
+  ],
+  rideVerification: [
+    { name: "minVerifiedMinutes", label: "Minimum Verified Minutes", type: "number", min: 0, description: "Minimum active ride duration before any points are awarded." },
     { name: "maxAllowedAverageSpeedKmh", label: "Max Allowed Average Speed (km/h)", type: "number", min: 0, description: "Rides exceeding this average speed are flagged as invalid." },
     { name: "maxAllowedPeakSpeedKmh", label: "Max Allowed Peak Speed (km/h)", type: "number", min: 0, description: "Rides exceeding this peak GPS speed are flagged as invalid." },
     { name: "minMovementDistanceMeters", label: "Min Movement Distance (meters)", type: "number", min: 0, description: "Minimum total GPS distance for a ride session to qualify for points." },
     { name: "minMovementGpsPoints", label: "Min GPS Points", type: "number", min: 0, description: "Minimum number of GPS location points required for ride verification." },
+  ],
+  impact: [
+    {
+      name: "distanceUnit",
+      label: "Distance Unit",
+      type: "select",
+      options: ["km", "mi"],
+      description: "Unit used for distance display across the platform.",
+    },
+    {
+      name: "co2KgPerKm",
+      label: "CO\u2082 Savings Factor (kg/km)",
+      type: "number",
+      min: 0,
+      description: "Average CO\u2082 saved per km cycled vs. car equivalent. Used for lifetime impact calculations.",
+    },
   ],
   campaigns: [
     { name: "defaultMultiplier", label: "Default Multiplier", type: "number", min: 0 },
@@ -211,6 +247,13 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
       label: "Alert Routing",
       type: "select",
       options: [...SETTINGS_OPTIONS.alertRouting],
+    },
+    {
+      name: "fraudAlertEmail",
+      label: "Fraud Alert Email",
+      type: "email",
+      description:
+        "Email address notified when a ride session is flagged for suspected GPS spoofing or speed fraud. Leave blank to suppress fraud alerts.",
     },
   ],
   security: [
@@ -264,6 +307,13 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
     { name: "businessAddress", label: "Business Address", type: "textarea" },
   ],
   privacy: [
+    {
+      name: "retentionLastRunAt",
+      label: "Last Retention Run",
+      type: "text",
+      readOnly: true,
+      description: "Timestamp of the last privacy retention job execution. Updated automatically by the scheduled job.",
+    },
     {
       name: "waitlistRetentionDays",
       label: "Waitlist Retention (Days)",

@@ -27,6 +27,7 @@ import {
   fetchLatestUserActivitySignalMap,
   resolveLatestIsoTimestamp,
 } from "@/lib/activitySignals";
+import { ADMIN_DASHBOARD_SESSION_AUDIT_ACTION } from "@/lib/adminAccessMonitoring";
 import {
   fetchUserActivityFeed,
   writeUserActivity,
@@ -55,46 +56,48 @@ const mapDbStatusToUi = (status: string | null | undefined) => {
   return status;
 };
 
-const createUserSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  name: z.string().min(1, "Full name is required").max(100),
-  phone: z.string().optional(),
-  role: userRoleSchema,
-  status: userStatusSchema.default("active"),
-  organization: z.string().optional(),
-  languagePreference: z.string().default("en"),
-  isVerified: z.boolean().default(false),
-  accountNotes: z.string().optional(),
-  sendWelcomeEmail: z.boolean().default(true),
-  city: z.string().optional(),
-  country: z.string().optional(),
-  allowAdvertiserBootstrap: z.boolean().optional(),
-}).superRefine((value, ctx) => {
-  if (value.role === "advertiser" && !value.allowAdvertiserBootstrap) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message:
-        "Advertiser accounts must be created from the Advertisers module.",
-      path: ["role"],
-    });
-  }
-  if (value.role === "rider") {
-    if (!value.city?.trim()) {
+const createUserSchema = z
+  .object({
+    email: z.string().email("Invalid email address"),
+    name: z.string().min(1, "Full name is required").max(100),
+    phone: z.string().optional(),
+    role: userRoleSchema,
+    status: userStatusSchema.default("active"),
+    organization: z.string().optional(),
+    languagePreference: z.string().default("en"),
+    isVerified: z.boolean().default(false),
+    accountNotes: z.string().optional(),
+    sendWelcomeEmail: z.boolean().default(true),
+    city: z.string().optional(),
+    country: z.string().optional(),
+    allowAdvertiserBootstrap: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.role === "advertiser" && !value.allowAdvertiserBootstrap) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "City is required for rider accounts",
-        path: ["city"],
+        message:
+          "Advertiser accounts must be created from the Advertisers module.",
+        path: ["role"],
       });
     }
-    if (!value.country?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Country is required for rider accounts",
-        path: ["country"],
-      });
+    if (value.role === "rider") {
+      if (!value.city?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "City is required for rider accounts",
+          path: ["city"],
+        });
+      }
+      if (!value.country?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Country is required for rider accounts",
+          path: ["country"],
+        });
+      }
     }
-  }
-});
+  });
 
 const updateUserSchema = z.object({
   id: z.string(),
@@ -125,8 +128,7 @@ const getSenderEmail = () =>
 const getRecoveryRedirectUrl = () =>
   new URL("/auth/callback?next=/auth/reset-password", APP_URL).toString();
 
-const delay = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const ADMIN_ACCESS_ROLES = new Set([
   "super_admin",
@@ -134,6 +136,7 @@ const ADMIN_ACCESS_ROLES = new Set([
   "moderator",
   "support",
   "compliance_officer",
+  "government",
 ]);
 
 const syncAdminAccessRecord = async (
@@ -219,13 +222,144 @@ type UserActivityEntry = {
   action: string;
   description: string;
   created_at: string;
-  source:
-    | "admin_access"
-    | "route"
-    | "campaign"
-    | "reward"
-    | "account";
+  source: "admin_access" | "route" | "campaign" | "reward" | "account";
 };
+
+type UserAuditExportLog = {
+  id: string;
+  action: string;
+  result?: string;
+  timestamp: string;
+  source_ip?: string;
+  user_agent?: string;
+  resource_id?: string;
+  metadata?: Record<string, unknown>;
+  performed_by: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+  affected_entity?: {
+    type: string;
+    id: string;
+    name: string;
+  };
+};
+
+const normalizeUserAuditExportLog = (
+  row: Record<string, unknown>,
+): UserAuditExportLog | null => {
+  const timestamp =
+    typeof row.timestamp === "string"
+      ? row.timestamp
+      : typeof row.created_at === "string"
+        ? row.created_at
+        : undefined;
+
+  if (!timestamp) {
+    return null;
+  }
+
+  const performedBy = (row.performed_by as
+    | UserAuditExportLog["performed_by"]
+    | undefined) ??
+    (row.performedBy as UserAuditExportLog["performed_by"] | undefined) ?? {
+      id: String(row.performed_by_id ?? row.performedById ?? ""),
+      name: String(row.performed_by_name ?? row.performedByName ?? "System"),
+      email: String(
+        row.performed_by_email ?? row.performedByEmail ?? "system@movrr.local",
+      ),
+      role: String(row.performed_by_role ?? row.performedByRole ?? "system"),
+    };
+
+  const affectedEntity =
+    (row.affected_entity as
+      | UserAuditExportLog["affected_entity"]
+      | undefined) ??
+    (row.affectedEntity as UserAuditExportLog["affected_entity"] | undefined) ??
+    undefined;
+
+  return {
+    id: String(row.id ?? crypto.randomUUID()),
+    action: String(row.action ?? "Audit event"),
+    result:
+      typeof row.result === "string"
+        ? row.result.charAt(0).toUpperCase() + row.result.slice(1).toLowerCase()
+        : undefined,
+    timestamp,
+    source_ip: (row.source_ip ?? row.sourceIp) as string | undefined,
+    user_agent: (row.user_agent ?? row.userAgent) as string | undefined,
+    resource_id: (row.resource_id ?? row.resourceId) as string | undefined,
+    metadata: (row.metadata as Record<string, unknown> | undefined) ?? {},
+    performed_by: performedBy,
+    affected_entity: affectedEntity,
+  };
+};
+
+const fetchAdminSessionAuditLogs = async (
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+  limit: number,
+): Promise<{ data: UserAuditExportLog[]; error?: string }> => {
+  const tryFetch = async (tableName: string, resourceField: string) =>
+    supabaseAdmin
+      .from(tableName)
+      .select("*")
+      .eq("action", ADMIN_DASHBOARD_SESSION_AUDIT_ACTION)
+      .eq(resourceField, userId)
+      .order("timestamp", { ascending: false })
+      .limit(limit);
+
+  const primary = await tryFetch("audit_log", "resource_id");
+  if (!primary.error) {
+    return {
+      data: (primary.data ?? [])
+        .map((row) => normalizeUserAuditExportLog(row))
+        .filter((row): row is UserAuditExportLog => Boolean(row)),
+    };
+  }
+
+  const fallback = await tryFetch("audit_logs", "resourceId");
+  if (!fallback.error) {
+    return {
+      data: (fallback.data ?? [])
+        .map((row) => normalizeUserAuditExportLog(row))
+        .filter((row): row is UserAuditExportLog => Boolean(row)),
+    };
+  }
+
+  return {
+    data: [],
+    error: primary.error?.message || fallback.error?.message,
+  };
+};
+
+const toAdminAccessTimelineEntries = (
+  logs: UserAuditExportLog[],
+): UserActivityEntry[] =>
+  logs
+    .filter((log) => Boolean(log.timestamp))
+    .map((log) => {
+      const entryPath =
+        typeof log.metadata?.entry_path === "string"
+          ? log.metadata.entry_path
+          : log.affected_entity?.name;
+      const sourceIp =
+        typeof log.metadata?.source_ip === "string"
+          ? log.metadata.source_ip
+          : log.source_ip;
+      const pathLabel = entryPath ? ` via ${entryPath}` : "";
+      const ipLabel = sourceIp ? ` from ${sourceIp}` : "";
+
+      return {
+        id: `admin-access-${log.id}`,
+        action: "Admin dashboard access",
+        description: `User successfully accessed the admin dashboard${pathLabel}${ipLabel}.`,
+        created_at: log.timestamp,
+        source: "admin_access" as const,
+      };
+    });
 
 /**
  * Server action to fetch users for the dashboard.
@@ -483,8 +617,7 @@ export async function createUser(
 
           if (recoveryError || !recoveryData?.properties?.action_link) {
             throw new Error(
-              recoveryError?.message ||
-                "Failed to generate account setup link",
+              recoveryError?.message || "Failed to generate account setup link",
             );
           }
 
@@ -693,7 +826,10 @@ export async function updateUserRole(
         role: validatedData.role,
       });
     } catch (adminAccessError) {
-      console.error("Update user role admin access sync error:", adminAccessError);
+      console.error(
+        "Update user role admin access sync error:",
+        adminAccessError,
+      );
       return {
         success: false,
         error:
@@ -782,7 +918,10 @@ export async function toggleUserStatus(
           role: mapDbRoleToUi(userRow.role),
         });
       } catch (adminAccessError) {
-        console.error("Toggle user status admin access sync error:", adminAccessError);
+        console.error(
+          "Toggle user status admin access sync error:",
+          adminAccessError,
+        );
         return {
           success: false,
           error:
@@ -834,7 +973,8 @@ export async function sendPasswordResetEmail(
     if (!allowPasswordResetLinks) {
       return {
         success: false,
-        error: "Password reset links are disabled by the current security policy.",
+        error:
+          "Password reset links are disabled by the current security policy.",
       };
     }
 
@@ -990,13 +1130,10 @@ export async function exportUserData(
           .single()
       : { data: null };
 
-    // Fetch audit logs for this user
-    const { data: auditLogs } = await supabaseAdmin
-      .from("admin_access_logs")
-      .select("*")
-      .or(`user_id.eq.${userId},email.eq.${user?.email}`)
-      .order("created_at", { ascending: false })
-      .limit(100);
+    const [activityFeed, adminSessionAuditLogs] = await Promise.all([
+      fetchUserActivityFeed(supabaseAdmin, userId, 250),
+      fetchAdminSessionAuditLogs(supabaseAdmin, userId, 100),
+    ]);
 
     // Compile all data
     const privacyPolicy = await getPlatformPrivacyPolicy();
@@ -1023,7 +1160,8 @@ export async function exportUserData(
       campaignSignups: campaignSignups || [],
       rewardTransactions: rewardTransactions || [],
       rewardBalance: rewardBalance || null,
-      auditLogs: auditLogs || [],
+      activityLogs: activityFeed.available ? activityFeed.data : [],
+      auditLogs: adminSessionAuditLogs.data,
     };
 
     return { success: true, data: exportData };
@@ -1145,7 +1283,10 @@ export async function deleteUser(
       description: `Account ${targetUser?.email ?? userId} was deleted by an administrator.`,
       related_entity_type: "user",
       related_entity_id: userId,
-      metadata: { name: targetUser?.name ?? null, email: targetUser?.email ?? null },
+      metadata: {
+        name: targetUser?.name ?? null,
+        email: targetUser?.email ?? null,
+      },
     }).catch((activityError) => {
       console.warn("Delete user activity write failed:", activityError);
     });
@@ -1211,7 +1352,11 @@ export async function getUserActivityLogs(
   try {
     await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
-    const canonicalFeed = await fetchUserActivityFeed(supabaseAdmin, userId, limit);
+    const canonicalFeed = await fetchUserActivityFeed(
+      supabaseAdmin,
+      userId,
+      limit,
+    );
     if (canonicalFeed.available && canonicalFeed.data.length > 0) {
       return { success: true, data: canonicalFeed.data };
     }
@@ -1235,19 +1380,13 @@ export async function getUserActivityLogs(
     const riderId = rider?.id ?? null;
 
     const [
-      adminAccessResult,
+      adminSessionAuditResult,
       routeResult,
       rewardResult,
       campaignAssignmentResult,
       campaignSignupResult,
     ] = await Promise.all([
-      supabaseAdmin
-        .from("admin_access_logs")
-        .select("id, action, success, created_at")
-        .or(`user_id.eq.${userId},email.eq.${profile.email}`)
-        .eq("success", true)
-        .order("created_at", { ascending: false })
-        .limit(5),
+      fetchAdminSessionAuditLogs(supabaseAdmin, userId, 5),
       riderId
         ? supabaseAdmin
             .from("rider_route")
@@ -1267,7 +1406,9 @@ export async function getUserActivityLogs(
       riderId
         ? supabaseAdmin
             .from("campaign_assignment")
-            .select("id, campaign_id, created_at, assigned_at, selected_at, confirmed_at")
+            .select(
+              "id, campaign_id, created_at, assigned_at, selected_at, confirmed_at",
+            )
             .eq("rider_id", riderId)
             .order("created_at", { ascending: false })
             .limit(10)
@@ -1283,7 +1424,7 @@ export async function getUserActivityLogs(
     ]);
 
     const errors = [
-      adminAccessResult.error,
+      adminSessionAuditResult.error,
       routeResult.error,
       rewardResult.error,
       campaignAssignmentResult.error,
@@ -1323,15 +1464,7 @@ export async function getUserActivityLogs(
       });
     }
 
-    (adminAccessResult.data ?? []).forEach((log) => {
-      entries.push({
-        id: `admin-access-${log.id}`,
-        action: "Admin dashboard access",
-        description: "User successfully accessed the admin dashboard.",
-        created_at: log.created_at,
-        source: "admin_access",
-      });
-    });
+    entries.push(...toAdminAccessTimelineEntries(adminSessionAuditResult.data));
 
     (routeResult.data ?? []).forEach((route) => {
       if (route.completed_at) {
@@ -1623,4 +1756,3 @@ export async function getUserPointsBalance(
     };
   }
 }
-

@@ -10,14 +10,41 @@ import {
   ROUTE_OPTIMIZER_TOKEN,
 } from "@/lib/env";
 
+const PUBLIC_PATHS = [
+  "/auth/signin",
+  "/auth/signup",
+  "/auth/reset-password",
+  "/auth/callback",
+  "/unauthorized",
+];
+
+const PUBLIC_API_PREFIX = "/api/public/";
+
+const DASHBOARD_ACCESS_ROLES = new Set([
+  "admin",
+  "super_admin",
+  "moderator",
+  "support",
+  "compliance_officer",
+  "government",
+]);
+
+function isPublicPath(pathname: string): boolean {
+  if (pathname.startsWith(PUBLIC_API_PREFIX)) return true;
+  return PUBLIC_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+}
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
 
+  const pathname = request.nextUrl.pathname || "";
+
   // Simple token-based access for optimizer proxy routes
   try {
-    const pathname = request.nextUrl.pathname || "";
     if (pathname.startsWith("/api/optimize")) {
       const expected = ROUTE_OPTIMIZER_TOKEN || ROUTE_OPTIMIZER_KEY || "";
       const previous =
@@ -31,11 +58,19 @@ export async function proxy(request: NextRequest) {
     }
   } catch (e) {
     console.error("proxy token check error", e);
-    const response = new NextResponse(JSON.stringify({ error: "unauthorized" }), {
-      status: 401,
-      headers: { "content-type": "application/json" },
-    });
+    const response = new NextResponse(
+      JSON.stringify({ error: "unauthorized" }),
+      {
+        status: 401,
+        headers: { "content-type": "application/json" },
+      },
+    );
     return applySecurityHeaders(response, request);
+  }
+
+  // Public routes — skip auth entirely
+  if (isPublicPath(pathname)) {
+    return applySecurityHeaders(supabaseResponse, request);
   }
 
   const supabase = createServerClient(
@@ -52,75 +87,39 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  if (request.nextUrl.pathname === "/") {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-    if (userError) {
-      console.error("Auth error:", userError);
-    }
+  if (userError) {
+    console.error("Auth error:", userError);
+  }
 
-    // Log access attempt
-    const logData = {
-      user_id: user?.id || null,
-      email: user?.email || null,
-      action: `admin_access_attempt:${request.nextUrl.pathname}`,
-      ip_address: request.headers.get("x-forwarded-for") || "unknown",
-      user_agent: request.headers.get("user-agent") || "unknown",
-      success: false,
-    };
+  if (!user) {
+    const redirectUrl = new URL("/auth/signin", request.url);
+    redirectUrl.searchParams.set("next", pathname);
+    return applySecurityHeaders(NextResponse.redirect(redirectUrl), request);
+  }
 
-    const log = async (data: any) => {
-      const cookie = request.headers.get("cookie");
-      fetch(`${request.nextUrl.origin}/api/log-admin-access`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(cookie ? { cookie } : {}),
-        },
-        body: JSON.stringify(data),
-      }).catch(() => {});
-    };
+  // Validate role against admin_users table (authoritative source)
+  const { data: adminUser, error: adminError } = await supabase
+    .from("admin_users")
+    .select("role")
+    .eq("user_id", user.id)
+    .single();
 
-    if (!user) {
-      // Log unauthorized access attempt
-      await log(logData);
+  if (adminError) {
+    console.error("Admin user query error:", adminError);
+  }
 
-      // Redirect to login with return URL
-      const redirectUrl = new URL("/auth/signin", request.url);
-      redirectUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
-      return applySecurityHeaders(NextResponse.redirect(redirectUrl), request);
-    }
+  const role = adminUser?.role as string | undefined;
 
-    // Check if user is an admin
-    const { data: adminUser, error: adminError } = await supabase
-      .from("admin_users")
-      .select("role")
-      .eq("user_id", user.id)
-      .single();
-
-    if (adminError) {
-      console.error("Admin user query error:", adminError);
-    }
-
-    if (!adminUser) {
-      // Log unauthorized access attempt
-      await log(logData);
-
-      // Redirect to unauthorized page
-      return applySecurityHeaders(
-        NextResponse.redirect(new URL("/unauthorized", request.url)),
-        request,
-      );
-    }
-
-    // Log successful access
-    await log({
-      ...logData,
-      success: true,
-    });
+  if (!adminUser || !role || !DASHBOARD_ACCESS_ROLES.has(role)) {
+    return applySecurityHeaders(
+      NextResponse.redirect(new URL("/unauthorized", request.url)),
+      request,
+    );
   }
 
   return applySecurityHeaders(supabaseResponse, request);

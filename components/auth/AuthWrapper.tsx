@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import type { UserRole } from "@/schemas";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, trackAdminDashboardSession } from "@/lib/admin";
 import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
 
 interface AuthWrapperProps {
@@ -12,8 +12,12 @@ export default async function AuthWrapper({
   children,
   allowedRoles,
 }: AuthWrapperProps) {
+  let authenticatedUser;
+
   try {
-    await requireAdminRoles(allowedRoles ?? DASHBOARD_ACCESS_ROLES);
+    authenticatedUser = await requireAdminRoles(
+      allowedRoles ?? DASHBOARD_ACCESS_ROLES,
+    );
   } catch (error) {
     if (
       error instanceof Error &&
@@ -23,6 +27,8 @@ export default async function AuthWrapper({
     }
     redirect("/unauthorized");
   }
+
+  await trackAdminDashboardSession(authenticatedUser);
 
   return <>{children}</>;
 }

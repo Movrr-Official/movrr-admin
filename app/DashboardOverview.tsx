@@ -29,6 +29,12 @@ import { useCampaignsData } from "@/hooks/useCampaignsData";
 import { useRewardStats } from "@/hooks/useRewardsData";
 import { useAuditLogsData } from "@/hooks/useAuditLogsData";
 import {
+  formatRoleLabel,
+  getAuditLogEntryPath,
+  getAuditLogSourceIp,
+  isAdminDashboardSessionLog,
+} from "@/lib/adminAccessMonitoring";
+import {
   buildCampaignPerformanceSeries,
   buildCumulativeUserSeries,
   buildPointsTrendSeries,
@@ -1259,11 +1265,18 @@ export default function DashboardOverview() {
                         className="flex flex-wrap items-center justify-between gap-2 bg-background"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            {log.action}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">
+                              {log.action}
+                            </p>
+                            {isAdminDashboardSessionLog(log) && (
+                              <Badge variant="info" className="text-[11px]">
+                                Access
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">
-                            {log.affectedEntity?.name ?? "System"} -{" "}
+                            {getAuditLogEntryPath(log)} -{" "}
                             {new Date(log.timestamp).toLocaleString(
                               DASHBOARD_LOCALE,
                               {
@@ -1273,6 +1286,14 @@ export default function DashboardOverview() {
                               },
                             )}
                           </p>
+                          {isAdminDashboardSessionLog(log) && (
+                            <p className="text-xs text-muted-foreground">
+                              {formatRoleLabel(log.performedBy?.role)}
+                              {getAuditLogSourceIp(log)
+                                ? ` · IP ${getAuditLogSourceIp(log)}`
+                                : ""}
+                            </p>
+                          )}
                         </div>
                         <Badge variant="outline" className="text-xs">
                           {log.performedBy?.name ?? "Automated"}

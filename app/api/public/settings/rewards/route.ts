@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
-import { getPublicRewardsConfig } from "@/lib/platformSettings";
+import { getPublicPlatformConfig } from "@/lib/platformSettings";
 
-// Short-lived cache: mobile fetches this at session start; 60-second revalidation
-// balances freshness against DB load.
+// Mobile fetches this at app startup to hydrate the reward engine and check
+// operational state. 60 s revalidation balances freshness against DB load.
 export const dynamic = "force-dynamic";
 export const revalidate = 60;
 
 export async function GET() {
   try {
-    const config = await getPublicRewardsConfig();
+    const platform = await getPublicPlatformConfig();
     return NextResponse.json(
-      { success: true, config },
+      { success: true, ...platform },
       {
         status: 200,
         headers: {
@@ -19,9 +19,9 @@ export async function GET() {
       },
     );
   } catch (err) {
-    console.error("[platform-config/rewards] Failed to load reward config", err);
+    console.error("[platform-config/rewards] Failed to load platform config", err);
     return NextResponse.json(
-      { success: false, error: "Failed to load reward configuration" },
+      { success: false, error: "Failed to load platform configuration" },
       { status: 500 },
     );
   }

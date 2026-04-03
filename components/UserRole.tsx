@@ -11,6 +11,7 @@ export const getRoleIcon = (role: AdminRole) => {
       return <ShieldCheck className="h-4 w-4 text-primary" />;
     case "moderator":
     case "support":
+    case "government":
       return <Shield className="h-4 w-4 text-info" />;
     default:
       return <ShieldQuestion className="h-4 w-4 text-muted-foreground" />;
@@ -40,6 +41,10 @@ export const getRoleBadge = (role: AdminRole) => {
     compliance_officer: {
       className: "bg-info/10 text-info border-info/30",
       displayName: "COMPLIANCE OFFICER",
+    },
+    government: {
+      className: "bg-warning/10 text-warning border-warning/30",
+      displayName: "GOVERNMENT",
     },
   };
 

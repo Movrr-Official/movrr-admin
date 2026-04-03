@@ -119,7 +119,7 @@ Identity bootstrap rule:
 
 - Structured logger in `lib/logger.ts` with environment-based levels.
 - `/api/health` checks database and email service availability.
-- `admin_access_logs` receives access events from `proxy.ts`.
+- Trusted dashboard-entry monitoring is session-based: first protected page access after login writes `user_activity` and `audit_log` records from the server auth layer.
 - Optimizer run/decision telemetry is persisted and queryable.
 
 ## Notable architectural constraints

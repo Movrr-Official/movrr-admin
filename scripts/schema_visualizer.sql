@@ -1,18 +1,6 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
-CREATE TABLE public.admin_access_logs (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid,
-  email text,
-  action text NOT NULL,
-  ip_address text,
-  user_agent text,
-  success boolean NOT NULL DEFAULT false,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT admin_access_logs_pkey PRIMARY KEY (id),
-  CONSTRAINT admin_access_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
-);
 CREATE TABLE public.admin_settings (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   key text NOT NULL UNIQUE,

@@ -54,7 +54,8 @@ Additional controls to maintain:
 
 ## Logging, auditing, and traceability
 
-- Access attempts are logged to `admin_access_logs`.
+- Protected dashboard entry stamps a trusted `admin_session_started_at` marker in auth metadata on first successful page access after login.
+- Dashboard access monitoring is session-based, not request-based: one durable `user_activity` record and one `audit_log` record are written per authenticated admin session.
 - Audit logs are retrievable via `audit_log`/`audit_logs` readers.
 - Optimizer request/decision events are persisted (`route_optimizer_runs`, `route_optimizer_decisions`).
 - Optimizer proxy and service propagate `trace_id` for correlation.
@@ -98,6 +99,6 @@ If compromise is suspected:
 
 1. Rotate Supabase service-role key and optimizer tokens immediately.
 2. Rotate Resend key if email layer is implicated.
-3. Review `admin_access_logs`, audit logs, and optimizer run/decision logs for suspicious activity.
+3. Review `user_activity` admin-access events, `audit_log` entries, and optimizer run/decision logs for suspicious activity.
 4. Disable high-risk mutating endpoints until scope is understood.
 5. Re-enable incrementally with monitoring.

@@ -54,43 +54,12 @@ export const fetchAuthLastSignInMap = async (
   return map;
 };
 
-export const fetchRecentAdminAccessMap = async (
-  supabaseAdmin: SupabaseAdminClient,
-  userIds: string[],
-) => {
-  if (userIds.length === 0) return new Map<string, string>();
-
-  const { data, error } = await supabaseAdmin
-    .from("admin_access_logs")
-    .select("user_id, created_at, success")
-    .in("user_id", userIds)
-    .eq("success", true)
-    .order("created_at", { ascending: false })
-    .limit(Math.max(userIds.length * 3, 50));
-
-  if (error) {
-    console.warn("Fetch recent admin access map error:", error.message);
-    return new Map<string, string>();
-  }
-
-  const latestByUser = new Map<string, string>();
-  for (const row of data ?? []) {
-    if (!row.user_id || !row.created_at || latestByUser.has(row.user_id)) {
-      continue;
-    }
-    latestByUser.set(row.user_id, row.created_at);
-  }
-
-  return latestByUser;
-};
-
 export const fetchLatestUserActivitySignalMap = async (
   supabaseAdmin: SupabaseAdminClient,
   userIds: string[],
 ) => {
-  const [userActivityMap, adminAccessMap, authSignInMap] = await Promise.all([
+  const [userActivityMap, authSignInMap] = await Promise.all([
     fetchRecentUserActivityMap(supabaseAdmin, userIds),
-    fetchRecentAdminAccessMap(supabaseAdmin, userIds),
     fetchAuthLastSignInMap(supabaseAdmin, userIds),
   ]);
 
@@ -98,7 +67,6 @@ export const fetchLatestUserActivitySignalMap = async (
   userIds.forEach((userId) => {
     const timestamp = resolveLatestIsoTimestamp(
       userActivityMap.get(userId),
-      adminAccessMap.get(userId),
       authSignInMap.get(userId),
     );
     if (timestamp) {

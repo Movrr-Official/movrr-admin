@@ -70,7 +70,7 @@ In practice, operations teams use it to:
 
 The app reads/writes Supabase tables used across operations, including:
 
-- Identity/access: `user`, `admin_users`, `admin_access_logs`.
+- Identity/access: `user`, `admin_users`, `user_activity`, `audit_log`.
 - Rider ops: `rider`, `rider_route`, `route`, `route_stop`, `route_tracking`, `impression_events`.
 - Campaign ops: `campaign`, `campaign_assignment`, `campaign_signup`, `campaign_zone`, `campaign_hot_zone`, `advertiser`.
 - Rewards: `reward_transactions`, `reward_redemptions`, `rider_reward_balance`, `reward_catalog`, `reward_partner`.
@@ -93,7 +93,6 @@ This repository does not include the rider app code, but the integration boundar
 - Server actions in `app/actions/*` perform domain CRUD and aggregation.
 - API routes in `app/api/*` provide health and optimizer proxy endpoints:
   - `/api/health`
-  - `/api/log-admin-access`
   - `/api/optimize/health`
   - `/api/optimize/route`
   - `/api/optimize/penalties`

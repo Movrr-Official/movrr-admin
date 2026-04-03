@@ -21,6 +21,8 @@ export const settingsSectionIdSchema = z.enum([
   "general",
   "onboarding",
   "rewards",
+  "rideVerification",
+  "impact",
   "campaigns",
   "features",
   "notifications",
@@ -34,6 +36,12 @@ export const settingsSectionIdSchema = z.enum([
 export type SettingsSectionId = z.infer<typeof settingsSectionIdSchema>;
 
 export const distanceUnitSchema = z.enum(["km", "mi"]);
+export const maintenanceScopeSchema = z.enum([
+  "global",
+  "rewards_only",
+  "onboarding_only",
+  "sessions_only",
+]);
 
 export const generalSettingsSchema = z.object({
   supportEmail: optionalEmailSchema.default("support@movrr.nl"),
@@ -45,10 +53,20 @@ export const generalSettingsSchema = z.object({
   defaultCurrency: nonEmptyTrimmedString.default("EUR"),
   appVersion: nonEmptyTrimmedString.default("0.1.0"),
   maintenanceMode: z.boolean().default(false),
+  maintenanceScope: maintenanceScopeSchema.default("global"),
+  maintenanceMessage: z
+    .string()
+    .trim()
+    .max(500)
+    .default(
+      "The platform is temporarily unavailable for maintenance. Please check back shortly.",
+    ),
   // Impact metrics
   distanceUnit: distanceUnitSchema.default("km"),
   co2KgPerKm: nonNegativeNumber.default(0.021),
 });
+
+export type MaintenanceScope = z.infer<typeof maintenanceScopeSchema>;
 
 export const onboardingModeSchema = z.enum(["open", "waitlist_only", "closed"]);
 
@@ -81,6 +99,28 @@ export const rewardsSettingsSchema = z.object({
   minMovementGpsPoints: nonNegativeInteger.default(3),
 });
 
+/**
+ * Ride verification thresholds — previously embedded in rewardsSettingsSchema.
+ * Now a standalone persisted section for cleaner IA. On first load, mergeSettingsRows
+ * seeds these from the rewards row if no dedicated rideVerification row exists yet.
+ */
+export const rideVerificationSettingsSchema = z.object({
+  maxAllowedAverageSpeedKmh: nonNegativeNumber.default(35),
+  maxAllowedPeakSpeedKmh: nonNegativeNumber.default(45),
+  minMovementDistanceMeters: nonNegativeNumber.default(150),
+  minMovementGpsPoints: nonNegativeInteger.default(3),
+  minVerifiedMinutes: nonNegativeInteger.default(1),
+});
+
+/**
+ * Impact & reporting — distanceUnit and CO₂ factor.
+ * Previously embedded in generalSettingsSchema. Seeded from general on first load.
+ */
+export const impactSettingsSchema = z.object({
+  distanceUnit: distanceUnitSchema.default("km"),
+  co2KgPerKm: nonNegativeNumber.default(0.021),
+});
+
 export const campaignSettingsSchema = z.object({
   defaultMultiplier: nonNegativeNumber.default(1),
   defaultDurationDays: positiveInteger.default(30),
@@ -108,6 +148,7 @@ export const notificationSettingsSchema = z.object({
   alertRouting: z
     .enum(["support_only", "support_and_admin", "admin_only"])
     .default("support_and_admin"),
+  fraudAlertEmail: optionalEmailSchema.default(""),
 });
 
 export const securitySettingsSchema = z.object({
@@ -142,6 +183,7 @@ export const privacySettingsSchema = z.object({
   exportRequestResponseHours: positiveInteger.default(72),
   deletionPolicyText: z.string().trim().max(2000).default(""),
   privacyContactEmail: optionalEmailSchema.default(""),
+  retentionLastRunAt: z.string().datetime().nullable().optional().default(null),
 });
 
 export const billingConnectionStatusSchema = z.enum([
@@ -170,6 +212,8 @@ export const adminSettingsValuesSchema = z.object({
   general: generalSettingsSchema,
   onboarding: onboardingSettingsSchema,
   rewards: rewardsSettingsSchema,
+  rideVerification: rideVerificationSettingsSchema,
+  impact: impactSettingsSchema,
   campaigns: campaignSettingsSchema,
   features: featureSettingsSchema,
   notifications: notificationSettingsSchema,
@@ -247,6 +291,8 @@ export const updateSettingsSectionInputSchema = z.object({
 
 export type GeneralSettings = z.infer<typeof generalSettingsSchema>;
 export type OnboardingSettings = z.infer<typeof onboardingSettingsSchema>;
+export type RideVerificationSettings = z.infer<typeof rideVerificationSettingsSchema>;
+export type ImpactSettings = z.infer<typeof impactSettingsSchema>;
 export type RewardsSettings = z.infer<typeof rewardsSettingsSchema>;
 export type RewardsSettingsPublicConfig = Pick<
   RewardsSettings,

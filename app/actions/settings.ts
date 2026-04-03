@@ -31,6 +31,7 @@ import {
   campaignSettingsSchema,
   featureSettingsSchema,
   generalSettingsSchema,
+  impactSettingsSchema,
   integrationsSettingsSchema,
   notificationSettingsSchema,
   onboardingModeSchema,
@@ -38,6 +39,7 @@ import {
   organizationSettingsSchema,
   privacySettingsSchema,
   rewardsSettingsSchema,
+  rideVerificationSettingsSchema,
   securitySettingsSchema,
   settingsSectionIdSchema,
 } from "@/schemas/settings";
@@ -47,6 +49,8 @@ const SETTINGS_KEYS = [
   "general",
   "onboarding",
   "rewards",
+  "rideVerification",
+  "impact",
   "campaigns",
   "features",
   "notifications",
@@ -70,6 +74,8 @@ const sectionSchemas = {
   general: generalSettingsSchema,
   onboarding: onboardingSettingsSchema,
   rewards: rewardsSettingsSchema,
+  rideVerification: rideVerificationSettingsSchema,
+  impact: impactSettingsSchema,
   campaigns: campaignSettingsSchema,
   features: featureSettingsSchema,
   notifications: notificationSettingsSchema,
@@ -103,10 +109,21 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
   },
   rewards: {
     basePointsPerMinute: 1,
-    dailyCap: 120,
+    dailyCap: 1000,
     weeklyCap: 600,
     campaignMaxRewardCap: 1000,
     minVerifiedMinutes: 1,
+  },
+  rideVerification: {
+    maxAllowedAverageSpeedKmh: 35,
+    maxAllowedPeakSpeedKmh: 45,
+    minMovementDistanceMeters: 150,
+    minMovementGpsPoints: 3,
+    minVerifiedMinutes: 1,
+  },
+  impact: {
+    distanceUnit: "km",
+    co2KgPerKm: 0.021,
   },
   campaigns: {
     defaultMultiplier: 1,
@@ -129,6 +146,7 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
     onboardingSetupNotificationsEnabled: true,
     digestFrequency: "daily",
     alertRouting: "support_and_admin",
+    fraudAlertEmail: "",
   },
   security: {
     enforceAdminMfa: false,
@@ -174,7 +192,10 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
 const RISKY_FIELDS: Partial<
   Record<SettingsSectionId, Array<{ path: string; label: string }>>
 > = {
-  general: [{ path: "maintenanceMode", label: "Maintenance mode" }],
+  general: [
+    { path: "maintenanceMode", label: "Maintenance mode" },
+    { path: "maintenanceScope", label: "Maintenance scope" },
+  ],
   onboarding: [{ path: "riderOnboardingMode", label: "Rider onboarding mode" }],
   features: [
     { path: "realtimeTrackingEnabled", label: "Realtime tracking" },
@@ -193,6 +214,8 @@ const ENV_MANAGED_FIELDS: Record<SettingsSectionId, string[]> = {
   general: ["appVersion"],
   onboarding: [],
   rewards: [],
+  rideVerification: [],
+  impact: [],
   campaigns: [],
   features: [],
   notifications: [],
@@ -907,12 +930,28 @@ export async function executePrivacyRetentionJob() {
     throw new Error(deleteAuditError.message);
   }
 
+  const executedAt = new Date().toISOString();
+
+  // Stamp retentionLastRunAt into the persisted privacy settings so the admin
+  // UI can surface when the job last ran without a separate table.
+  const currentRows = await loadSettingsRows();
+  const currentValues = mergeRows(currentRows);
+  const privacyRow = currentRows.find((r) => r.key === "privacy");
+  const nextPrivacyValue = {
+    ...(privacyRow?.value ?? currentValues.privacy),
+    retentionLastRunAt: executedAt,
+  };
+  await supabaseAdmin.from("admin_settings").upsert(
+    { key: "privacy", value: nextPrivacyValue, updated_at: executedAt },
+    { onConflict: "key" },
+  );
+
   return {
     success: true as const,
     data: {
       waitlistDeleted: staleWaitlistRows?.length ?? 0,
       auditDeleted: staleAuditRows?.length ?? 0,
-      executedAt: new Date().toISOString(),
+      executedAt,
       waitlistCutoff: waitlistCutoff.toISOString(),
       auditCutoff: auditCutoff.toISOString(),
     },

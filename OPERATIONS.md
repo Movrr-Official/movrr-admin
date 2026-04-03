@@ -126,7 +126,9 @@ Identity bootstrap scripts and constraints:
 
 ### Access and activity logs
 
-- Root access attempts/logins are posted to `admin_access_logs`.
+- A trusted admin dashboard session is stamped once per authenticated login session using `auth.users.app_metadata.admin_session_started_at`.
+- First protected dashboard entry writes a durable `user_activity` event with source `admin_access` and action `dashboard_session_started`.
+- The same session-start event is mirrored into `audit_log` for operational review and incident response.
 - Audit logs are read from `audit_log` with `audit_logs` fallback.
 
 ## Incident handling

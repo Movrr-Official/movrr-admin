@@ -18,6 +18,7 @@ export const DASHBOARD_ACCESS_ROLES = [
   "moderator",
   "support",
   "compliance_officer",
+  "government",
 ] as const satisfies readonly UserRole[];
 
 export const ADMIN_MODERATOR_ROLES = [

@@ -2,6 +2,32 @@ import { AuditLog } from "@/schemas";
 
 export const mockAuditLogs: AuditLog[] = [
   {
+    id: "8",
+    action: "Admin dashboard session started",
+    result: "Success",
+    performedBy: {
+      id: "admin3",
+      name: "Ops Supervisor",
+      email: "ops.supervisor@movrr.com",
+      role: "support",
+    },
+    affectedEntity: {
+      type: "admin_dashboard_session",
+      id: "admin3",
+      name: "/recent-activity",
+    },
+    sourceIp: "203.0.113.24",
+    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/135.0",
+    metadata: {
+      entry_path: "/recent-activity",
+      role: "support",
+      session_started_at: "2026-04-03T08:42:00Z",
+      source_ip: "203.0.113.24",
+      user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/135.0",
+    },
+    timestamp: "2026-04-03T08:42:00Z",
+  },
+  {
     id: "1",
     action: "User Role Changed",
     performedBy: {

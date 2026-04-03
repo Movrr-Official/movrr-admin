@@ -16,12 +16,14 @@ import {
   campaignSettingsSchema,
   featureSettingsSchema,
   generalSettingsSchema,
+  impactSettingsSchema,
   integrationsSettingsSchema,
   notificationSettingsSchema,
   onboardingSettingsSchema,
   organizationSettingsSchema,
   privacySettingsSchema,
   rewardsSettingsSchema,
+  rideVerificationSettingsSchema,
   securitySettingsSchema,
   type SettingsSectionId,
 } from "@/schemas/settings";
@@ -31,6 +33,8 @@ const SETTINGS_KEYS = [
   "general",
   "onboarding",
   "rewards",
+  "rideVerification",
+  "impact",
   "campaigns",
   "features",
   "notifications",
@@ -54,6 +58,8 @@ const sectionSchemas = {
   general: generalSettingsSchema,
   onboarding: onboardingSettingsSchema,
   rewards: rewardsSettingsSchema,
+  rideVerification: rideVerificationSettingsSchema,
+  impact: impactSettingsSchema,
   campaigns: campaignSettingsSchema,
   features: featureSettingsSchema,
   notifications: notificationSettingsSchema,
@@ -75,6 +81,9 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     defaultCurrency: "EUR",
     appVersion: "0.1.0",
     maintenanceMode: false,
+    maintenanceScope: "global" as const,
+    maintenanceMessage:
+      "The platform is temporarily unavailable for maintenance. Please check back shortly.",
     distanceUnit: "km" as const,
     co2KgPerKm: 0.021,
   },
@@ -102,6 +111,17 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     minMovementDistanceMeters: 150,
     minMovementGpsPoints: 3,
   },
+  rideVerification: {
+    maxAllowedAverageSpeedKmh: 35,
+    maxAllowedPeakSpeedKmh: 45,
+    minMovementDistanceMeters: 150,
+    minMovementGpsPoints: 3,
+    minVerifiedMinutes: 1,
+  },
+  impact: {
+    distanceUnit: "km" as const,
+    co2KgPerKm: 0.021,
+  },
   campaigns: {
     defaultMultiplier: 1,
     defaultDurationDays: 30,
@@ -123,6 +143,7 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     onboardingSetupNotificationsEnabled: true,
     digestFrequency: "daily",
     alertRouting: "support_and_admin",
+    fraudAlertEmail: "",
   },
   security: {
     enforceAdminMfa: true,
@@ -153,6 +174,7 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     exportRequestResponseHours: 72,
     deletionPolicyText: "",
     privacyContactEmail: "",
+    retentionLastRunAt: null,
   },
   billing: {
     connectionStatus: "not_connected",
@@ -171,6 +193,8 @@ export const ENV_MANAGED_FIELDS: Record<SettingsSectionId, string[]> = {
   general: ["appVersion"],
   onboarding: [],
   rewards: [],
+  rideVerification: [],
+  impact: [],
   campaigns: [],
   features: [],
   notifications: [],
@@ -297,6 +321,28 @@ export const mergeSettingsRows = (rows: SettingsRow[]): AdminSettingsValues => {
 
   mapLegacyRows(rows, merged);
 
+  // Migration seeding: if no dedicated rideVerification row exists yet, seed from
+  // the rewards row so admins don't see a blank section on first visit.
+  const hasRideVerificationRow = rows.some((r) => r.key === "rideVerification" && r.value);
+  if (!hasRideVerificationRow) {
+    merged.rideVerification = rideVerificationSettingsSchema.parse({
+      maxAllowedAverageSpeedKmh: merged.rewards.maxAllowedAverageSpeedKmh,
+      maxAllowedPeakSpeedKmh: merged.rewards.maxAllowedPeakSpeedKmh,
+      minMovementDistanceMeters: merged.rewards.minMovementDistanceMeters,
+      minMovementGpsPoints: merged.rewards.minMovementGpsPoints,
+      minVerifiedMinutes: merged.rewards.minVerifiedMinutes,
+    });
+  }
+
+  // Migration seeding: if no dedicated impact row exists, seed from general.
+  const hasImpactRow = rows.some((r) => r.key === "impact" && r.value);
+  if (!hasImpactRow) {
+    merged.impact = impactSettingsSchema.parse({
+      distanceUnit: merged.general.distanceUnit,
+      co2KgPerKm: merged.general.co2KgPerKm,
+    });
+  }
+
   merged.general.appVersion = DEFAULT_SETTINGS.general.appVersion;
   merged.general.supportEmail =
     merged.general.supportEmail || SUPPORT_EMAIL || "support@movrr.nl";
@@ -380,24 +426,56 @@ export async function getPlatformOperationalPolicies() {
   };
 }
 
-export async function getPublicRewardsConfig() {
+export async function getPublicPlatformConfig() {
   const values = await getResolvedPlatformSettingsValues();
   const r = values.rewards;
+  const rv = values.rideVerification;
+  const imp = values.impact;
+  const g = values.general;
+  const f = values.features;
   return {
-    basePointsPerMinute: r.basePointsPerMinute,
-    dailyCap: r.dailyCap,
-    weeklyCap: r.weeklyCap,
-    campaignMaxRewardCap: r.campaignMaxRewardCap,
-    minVerifiedMinutes: r.minVerifiedMinutes,
-    standardBikeMultiplier: r.standardBikeMultiplier,
-    eBikeMultiplier: r.eBikeMultiplier,
-    fatBikeMultiplier: r.fatBikeMultiplier,
-    campaignRideMultiplier: r.campaignRideMultiplier,
-    maxAllowedAverageSpeedKmh: r.maxAllowedAverageSpeedKmh,
-    maxAllowedPeakSpeedKmh: r.maxAllowedPeakSpeedKmh,
-    minMovementDistanceMeters: r.minMovementDistanceMeters,
-    minMovementGpsPoints: r.minMovementGpsPoints,
+    // Reward engine config — ride earning params come from rewards; verification
+    // thresholds come from rideVerification (canonical after IA restructure).
+    config: {
+      basePointsPerMinute: r.basePointsPerMinute,
+      dailyCap: r.dailyCap,
+      weeklyCap: r.weeklyCap,
+      campaignMaxRewardCap: r.campaignMaxRewardCap,
+      minVerifiedMinutes: rv.minVerifiedMinutes,
+      standardBikeMultiplier: r.standardBikeMultiplier,
+      eBikeMultiplier: r.eBikeMultiplier,
+      fatBikeMultiplier: r.fatBikeMultiplier,
+      campaignRideMultiplier: r.campaignRideMultiplier,
+      maxAllowedAverageSpeedKmh: rv.maxAllowedAverageSpeedKmh,
+      maxAllowedPeakSpeedKmh: rv.maxAllowedPeakSpeedKmh,
+      minMovementDistanceMeters: rv.minMovementDistanceMeters,
+      minMovementGpsPoints: rv.minMovementGpsPoints,
+    },
+    // Impact & reporting
+    impact: {
+      distanceUnit: imp.distanceUnit,
+      co2KgPerKm: imp.co2KgPerKm,
+    },
+    // Operational state — mobile must check before starting any session
+    operational: {
+      maintenanceMode: g.maintenanceMode,
+      maintenanceScope: g.maintenanceScope,
+      maintenanceMessage: g.maintenanceMessage,
+    },
+    // Feature flags
+    features: {
+      rewardsShopEnabled: f.rewardsShopEnabled,
+      routeTemplatesEnabled: f.routeTemplatesEnabled,
+      autoAssignmentEnabled: f.autoAssignmentEnabled,
+      realtimeTrackingEnabled: f.realtimeTrackingEnabled,
+    },
   };
+}
+
+/** @deprecated Use getPublicPlatformConfig */
+export async function getPublicRewardsConfig() {
+  const platform = await getPublicPlatformConfig();
+  return platform.config;
 }
 
 export async function getPlatformIntegrationRuntimeDefaults() {

@@ -29,14 +29,19 @@ const normalizeAuditLog = (row: Record<string, unknown>): AuditLog => {
   return {
     id: String(row.id ?? crypto.randomUUID()),
     action: row.action as AuditLog["action"],
-    result: row.result as AuditLog["result"],
+    result:
+      typeof row.result === "string"
+        ? ((row.result.charAt(0).toUpperCase() +
+            row.result.slice(1).toLowerCase()) as AuditLog["result"])
+        : undefined,
     performedBy,
     affectedEntity,
     timestamp,
-    sourceIp: row.sourceIp as string | undefined,
-    geoLocation: row.geoLocation as AuditLog["geoLocation"],
-    userAgent: row.userAgent as string | undefined,
-    resourceId: row.resourceId as string | undefined,
+    sourceIp: (row.sourceIp ?? row.source_ip) as string | undefined,
+    geoLocation: (row.geoLocation ??
+      row.geo_location) as AuditLog["geoLocation"],
+    userAgent: (row.userAgent ?? row.user_agent) as string | undefined,
+    resourceId: (row.resourceId ?? row.resource_id) as string | undefined,
     metadata: row.metadata as Record<string, unknown> | undefined,
   };
 };
@@ -64,7 +69,24 @@ const filterAuditLogs = (logs: AuditLog[], filters?: AuditFilters) => {
       const entityMatch = log.affectedEntity?.name
         ?.toLowerCase()
         .includes(query);
-      return Boolean(actionMatch || entityMatch);
+      const actorMatch =
+        log.performedBy.name.toLowerCase().includes(query) ||
+        log.performedBy.email.toLowerCase().includes(query);
+      const ipMatch = log.sourceIp?.toLowerCase().includes(query);
+      const userAgentMatch = log.userAgent?.toLowerCase().includes(query);
+      const entryPath =
+        typeof log.metadata?.entry_path === "string"
+          ? log.metadata.entry_path.toLowerCase()
+          : undefined;
+
+      return Boolean(
+        actionMatch ||
+          entityMatch ||
+          actorMatch ||
+          ipMatch ||
+          userAgentMatch ||
+          entryPath?.includes(query),
+      );
     });
   }
 
