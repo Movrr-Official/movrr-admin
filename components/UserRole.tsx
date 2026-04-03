@@ -37,6 +37,10 @@ export const getRoleBadge = (role: AdminRole) => {
       className: "bg-success/10 text-success border-success/30",
       displayName: "SUPPORT",
     },
+    compliance_officer: {
+      className: "bg-info/10 text-info border-info/30",
+      displayName: "COMPLIANCE OFFICER",
+    },
   };
 
   const config = variantConfig[role] || {
