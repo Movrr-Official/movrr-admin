@@ -36,6 +36,13 @@ const rolePermissions: Record<AdminRole, string[]> = {
     "rewards:read",
     "notifications:read",
   ],
+  compliance_officer: [
+    "dashboard:read",
+    "users:read",
+    "campaigns:read",
+    "rewards:read",
+    "notifications:read",
+  ],
 };
 
 /**
@@ -74,7 +81,9 @@ export async function checkPermission(permission: string) {
     }
 
     const permissions = rolePermissions[user.adminUser.role];
-    return permissions.includes("*") || permissions.includes(normalizedPermission);
+    return (
+      permissions.includes("*") || permissions.includes(normalizedPermission)
+    );
   } catch (error) {
     console.error("checkPermission error:", error);
     return false;
