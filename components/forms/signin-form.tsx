@@ -42,6 +42,20 @@ export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/";
+  const authReason = searchParams.get("reason");
+
+  const authReasonMessage =
+    authReason === "session_expired"
+      ? "Your admin session expired. Sign in again to continue."
+      : authReason === "mfa_required"
+        ? "Admin MFA is required by the current security policy."
+        : authReason === "session_unavailable"
+          ? "We could not establish a trusted admin session. Please sign in again."
+          : authReason === "auth_unavailable"
+            ? "Authentication services are temporarily unavailable. Please retry."
+            : authReason === "auth_required"
+              ? "Sign in to access the admin dashboard."
+              : "";
 
   const form = useForm<SignInFormData>({
     resolver: zodResolver(signInFormSchema),
@@ -90,6 +104,12 @@ export function SignInForm() {
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {authReasonMessage && !error && (
+          <Alert>
+            <AlertDescription>{authReasonMessage}</AlertDescription>
+          </Alert>
+        )}
+
         {error && (
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
@@ -214,6 +234,3 @@ export function SignInForm() {
     </Form>
   );
 }
-
-
-

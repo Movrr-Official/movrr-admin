@@ -42,21 +42,21 @@ const getTransactionTypeBadge = (type: RewardTransaction["type"]) => {
   switch (type) {
     case "awarded":
       return (
-        <Badge className="bg-green-50 text-green-700 border-green-200 font-medium dark:bg-green-950 dark:text-green-300">
+        <Badge variant="success">
           <TrendingUp className="h-3 w-3 mr-1" />
           Awarded
         </Badge>
       );
     case "redeemed":
       return (
-        <Badge className="bg-blue-50 text-blue-700 border-blue-200 font-medium dark:bg-blue-950 dark:text-blue-300">
+        <Badge variant="info">
           <TrendingDown className="h-3 w-3 mr-1" />
           Redeemed
         </Badge>
       );
     case "adjusted":
       return (
-        <Badge className="bg-amber-50 text-amber-700 border-amber-200 font-medium dark:bg-amber-950 dark:text-amber-300">
+        <Badge variant="warning">
           <Edit className="h-3 w-3 mr-1" />
           Adjusted
         </Badge>
@@ -235,7 +235,11 @@ export function RiderTransactionsDetailsDrawer({
           </div>
 
           {/* Earning breakdown — shown for ride-based transactions that have metadata */}
-          {(transaction.basePoints != null || transaction.verifiedMinutes != null || transaction.wasCapped != null || (transaction.bonusBreakdown && transaction.bonusBreakdown.length > 0)) && (
+          {(transaction.basePoints != null ||
+            transaction.verifiedMinutes != null ||
+            transaction.wasCapped != null ||
+            (transaction.bonusBreakdown &&
+              transaction.bonusBreakdown.length > 0)) && (
             <Card className="glass-card border-0">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -256,44 +260,71 @@ export function RiderTransactionsDetailsDrawer({
                       <Timer className="h-3.5 w-3.5" />
                       Verified minutes
                     </div>
-                    <span className="font-medium">{transaction.verifiedMinutes} min</span>
+                    <span className="font-medium">
+                      {transaction.verifiedMinutes} min
+                    </span>
                   </div>
                 )}
                 {transaction.basePoints != null && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Base points</span>
-                    <span className="font-medium">+{transaction.basePoints}</span>
+                    <span className="font-medium">
+                      +{transaction.basePoints}
+                    </span>
                   </div>
                 )}
-                {transaction.multiplier != null && transaction.multiplier !== 1 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Earning multiplier</span>
-                    <span className="font-medium">{transaction.multiplier}×</span>
-                  </div>
-                )}
-                {transaction.campaignBoostMultiplier != null && transaction.campaignBoostMultiplier !== 1 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Campaign boost</span>
-                    <span className="font-medium text-violet-600">{transaction.campaignBoostMultiplier}×</span>
-                  </div>
-                )}
-                {transaction.bonusBreakdown && transaction.bonusBreakdown.length > 0 && (
-                  <>
-                    <Separator />
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bonuses</p>
-                    {transaction.bonusBreakdown.map((bonus, i) => (
-                      <div key={i} className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{bonus.label ?? bonus.type}</span>
-                        <span className="font-medium text-green-600">
-                          {bonus.addedPoints != null ? `+${bonus.addedPoints}` : bonus.multiplier != null ? `${bonus.multiplier}×` : "—"}
-                        </span>
-                      </div>
-                    ))}
-                  </>
-                )}
+                {transaction.multiplier != null &&
+                  transaction.multiplier !== 1 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Earning multiplier
+                      </span>
+                      <span className="font-medium">
+                        {transaction.multiplier}×
+                      </span>
+                    </div>
+                  )}
+                {transaction.campaignBoostMultiplier != null &&
+                  transaction.campaignBoostMultiplier !== 1 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Campaign boost
+                      </span>
+                      <span className="font-medium text-violet-600">
+                        {transaction.campaignBoostMultiplier}×
+                      </span>
+                    </div>
+                  )}
+                {transaction.bonusBreakdown &&
+                  transaction.bonusBreakdown.length > 0 && (
+                    <>
+                      <Separator />
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Bonuses
+                      </p>
+                      {transaction.bonusBreakdown.map((bonus, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="text-muted-foreground">
+                            {bonus.label ?? bonus.type}
+                          </span>
+                          <span className="font-medium text-green-600">
+                            {bonus.addedPoints != null
+                              ? `+${bonus.addedPoints}`
+                              : bonus.multiplier != null
+                                ? `${bonus.multiplier}×`
+                                : "—"}
+                          </span>
+                        </div>
+                      ))}
+                    </>
+                  )}
                 {transaction.wasCapped && (
                   <div className="mt-2 rounded-lg bg-orange-50 dark:bg-orange-950 px-3 py-2 text-xs text-orange-700 dark:text-orange-300">
-                    This transaction was reduced because the rider reached their daily earning cap. Some points were not awarded.
+                    This transaction was reduced because the rider reached their
+                    daily earning cap. Some points were not awarded.
                   </div>
                 )}
               </CardContent>

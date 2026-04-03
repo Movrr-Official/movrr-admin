@@ -9,7 +9,10 @@ import { AlertCircle, Eye, Mail } from "lucide-react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { BillingSection } from "@/components/settings/BillingSection";
-import { SETTINGS_FIELDS, SETTINGS_SECTIONS } from "@/components/settings/config";
+import {
+  SETTINGS_FIELDS,
+  SETTINGS_SECTIONS,
+} from "@/components/settings/config";
 import { IntegrationStatusCards } from "@/components/settings/IntegrationStatusCards";
 import { SettingsAuditPanel } from "@/components/settings/SettingsAuditPanel";
 import { SettingsSectionForm } from "@/components/settings/SettingsSectionForm";
@@ -32,7 +35,10 @@ import {
   recheckIntegrationStatus,
   updateSettingsSection,
 } from "@/app/actions/settings";
-import { ADMIN_SETTINGS_QUERY_KEY, useSettingsData } from "@/hooks/useSettingsData";
+import {
+  ADMIN_SETTINGS_QUERY_KEY,
+  useSettingsData,
+} from "@/hooks/useSettingsData";
 import {
   type SettingsAuditEntry,
   type SettingsSectionId,
@@ -76,9 +82,11 @@ export default function SettingsPage() {
   const { data: settings, isLoading, error } = useSettingsData();
   const { data: adminUser } = useAdminUser();
   const isReadOnlyRole =
-    adminUser?.role === "compliance_officer" || adminUser?.role === "government";
+    adminUser?.role === "compliance_officer" ||
+    adminUser?.role === "government";
   const [isSaving, setIsSaving] = useState(false);
-  const [isRecheckingIntegrations, setIsRecheckingIntegrations] = useState(false);
+  const [isRecheckingIntegrations, setIsRecheckingIntegrations] =
+    useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<{
     values: Record<string, unknown>;
     currentValues: Record<string, unknown>;
@@ -115,7 +123,9 @@ export default function SettingsPage() {
     queryFn: async () => {
       const result = await getSettingsAudit(section);
       if (!result.success || !result.data) {
-        throw new Error(result.error || "Failed to load settings audit history");
+        throw new Error(
+          result.error || "Failed to load settings audit history",
+        );
       }
       return result.data;
     },
@@ -201,7 +211,9 @@ export default function SettingsPage() {
       if (!result.success) {
         throw new Error(result.error || "Failed to refresh integration checks");
       }
-      await queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_QUERY_KEY });
+      await queryClient.invalidateQueries({
+        queryKey: ADMIN_SETTINGS_QUERY_KEY,
+      });
       toast({
         title: "Integrations refreshed",
         description: "Integration health has been rechecked.",
@@ -247,7 +259,9 @@ export default function SettingsPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Unable to load settings</AlertTitle>
           <AlertDescription>
-            {error instanceof Error ? error.message : "Failed to load settings."}
+            {error instanceof Error
+              ? error.message
+              : "Failed to load settings."}
           </AlertDescription>
         </Alert>
       </div>
@@ -280,10 +294,15 @@ export default function SettingsPage() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="h-4 w-4" />
                       <div>
-                        <div className="font-medium text-foreground">{entry.title}</div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          <div className="font-medium text-foreground">
+                            {entry.title}
+                          </div>
+                        </div>
+
+                        <div className="text-xs text-muted-foreground ml-6">
                           {entry.description}
                         </div>
                       </div>
@@ -371,7 +390,9 @@ export default function SettingsPage() {
                   fields={fields}
                   values={values}
                   isSaving={isSaving}
-                  isSectionReadOnly={Boolean(metadata?.readOnly) || isReadOnlyRole}
+                  isSectionReadOnly={
+                    Boolean(metadata?.readOnly) || isReadOnlyRole
+                  }
                   onSubmit={saveSection}
                 />
               </CardContent>
@@ -409,7 +430,8 @@ export default function SettingsPage() {
                 const fmt = (v: unknown): string => {
                   if (v === null || v === undefined) return "—";
                   if (typeof v === "boolean") return v ? "on" : "off";
-                  if (Array.isArray(v)) return v.length === 0 ? "(empty)" : v.join(", ");
+                  if (Array.isArray(v))
+                    return v.length === 0 ? "(empty)" : v.join(", ");
                   return String(v);
                 };
 
@@ -418,7 +440,9 @@ export default function SettingsPage() {
                     key={fieldName}
                     className="rounded-lg border border-border/60 bg-background/60 p-3"
                   >
-                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {label}
+                    </p>
                     <div className="mt-1.5 flex items-center gap-2 text-xs">
                       <span className="rounded bg-destructive/10 px-1.5 py-0.5 font-mono text-destructive/80 line-through">
                         {fmt(oldVal)}

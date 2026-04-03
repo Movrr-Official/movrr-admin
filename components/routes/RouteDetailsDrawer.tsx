@@ -898,28 +898,28 @@ export function RouteDetailsDrawer({
     switch (status) {
       case "assigned":
         return (
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200 font-medium dark:bg-blue-950 dark:text-blue-300">
+          <Badge variant="info">
             <Calendar className="h-3 w-3 mr-1" />
             Assigned
           </Badge>
         );
       case "in-progress":
         return (
-          <Badge className="bg-amber-50 text-amber-700 border-amber-200 font-medium dark:bg-amber-950 dark:text-amber-300">
+          <Badge variant="warning">
             <Clock className="h-3 w-3 mr-1" />
             In Progress
           </Badge>
         );
       case "completed":
         return (
-          <Badge className="bg-green-50 text-green-700 border-green-200 font-medium dark:bg-green-950 dark:text-green-300">
+          <Badge variant="success">
             <CheckCircle2 className="h-3 w-3 mr-1" />
             Completed
           </Badge>
         );
       case "cancelled":
         return (
-          <Badge className="bg-red-50 text-red-700 border-red-200 font-medium dark:bg-red-950 dark:text-red-300">
+          <Badge variant="destructive">
             <XCircle className="h-3 w-3 mr-1" />
             Cancelled
           </Badge>
@@ -933,21 +933,21 @@ export function RouteDetailsDrawer({
     switch (performance) {
       case "high":
         return (
-          <Badge className="bg-green-50 text-green-700 border-green-200 font-medium dark:bg-green-950 dark:text-green-300">
+          <Badge variant="success">
             <TrendingUp className="h-3 w-3 mr-1" />
             High
           </Badge>
         );
       case "medium":
         return (
-          <Badge className="bg-amber-50 text-amber-700 border-amber-200 font-medium dark:bg-amber-950 dark:text-amber-300">
+          <Badge variant="warning">
             <AlertCircle className="h-3 w-3 mr-1" />
             Medium
           </Badge>
         );
       case "low":
         return (
-          <Badge className="bg-red-50 text-red-700 border-red-200 font-medium dark:bg-red-950 dark:text-red-300">
+          <Badge variant="destructive">
             <AlertCircle className="h-3 w-3 mr-1" />
             Low
           </Badge>
@@ -973,7 +973,7 @@ export function RouteDetailsDrawer({
                   {getStatusBadge(route.status)}
                   {getPerformanceBadge(route.performance)}
                   {route.brand && (
-                    <Badge variant="outline" className="font-medium">
+                    <Badge variant="secondary" className="font-medium">
                       {route.brand}
                     </Badge>
                   )}

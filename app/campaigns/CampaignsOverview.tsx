@@ -280,9 +280,7 @@ export default function CampaignsOverview() {
                         Destination Ride
                       </span>
                     </div>
-                    <Badge className="bg-info/10 text-info border-info/30">
-                      {destinationRideCampaigns}
-                    </Badge>
+                    <Badge variant="info">{destinationRideCampaigns}</Badge>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
                     <div className="flex items-center gap-3">
@@ -293,9 +291,7 @@ export default function CampaignsOverview() {
                         Swarm
                       </span>
                     </div>
-                    <Badge className="bg-success/10 text-success border-success/30">
-                      {swarmCampaigns}
-                    </Badge>
+                    <Badge variant="success">{swarmCampaigns}</Badge>
                   </div>
                 </div>
               </CardContent>

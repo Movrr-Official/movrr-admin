@@ -83,20 +83,33 @@ import {
 
 type WorkboardRole = "owner" | "admin" | "editor" | "viewer";
 
+const workboardBadgeBase =
+  "border-0 bg-none shadow-none backdrop-blur-0 hover:bg-inherit";
+
 const typeTone: Record<WorkboardCard["type"], string> = {
-  Engineering: "bg-slate-100 text-slate-700",
-  Operations: "bg-emerald-100 text-emerald-700",
-  Campaign: "bg-indigo-100 text-indigo-700",
-  Product: "bg-amber-100 text-amber-700",
-  Growth: "bg-purple-100 text-purple-700",
+  Engineering: `${workboardBadgeBase} bg-slate-100 text-slate-700`,
+  Operations: `${workboardBadgeBase} bg-emerald-100 text-emerald-700`,
+  Campaign: `${workboardBadgeBase} bg-indigo-100 text-indigo-700`,
+  Product: `${workboardBadgeBase} bg-amber-100 text-amber-700`,
+  Growth: `${workboardBadgeBase} bg-purple-100 text-purple-700`,
 };
 
 const priorityTone: Record<WorkboardCard["priority"], string> = {
-  Low: "bg-slate-50 text-slate-600",
-  Medium: "bg-blue-50 text-blue-600",
-  High: "bg-orange-50 text-orange-600",
-  Critical: "bg-rose-50 text-rose-600",
+  Low: `${workboardBadgeBase} bg-slate-50 text-slate-600`,
+  Medium: `${workboardBadgeBase} bg-blue-50 text-blue-600`,
+  High: `${workboardBadgeBase} bg-orange-50 text-orange-600`,
+  Critical: `${workboardBadgeBase} bg-rose-50 text-rose-600`,
 };
+
+const boardToneCount: Record<WorkboardBoard["tone"], string> = {
+  slate: `${workboardBadgeBase} bg-slate-100 text-slate-600`,
+  indigo: `${workboardBadgeBase} bg-indigo-100 text-indigo-700`,
+  emerald: `${workboardBadgeBase} bg-emerald-100 text-emerald-700`,
+  amber: `${workboardBadgeBase} bg-amber-100 text-amber-700`,
+};
+
+const workboardMetaBadge =
+  "border border-border/70 bg-background bg-none text-foreground shadow-none backdrop-blur-0";
 
 const boardTones: WorkboardBoard["tone"][] = [
   "slate",
@@ -1392,15 +1405,8 @@ export default function WorkboardPage() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          "border-0 px-2 text-[10px] font-semibold",
-                          board.tone === "slate" &&
-                            "bg-slate-100 text-slate-600",
-                          board.tone === "indigo" &&
-                            "bg-indigo-100 text-indigo-700",
-                          board.tone === "emerald" &&
-                            "bg-emerald-100 text-emerald-700",
-                          board.tone === "amber" &&
-                            "bg-amber-100 text-amber-700",
+                          "px-2 text-[10px] font-semibold",
+                          boardToneCount[board.tone],
                         )}
                       >
                         {board.items.length}
@@ -1494,7 +1500,7 @@ export default function WorkboardPage() {
                             <Badge
                               variant="outline"
                               className={cn(
-                                "border-0 text-[10px]",
+                                "text-[10px]",
                                 priorityTone[card.priority],
                               )}
                             >
@@ -1538,7 +1544,10 @@ export default function WorkboardPage() {
                               </Avatar>
                             ))}
                           </div>
-                          <Badge variant="outline" className="text-[10px]">
+                          <Badge
+                            variant="outline"
+                            className={cn("text-[10px]", workboardMetaBadge)}
+                          >
                             {formatCardId(card)}
                           </Badge>
                         </div>

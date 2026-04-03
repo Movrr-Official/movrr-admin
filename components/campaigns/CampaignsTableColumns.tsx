@@ -33,35 +33,35 @@ const getStatusBadge = (status: string) => {
   switch (status) {
     case "active":
       return (
-        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 font-medium dark:bg-green-950 dark:text-green-300 dark:border-green-800">
+        <Badge variant="success">
           <PlayCircle className="h-3 w-3 mr-1" />
           Active
         </Badge>
       );
     case "paused":
       return (
-        <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 font-medium dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
+        <Badge variant="warning">
           <PauseCircle className="h-3 w-3 mr-1" />
           Paused
         </Badge>
       );
     case "draft":
       return (
-        <Badge className="bg-muted text-muted-foreground border-border hover:bg-muted/80 font-medium">
+        <Badge variant="secondary">
           <FileText className="h-3 w-3 mr-1" />
           Draft
         </Badge>
       );
     case "completed":
       return (
-        <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 font-medium dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
+        <Badge variant="info">
           <CheckCircle2 className="h-3 w-3 mr-1" />
           Completed
         </Badge>
       );
     case "cancelled":
       return (
-        <Badge className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 font-medium dark:bg-red-950 dark:text-red-300 dark:border-red-800">
+        <Badge variant="destructive">
           <XCircle className="h-3 w-3 mr-1" />
           Cancelled
         </Badge>
@@ -75,14 +75,14 @@ const getTypeBadge = (type: string) => {
   switch (type) {
     case "destination_ride":
       return (
-        <Badge className="bg-blue-50 text-blue-700 border-blue-200 font-medium dark:bg-blue-950 dark:text-blue-300">
+        <Badge variant="info">
           <Megaphone className="h-3 w-3 mr-1" />
           Destination Ride
         </Badge>
       );
     case "swarm":
       return (
-        <Badge className="bg-green-50 text-green-700 border-green-200 font-medium dark:bg-green-950 dark:text-green-300">
+        <Badge variant="success">
           <Target className="h-3 w-3 mr-1" />
           Swarm
         </Badge>

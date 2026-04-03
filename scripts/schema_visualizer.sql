@@ -21,6 +21,21 @@ CREATE TABLE public.admin_users (
   CONSTRAINT admin_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT admin_users_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
 );
+CREATE TABLE public.admin_dashboard_sessions (
+  auth_user_id uuid NOT NULL,
+  admin_user_id uuid NOT NULL,
+  auth_last_sign_in_at timestamp with time zone,
+  session_started_at timestamp with time zone NOT NULL,
+  last_seen_at timestamp with time zone NOT NULL,
+  session_expires_at timestamp with time zone NOT NULL,
+  entry_path text,
+  source_ip text,
+  user_agent text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT admin_dashboard_sessions_pkey PRIMARY KEY (auth_user_id),
+  CONSTRAINT admin_dashboard_sessions_admin_user_id_fkey FOREIGN KEY (admin_user_id) REFERENCES public.admin_users(id)
+);
 CREATE TABLE public.advertiser (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   industry text,

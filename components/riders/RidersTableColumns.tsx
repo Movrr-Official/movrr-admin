@@ -28,7 +28,7 @@ import {
 const getStatusBadge = (status: Rider["status"]) => {
   if (status === "active") {
     return (
-      <Badge className="bg-success/10 text-success border-success/30">
+      <Badge variant="success">
         <UserCheck className="mr-1 h-3 w-3" />
         Active
       </Badge>
@@ -36,11 +36,11 @@ const getStatusBadge = (status: Rider["status"]) => {
   }
 
   if (status === "pending") {
-    return <Badge className="bg-info/10 text-info border-info/30">Pending</Badge>;
+    return <Badge variant="info">Pending</Badge>;
   }
 
   return (
-    <Badge className="bg-warning/10 text-warning border-warning/30">
+    <Badge variant="warning">
       <UserX className="mr-1 h-3 w-3" />
       Inactive
     </Badge>
@@ -99,7 +99,9 @@ export const getRidersTableColumns = ({
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="truncate font-semibold text-foreground">{rider.name}</p>
+            <p className="truncate font-semibold text-foreground">
+              {rider.name}
+            </p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Mail className="h-3.5 w-3.5" />
               <span className="truncate">{rider.email}</span>
@@ -162,7 +164,9 @@ export const getRidersTableColumns = ({
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Bike className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs">{rider.activeCampaignsCount} campaign rides</span>
+            <span className="text-xs">
+              {rider.activeCampaignsCount} campaign rides
+            </span>
           </div>
         </div>
       );
@@ -190,12 +194,15 @@ export const getRidersTableColumns = ({
     accessorKey: "lastActivityAt",
     header: "Last Active",
     cell: ({ row }) => {
-      const lastActivityAt = row.original.lastActivityAt ?? row.original.lastActive;
+      const lastActivityAt =
+        row.original.lastActivityAt ?? row.original.lastActive;
       if (!lastActivityAt) {
         return (
           <div className="min-w-[130px]">
             <p className="text-sm font-medium text-muted-foreground">Never</p>
-            <p className="text-xs text-muted-foreground">No recorded activity</p>
+            <p className="text-xs text-muted-foreground">
+              No recorded activity
+            </p>
           </div>
         );
       }
@@ -205,7 +212,9 @@ export const getRidersTableColumns = ({
         return (
           <div className="min-w-[130px]">
             <p className="text-sm font-medium text-muted-foreground">Unknown</p>
-            <p className="text-xs text-muted-foreground">Invalid activity timestamp</p>
+            <p className="text-xs text-muted-foreground">
+              Invalid activity timestamp
+            </p>
           </div>
         );
       }

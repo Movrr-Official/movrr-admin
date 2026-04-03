@@ -26,28 +26,28 @@ export const getStatusBadge = (status: string) => {
   switch (status) {
     case "upcoming":
       return (
-        <Badge className="bg-blue-50 text-blue-700 border-blue-200 font-medium dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
+        <Badge variant="info">
           <Clock className="h-3 w-3 mr-1" />
           Upcoming
         </Badge>
       );
     case "active":
       return (
-        <Badge className="bg-green-100 text-green-700 border-green-200 font-medium dark:bg-green-950 dark:text-green-300 dark:border-green-800">
+        <Badge variant="success">
           <PlayCircle className="h-3 w-3 mr-1" />
           Active
         </Badge>
       );
     case "completed":
       return (
-        <Badge className="bg-muted text-muted-foreground border-border font-medium">
+        <Badge variant="secondary">
           <CheckCircle2 className="h-3 w-3 mr-1" />
           Completed
         </Badge>
       );
     case "cancelled":
       return (
-        <Badge className="bg-red-50 text-red-700 border-red-200 font-medium dark:bg-red-950 dark:text-red-300 dark:border-red-800">
+        <Badge variant="destructive">
           <XCircle className="h-3 w-3 mr-1" />
           Cancelled
         </Badge>
@@ -60,23 +60,11 @@ export const getStatusBadge = (status: string) => {
 export const getDifficultyBadge = (difficulty: string) => {
   switch (difficulty) {
     case "easy":
-      return (
-        <Badge className="bg-green-50 text-green-700 border-green-200 font-medium dark:bg-green-950 dark:text-green-300">
-          Easy
-        </Badge>
-      );
+      return <Badge variant="success">Easy</Badge>;
     case "moderate":
-      return (
-        <Badge className="bg-amber-50 text-amber-700 border-amber-200 font-medium dark:bg-amber-950 dark:text-amber-300">
-          Moderate
-        </Badge>
-      );
+      return <Badge variant="warning">Moderate</Badge>;
     case "challenging":
-      return (
-        <Badge className="bg-red-50 text-red-700 border-red-200 font-medium dark:bg-red-950 dark:text-red-300">
-          Challenging
-        </Badge>
-      );
+      return <Badge variant="destructive">Challenging</Badge>;
     default:
       return <Badge variant="secondary">{difficulty}</Badge>;
   }

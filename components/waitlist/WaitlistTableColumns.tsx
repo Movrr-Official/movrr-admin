@@ -22,7 +22,7 @@ const getBikeOwnershipBadge = (ownership: string) => {
   switch (ownership) {
     case "yes":
       return (
-        <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 font-medium">
+        <Badge variant="default">
           <Bike className="h-3 w-3 mr-1" />
           Owns Bike
         </Badge>
@@ -37,14 +37,7 @@ const getBikeOwnershipBadge = (ownership: string) => {
         </Badge>
       );
     case "planning":
-      return (
-        <Badge
-          variant="outline"
-          className="bg-info/10 text-info border-info/30 hover:bg-info/20 font-medium"
-        >
-          Planning to Get
-        </Badge>
-      );
+      return <Badge variant="info">Planning to Get</Badge>;
     default:
       return <Badge variant="secondary">{ownership}</Badge>;
   }
@@ -85,14 +78,7 @@ export const getWaitlistTableColumns = ({
   {
     accessorKey: "city",
     header: "City",
-    cell: ({ row }) => (
-      <Badge
-        variant="outline"
-        className="bg-info/10 text-info border-info/30 font-medium"
-      >
-        {row.getValue("city")}
-      </Badge>
-    ),
+    cell: ({ row }) => <Badge variant="info">{row.getValue("city")}</Badge>,
   },
   {
     accessorKey: "bike_ownership",
@@ -107,27 +93,21 @@ export const getWaitlistTableColumns = ({
       switch (status) {
         case "approved":
           return (
-            <Badge className="bg-success/10 text-success border-success/30 hover:bg-success/20 font-medium">
+            <Badge variant="success">
               <CheckCircle className="h-3 w-3 mr-1" />
               Approved
             </Badge>
           );
         case "pending":
           return (
-            <Badge
-              variant="outline"
-              className="bg-warning/10 text-warning border-warning/30 hover:bg-warning/20 font-medium"
-            >
+            <Badge variant="warning">
               <Clock className="h-3 w-3 mr-1" />
               Pending
             </Badge>
           );
         case "rejected":
           return (
-            <Badge
-              variant="outline"
-              className="bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/20 font-medium"
-            >
+            <Badge variant="destructive">
               <AlertCircle className="h-3 w-3 mr-1" />
               Rejected
             </Badge>

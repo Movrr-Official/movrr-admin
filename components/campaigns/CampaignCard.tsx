@@ -44,21 +44,31 @@ export function CampaignCard({
   onDelete,
   onDuplicate,
 }: CampaignCardProps) {
-  // Map status to badge colors
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800";
+        return "success" as const;
       case "paused":
-        return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800";
+        return "warning" as const;
       case "completed":
-        return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800";
+        return "info" as const;
       case "cancelled":
-        return "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800";
+        return "destructive" as const;
       case "draft":
-        return "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-950 dark:text-gray-300 dark:border-gray-800";
+        return "secondary" as const;
       default:
-        return "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-950 dark:text-gray-300 dark:border-gray-800";
+        return "secondary" as const;
+    }
+  };
+
+  const getTypeVariant = (type: string) => {
+    switch (type) {
+      case "destination_ride":
+        return "info" as const;
+      case "swarm":
+        return "success" as const;
+      default:
+        return "secondary" as const;
     }
   };
 
@@ -134,14 +144,14 @@ export function CampaignCard({
             </p>
           )}
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge
-              variant="outline"
-              className={getStatusColor(campaign.status)}
-            >
+            <Badge variant={getStatusVariant(campaign.status)}>
               {campaign.status.charAt(0).toUpperCase() +
                 campaign.status.slice(1)}
             </Badge>
-            <Badge variant="outline" className="text-xs">
+            <Badge
+              variant={getTypeVariant(campaign.campaignType)}
+              className="text-xs"
+            >
               {campaign.campaignType}
             </Badge>
           </div>

@@ -1,4 +1,4 @@
-"use server";
+import "server-only";
 
 import { createSupabaseServerClient } from "./supabase-server";
 import { createSupabaseAdminClient } from "./supabase-admin";
@@ -27,6 +27,44 @@ const VALID_ADMIN_ROLES: AdminRole[] = [
 ];
 
 const EXCLUDED_PATHS = ["/auth", "/unauthorized"] as const;
+const ADMIN_SESSION_BOOTSTRAP_GRACE_MS = 2 * 60_000;
+
+export type AdminAuthErrorCode =
+  | "UNAUTHENTICATED"
+  | "NOT_ADMIN"
+  | "INVALID_ADMIN_ROLE"
+  | "MFA_REQUIRED"
+  | "SESSION_EXPIRED"
+  | "SESSION_BOOTSTRAP_REQUIRED"
+  | "SESSION_BOOTSTRAP_FAILED"
+  | "NOT_AUTHORIZED"
+  | "AUTH_INTERNAL_ERROR";
+
+export class AdminAuthError extends Error {
+  constructor(
+    public readonly code: AdminAuthErrorCode,
+    message: string,
+    public readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = "AdminAuthError";
+  }
+}
+
+export const isAdminAuthError = (value: unknown): value is AdminAuthError =>
+  value instanceof AdminAuthError;
+
+type AdminDashboardSessionRow = {
+  auth_user_id: string;
+  admin_user_id: string;
+  auth_last_sign_in_at: string | null;
+  session_started_at: string;
+  last_seen_at: string;
+  session_expires_at: string;
+  entry_path: string | null;
+  source_ip: string | null;
+  user_agent: string | null;
+};
 
 const parseTimestamp = (value?: string | null) => {
   if (typeof value !== "string" || !value.trim()) return null;
@@ -79,43 +117,77 @@ const shouldResolveRoleForPath = (pathname?: string) => {
   return !EXCLUDED_PATHS.some((path) => pathname.startsWith(path));
 };
 
-const resolveTrustedAdminSessionStartedAt = (authUser: {
-  app_metadata?: Record<string, unknown>;
-  user_metadata?: Record<string, unknown>;
-}) => {
-  const candidates = [
-    authUser.app_metadata?.admin_session_started_at,
-    authUser.user_metadata?.admin_session_started_at,
-  ];
-
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string" || !candidate.trim()) continue;
-    const timestamp = new Date(candidate).getTime();
-    if (!Number.isNaN(timestamp)) {
-      return timestamp;
-    }
+const isWithinBootstrapGraceWindow = (lastSignInAt: number | null) => {
+  if (lastSignInAt === null) {
+    return false;
   }
 
-  return null;
+  return Date.now() - lastSignInAt <= ADMIN_SESSION_BOOTSTRAP_GRACE_MS;
 };
 
-const shouldStartTrackedAdminSession = (authUser: {
+const timestampsMatchWithinSkew = (
+  left?: string | null,
+  right?: string | null,
+) => {
+  const leftTimestamp = parseTimestamp(left);
+  const rightTimestamp = parseTimestamp(right);
+
+  if (leftTimestamp === null || rightTimestamp === null) {
+    return false;
+  }
+
+  return Math.abs(leftTimestamp - rightTimestamp) <= 1000;
+};
+
+const fetchActiveAdminDashboardSession = async (authUserId: string) => {
+  const supabaseAdmin = createSupabaseAdminClient();
+  const { data, error } = await supabaseAdmin
+    .from("admin_dashboard_sessions")
+    .select(
+      "auth_user_id, admin_user_id, auth_last_sign_in_at, session_started_at, last_seen_at, session_expires_at, entry_path, source_ip, user_agent",
+    )
+    .eq("auth_user_id", authUserId)
+    .maybeSingle<AdminDashboardSessionRow>();
+
+  if (error) {
+    throw new AdminAuthError(
+      "AUTH_INTERNAL_ERROR",
+      "Unable to validate the current admin session.",
+      error,
+    );
+  }
+
+  return data;
+};
+
+const resolveTrustedAdminSession = async (authUser: {
+  id: string;
   last_sign_in_at?: string | null;
-  app_metadata?: Record<string, unknown>;
-  user_metadata?: Record<string, unknown>;
 }) => {
-  const trustedSessionStartedAt = resolveTrustedAdminSessionStartedAt(authUser);
+  const activeSession = await fetchActiveAdminDashboardSession(authUser.id);
 
-  if (trustedSessionStartedAt === null) {
-    return true;
+  if (!activeSession) {
+    return null;
   }
 
-  const lastSignInAt = parseTimestamp(authUser.last_sign_in_at);
-  if (lastSignInAt !== null && trustedSessionStartedAt + 1000 < lastSignInAt) {
-    return true;
+  if (
+    !timestampsMatchWithinSkew(
+      activeSession.auth_last_sign_in_at,
+      authUser.last_sign_in_at,
+    )
+  ) {
+    return null;
   }
 
-  return false;
+  return activeSession;
+};
+
+const shouldStartTrackedAdminSession = async (authUser: {
+  id: string;
+  last_sign_in_at?: string | null;
+}) => {
+  const trustedSession = await resolveTrustedAdminSession(authUser);
+  return trustedSession === null;
 };
 
 const resolveAdminDisplayName = (authUser: {
@@ -131,16 +203,22 @@ const resolveAdminDisplayName = (authUser: {
 };
 
 const enforceSecurityPolicy = async (authUser: {
+  id: string;
   last_sign_in_at?: string | null;
   app_metadata?: Record<string, unknown>;
   user_metadata?: Record<string, unknown>;
 }) => {
   const policy = await getPlatformSecurityPolicy();
-  const trustedSessionStartedAt = resolveTrustedAdminSessionStartedAt(authUser);
+  const trustedSession = await resolveTrustedAdminSession(authUser);
+  const lastSignInAt = parseTimestamp(authUser.last_sign_in_at);
   const ageMinutes =
-    trustedSessionStartedAt === null
+    trustedSession === null
       ? null
-      : Math.max(0, (Date.now() - trustedSessionStartedAt) / 60_000);
+      : Math.max(
+          0,
+          (Date.now() - new Date(trustedSession.session_started_at).getTime()) /
+            60_000,
+        );
   const aal =
     typeof authUser.app_metadata?.aal === "string"
       ? authUser.app_metadata.aal
@@ -149,15 +227,34 @@ const enforceSecurityPolicy = async (authUser: {
         : undefined;
 
   if (policy.enforceAdminMfa && aal && aal !== "aal2") {
-    throw new Error("Admin MFA is required by the current security policy.");
+    throw new AdminAuthError(
+      "MFA_REQUIRED",
+      "Admin MFA is required by the current security policy.",
+    );
   }
 
-  // Do not treat auth.users.last_sign_in_at as an active admin-session timer.
-  // It is not a reliable signal for server-rendered dashboard requests and can
-  // incorrectly expire valid sessions. Enforce timeout only when a dedicated,
-  // trusted admin-session start marker exists.
+  if (trustedSession === null) {
+    if (isWithinBootstrapGraceWindow(lastSignInAt)) {
+      return {
+        policy,
+        sessionState: {
+          ageMinutes: null,
+          aal,
+          timeoutEnforced: false,
+          bootstrapPending: true,
+        },
+      };
+    }
+
+    throw new AdminAuthError(
+      "SESSION_BOOTSTRAP_REQUIRED",
+      "Admin session has expired under the current security policy.",
+    );
+  }
+
   if (ageMinutes !== null && ageMinutes > policy.adminSessionTimeoutMinutes) {
-    throw new Error(
+    throw new AdminAuthError(
+      "SESSION_EXPIRED",
       "Admin session has expired under the current security policy.",
     );
   }
@@ -167,7 +264,8 @@ const enforceSecurityPolicy = async (authUser: {
     sessionState: {
       ageMinutes,
       aal,
-      timeoutEnforced: trustedSessionStartedAt !== null,
+      timeoutEnforced: true,
+      bootstrapPending: false,
     },
   };
 };
@@ -195,7 +293,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
       .single();
 
     if (adminError || !adminRow) {
-      return null;
+      throw new AdminAuthError("NOT_ADMIN", "Not authorized", adminError);
     }
 
     // Validate role
@@ -203,8 +301,11 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
     const isValidRole = VALID_ADMIN_ROLES.includes(role);
 
     if (!isValidRole) {
-      console.warn(`Invalid admin role: ${role} for user ${authUser.id}`);
-      return null;
+      logger.warn("Invalid admin role found for authenticated user", {
+        userId: authUser.id,
+        role,
+      });
+      throw new AdminAuthError("INVALID_ADMIN_ROLE", "Not authorized");
     }
 
     await enforceSecurityPolicy(authUser);
@@ -217,8 +318,16 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
       } as AdminUser,
     };
   } catch (error) {
-    console.error("getAuthenticatedUser error:", error);
-    return null;
+    if (isAdminAuthError(error)) {
+      throw error;
+    }
+
+    logger.error("getAuthenticatedUser error", error);
+    throw new AdminAuthError(
+      "AUTH_INTERNAL_ERROR",
+      "Authentication service unavailable.",
+      error,
+    );
   }
 }
 
@@ -229,7 +338,7 @@ export async function requireAdmin(): Promise<AuthenticatedUser> {
   const user = await getAuthenticatedUser();
 
   if (!user) {
-    throw new Error("Authentication required");
+    throw new AdminAuthError("UNAUTHENTICATED", "Authentication required");
   }
 
   return user;
@@ -241,7 +350,7 @@ export async function requireAdminRoles(
   const user = await requireAdmin();
 
   if (!allowedRoles.includes(user.adminUser.role)) {
-    throw new Error("Not authorized");
+    throw new AdminAuthError("NOT_AUTHORIZED", "Not authorized");
   }
 
   return user;
@@ -250,12 +359,16 @@ export async function requireAdminRoles(
 export async function trackAdminDashboardSession(
   user: AuthenticatedUser,
 ): Promise<void> {
-  if (!shouldStartTrackedAdminSession(user.authUser)) {
+  if (!(await shouldStartTrackedAdminSession(user.authUser))) {
     return;
   }
 
   const requestContext = await resolveRequestContext();
   const sessionStartedAt = new Date().toISOString();
+  const policy = await getPlatformSecurityPolicy();
+  const sessionExpiresAt = new Date(
+    Date.now() + policy.adminSessionTimeoutMinutes * 60_000,
+  ).toISOString();
   const supabaseAdmin = createSupabaseAdminClient();
   const performedBy = {
     id: user.authUser.id,
@@ -264,29 +377,34 @@ export async function trackAdminDashboardSession(
     role: user.adminUser.role,
   };
 
-  const { error: metadataError } =
-    await supabaseAdmin.auth.admin.updateUserById(user.authUser.id, {
-      app_metadata: {
-        ...(user.authUser.app_metadata ?? {}),
-        admin_session_started_at: sessionStartedAt,
-        role: user.adminUser.role,
-      },
-      user_metadata: {
-        ...(user.authUser.user_metadata ?? {}),
-        admin_session_started_at: sessionStartedAt,
-      },
-    });
-
-  if (metadataError) {
-    logger.error(
-      "Failed to stamp admin dashboard session start",
-      metadataError,
+  const { error: sessionError } = await supabaseAdmin
+    .from("admin_dashboard_sessions")
+    .upsert(
       {
-        userId: user.authUser.id,
-        pathname: requestContext.pathname,
+        auth_user_id: user.authUser.id,
+        admin_user_id: user.adminUser.id,
+        auth_last_sign_in_at: user.authUser.last_sign_in_at ?? null,
+        session_started_at: sessionStartedAt,
+        last_seen_at: sessionStartedAt,
+        session_expires_at: sessionExpiresAt,
+        entry_path: requestContext.pathname ?? "/",
+        source_ip: requestContext.sourceIp,
+        user_agent: requestContext.userAgent,
+        updated_at: sessionStartedAt,
       },
+      { onConflict: "auth_user_id" },
     );
-    return;
+
+  if (sessionError) {
+    logger.error("Failed to persist admin dashboard session", sessionError, {
+      userId: user.authUser.id,
+      pathname: requestContext.pathname,
+    });
+    throw new AdminAuthError(
+      "SESSION_BOOTSTRAP_FAILED",
+      "Unable to establish a trusted admin session.",
+      sessionError,
+    );
   }
 
   const metadata = {

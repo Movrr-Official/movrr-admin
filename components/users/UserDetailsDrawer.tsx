@@ -4,7 +4,29 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X, Mail, Phone, Calendar, Clock, Shield, UserCheck, UserX, Building2, Bike, Edit, KeyRound, Save, Loader2, Download, Route, Megaphone, Gift, Coins, FileText, History } from "lucide-react";
+import {
+  X,
+  Mail,
+  Phone,
+  Calendar,
+  Clock,
+  Shield,
+  UserCheck,
+  UserX,
+  Building2,
+  Bike,
+  Edit,
+  KeyRound,
+  Save,
+  Loader2,
+  Download,
+  Route,
+  Megaphone,
+  Gift,
+  Coins,
+  FileText,
+  History,
+} from "lucide-react";
 import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
@@ -40,7 +62,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { User, userRoleSchema, userStatusSchema } from "@/schemas";
 import { CopyButton } from "@/components/CopyButton";
 import { useToast } from "@/hooks/useToast";
-import { updateUser, sendPasswordResetEmail, exportUserData, getUserActivityLogs, getUserRoutes, getUserCampaigns, getUserRewardTransactions, getUserPointsBalance } from "@/app/actions/users";
+import {
+  updateUser,
+  sendPasswordResetEmail,
+  exportUserData,
+  getUserActivityLogs,
+  getUserRoutes,
+  getUserCampaigns,
+  getUserRewardTransactions,
+  getUserPointsBalance,
+} from "@/app/actions/users";
 import { exportToJSON } from "@/lib/export";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -73,7 +104,8 @@ export function UserDetailsDrawer({
 }: UserDetailsDrawerProps) {
   const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [showResetPasswordConfirmation, setShowResetPasswordConfirmation] = useState(false);
+  const [showResetPasswordConfirmation, setShowResetPasswordConfirmation] =
+    useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [isExportingData, setIsExportingData] = useState(false);
@@ -159,13 +191,19 @@ export function UserDetailsDrawer({
 
         if (!isMounted) return;
 
-        setActivityLogs(activityResult.success ? (activityResult.data ?? []) : []);
+        setActivityLogs(
+          activityResult.success ? (activityResult.data ?? []) : [],
+        );
         setRoutes(routesResult.success ? (routesResult.data ?? []) : []);
-        setCampaigns(campaignsResult.success ? (campaignsResult.data ?? []) : []);
+        setCampaigns(
+          campaignsResult.success ? (campaignsResult.data ?? []) : [],
+        );
         setRewardTransactions(
           rewardsResult.success ? (rewardsResult.data ?? []) : [],
         );
-        setPointsBalance(pointsResult.success ? (pointsResult.data ?? null) : null);
+        setPointsBalance(
+          pointsResult.success ? (pointsResult.data ?? null) : null,
+        );
       } catch (error) {
         console.error("Load user additional data error:", error);
         if (!isMounted) return;
@@ -301,21 +339,21 @@ export function UserDetailsDrawer({
       case "admin":
       case "super_admin":
         return (
-          <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300">
+          <Badge variant="warning">
             <Shield className="h-3 w-3 mr-1" />
             {role === "super_admin" ? "Super Admin" : "Admin"}
           </Badge>
         );
       case "advertiser":
         return (
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300">
+          <Badge variant="info">
             <Building2 className="h-3 w-3 mr-1" />
             Advertiser
           </Badge>
         );
       case "rider":
         return (
-          <Badge className="bg-primary/10 text-primary border-primary/20">
+          <Badge variant="default">
             <Bike className="h-3 w-3 mr-1" />
             Rider
           </Badge>
@@ -329,21 +367,21 @@ export function UserDetailsDrawer({
     switch (status) {
       case "active":
         return (
-          <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300">
+          <Badge variant="success">
             <UserCheck className="h-3 w-3 mr-1" />
             Active
           </Badge>
         );
       case "inactive":
         return (
-          <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300">
+          <Badge variant="warning">
             <UserX className="h-3 w-3 mr-1" />
             Inactive
           </Badge>
         );
       case "pending":
         return (
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300">
+          <Badge variant="info">
             <Clock className="h-3 w-3 mr-1" />
             Pending
           </Badge>
@@ -359,7 +397,9 @@ export function UserDetailsDrawer({
         <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
           <DrawerHeader className="px-6 py-4 border-b glass-card border-0">
             <div className="flex items-center justify-between">
-              <DrawerTitle className="text-2xl font-bold">User Details</DrawerTitle>
+              <DrawerTitle className="text-2xl font-bold">
+                User Details
+              </DrawerTitle>
               <DrawerClose className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-muted transition-colors">
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
@@ -384,14 +424,19 @@ export function UserDetailsDrawer({
               <div className="flex-1">
                 {isEditMode ? (
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+                    <form
+                      onSubmit={form.handleSubmit(handleSave)}
+                      className="space-y-4"
+                    >
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-semibold">Full Name *</FormLabel>
+                              <FormLabel className="text-sm font-semibold">
+                                Full Name *
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="John Doe"
@@ -408,7 +453,9 @@ export function UserDetailsDrawer({
                           name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-semibold">Email *</FormLabel>
+                              <FormLabel className="text-sm font-semibold">
+                                Email *
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   type="email"
@@ -426,7 +473,9 @@ export function UserDetailsDrawer({
                           name="phone"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-semibold">Phone</FormLabel>
+                              <FormLabel className="text-sm font-semibold">
+                                Phone
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   type="tel"
@@ -444,7 +493,9 @@ export function UserDetailsDrawer({
                           name="organization"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-semibold">Organization</FormLabel>
+                              <FormLabel className="text-sm font-semibold">
+                                Organization
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="Company Name"
@@ -461,7 +512,9 @@ export function UserDetailsDrawer({
                           name="role"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-semibold">Role *</FormLabel>
+                              <FormLabel className="text-sm font-semibold">
+                                Role *
+                              </FormLabel>
                               <Select
                                 onValueChange={field.onChange}
                                 value={field.value}
@@ -473,11 +526,19 @@ export function UserDetailsDrawer({
                                 </FormControl>
                                 <SelectContent>
                                   <SelectItem value="rider">Rider</SelectItem>
-                                  <SelectItem value="advertiser">Advertiser</SelectItem>
+                                  <SelectItem value="advertiser">
+                                    Advertiser
+                                  </SelectItem>
                                   <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                                  <SelectItem value="moderator">Moderator</SelectItem>
-                                  <SelectItem value="support">Support</SelectItem>
+                                  <SelectItem value="super_admin">
+                                    Super Admin
+                                  </SelectItem>
+                                  <SelectItem value="moderator">
+                                    Moderator
+                                  </SelectItem>
+                                  <SelectItem value="support">
+                                    Support
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -489,7 +550,9 @@ export function UserDetailsDrawer({
                           name="status"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-semibold">Status *</FormLabel>
+                              <FormLabel className="text-sm font-semibold">
+                                Status *
+                              </FormLabel>
                               <Select
                                 onValueChange={field.onChange}
                                 value={field.value}
@@ -501,8 +564,12 @@ export function UserDetailsDrawer({
                                 </FormControl>
                                 <SelectContent>
                                   <SelectItem value="active">Active</SelectItem>
-                                  <SelectItem value="inactive">Inactive</SelectItem>
-                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="inactive">
+                                    Inactive
+                                  </SelectItem>
+                                  <SelectItem value="pending">
+                                    Pending
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -514,7 +581,9 @@ export function UserDetailsDrawer({
                           name="languagePreference"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-semibold">Language Preference</FormLabel>
+                              <FormLabel className="text-sm font-semibold">
+                                Language Preference
+                              </FormLabel>
                               <Select
                                 onValueChange={field.onChange}
                                 value={field.value}
@@ -542,8 +611,12 @@ export function UserDetailsDrawer({
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-xl border border-border/50 bg-background/60 backdrop-blur-sm p-4">
                               <div className="space-y-0.5">
-                                <FormLabel className="text-sm font-semibold">Verified Account</FormLabel>
-                                <p className="text-xs text-muted-foreground">Mark account as verified</p>
+                                <FormLabel className="text-sm font-semibold">
+                                  Verified Account
+                                </FormLabel>
+                                <p className="text-xs text-muted-foreground">
+                                  Mark account as verified
+                                </p>
                               </div>
                               <FormControl>
                                 <Switch
@@ -560,7 +633,9 @@ export function UserDetailsDrawer({
                         name="accountNotes"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm font-semibold">Account Notes</FormLabel>
+                            <FormLabel className="text-sm font-semibold">
+                              Account Notes
+                            </FormLabel>
                             <FormControl>
                               <Textarea
                                 placeholder="Add internal notes about this user..."
@@ -577,11 +652,11 @@ export function UserDetailsDrawer({
                 ) : (
                   <>
                     <div className="flex items-center gap-3 mb-2">
-                      <h2 className="text-2xl font-bold text-foreground">{user.name}</h2>
+                      <h2 className="text-2xl font-bold text-foreground">
+                        {user.name}
+                      </h2>
                       {user.isVerified && (
-                        <Badge className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300">
-                          Verified
-                        </Badge>
+                        <Badge variant="success">Verified</Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mb-3">
@@ -616,12 +691,16 @@ export function UserDetailsDrawer({
             {!isEditMode && (
               <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-bold">Basic Information</CardTitle>
+                  <CardTitle className="text-lg font-bold">
+                    Basic Information
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">User ID</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        User ID
+                      </p>
                       <div className="flex items-center gap-2">
                         <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
                           {user.id}
@@ -630,19 +709,25 @@ export function UserDetailsDrawer({
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Organization</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Organization
+                      </p>
                       <p className="text-sm font-medium text-foreground">
                         {user.organization || "—"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Language</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Language
+                      </p>
                       <p className="text-sm font-medium text-foreground uppercase">
                         {user.languagePreference || "en"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Verified</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Verified
+                      </p>
                       <p className="text-sm font-medium text-foreground">
                         {user.isVerified ? "Yes" : "No"}
                       </p>
@@ -655,7 +740,9 @@ export function UserDetailsDrawer({
             {/* Account Activity */}
             <Card className="glass-card border-0">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-bold">Account Activity</CardTitle>
+                <CardTitle className="text-lg font-bold">
+                  Account Activity
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -664,23 +751,33 @@ export function UserDetailsDrawer({
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <p className="text-sm font-medium text-foreground">
-                        {format(new Date(user.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                        {format(
+                          new Date(user.createdAt),
+                          "MMM d, yyyy 'at' h:mm a",
+                        )}
                       </p>
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Last Active</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Last Active
+                    </p>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <p className="text-sm font-medium text-foreground">
                         {user.lastActive
-                          ? format(new Date(user.lastActive), "MMM d, yyyy 'at' h:mm a")
+                          ? format(
+                              new Date(user.lastActive),
+                              "MMM d, yyyy 'at' h:mm a",
+                            )
                           : "Never"}
                       </p>
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Last Updated</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Last Updated
+                    </p>
                     <p className="text-sm font-medium text-foreground">
                       {format(new Date(user.updatedAt), "MMM d, yyyy")}
                     </p>
@@ -693,7 +790,9 @@ export function UserDetailsDrawer({
             {!isEditMode && (
               <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-bold">Additional Information</CardTitle>
+                  <CardTitle className="text-lg font-bold">
+                    Additional Information
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="activity" className="w-full">
@@ -744,7 +843,10 @@ export function UserDetailsDrawer({
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
                                   {log.created_at
-                                    ? format(new Date(log.created_at), "MMM d, yyyy 'at' h:mm a")
+                                    ? format(
+                                        new Date(log.created_at),
+                                        "MMM d, yyyy 'at' h:mm a",
+                                      )
                                     : "Unknown date"}
                                 </p>
                               </div>
@@ -784,7 +886,10 @@ export function UserDetailsDrawer({
                               </div>
                               {route.completed_at && (
                                 <p className="text-xs text-muted-foreground">
-                                  {format(new Date(route.completed_at), "MMM d, yyyy")}
+                                  {format(
+                                    new Date(route.completed_at),
+                                    "MMM d, yyyy",
+                                  )}
                                 </p>
                               )}
                             </div>
@@ -823,7 +928,10 @@ export function UserDetailsDrawer({
                               </div>
                               {campaign.created_at && (
                                 <p className="text-xs text-muted-foreground">
-                                  {format(new Date(campaign.created_at), "MMM d, yyyy")}
+                                  {format(
+                                    new Date(campaign.created_at),
+                                    "MMM d, yyyy",
+                                  )}
                                 </p>
                               )}
                             </div>
@@ -856,7 +964,8 @@ export function UserDetailsDrawer({
                                     {transaction.type || "Transaction"}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
-                                    {transaction.description || "No description"}
+                                    {transaction.description ||
+                                      "No description"}
                                   </p>
                                 </div>
                               </div>
@@ -867,7 +976,10 @@ export function UserDetailsDrawer({
                                 </p>
                                 {transaction.created_at && (
                                   <p className="text-xs text-muted-foreground">
-                                    {format(new Date(transaction.created_at), "MMM d, yyyy")}
+                                    {format(
+                                      new Date(transaction.created_at),
+                                      "MMM d, yyyy",
+                                    )}
                                   </p>
                                 )}
                               </div>
@@ -877,7 +989,9 @@ export function UserDetailsDrawer({
                       ) : (
                         <div className="text-center py-8 text-muted-foreground">
                           <Gift className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p className="text-sm">No reward transactions found</p>
+                          <p className="text-sm">
+                            No reward transactions found
+                          </p>
                         </div>
                       )}
                     </TabsContent>
@@ -891,21 +1005,28 @@ export function UserDetailsDrawer({
                         <div className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-primary/10 rounded-lg">
-                              <p className="text-xs text-muted-foreground mb-1">Current Balance</p>
+                              <p className="text-xs text-muted-foreground mb-1">
+                                Current Balance
+                              </p>
                               <p className="text-2xl font-bold text-foreground">
                                 {pointsBalance.points_balance || 0}
                               </p>
                             </div>
                             <div className="p-4 bg-primary/10 rounded-lg">
-                              <p className="text-xs text-muted-foreground mb-1">Lifetime Earned</p>
+                              <p className="text-xs text-muted-foreground mb-1">
+                                Lifetime Earned
+                              </p>
                               <p className="text-2xl font-bold text-foreground">
                                 {pointsBalance.lifetime_points_earned || 0}
                               </p>
                             </div>
                           </div>
-                          {pointsBalance.lifetime_points_redeemed !== undefined && (
+                          {pointsBalance.lifetime_points_redeemed !==
+                            undefined && (
                             <div className="p-4 bg-muted/30 rounded-lg">
-                              <p className="text-xs text-muted-foreground mb-1">Lifetime Redeemed</p>
+                              <p className="text-xs text-muted-foreground mb-1">
+                                Lifetime Redeemed
+                              </p>
                               <p className="text-lg font-semibold text-foreground">
                                 {pointsBalance.lifetime_points_redeemed || 0}
                               </p>
@@ -928,7 +1049,9 @@ export function UserDetailsDrawer({
             {!isEditMode && user.accountNotes && (
               <Card className="glass-card border-0">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-bold">Account Notes</CardTitle>
+                  <CardTitle className="text-lg font-bold">
+                    Account Notes
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground">{user.accountNotes}</p>
@@ -944,15 +1067,19 @@ export function UserDetailsDrawer({
                     <div className="p-2 bg-amber-50 dark:bg-amber-950 rounded-lg">
                       <KeyRound className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                     </div>
-                    <CardTitle className="text-lg font-bold">Reset Password</CardTitle>
+                    <CardTitle className="text-lg font-bold">
+                      Reset Password
+                    </CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
                       This will send a password reset email to{" "}
-                      <span className="font-semibold text-foreground">{user.email}</span>.
-                      The user will receive a link to set a new password.
+                      <span className="font-semibold text-foreground">
+                        {user.email}
+                      </span>
+                      . The user will receive a link to set a new password.
                     </p>
                   </div>
 

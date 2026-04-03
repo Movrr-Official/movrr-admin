@@ -5,23 +5,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
+  "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow,filter,background-image] overflow-hidden shadow-sm backdrop-blur-[1px]",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
+          "border-primary/25 bg-gradient-to-tl from-primary via-primary to-primary/80 text-primary-foreground shadow-primary/20 [a&]:hover:from-primary/95 [a&]:hover:to-primary/75",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+          "border-secondary/20 bg-gradient-to-tl from-secondary via-secondary to-secondary/85 text-secondary-foreground shadow-black/10 [a&]:hover:from-secondary/95 [a&]:hover:to-secondary/80",
         success:
-          "border-transparent bg-success text-success-foreground [a&]:hover:bg-success/90",
-        info: "border-transparent bg-info text-info-foreground [a&]:hover:bg-info/90",
+          "border-success/25 bg-gradient-to-tl from-success via-success to-success/80 text-success-foreground shadow-success/20 [a&]:hover:from-success/95 [a&]:hover:to-success/75",
+        info: "border-info/25 bg-gradient-to-tl from-info via-info to-info/80 text-info-foreground shadow-info/20 [a&]:hover:from-info/95 [a&]:hover:to-info/75",
         warning:
-          "border-transparent bg-warning text-warning-foreground [a&]:hover:bg-warning/90",
+          "border-warning/30 bg-gradient-to-tl from-warning via-warning to-warning/80 text-warning-foreground shadow-warning/20 [a&]:hover:from-warning/95 [a&]:hover:to-warning/75",
         accent:
-          "border-transparent bg-accent-alt text-accent-alt-foreground [a&]:hover:bg-accent-alt/90",
+          "border-accent-alt/25 bg-gradient-to-tl from-accent-alt via-accent-alt to-accent-alt/80 text-accent-alt-foreground shadow-accent-alt/20 [a&]:hover:from-accent-alt/95 [a&]:hover:to-accent-alt/75",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "border-destructive/25 bg-gradient-to-tl from-destructive via-destructive to-destructive/80 text-destructive-foreground shadow-destructive/20 [a&]:hover:from-destructive/95 [a&]:hover:to-destructive/75 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
       },

@@ -37,37 +37,44 @@ const getRoleBadge = (role: string) => {
     case "admin":
     case "super_admin":
       return (
-        <Badge className="bg-warning/10 text-warning border-warning/30 hover:bg-warning/20 font-medium">
+        <Badge variant="warning">
           <Shield className="h-3 w-3 mr-1" />
           {role === "super_admin" ? "Super Admin" : "Admin"}
         </Badge>
       );
     case "advertiser":
       return (
-        <Badge className="bg-info/10 text-info border-info/30 hover:bg-info/20 font-medium">
+        <Badge variant="info">
           <Building2 className="h-3 w-3 mr-1" />
           Advertiser
         </Badge>
       );
     case "rider":
       return (
-        <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 font-medium">
+        <Badge variant="default">
           <Bike className="h-3 w-3 mr-1" />
           Rider
         </Badge>
       );
     case "moderator":
       return (
-        <Badge className="bg-accent-alt/10 text-accent-alt border-accent-alt/30 hover:bg-accent-alt/20 font-medium">
+        <Badge variant="accent">
           <Shield className="h-3 w-3 mr-1" />
           Moderator
         </Badge>
       );
     case "support":
       return (
-        <Badge className="bg-success/10 text-success border-success/30 hover:bg-success/20 font-medium">
+        <Badge variant="success">
           <Shield className="h-3 w-3 mr-1" />
           Support
+        </Badge>
+      );
+    case "government":
+      return (
+        <Badge variant="info">
+          <Shield className="h-3 w-3 mr-1" />
+          Government
         </Badge>
       );
     default:
@@ -83,27 +90,21 @@ const getStatusBadge = (status: string) => {
   switch (status) {
     case "active":
       return (
-        <Badge className="bg-success/10 text-success border-success/30 hover:bg-success/20 font-medium">
+        <Badge variant="success">
           <UserCheck className="h-3 w-3 mr-1" />
           Active
         </Badge>
       );
     case "inactive":
       return (
-        <Badge
-          variant="outline"
-          className="bg-warning/10 text-warning border-warning/30 hover:bg-warning/20 font-medium"
-        >
+        <Badge variant="warning">
           <UserX className="h-3 w-3 mr-1" />
           Inactive
         </Badge>
       );
     case "pending":
       return (
-        <Badge
-          variant="outline"
-          className="bg-info/10 text-info border-info/30 hover:bg-info/20 font-medium"
-        >
+        <Badge variant="info">
           <Clock className="h-3 w-3 mr-1" />
           Pending
         </Badge>
@@ -178,10 +179,7 @@ export const getUsersTableColumns = ({
                 {user.name}
               </div>
               {isVerified && (
-                <Badge
-                  variant="outline"
-                  className="h-4 px-1.5 text-xs bg-success/10 text-success border-success/30"
-                >
+                <Badge variant="success" className="h-4 px-1.5 text-xs">
                   <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                   Verified
                 </Badge>

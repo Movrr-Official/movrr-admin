@@ -28,7 +28,7 @@ import {
 const getStatusBadge = (status: Advertiser["status"]) => {
   if (status === "active") {
     return (
-      <Badge className="bg-success/10 text-success border-success/30">
+      <Badge variant="success">
         <UserCheck className="mr-1 h-3 w-3" />
         Active
       </Badge>
@@ -37,7 +37,7 @@ const getStatusBadge = (status: Advertiser["status"]) => {
 
   if (status === "pending") {
     return (
-      <Badge className="bg-info/10 text-info border-info/30">
+      <Badge variant="info">
         <Clock className="mr-1 h-3 w-3" />
         Pending
       </Badge>
@@ -45,7 +45,7 @@ const getStatusBadge = (status: Advertiser["status"]) => {
   }
 
   return (
-    <Badge className="bg-warning/10 text-warning border-warning/30">
+    <Badge variant="warning">
       <UserX className="mr-1 h-3 w-3" />
       Inactive
     </Badge>
@@ -133,13 +133,7 @@ export const getAdvertisersTableColumns = ({
     accessorKey: "verified",
     header: "Verification",
     cell: ({ row }) => (
-      <Badge
-        className={
-          row.original.verified
-            ? "bg-success/10 text-success border-success/30"
-            : "bg-muted text-muted-foreground border-border"
-        }
-      >
+      <Badge variant={row.original.verified ? "success" : "secondary"}>
         <BadgeCheck className="mr-1 h-3 w-3" />
         {row.original.verified ? "Verified" : "Unverified"}
       </Badge>
@@ -198,4 +192,3 @@ export const getAdvertisersTableColumns = ({
     },
   },
 ];
-

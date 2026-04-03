@@ -336,7 +336,11 @@ export function StatsCard({
               {badges.map((badge, index) => (
                 <Badge
                   key={index}
-                  variant={badge.variant || "outline"}
+                  variant={
+                    badge.variant === "outline"
+                      ? "secondary"
+                      : badge.variant || "secondary"
+                  }
                   className={cn(
                     "text-xs font-medium",
                     isGradient &&

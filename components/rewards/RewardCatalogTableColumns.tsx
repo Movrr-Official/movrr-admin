@@ -31,19 +31,15 @@ interface RewardCatalogTableColumnsProps {
 const statusBadge = (status: RewardCatalogItem["status"]) => {
   switch (status) {
     case "active":
-      return (
-        <Badge className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300">
-          Active
-        </Badge>
-      );
+      return <Badge variant="success">Active</Badge>;
     case "paused":
+      return <Badge variant="warning">Paused</Badge>;
+    case "archived":
       return (
-        <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300">
-          Paused
+        <Badge className="bg-muted text-muted-foreground border-border">
+          Archived
         </Badge>
       );
-    case "archived":
-      return <Badge variant="outline">Archived</Badge>;
     default:
       return <Badge variant="secondary">Draft</Badge>;
   }

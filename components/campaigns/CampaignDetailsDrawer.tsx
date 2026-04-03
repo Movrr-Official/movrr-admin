@@ -397,35 +397,35 @@ export function CampaignDetailsDrawer({
     switch (status) {
       case "active":
         return (
-          <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300">
+          <Badge variant="success">
             <PlayCircle className="h-3 w-3 mr-1" />
             Active
           </Badge>
         );
       case "paused":
         return (
-          <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300">
+          <Badge variant="warning">
             <PauseCircle className="h-3 w-3 mr-1" />
             Paused
           </Badge>
         );
       case "draft":
         return (
-          <Badge className="bg-muted text-muted-foreground border-border">
+          <Badge variant="secondary">
             <FileText className="h-3 w-3 mr-1" />
             Draft
           </Badge>
         );
       case "completed":
         return (
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300">
+          <Badge variant="info">
             <CheckCircle2 className="h-3 w-3 mr-1" />
             Completed
           </Badge>
         );
       case "cancelled":
         return (
-          <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300">
+          <Badge variant="destructive">
             <AlertCircle className="h-3 w-3 mr-1" />
             Cancelled
           </Badge>
@@ -439,14 +439,14 @@ export function CampaignDetailsDrawer({
     switch (type) {
       case "destination_ride":
         return (
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300">
+          <Badge variant="info">
             <Megaphone className="h-3 w-3 mr-1" />
             Destination Ride
           </Badge>
         );
       case "swarm":
         return (
-          <Badge className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300">
+          <Badge variant="success">
             <Target className="h-3 w-3 mr-1" />
             Swarm
           </Badge>
@@ -1011,7 +1011,7 @@ export function CampaignDetailsDrawer({
                           <p className="text-sm text-muted-foreground mb-1">
                             Delivery Mode
                           </p>
-                          <Badge variant="outline" className="capitalize">
+                          <Badge variant="secondary" className="capitalize">
                             {campaign.deliveryMode}
                           </Badge>
                         </div>
@@ -1020,12 +1020,12 @@ export function CampaignDetailsDrawer({
                             Compliance Status
                           </p>
                           <Badge
-                            className={
+                            variant={
                               campaign.complianceStatus === "approved"
-                                ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300"
+                                ? "success"
                                 : campaign.complianceStatus === "pending"
-                                  ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
-                                  : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300"
+                                  ? "warning"
+                                  : "info"
                             }
                           >
                             {campaign.complianceStatus === "approved"
@@ -1054,11 +1054,7 @@ export function CampaignDetailsDrawer({
                     <CardContent>
                       <div className="flex flex-wrap gap-2">
                         {campaign.targetZones.map((zone) => (
-                          <Badge
-                            key={zone}
-                            variant="outline"
-                            className="bg-primary/10 text-primary border-primary/20"
-                          >
+                          <Badge key={zone} variant="default">
                             <MapPin className="h-3 w-3 mr-1" />
                             {zone}
                           </Badge>
@@ -1116,11 +1112,10 @@ export function CampaignDetailsDrawer({
                                 {route.name}
                               </span>
                               <Badge
-                                variant="outline"
-                                className={
+                                variant={
                                   route.status === "active"
-                                    ? "bg-green-50 text-green-700 border-green-200"
-                                    : "bg-amber-50 text-amber-700 border-amber-200"
+                                    ? "success"
+                                    : "warning"
                                 }
                               >
                                 {route.status}

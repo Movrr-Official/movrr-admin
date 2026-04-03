@@ -77,7 +77,11 @@ const editAdvertiserSchema = z.object({
   email: z.string().email("Valid email is required"),
   phone: z.string().optional(),
   website: z.string().optional(),
-  logoUrl: z.string().url("Logo URL must be valid").optional().or(z.literal("")),
+  logoUrl: z
+    .string()
+    .url("Logo URL must be valid")
+    .optional()
+    .or(z.literal("")),
   industry: z.string().optional(),
   language: z.string().default("en"),
   timezone: z.string().default("UTC"),
@@ -96,10 +100,10 @@ interface AdvertiserDetailsDrawerProps {
   onAdvertiserUpdate?: () => void;
 }
 
-const statusBadgeClass = (status: Advertiser["status"]) => {
-  if (status === "active") return "bg-green-100 text-green-700 border-green-200";
-  if (status === "pending") return "bg-blue-50 text-blue-700 border-blue-200";
-  return "bg-amber-50 text-amber-700 border-amber-200";
+const statusBadgeVariant = (status: Advertiser["status"]) => {
+  if (status === "active") return "success" as const;
+  if (status === "pending") return "info" as const;
+  return "warning" as const;
 };
 
 export function AdvertiserDetailsDrawer({
@@ -379,7 +383,9 @@ export function AdvertiserDetailsDrawer({
                               <SelectContent>
                                 <SelectItem value="active">Active</SelectItem>
                                 <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="inactive">Inactive</SelectItem>
+                                <SelectItem value="inactive">
+                                  Inactive
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -573,14 +579,12 @@ export function AdvertiserDetailsDrawer({
                         <CopyButton value={advertiser.id} />
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge className={statusBadgeClass(advertiser.status)}>
+                        <Badge variant={statusBadgeVariant(advertiser.status)}>
                           {advertiser.status}
                         </Badge>
                         <Badge
-                          className={
-                            advertiser.verified
-                              ? "bg-green-100 text-green-700 border-green-200"
-                              : "bg-muted text-muted-foreground border-border"
+                          variant={
+                            advertiser.verified ? "success" : "secondary"
                           }
                         >
                           <BadgeCheck className="h-3 w-3 mr-1" />
@@ -632,7 +636,9 @@ export function AdvertiserDetailsDrawer({
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                        <p className="text-xs text-muted-foreground">Campaigns</p>
+                        <p className="text-xs text-muted-foreground">
+                          Campaigns
+                        </p>
                         <p className="text-xl font-bold text-foreground">
                           {advertiser.totalCampaigns}
                         </p>
@@ -644,7 +650,9 @@ export function AdvertiserDetailsDrawer({
                         </p>
                       </div>
                       <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                        <p className="text-xs text-muted-foreground">Impressions</p>
+                        <p className="text-xs text-muted-foreground">
+                          Impressions
+                        </p>
                         <p className="text-xl font-bold text-foreground">
                           {advertiser.totalImpressions.toLocaleString()}
                         </p>
@@ -669,14 +677,20 @@ export function AdvertiserDetailsDrawer({
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm text-foreground">
                           Created:{" "}
-                          {format(new Date(advertiser.createdAt), "MMM d, yyyy")}
+                          {format(
+                            new Date(advertiser.createdAt),
+                            "MMM d, yyyy",
+                          )}
                         </span>
                       </div>
                       <div className="flex items-center gap-3">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm text-foreground">
                           Updated:{" "}
-                          {format(new Date(advertiser.updatedAt), "MMM d, yyyy")}
+                          {format(
+                            new Date(advertiser.updatedAt),
+                            "MMM d, yyyy",
+                          )}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground">

@@ -44,25 +44,25 @@ const VerificationStatusBadge = ({
   switch (status) {
     case "verified":
       return (
-        <Badge className="bg-green-50 text-green-700 border-green-200 font-medium dark:bg-green-950 dark:text-green-300 dark:border-green-800">
+        <Badge variant="success">
           <ShieldCheck className="h-3 w-3 mr-1" /> Verified
         </Badge>
       );
     case "pending":
       return (
-        <Badge className="bg-amber-50 text-amber-700 border-amber-200 font-medium dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
+        <Badge variant="warning">
           <Clock className="h-3 w-3 mr-1" /> Pending
         </Badge>
       );
     case "rejected":
       return (
-        <Badge className="bg-red-50 text-red-700 border-red-200 font-medium dark:bg-red-950 dark:text-red-300 dark:border-red-800">
+        <Badge variant="destructive">
           <ShieldX className="h-3 w-3 mr-1" /> Rejected
         </Badge>
       );
     case "manual_review":
       return (
-        <Badge className="bg-orange-50 text-orange-700 border-orange-200 font-medium dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800">
+        <Badge variant="warning">
           <AlertCircle className="h-3 w-3 mr-1" /> Manual Review
         </Badge>
       );
@@ -78,14 +78,13 @@ export function RideSessionDetailsDrawer({
 }: RideSessionDetailsDrawerProps) {
   if (!session) return null;
 
-  const duration =
-    session.endedAt
-      ? Math.round(
-          (new Date(session.endedAt).getTime() -
-            new Date(session.startedAt).getTime()) /
-            60000,
-        )
-      : null;
+  const duration = session.endedAt
+    ? Math.round(
+        (new Date(session.endedAt).getTime() -
+          new Date(session.startedAt).getTime()) /
+          60000,
+      )
+    : null;
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
@@ -140,7 +139,9 @@ export function RideSessionDetailsDrawer({
             <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
               <div className="flex items-center gap-2 mb-1">
                 <Timer className="h-4 w-4 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">Verified Minutes</p>
+                <p className="text-xs text-muted-foreground">
+                  Verified Minutes
+                </p>
               </div>
               <p className="text-2xl font-bold">{session.verifiedMinutes}</p>
             </div>
@@ -157,7 +158,9 @@ export function RideSessionDetailsDrawer({
               <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
                 <div className="flex items-center gap-2 mb-1">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground">Total Duration</p>
+                  <p className="text-xs text-muted-foreground">
+                    Total Duration
+                  </p>
                 </div>
                 <p className="text-2xl font-bold">{duration} min</p>
               </div>
@@ -174,10 +177,14 @@ export function RideSessionDetailsDrawer({
             {session.rideQualityPercent != null && (
               <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
                 <div className="flex items-center gap-2 mb-1">
-                  <Gauge className={`h-4 w-4 ${session.rideQualityPercent >= 70 ? "text-green-600" : session.rideQualityPercent >= 40 ? "text-amber-600" : "text-red-600"}`} />
+                  <Gauge
+                    className={`h-4 w-4 ${session.rideQualityPercent >= 70 ? "text-green-600" : session.rideQualityPercent >= 40 ? "text-amber-600" : "text-red-600"}`}
+                  />
                   <p className="text-xs text-muted-foreground">Quality Score</p>
                 </div>
-                <p className={`text-2xl font-bold ${session.rideQualityPercent >= 70 ? "text-green-600" : session.rideQualityPercent >= 40 ? "text-amber-600" : "text-red-600"}`}>
+                <p
+                  className={`text-2xl font-bold ${session.rideQualityPercent >= 70 ? "text-green-600" : session.rideQualityPercent >= 40 ? "text-amber-600" : "text-red-600"}`}
+                >
                   {session.rideQualityPercent}%
                 </p>
               </div>
@@ -193,7 +200,13 @@ export function RideSessionDetailsDrawer({
                   <p className="text-xs text-muted-foreground">Bike Type</p>
                 </div>
                 <p className="text-sm font-semibold capitalize">
-                  {session.bikeType === "e_bike" ? "E-Bike" : session.bikeType === "fat_bike" ? "Fat Bike" : session.bikeType === "standard_bike" ? "Standard Bike" : "Unknown"}
+                  {session.bikeType === "e_bike"
+                    ? "E-Bike"
+                    : session.bikeType === "fat_bike"
+                      ? "Fat Bike"
+                      : session.bikeType === "standard_bike"
+                        ? "Standard Bike"
+                        : "Unknown"}
                 </p>
               </div>
             )}
@@ -208,7 +221,9 @@ export function RideSessionDetailsDrawer({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-sm font-medium">{session.riderName ?? "Unknown"}</p>
+              <p className="text-sm font-medium">
+                {session.riderName ?? "Unknown"}
+              </p>
               <p className="text-xs text-muted-foreground font-mono">
                 {session.riderId}
               </p>
@@ -270,7 +285,11 @@ export function RideSessionDetailsDrawer({
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {session.reasonCodes.map((code) => (
-                    <Badge key={code} variant="secondary" className="font-mono text-xs">
+                    <Badge
+                      key={code}
+                      variant="secondary"
+                      className="font-mono text-xs"
+                    >
                       {code}
                     </Badge>
                   ))}

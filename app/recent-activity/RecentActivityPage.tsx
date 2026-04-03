@@ -153,7 +153,7 @@ export default function RecentActivityPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="secondary" className="text-xs">
                           {formatRoleLabel(log.performedBy?.role)}
                         </Badge>
                         {getAuditLogResultLabel(log) && (
@@ -162,7 +162,7 @@ export default function RecentActivityPage() {
                           </Badge>
                         )}
                         {getAuditLogSourceIp(log) && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="info" className="text-xs">
                             IP {getAuditLogSourceIp(log)}
                           </Badge>
                         )}
