@@ -17,12 +17,19 @@ export const DASHBOARD_ACCESS_ROLES = [
   "super_admin",
   "moderator",
   "support",
+  "compliance_officer",
 ] as const satisfies readonly UserRole[];
 
 export const ADMIN_MODERATOR_ROLES = [
   "admin",
   "super_admin",
   "moderator",
+] as const satisfies readonly UserRole[];
+
+export const COMPLIANCE_ROLES = [
+  "admin",
+  "super_admin",
+  "compliance_officer",
 ] as const satisfies readonly UserRole[];
 
 export const NOTIFICATION_ACCESS_ROLES = DASHBOARD_ACCESS_ROLES;

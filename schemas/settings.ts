@@ -33,6 +33,8 @@ export const settingsSectionIdSchema = z.enum([
 
 export type SettingsSectionId = z.infer<typeof settingsSectionIdSchema>;
 
+export const distanceUnitSchema = z.enum(["km", "mi"]);
+
 export const generalSettingsSchema = z.object({
   supportEmail: optionalEmailSchema.default("support@movrr.nl"),
   publicSupportEmail: optionalEmailSchema.default("support@movrr.nl"),
@@ -43,6 +45,9 @@ export const generalSettingsSchema = z.object({
   defaultCurrency: nonEmptyTrimmedString.default("EUR"),
   appVersion: nonEmptyTrimmedString.default("0.1.0"),
   maintenanceMode: z.boolean().default(false),
+  // Impact metrics
+  distanceUnit: distanceUnitSchema.default("km"),
+  co2KgPerKm: nonNegativeNumber.default(0.021),
 });
 
 export const onboardingModeSchema = z.enum(["open", "waitlist_only", "closed"]);
@@ -58,11 +63,22 @@ export const onboardingSettingsSchema = z.object({
 });
 
 export const rewardsSettingsSchema = z.object({
+  // Base earning
   basePointsPerMinute: nonNegativeInteger.default(1),
-  dailyCap: nonNegativeInteger.default(120),
+  dailyCap: nonNegativeInteger.default(1000),
   weeklyCap: nonNegativeInteger.default(600),
   campaignMaxRewardCap: nonNegativeInteger.default(1000),
   minVerifiedMinutes: nonNegativeInteger.default(1),
+  // Bike-type multipliers (must stay in sync with mobile REWARD_CONFIG)
+  standardBikeMultiplier: nonNegativeNumber.default(1),
+  eBikeMultiplier: nonNegativeNumber.default(0.9),
+  fatBikeMultiplier: nonNegativeNumber.default(0.75),
+  campaignRideMultiplier: nonNegativeNumber.default(1.5),
+  // Movement verification thresholds (must stay in sync with mobile REWARD_CONFIG)
+  maxAllowedAverageSpeedKmh: nonNegativeNumber.default(35),
+  maxAllowedPeakSpeedKmh: nonNegativeNumber.default(45),
+  minMovementDistanceMeters: nonNegativeNumber.default(150),
+  minMovementGpsPoints: nonNegativeInteger.default(3),
 });
 
 export const campaignSettingsSchema = z.object({
@@ -95,7 +111,7 @@ export const notificationSettingsSchema = z.object({
 });
 
 export const securitySettingsSchema = z.object({
-  enforceAdminMfa: z.boolean().default(false),
+  enforceAdminMfa: z.boolean().default(true),
   adminSessionTimeoutMinutes: positiveInteger.default(60),
   auditRetentionDays: positiveInteger.default(365),
   allowPasswordResetLinks: z.boolean().default(true),
@@ -232,6 +248,22 @@ export const updateSettingsSectionInputSchema = z.object({
 export type GeneralSettings = z.infer<typeof generalSettingsSchema>;
 export type OnboardingSettings = z.infer<typeof onboardingSettingsSchema>;
 export type RewardsSettings = z.infer<typeof rewardsSettingsSchema>;
+export type RewardsSettingsPublicConfig = Pick<
+  RewardsSettings,
+  | "basePointsPerMinute"
+  | "dailyCap"
+  | "weeklyCap"
+  | "campaignMaxRewardCap"
+  | "minVerifiedMinutes"
+  | "standardBikeMultiplier"
+  | "eBikeMultiplier"
+  | "fatBikeMultiplier"
+  | "campaignRideMultiplier"
+  | "maxAllowedAverageSpeedKmh"
+  | "maxAllowedPeakSpeedKmh"
+  | "minMovementDistanceMeters"
+  | "minMovementGpsPoints"
+>;
 export type CampaignSettings = z.infer<typeof campaignSettingsSchema>;
 export type FeatureSettings = z.infer<typeof featureSettingsSchema>;
 export type NotificationSettings = z.infer<typeof notificationSettingsSchema>;

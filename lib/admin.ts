@@ -17,6 +17,7 @@ const VALID_ADMIN_ROLES: AdminRole[] = [
   "admin",
   "moderator",
   "support",
+  "compliance_officer",
 ];
 
 const EXCLUDED_PATHS = ["/auth", "/unauthorized"] as const;

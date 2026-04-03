@@ -101,6 +101,7 @@ export const SETTINGS_OPTIONS = {
   riderOnboardingMode: ["open", "waitlist_only", "closed"],
   digestFrequency: ["off", "daily", "weekly"],
   alertRouting: ["support_only", "support_and_admin", "admin_only"],
+  distanceUnit: ["km", "mi"],
 } as const;
 
 export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> = {
@@ -122,6 +123,20 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
       label: "Maintenance Mode",
       type: "switch",
       description: "Blocks normal platform use for maintenance windows.",
+    },
+    {
+      name: "distanceUnit",
+      label: "Distance Unit",
+      type: "select",
+      options: ["km", "mi"],
+      description: "Unit used for distance display across the platform.",
+    },
+    {
+      name: "co2KgPerKm",
+      label: "CO₂ Savings Factor (kg/km)",
+      type: "number",
+      min: 0,
+      description: "Average CO₂ saved per km cycled vs. car equivalent. Used for lifetime impact calculations.",
     },
   ],
   onboarding: [
@@ -145,9 +160,13 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
     { name: "campaignMaxRewardCap", label: "Per-Ride Reward Cap", type: "number", min: 0, description: "Maximum points awarded per verified ride session, regardless of mode." },
     { name: "minVerifiedMinutes", label: "Minimum Verified Minutes", type: "number", min: 0 },
     { name: "standardBikeMultiplier", label: "Standard Bike Multiplier", type: "number", min: 0, description: "Points multiplier for standard_bike riders (default 1.0)." },
-    { name: "eBikeMultiplier", label: "E-Bike Multiplier", type: "number", min: 0, description: "Points multiplier for e_bike riders." },
-    { name: "fatBikeMultiplier", label: "Fat Bike Multiplier", type: "number", min: 0, description: "Points multiplier for fat_bike riders." },
-    { name: "campaignRideMultiplier", label: "Campaign Ride Multiplier", type: "number", min: 0, description: "Additional multiplier applied to points earned on campaign-assigned rides (default 1.5)." },
+    { name: "eBikeMultiplier", label: "E-Bike Multiplier", type: "number", min: 0, description: "Points multiplier for e_bike riders (default 0.9)." },
+    { name: "fatBikeMultiplier", label: "Fat Bike Multiplier", type: "number", min: 0, description: "Points multiplier for fat_bike riders (default 0.75)." },
+    { name: "campaignRideMultiplier", label: "Campaign Ride Multiplier", type: "number", min: 0, description: "Multiplier applied to points earned on campaign-assigned rides (default 1.5)." },
+    { name: "maxAllowedAverageSpeedKmh", label: "Max Allowed Average Speed (km/h)", type: "number", min: 0, description: "Rides exceeding this average speed are flagged as invalid." },
+    { name: "maxAllowedPeakSpeedKmh", label: "Max Allowed Peak Speed (km/h)", type: "number", min: 0, description: "Rides exceeding this peak GPS speed are flagged as invalid." },
+    { name: "minMovementDistanceMeters", label: "Min Movement Distance (meters)", type: "number", min: 0, description: "Minimum total GPS distance for a ride session to qualify for points." },
+    { name: "minMovementGpsPoints", label: "Min GPS Points", type: "number", min: 0, description: "Minimum number of GPS location points required for ride verification." },
   ],
   campaigns: [
     { name: "defaultMultiplier", label: "Default Multiplier", type: "number", min: 0 },

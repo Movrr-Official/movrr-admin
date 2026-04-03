@@ -10,6 +10,7 @@ export const userRoleSchema = z.enum([
   "super_admin",
   "moderator",
   "support",
+  "compliance_officer",
   "advertiser",
   "rider",
   "government",

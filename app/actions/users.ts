@@ -101,17 +101,7 @@ const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   email: z.string().email().optional(),
   phone: z.string().optional(),
-  role: z
-    .enum([
-      "admin",
-      "super_admin",
-      "moderator",
-      "support",
-      "advertiser",
-      "rider",
-      "government",
-    ])
-    .optional(),
+  role: userRoleSchema.optional(),
   status: z.enum(["active", "inactive", "pending"]).optional(),
   organization: z.string().optional(),
   languagePreference: z.string().optional(),
@@ -143,6 +133,7 @@ const ADMIN_ACCESS_ROLES = new Set([
   "admin",
   "moderator",
   "support",
+  "compliance_officer",
 ]);
 
 const syncAdminAccessRecord = async (

@@ -75,6 +75,8 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     defaultCurrency: "EUR",
     appVersion: "0.1.0",
     maintenanceMode: false,
+    distanceUnit: "km" as const,
+    co2KgPerKm: 0.021,
   },
   onboarding: {
     riderOnboardingMode: "open",
@@ -87,10 +89,18 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
   },
   rewards: {
     basePointsPerMinute: 1,
-    dailyCap: 120,
+    dailyCap: 1000,
     weeklyCap: 600,
     campaignMaxRewardCap: 1000,
     minVerifiedMinutes: 1,
+    standardBikeMultiplier: 1,
+    eBikeMultiplier: 0.9,
+    fatBikeMultiplier: 0.75,
+    campaignRideMultiplier: 1.5,
+    maxAllowedAverageSpeedKmh: 35,
+    maxAllowedPeakSpeedKmh: 45,
+    minMovementDistanceMeters: 150,
+    minMovementGpsPoints: 3,
   },
   campaigns: {
     defaultMultiplier: 1,
@@ -115,7 +125,7 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     alertRouting: "support_and_admin",
   },
   security: {
-    enforceAdminMfa: false,
+    enforceAdminMfa: true,
     adminSessionTimeoutMinutes: 60,
     auditRetentionDays: 365,
     allowPasswordResetLinks: true,
@@ -367,6 +377,26 @@ export async function getPlatformOperationalPolicies() {
     security: values.security,
     general: values.general,
     organization: values.organization,
+  };
+}
+
+export async function getPublicRewardsConfig() {
+  const values = await getResolvedPlatformSettingsValues();
+  const r = values.rewards;
+  return {
+    basePointsPerMinute: r.basePointsPerMinute,
+    dailyCap: r.dailyCap,
+    weeklyCap: r.weeklyCap,
+    campaignMaxRewardCap: r.campaignMaxRewardCap,
+    minVerifiedMinutes: r.minVerifiedMinutes,
+    standardBikeMultiplier: r.standardBikeMultiplier,
+    eBikeMultiplier: r.eBikeMultiplier,
+    fatBikeMultiplier: r.fatBikeMultiplier,
+    campaignRideMultiplier: r.campaignRideMultiplier,
+    maxAllowedAverageSpeedKmh: r.maxAllowedAverageSpeedKmh,
+    maxAllowedPeakSpeedKmh: r.maxAllowedPeakSpeedKmh,
+    minMovementDistanceMeters: r.minMovementDistanceMeters,
+    minMovementGpsPoints: r.minMovementGpsPoints,
   };
 }
 
