@@ -147,8 +147,13 @@ export default function RecentActivityPage() {
                           })}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {log.performedBy?.name ?? "Automated"} ·{" "}
-                          {log.performedBy?.email ?? "system@movrr.local"}
+                          <span className="font-medium text-foreground/80">
+                            {log.performedBy?.name ?? "Automated"}
+                          </span>{" "}
+                          ·{" "}
+                          <span className="font-normal text-muted-foreground">
+                            {log.performedBy?.email ?? "system@movrr.local"}
+                          </span>
                         </p>
                       </div>
 

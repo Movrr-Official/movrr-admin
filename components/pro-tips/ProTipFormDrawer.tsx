@@ -35,12 +35,18 @@ import { ProTip, createProTipSchema, CreateProTipFormData } from "@/schemas";
 import { useWatch } from "react-hook-form";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  earning: "bg-green-100 text-green-700",
-  timing: "bg-blue-100 text-blue-700",
-  compliance: "bg-red-100 text-red-700",
-  performance: "bg-violet-100 text-violet-700",
-  technical: "bg-slate-100 text-slate-700",
-  planning: "bg-amber-100 text-amber-700",
+  earning:
+    "border-transparent bg-gradient-to-tl from-green-500 to-green-600 text-white shadow-green-500/20",
+  timing:
+    "border-transparent bg-gradient-to-tl from-blue-500 to-blue-600 text-white shadow-blue-500/20",
+  compliance:
+    "border-transparent bg-gradient-to-tl from-amber-500 to-amber-600 text-white shadow-amber-500/20",
+  performance:
+    "border-transparent bg-gradient-to-tl from-purple-500 to-purple-600 text-white shadow-purple-500/20",
+  technical:
+    "border-transparent bg-gradient-to-tl from-cyan-500 to-cyan-600 text-white shadow-cyan-500/20",
+  planning:
+    "border-transparent bg-gradient-to-tl from-orange-500 to-orange-600 text-white shadow-orange-500/20",
 };
 
 interface ProTipFormDrawerProps {
@@ -149,11 +155,7 @@ export function ProTipFormDrawer({
                     <FormItem>
                       <FormLabel>Icon (emoji)</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="🚲"
-                          maxLength={8}
-                          {...field}
-                        />
+                        <Input placeholder="🚲" maxLength={8} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -263,7 +265,9 @@ export function ProTipFormDrawer({
                 <div className="mx-auto w-[240px] rounded-[2rem] border-4 border-foreground/10 bg-background shadow-lg overflow-hidden">
                   {/* Status bar mockup */}
                   <div className="bg-muted/40 px-4 py-1.5 flex justify-between items-center">
-                    <span className="text-[9px] font-semibold text-muted-foreground">9:41</span>
+                    <span className="text-[9px] font-semibold text-muted-foreground">
+                      9:41
+                    </span>
                     <div className="flex gap-1">
                       <div className="w-2.5 h-1.5 rounded-sm bg-muted-foreground/50" />
                       <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
@@ -273,7 +277,10 @@ export function ProTipFormDrawer({
                   <div className="p-3">
                     <div
                       className={`rounded-2xl p-3 flex items-start gap-3 shadow-sm ${!previewActive ? "opacity-40" : ""}`}
-                      style={{ background: "var(--color-surface, hsl(var(--muted)/0.4))" }}
+                      style={{
+                        background:
+                          "var(--color-surface, hsl(var(--muted)/0.4))",
+                      }}
                     >
                       {/* Icon bubble */}
                       <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-lg leading-none">
@@ -281,12 +288,18 @@ export function ProTipFormDrawer({
                       </div>
                       <div className="flex-1 min-w-0 space-y-1">
                         {previewCategory && (
-                          <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${CATEGORY_COLORS[previewCategory] ?? "bg-muted text-muted-foreground"}`}>
+                          <span
+                            className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded-full capitalize shadow-sm ${CATEGORY_COLORS[previewCategory] ?? "border-transparent bg-gradient-to-tl from-slate-600 to-slate-700 text-white"}`}
+                          >
                             {previewCategory}
                           </span>
                         )}
                         <p className="text-[11px] text-foreground leading-snug line-clamp-4">
-                          {previewText || <span className="text-muted-foreground italic">Tip text will appear here…</span>}
+                          {previewText || (
+                            <span className="text-muted-foreground italic">
+                              Tip text will appear here…
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>

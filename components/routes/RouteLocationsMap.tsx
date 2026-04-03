@@ -456,7 +456,9 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-lg font-bold">Live Route Map</CardTitle>
-          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300">
+          <Badge
+            variant={useMockData ? "mock" : isLoading ? "info" : "success"}
+          >
             {useMockData
               ? `Mock · ${locations.length} active`
               : isLoading

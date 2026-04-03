@@ -1295,7 +1295,7 @@ export default function DashboardOverview() {
                             </p>
                           )}
                         </div>
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="ghost" className="text-xs">
                           {log.performedBy?.name ?? "Automated"}
                         </Badge>
                       </div>

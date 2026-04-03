@@ -8,7 +8,15 @@ import { cn } from "@/lib/utils";
 
 export interface StatBadge {
   label: string;
-  variant?: "default" | "outline" | "secondary" | "destructive";
+  variant?:
+    | "default"
+    | "outline"
+    | "secondary"
+    | "destructive"
+    | "success"
+    | "info"
+    | "warning"
+    | "accent";
   className?: string;
 }
 
@@ -85,6 +93,42 @@ const valueSizeClasses = {
   md: "text-2xl md:text-3xl",
   lg: "text-3xl md:text-4xl",
   xl: "text-4xl md:text-5xl",
+};
+
+const inferStatBadgeVariant = (
+  badge: StatBadge,
+): NonNullable<StatBadge["variant"]> => {
+  if (badge.variant && badge.variant !== "outline") {
+    return badge.variant;
+  }
+
+  const className = badge.className ?? "";
+
+  if (/(bg-success|green-)/.test(className)) {
+    return "success";
+  }
+
+  if (/(bg-info|blue-|cyan-)/.test(className)) {
+    return "info";
+  }
+
+  if (/(bg-warning|amber-|orange-)/.test(className)) {
+    return "warning";
+  }
+
+  if (/(purple-|violet-|accent-alt)/.test(className)) {
+    return "accent";
+  }
+
+  if (/(bg-destructive|red-|rose-)/.test(className)) {
+    return "destructive";
+  }
+
+  if (/(bg-muted|border-border|text-muted-foreground)/.test(className)) {
+    return "secondary";
+  }
+
+  return badge.variant === "outline" ? "secondary" : "secondary";
 };
 
 export function StatsCard({
@@ -336,17 +380,8 @@ export function StatsCard({
               {badges.map((badge, index) => (
                 <Badge
                   key={index}
-                  variant={
-                    badge.variant === "outline"
-                      ? "secondary"
-                      : badge.variant || "secondary"
-                  }
-                  className={cn(
-                    "text-xs font-medium",
-                    isGradient &&
-                      "bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20",
-                    badge.className,
-                  )}
+                  variant={inferStatBadgeVariant(badge)}
+                  className="text-xs font-medium"
                 >
                   {badge.label}
                 </Badge>

@@ -14,12 +14,18 @@ import {
 import { ProTip } from "@/schemas";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  earning: "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300",
-  timing: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300",
-  compliance: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300",
-  performance: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300",
-  technical: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950 dark:text-cyan-300",
-  planning: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300",
+  earning:
+    "border-transparent bg-gradient-to-r from-green-500 to-green-600 text-white shadow-green-500/20",
+  timing:
+    "border-transparent bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-500/20",
+  compliance:
+    "border-transparent bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-amber-500/20",
+  performance:
+    "border-transparent bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-purple-500/20",
+  technical:
+    "border-transparent bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-cyan-500/20",
+  planning:
+    "border-transparent bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-orange-500/20",
 };
 
 interface ProTipsTableColumnsProps {
@@ -65,7 +71,7 @@ export const getProTipsTableColumns = ({
       if (!cat) return <span className="text-xs text-muted-foreground">—</span>;
       return (
         <Badge
-          className={`font-medium capitalize ${CATEGORY_COLORS[cat] ?? "bg-muted text-muted-foreground"}`}
+          className={`font-medium capitalize shadow-sm ${CATEGORY_COLORS[cat] ?? "border-transparent bg-gradient-to-r from-muted to-muted/80 text-foreground"}`}
         >
           {cat}
         </Badge>

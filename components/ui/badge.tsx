@@ -18,12 +18,14 @@ const badgeVariants = cva(
         info: "border-info/25 bg-gradient-to-tl from-info via-info to-info/80 text-info-foreground shadow-info/20 [a&]:hover:from-info/95 [a&]:hover:to-info/75",
         warning:
           "border-warning/30 bg-gradient-to-tl from-warning via-warning to-warning/80 text-warning-foreground shadow-warning/20 [a&]:hover:from-warning/95 [a&]:hover:to-warning/75",
+        mock: "border-slate-500/25 bg-gradient-to-tl from-slate-700 via-slate-600 to-slate-500 text-white shadow-slate-900/20 [a&]:hover:from-slate-700 [a&]:hover:to-slate-500 dark:border-slate-400/25 dark:from-slate-500 dark:via-slate-400 dark:to-slate-300 dark:text-slate-950",
         accent:
           "border-accent-alt/25 bg-gradient-to-tl from-accent-alt via-accent-alt to-accent-alt/80 text-accent-alt-foreground shadow-accent-alt/20 [a&]:hover:from-accent-alt/95 [a&]:hover:to-accent-alt/75",
         destructive:
           "border-destructive/25 bg-gradient-to-tl from-destructive via-destructive to-destructive/80 text-destructive-foreground shadow-destructive/20 [a&]:hover:from-destructive/95 [a&]:hover:to-destructive/75 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        ghost: "border-0 bg-transparent shadow-none",
       },
     },
     defaultVariants: {

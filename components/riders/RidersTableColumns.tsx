@@ -136,15 +136,9 @@ export const getRidersTableColumns = ({
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
-      <div className="space-y-2">
+      <div className="flex flex-col space-y-2">
         {getStatusBadge(row.original.status)}
-        <Badge
-          className={
-            row.original.isVerified
-              ? "bg-primary/10 text-primary border-primary/30"
-              : "bg-muted text-muted-foreground border-border"
-          }
-        >
+        <Badge variant={row.original.isVerified ? "success" : "destructive"}>
           <ShieldCheck className="mr-1 h-3 w-3" />
           {row.original.isVerified ? "Verified" : "Unverified"}
         </Badge>

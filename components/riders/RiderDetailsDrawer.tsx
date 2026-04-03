@@ -109,12 +109,10 @@ interface RiderDetailsDrawerProps {
   onRiderUpdate?: () => void;
 }
 
-const statusClass = (status: Rider["status"]) =>
-  status === "active"
-    ? "bg-green-100 text-green-700 border-green-200"
-    : status === "pending"
-      ? "bg-blue-50 text-blue-700 border-blue-200"
-      : "bg-amber-50 text-amber-700 border-amber-200";
+const statusVariant = (
+  status: Rider["status"],
+): "success" | "info" | "warning" =>
+  status === "active" ? "success" : status === "pending" ? "info" : "warning";
 
 export function RiderDetailsDrawer({
   rider,
@@ -606,25 +604,17 @@ export function RiderDetailsDrawer({
                         <CopyButton value={rider.id} />
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Badge className={statusClass(rider.status)}>
+                        <Badge variant={statusVariant(rider.status)}>
                           {rider.status}
                         </Badge>
                         <Badge
-                          className={
-                            rider.isVerified
-                              ? "bg-primary/10 text-primary border-primary/30"
-                              : "bg-muted text-muted-foreground border-border"
-                          }
+                          variant={rider.isVerified ? "success" : "destructive"}
                         >
                           <ShieldCheck className="mr-1 h-3 w-3" />
                           {rider.isVerified ? "Verified" : "Unverified"}
                         </Badge>
                         <Badge
-                          className={
-                            rider.isCertified
-                              ? "bg-green-100 text-green-700 border-green-200"
-                              : "bg-muted text-muted-foreground border-border"
-                          }
+                          variant={rider.isCertified ? "success" : "warning"}
                         >
                           {rider.isCertified ? "Certified" : "Not Certified"}
                         </Badge>
