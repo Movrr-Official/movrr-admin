@@ -93,6 +93,13 @@ const serverEnvSchema = publicEnvSchema
   ROUTE_OPTIMIZER_URL: z.string().url("Invalid ROUTE_OPTIMIZER_URL"),
   ROUTE_OPTIMIZER_PREV_TOKEN: z.string().optional(),
   ROUTE_OPTIMIZER_OLD_TOKEN: z.string().optional(),
+
+  // LLM route intelligence (all optional — service self-disables if absent)
+  LLM_API_KEY: z.string().optional(),
+  LLM_MODEL: z.string().optional(),
+  LLM_API_BASE_URL: z.string().url("Invalid LLM_API_BASE_URL").optional(),
+  LLM_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).optional(),
+  LLM_MAX_RETRIES: z.coerce.number().int().min(0).max(5).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.ADMIN_EMAILS) {
@@ -193,6 +200,11 @@ function getEnv(): PublicEnv | ServerEnv {
       ROUTE_OPTIMIZER_URL: process.env.ROUTE_OPTIMIZER_URL,
       ROUTE_OPTIMIZER_PREV_TOKEN: process.env.ROUTE_OPTIMIZER_PREV_TOKEN,
       ROUTE_OPTIMIZER_OLD_TOKEN: process.env.ROUTE_OPTIMIZER_OLD_TOKEN,
+      LLM_API_KEY: process.env.LLM_API_KEY,
+      LLM_MODEL: process.env.LLM_MODEL,
+      LLM_API_BASE_URL: process.env.LLM_API_BASE_URL,
+      LLM_TIMEOUT_MS: process.env.LLM_TIMEOUT_MS,
+      LLM_MAX_RETRIES: process.env.LLM_MAX_RETRIES,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -280,6 +292,14 @@ export const ROUTE_OPTIMIZER_PREV_TOKEN =
   serverEnv?.ROUTE_OPTIMIZER_PREV_TOKEN ?? "";
 export const ROUTE_OPTIMIZER_OLD_TOKEN =
   serverEnv?.ROUTE_OPTIMIZER_OLD_TOKEN ?? "";
+
+// LLM route intelligence — all optional; service self-disables if key is absent
+export const LLM_API_KEY = serverEnv?.LLM_API_KEY ?? "";
+export const LLM_MODEL = serverEnv?.LLM_MODEL || "claude-haiku-4-5-20251001";
+export const LLM_API_BASE_URL =
+  serverEnv?.LLM_API_BASE_URL ?? "https://api.anthropic.com";
+export const LLM_TIMEOUT_MS = serverEnv?.LLM_TIMEOUT_MS ?? 15_000;
+export const LLM_MAX_RETRIES = serverEnv?.LLM_MAX_RETRIES ?? 1;
 
 // Helper to check if we're in production
 export const isProduction = NODE_ENV === "production";

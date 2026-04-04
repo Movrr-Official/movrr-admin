@@ -4,15 +4,6 @@ import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
 import { requireAdminRoles } from "@/lib/admin";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import {
-  ROUTE_OPTIMIZER_KEY,
-  ROUTE_OPTIMIZER_TOKEN,
-  ROUTE_OPTIMIZER_URL,
-} from "@/lib/env";
-
-const TARGET = ROUTE_OPTIMIZER_URL || "http://localhost:5000";
-const SERVICE_TOKEN = ROUTE_OPTIMIZER_TOKEN || ROUTE_OPTIMIZER_KEY || "";
-
 const MAX_BODY_BYTES = 100_000;
 
 const decisionSchema = z
@@ -116,16 +107,7 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!SERVICE_TOKEN) {
-    return NextResponse.json(
-      { error: "optimizer_unavailable" },
-      { status: 503 },
-    );
-  }
-
   const traceId = makeTraceId(req);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
   try {
     let body: unknown;
     try {
@@ -147,29 +129,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      "X-Trace-Id": traceId,
-    };
-    if (SERVICE_TOKEN) {
-      headers["authorization"] = `Bearer ${SERVICE_TOKEN}`;
-    }
-
-    const res = await fetch(`${TARGET}/decision`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(parsed.data),
-      signal: controller.signal,
-    });
-    const contentType = res.headers.get("content-type") || "";
-    let responsePayload: unknown = null;
-    let responseText: string | null = null;
-    if (contentType.includes("application/json")) {
-      responsePayload = await res.json();
-    } else {
-      responseText = await res.text();
-    }
-
+    // Persist to DB. The Python /decision endpoint has been removed -- this
+    // is now the single source of truth for accept/reject decisions.
     await persistDecision({
       traceId: parsed.data.trace_id || traceId,
       authUserId: admin.authUser.id,
@@ -179,22 +140,9 @@ export async function POST(req: Request) {
       metadata: parsed.data.metadata,
     });
 
-    if (contentType.includes("application/json")) {
-      return NextResponse.json(responsePayload, { status: res.status });
-    }
-
-    return new NextResponse(responseText ?? "", {
-      status: res.status,
-      headers: { "content-type": contentType || "application/json" },
-    });
+    return NextResponse.json({ status: "ok", trace_id: traceId });
   } catch (err: any) {
-    const isAbort = err && err.name === "AbortError";
-    return NextResponse.json(
-      { error: isAbort ? "upstream_timeout" : "request_failed" },
-      { status: isAbort ? 504 : 502 },
-    );
-  } finally {
-    clearTimeout(timeout);
+    return NextResponse.json({ error: "request_failed" }, { status: 502 });
   }
 }
 

@@ -9,12 +9,20 @@ import {
   ROUTE_OPTIMIZER_TOKEN,
   ROUTE_OPTIMIZER_URL,
 } from "@/lib/env";
+import {
+  type OptimizerRequestContext,
+  type OptimizerResponseSummary,
+  runShadowIntelligence,
+} from "@/lib/services/routeIntelligence";
 
 const TARGET = ROUTE_OPTIMIZER_URL || "http://localhost:5000";
 const SERVICE_TOKEN = ROUTE_OPTIMIZER_TOKEN || ROUTE_OPTIMIZER_KEY || "";
 
 const MAX_LOCATIONS = 80;
 const MAX_BODY_BYTES = 200_000;
+// Default solver time budget passed to the Python service when the client
+// does not explicitly supply one. Keeps every request bounded.
+const DEFAULT_SOLVER_TIME_LIMIT_SECONDS = 5;
 
 const locationSchema = z.object({
   id: z.string().optional(),
@@ -98,6 +106,18 @@ async function persistRun(data: {
   }
 }
 
+function buildBoundingBox(locations: Array<{ lat: number; lng: number }>) {
+  if (!locations.length) return undefined;
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+  for (const loc of locations) {
+    if (loc.lat < minLat) minLat = loc.lat;
+    if (loc.lat > maxLat) maxLat = loc.lat;
+    if (loc.lng < minLng) minLng = loc.lng;
+    if (loc.lng > maxLng) maxLng = loc.lng;
+  }
+  return { minLat, maxLat, minLng, maxLng };
+}
+
 function sanitizeOptimizeRequest(payload: {
   start_index?: number;
   locations: Array<{ id?: string; lat: number; lng: number }>;
@@ -124,8 +144,10 @@ function sanitizeOptimizeResponse(payload: any) {
   return {
     metrics: payload.metrics ?? null,
     score: payload.score ?? null,
+    solver_status: payload.solver_status ?? null,
+    solver_time_seconds: payload.solver_time_seconds ?? null,
+    solver_time_limit_applied: payload.solver_time_limit_applied ?? null,
     warnings: payload.warnings ?? null,
-    model_version: payload.model_version ?? null,
     solver_version: payload.solver_version ?? null,
     trace_id: payload.trace_id ?? null,
   };
@@ -217,10 +239,20 @@ export async function POST(req: Request) {
       headers["authorization"] = `Bearer ${SERVICE_TOKEN}`;
     }
 
+    // Always ensure a solver time limit is set so no request blocks indefinitely.
+    const outboundPreferences = parsed.data.preferences ?? {};
+    const outboundData = {
+      ...parsed.data,
+      preferences: {
+        solver_time_limit_seconds: DEFAULT_SOLVER_TIME_LIMIT_SECONDS,
+        ...outboundPreferences,
+      },
+    };
+
     const res = await fetch(`${TARGET}/optimize`, {
       method: "POST",
       headers,
-      body: JSON.stringify(parsed.data),
+      body: JSON.stringify(outboundData),
       signal: controller.signal,
     });
     const durationMs = Date.now() - startedAt;
@@ -233,18 +265,48 @@ export async function POST(req: Request) {
       responseText = await res.text();
     }
 
+    const sanitizedResponse = sanitizeOptimizeResponse(responsePayload);
+
     await persistRun({
       traceId,
       authUserId: admin.authUser.id,
       adminUserId: admin.adminUser?.id ?? null,
       status: res.ok ? "success" : "error",
       requestPayload: sanitizeOptimizeRequest(parsed.data),
-      responsePayload: sanitizeOptimizeResponse(responsePayload),
+      responsePayload: sanitizedResponse,
       error: res.ok ? null : `upstream_${res.status}`,
       durationMs,
       locationsCount: locations.length,
       startIndex: typeof start_index === "number" ? start_index : null,
     });
+
+    // ── Shadow intelligence — non-blocking, never affects live response ────────
+    // Fires only when shadow mode flags are enabled (default: all off).
+    // The response is returned immediately below; this runs in the background.
+    if (res.ok && contentType.includes("application/json")) {
+      const campaign = (parsed.data.context as any)?.campaign;
+      const requestCtx: OptimizerRequestContext = {
+        traceId,
+        locationsCount: locations.length,
+        boundingBox: buildBoundingBox(locations),
+        city: campaign?.city ?? undefined,
+        preferences: parsed.data.preferences ?? undefined,
+        campaignContext: campaign
+          ? { id: campaign.id, name: campaign.name, campaignType: campaign.campaignType }
+          : undefined,
+      };
+      const metrics = (responsePayload as any)?.metrics;
+      const responseSummary: OptimizerResponseSummary = {
+        solverStatus: sanitizedResponse?.solver_status ?? null,
+        distanceKm: metrics?.distance_km ?? null,
+        distanceMeters: metrics?.distance_meters ?? null,
+        impressionsEstimate: (responsePayload as any)?.score?.impressions_estimate ?? null,
+        solverTimeSeconds: sanitizedResponse?.solver_time_seconds ?? null,
+      };
+      void runShadowIntelligence(requestCtx, responseSummary).catch(() => {
+        // intentional no-op — shadow errors must never surface
+      });
+    }
 
     if (contentType.includes("application/json")) {
       return NextResponse.json(responsePayload, { status: res.status });

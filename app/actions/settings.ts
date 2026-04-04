@@ -42,6 +42,7 @@ import {
   rideVerificationSettingsSchema,
   securitySettingsSchema,
   settingsSectionIdSchema,
+  suggestedRoutesSettingsSchema,
 } from "@/schemas/settings";
 
 const LEGACY_KEYS = ["system", "points", "campaignDefaults", "featureFlags"] as const;
@@ -52,6 +53,7 @@ const SETTINGS_KEYS = [
   "rideVerification",
   "impact",
   "campaigns",
+  "suggestedRoutes",
   "features",
   "notifications",
   "security",
@@ -77,6 +79,7 @@ const sectionSchemas = {
   rideVerification: rideVerificationSettingsSchema,
   impact: impactSettingsSchema,
   campaigns: campaignSettingsSchema,
+  suggestedRoutes: suggestedRoutesSettingsSchema,
   features: featureSettingsSchema,
   notifications: notificationSettingsSchema,
   security: securitySettingsSchema,
@@ -131,6 +134,13 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
     defaultSignupDeadlineDays: 7,
     defaultMaxRiders: 50,
     requireApproval: false,
+  },
+  suggestedRoutes: {
+    freeRideEnabled: true,
+    defaultMultiplier: 1.5,
+    complianceThreshold: 0.7,
+    maxDailyBonusPoints: 300,
+    maxPerRouteBonusTotal: 10000,
   },
   features: {
     rewardsShopEnabled: true,
@@ -217,6 +227,7 @@ const ENV_MANAGED_FIELDS: Record<SettingsSectionId, string[]> = {
   rideVerification: [],
   impact: [],
   campaigns: [],
+  suggestedRoutes: [],
   features: [],
   notifications: [],
   security: [],

@@ -54,6 +54,7 @@ import {
   rewardsSettingsSchema,
   rideVerificationSettingsSchema,
   securitySettingsSchema,
+  suggestedRoutesSettingsSchema,
 } from "@/schemas/settings";
 
 const SECTION_SCHEMAS = {
@@ -63,6 +64,7 @@ const SECTION_SCHEMAS = {
   rideVerification: rideVerificationSettingsSchema,
   impact: impactSettingsSchema,
   campaigns: campaignSettingsSchema,
+  suggestedRoutes: suggestedRoutesSettingsSchema,
   features: featureSettingsSchema,
   notifications: notificationSettingsSchema,
   security: securitySettingsSchema,

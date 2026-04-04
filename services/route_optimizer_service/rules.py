@@ -1,9 +1,13 @@
-"""Lightweight rules engine for the prototype route optimizer.
+"""Lightweight rules engine for the route optimizer.
 
 This module enforces hard constraints and performs simple transformations needed
 before passing locations to the solver. Keep rules deterministic and auditable.
 """
 from typing import Dict, List, Tuple, Any
+
+# Hard upper bound on locations accepted by the solver. The proxy layer
+# enforces 80; this is defence-in-depth at the service boundary.
+MAX_LOCATIONS = 100
 
 
 def enforce_rules(payload: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], List[str]]:
@@ -82,3 +86,6 @@ def enforce_rules(payload: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], List[s
             warnings.append(f"preference received: {key}={preferences.get(key)}")
 
     return out, warnings
+
+
+__all__ = ["enforce_rules", "MAX_LOCATIONS"]

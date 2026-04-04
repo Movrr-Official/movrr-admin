@@ -24,6 +24,7 @@ export const settingsSectionIdSchema = z.enum([
   "rideVerification",
   "impact",
   "campaigns",
+  "suggestedRoutes",
   "features",
   "notifications",
   "security",
@@ -121,6 +122,28 @@ export const impactSettingsSchema = z.object({
   co2KgPerKm: nonNegativeNumber.default(0.021),
 });
 
+/**
+ * Free Ride Mode (Suggested Routes) — controls bonuses and compliance thresholds.
+ * These values are synced to the mobile app via the public platform config endpoint.
+ */
+export const suggestedRoutesSettingsSchema = z.object({
+  /** Whether the Free Ride Mode bonus system is active platform-wide. */
+  freeRideEnabled: z.boolean().default(true),
+  /** Default multiplier applied to base points when a rider completes a
+   *  multiplier-type suggested route. 1.0 = no multiplier. */
+  defaultMultiplier: nonNegativeNumber.min(1).default(1.5),
+  /** Fraction [0–1] of route waypoints the rider's GPS path must cover to
+   *  qualify for a bonus. */
+  complianceThreshold: nonNegativeNumber.max(1).default(0.7),
+  /** Maximum bonus points any rider can earn from suggested routes per day. */
+  maxDailyBonusPoints: nonNegativeInteger.default(300),
+  /** Maximum total points that can be distributed from a single suggested
+   *  route across all riders (0 = unlimited). */
+  maxPerRouteBonusTotal: nonNegativeInteger.default(10000),
+});
+
+export type SuggestedRoutesSettings = z.infer<typeof suggestedRoutesSettingsSchema>;
+
 export const campaignSettingsSchema = z.object({
   defaultMultiplier: nonNegativeNumber.default(1),
   defaultDurationDays: positiveInteger.default(30),
@@ -135,6 +158,17 @@ export const featureSettingsSchema = z.object({
   autoAssignmentEnabled: z.boolean().default(false),
   realtimeTrackingEnabled: z.boolean().default(true),
   emailNotificationsEnabled: z.boolean().default(true),
+
+  // ── LLM Route Intelligence (shadow mode) ────────────────────────────────────
+  // All LLM flags are false/disabled by default. llmGlobalDisable is the
+  // master kill switch: when true, all LLM paths short-circuit immediately
+  // regardless of the other flags. Shadow mode runs LLM in parallel with the
+  // live optimizer; output is only stored internally and never shown to users.
+  llmGlobalDisable: z.boolean().default(true),
+  llmShadowModeEnabled: z.boolean().default(false),
+  llmRouteSuggestionsEnabled: z.boolean().default(false),
+  llmRouteExplanationsEnabled: z.boolean().default(false),
+  llmPolicyTranslationEnabled: z.boolean().default(false),
 });
 
 export const digestFrequencySchema = z.enum(["off", "daily", "weekly"]);
@@ -215,6 +249,7 @@ export const adminSettingsValuesSchema = z.object({
   rideVerification: rideVerificationSettingsSchema,
   impact: impactSettingsSchema,
   campaigns: campaignSettingsSchema,
+  suggestedRoutes: suggestedRoutesSettingsSchema,
   features: featureSettingsSchema,
   notifications: notificationSettingsSchema,
   security: securitySettingsSchema,

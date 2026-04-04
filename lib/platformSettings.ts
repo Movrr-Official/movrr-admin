@@ -25,6 +25,7 @@ import {
   rewardsSettingsSchema,
   rideVerificationSettingsSchema,
   securitySettingsSchema,
+  suggestedRoutesSettingsSchema,
   type SettingsSectionId,
 } from "@/schemas/settings";
 
@@ -36,6 +37,7 @@ const SETTINGS_KEYS = [
   "rideVerification",
   "impact",
   "campaigns",
+  "suggestedRoutes",
   "features",
   "notifications",
   "security",
@@ -61,6 +63,7 @@ const sectionSchemas = {
   rideVerification: rideVerificationSettingsSchema,
   impact: impactSettingsSchema,
   campaigns: campaignSettingsSchema,
+  suggestedRoutes: suggestedRoutesSettingsSchema,
   features: featureSettingsSchema,
   notifications: notificationSettingsSchema,
   security: securitySettingsSchema,
@@ -129,12 +132,25 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     defaultMaxRiders: 50,
     requireApproval: false,
   },
+  suggestedRoutes: {
+    freeRideEnabled: true,
+    defaultMultiplier: 1.5,
+    complianceThreshold: 0.7,
+    maxDailyBonusPoints: 300,
+    maxPerRouteBonusTotal: 10000,
+  },
   features: {
     rewardsShopEnabled: true,
     routeTemplatesEnabled: true,
     autoAssignmentEnabled: false,
     realtimeTrackingEnabled: true,
     emailNotificationsEnabled: true,
+    // LLM route intelligence — all off by default (shadow mode, never live)
+    llmGlobalDisable: true,
+    llmShadowModeEnabled: false,
+    llmRouteSuggestionsEnabled: false,
+    llmRouteExplanationsEnabled: false,
+    llmPolicyTranslationEnabled: false,
   },
   notifications: {
     operationsEmailEnabled: true,
@@ -196,6 +212,7 @@ export const ENV_MANAGED_FIELDS: Record<SettingsSectionId, string[]> = {
   rideVerification: [],
   impact: [],
   campaigns: [],
+  suggestedRoutes: [],
   features: [],
   notifications: [],
   security: [],
@@ -433,6 +450,7 @@ export async function getPublicPlatformConfig() {
   const imp = values.impact;
   const g = values.general;
   const f = values.features;
+  const sr = values.suggestedRoutes;
   return {
     // Reward engine config — ride earning params come from rewards; verification
     // thresholds come from rideVerification (canonical after IA restructure).
@@ -468,6 +486,14 @@ export async function getPublicPlatformConfig() {
       routeTemplatesEnabled: f.routeTemplatesEnabled,
       autoAssignmentEnabled: f.autoAssignmentEnabled,
       realtimeTrackingEnabled: f.realtimeTrackingEnabled,
+    },
+    // Free Ride Mode config — synced to mobile for compliance scoring and bonus UI.
+    freeRide: {
+      freeRideEnabled: sr.freeRideEnabled,
+      defaultMultiplier: sr.defaultMultiplier,
+      complianceThreshold: sr.complianceThreshold,
+      maxDailyBonusPoints: sr.maxDailyBonusPoints,
+      maxPerRouteBonusTotal: sr.maxPerRouteBonusTotal,
     },
   };
 }

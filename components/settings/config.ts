@@ -7,6 +7,7 @@ import {
   Globe,
   Leaf,
   Mail,
+  MapPin,
   Settings2,
   Shield,
   Sparkles,
@@ -68,6 +69,12 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
     title: "Campaigns",
     icon: Globe,
     description: "Default campaign planning and approval rules.",
+  },
+  {
+    id: "suggestedRoutes",
+    title: "Suggested Routes",
+    icon: MapPin,
+    description: "Free Ride Mode: route bonuses, compliance thresholds, and daily caps.",
   },
   {
     id: "features",
@@ -318,6 +325,47 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
           "Average CO\u2082 saved per km cycled vs. car equivalent. Used for lifetime impact calculations.",
       },
     ],
+    suggestedRoutes: [
+      {
+        name: "freeRideEnabled",
+        label: "Free Ride Mode Enabled",
+        type: "switch",
+        description:
+          "Enables the Free Ride Mode bonus system platform-wide. Riders earn bonuses for completing admin-curated suggested routes.",
+      },
+      {
+        name: "defaultMultiplier",
+        label: "Default Multiplier",
+        type: "number",
+        min: 1,
+        description:
+          "Default points multiplier applied when a rider completes a multiplier-type suggested route (minimum 1.0).",
+      },
+      {
+        name: "complianceThreshold",
+        label: "Compliance Threshold",
+        type: "number",
+        min: 0,
+        description:
+          "Fraction of route waypoints (0–1) the rider's GPS path must cover to qualify for a bonus. Default: 0.7 (70%).",
+      },
+      {
+        name: "maxDailyBonusPoints",
+        label: "Max Daily Bonus Points",
+        type: "number",
+        min: 0,
+        description:
+          "Maximum bonus points any rider can earn from suggested routes per day.",
+      },
+      {
+        name: "maxPerRouteBonusTotal",
+        label: "Max Per-Route Bonus Total",
+        type: "number",
+        min: 0,
+        description:
+          "Maximum total points that can be distributed from a single suggested route across all riders (0 = unlimited).",
+      },
+    ],
     campaigns: [
       {
         name: "defaultMultiplier",
@@ -370,6 +418,42 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
         name: "emailNotificationsEnabled",
         label: "Email Notifications Enabled",
         type: "switch",
+      },
+      // ── LLM Route Intelligence (shadow mode, admin-only) ──────────────────
+      {
+        name: "llmGlobalDisable",
+        label: "LLM Global Disable",
+        type: "switch",
+        description:
+          "Master kill switch. When ON, all LLM capabilities are immediately disabled regardless of other flags. Default: ON (disabled). Change only after internal review.",
+      },
+      {
+        name: "llmShadowModeEnabled",
+        label: "LLM Shadow Mode",
+        type: "switch",
+        description:
+          "Runs LLM analysis in parallel with the live optimizer. Output is stored internally only — never shown to users or used in routing decisions.",
+      },
+      {
+        name: "llmRouteSuggestionsEnabled",
+        label: "LLM Route Suggestions",
+        type: "switch",
+        description:
+          "Enables the route-suggestion capability in shadow mode. LLM suggests candidate route concepts for offline review.",
+      },
+      {
+        name: "llmRouteExplanationsEnabled",
+        label: "LLM Route Explanations",
+        type: "switch",
+        description:
+          "Enables the route-explanation capability in shadow mode. LLM generates human-readable summaries of deterministic optimizer outputs.",
+      },
+      {
+        name: "llmPolicyTranslationEnabled",
+        label: "LLM Policy Translation",
+        type: "switch",
+        description:
+          "Enables the policy-translation capability in shadow mode. LLM translates natural-language planning intent into structured optimizer preferences for admin review.",
       },
     ],
     notifications: [

@@ -558,9 +558,8 @@ export function RouteOptimizer({
           parentPayload.locations,
           preferences,
         );
-        if (parentPayload.locations.length > 12) {
-          preferences.solver_time_limit_seconds = 5;
-        }
+        // Always set a time limit so the solver is bounded regardless of input size.
+        preferences.solver_time_limit_seconds = 5;
         payloadToSend = {
           ...parentPayload,
           preferences: {
@@ -596,6 +595,16 @@ export function RouteOptimizer({
         if (!data || !Array.isArray(data.route)) {
           setOptimizeError("optimizer returned unexpected payload");
           console.warn("unexpected optimize payload", data);
+        } else if (
+          data.solver_status === "fallback" ||
+          data.solver_status === "failed"
+        ) {
+          // Solver could not find a solution — do not present as optimized.
+          setOptimizeError(
+            `Solver could not find an optimized route (status: ${data.solver_status}). ` +
+              "The route was not changed. Try reducing the number of stops or the max duration.",
+          );
+          console.warn("solver returned non-optimized result", data.solver_status, data.warnings);
         } else {
           setCandidateRoute(data);
           setOptimizationSucceeded(true);
@@ -884,27 +893,36 @@ export function RouteOptimizer({
             {optimizationSucceeded && (
               <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
                 <p>
-                  • Estimated impressions:{" "}
+                  • Impression proxy (estimate):{" "}
                   {candidateRoute?.score?.impressions_estimate ?? "—"}
+                  {candidateRoute?.score?.is_estimate ? " *" : ""}
                 </p>
                 <p>
-                  • Approx distance:{" "}
-                  {typeof candidateRoute?.metrics?.approx_distance_units ===
-                  "number"
-                    ? candidateRoute.metrics.approx_distance_units.toFixed(2)
+                  • Route distance:{" "}
+                  {typeof candidateRoute?.metrics?.distance_km === "number"
+                    ? `${candidateRoute.metrics.distance_km.toFixed(2)} km`
                     : "—"}
                 </p>
                 <p>
                   • Stops optimized:{" "}
                   {candidateRoute?.metrics?.locations_count ?? "—"}
                 </p>
-                <p>• Model version: {candidateRoute?.model_version ?? "—"}</p>
+                <p>
+                  • Solver:{" "}
+                  {candidateRoute?.solver_status ?? "—"}{" "}
+                  ({candidateRoute?.solver_version ?? "unknown"})
+                </p>
                 <p>• Trace ID: {candidateRoute?.trace_id ?? "—"}</p>
+                {candidateRoute?.score?.is_estimate && (
+                  <p className="text-xs text-green-600 dark:text-green-400 italic">
+                    * Impression figure is a distance-based heuristic estimate, not a model prediction.
+                  </p>
+                )}
                 {Array.isArray(candidateRoute?.warnings) &&
                   candidateRoute.warnings.includes("max_duration_exceeded") && (
                     <p>
-                      • Duration warning: Estimated distance exceeds the max
-                      duration setting.
+                      • Duration warning: Route distance exceeds the max
+                      duration estimate at 15 km/h average.
                     </p>
                   )}
               </div>
