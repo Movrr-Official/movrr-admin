@@ -33,6 +33,13 @@ const getSenderEmail = () =>
 const getRecoveryRedirectUrl = () =>
   new URL("/auth/callback?next=/auth/reset-password", APP_URL).toString();
 
+const buildConfirmUrl = (hashedToken: string, type: string): string => {
+  const url = new URL("/auth/confirm", APP_URL);
+  url.searchParams.set("token_hash", hashedToken);
+  url.searchParams.set("type", type);
+  return url.toString();
+};
+
 const delay = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -226,7 +233,7 @@ async function updateWaitlistStatusInternal(
           },
         });
 
-      if (recoveryError || !recoveryData?.properties?.action_link) {
+      if (recoveryError || !recoveryData?.properties?.hashed_token) {
         if (createdAuthUserId) {
           await cleanupCreatedUser(supabaseAdmin, createdAuthUserId);
         }
@@ -252,7 +259,10 @@ async function updateWaitlistStatusInternal(
         subject: "Set up your Movrr account",
         react: AccountSetupEmail({
           name: waitlist.name,
-          setupUrl: recoveryData.properties.action_link,
+          setupUrl: buildConfirmUrl(
+            recoveryData.properties.hashed_token,
+            "recovery",
+          ),
         }),
       });
 

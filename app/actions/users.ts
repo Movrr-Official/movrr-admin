@@ -129,6 +129,18 @@ const getSenderEmail = () =>
 const getRecoveryRedirectUrl = () =>
   new URL("/auth/callback?next=/auth/reset-password", APP_URL).toString();
 
+/**
+ * Build the scanner-safe confirm URL for outbound emails.
+ * Uses token_hash (from generateLink) instead of action_link so the token
+ * is only consumed after the user explicitly clicks "Continue" on /auth/confirm.
+ */
+const buildConfirmUrl = (hashedToken: string, type: string): string => {
+  const url = new URL("/auth/confirm", APP_URL);
+  url.searchParams.set("token_hash", hashedToken);
+  url.searchParams.set("type", type);
+  return url.toString();
+};
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const ADMIN_ACCESS_ROLES = new Set([
@@ -710,7 +722,7 @@ export async function createUser(
               },
             });
 
-          if (recoveryError || !recoveryData?.properties?.action_link) {
+          if (recoveryError || !recoveryData?.properties?.hashed_token) {
             throw new Error(
               recoveryError?.message || "Failed to generate account setup link",
             );
@@ -722,7 +734,10 @@ export async function createUser(
             subject: "Set up your Movrr account",
             react: AccountSetupEmail({
               name: validatedData.name,
-              setupUrl: recoveryData.properties.action_link,
+              setupUrl: buildConfirmUrl(
+                recoveryData.properties.hashed_token,
+                "recovery",
+              ),
             }),
           });
         }
@@ -1086,10 +1101,11 @@ export async function sendPasswordResetEmail(
       return { success: false, error: error.message };
     }
 
-    const resetLink = data?.properties?.action_link;
-    if (!resetLink) {
+    const hashedToken = data?.properties?.hashed_token;
+    if (!hashedToken) {
       return { success: false, error: "Password reset link not generated" };
     }
+    const resetLink = buildConfirmUrl(hashedToken, "recovery");
 
     const resend = getResendClient();
     if (!resend) {

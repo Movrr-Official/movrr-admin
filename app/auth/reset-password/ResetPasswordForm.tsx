@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { updatePassword } from "@/lib/auth";
+import { clearRecoveryCookie } from "@/app/actions/authActions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,9 +60,11 @@ export function ResetPasswordForm() {
         setError(updateError.message);
         return;
       }
+      // Clear the httpOnly recovery cookie server-side.
+      // document.cookie cannot touch httpOnly cookies set by the server.
+      await clearRecoveryCookie();
       setIsComplete(true);
       form.reset();
-      document.cookie = "movrr-admin-password-recovery=; Max-Age=0; Path=/auth/reset-password; SameSite=Lax";
     });
   };
 
