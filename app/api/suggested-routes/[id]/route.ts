@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
 import { requireAdminRoles } from "@/lib/admin";
@@ -37,9 +37,11 @@ const patchRouteSchema = z
 // ─── GET /api/suggested-routes/[id] ──────────────────────────────────────────
 
 export async function GET(
-  _request: Request,
-  { params }: { params: { id: string } },
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
+
   try {
     await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   } catch {
@@ -50,7 +52,7 @@ export async function GET(
   const { data, error } = await supabase
     .from("suggested_routes")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error?.code === "PGRST116") {
@@ -73,9 +75,11 @@ export async function GET(
 // ─── PATCH /api/suggested-routes/[id] ────────────────────────────────────────
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } },
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
+
   try {
     await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   } catch {
@@ -123,7 +127,7 @@ export async function PATCH(
   const { data, error } = await supabase
     .from("suggested_routes")
     .update(update)
-    .eq("id", params.id)
+    .eq("id", id)
     .select()
     .single();
 
@@ -149,9 +153,11 @@ export async function PATCH(
 // referenced by historical ride_session records.
 
 export async function DELETE(
-  _request: Request,
-  { params }: { params: { id: string } },
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
+
   try {
     await requireAdminRoles(ADMIN_MODERATOR_ROLES);
   } catch {
@@ -163,7 +169,7 @@ export async function DELETE(
   const { data, error } = await supabase
     .from("suggested_routes")
     .update({ active: false, updated_at: new Date().toISOString() })
-    .eq("id", params.id)
+    .eq("id", id)
     .select("id, active, updated_at")
     .single();
 
