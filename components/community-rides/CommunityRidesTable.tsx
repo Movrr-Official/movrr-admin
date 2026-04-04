@@ -34,14 +34,15 @@ export function CommunityRidesTable({
       ],
     },
     {
-      id: "difficulty",
-      label: "Difficulty",
+      id: "category",
+      label: "Category",
       type: "multi-select",
-      key: "difficulty",
+      key: "category",
       options: [
-        { value: "easy", label: "Easy" },
-        { value: "moderate", label: "Moderate" },
+        { value: "beginner", label: "Beginner" },
+        { value: "intermediate", label: "Intermediate" },
         { value: "challenging", label: "Challenging" },
+        { value: "social", label: "Social" },
       ],
     },
   ];

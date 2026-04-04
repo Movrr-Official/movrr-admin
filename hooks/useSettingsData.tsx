@@ -80,7 +80,7 @@ const fallbackValues: AdminSettingsValues = adminSettingsValuesSchema.parse({
     alertRouting: "support_and_admin",
   },
   security: {
-    enforceAdminMfa: false,
+    enforceAdminMfa: true,
     adminSessionTimeoutMinutes: 60,
     auditRetentionDays: 365,
     allowPasswordResetLinks: true,

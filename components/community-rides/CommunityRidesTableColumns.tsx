@@ -1,6 +1,7 @@
 import {
   MoreHorizontal,
   Eye,
+  Pencil,
   Trash2,
   XCircle,
   CheckCircle2,
@@ -57,27 +58,31 @@ export const getStatusBadge = (status: string) => {
   }
 };
 
-export const getDifficultyBadge = (difficulty: string) => {
-  switch (difficulty) {
-    case "easy":
-      return <Badge variant="success">Easy</Badge>;
-    case "moderate":
-      return <Badge variant="warning">Moderate</Badge>;
+export const getCategoryBadge = (category: string) => {
+  switch (category) {
+    case "beginner":
+      return <Badge variant="success">Beginner</Badge>;
+    case "intermediate":
+      return <Badge variant="warning">Intermediate</Badge>;
     case "challenging":
       return <Badge variant="destructive">Challenging</Badge>;
+    case "social":
+      return <Badge variant="info">Social</Badge>;
     default:
-      return <Badge variant="secondary">{difficulty}</Badge>;
+      return <Badge variant="secondary">{category}</Badge>;
   }
 };
 
 interface CommunityRidesTableColumnsProps {
   onView?: (ride: CommunityRide) => void;
+  onEdit?: (ride: CommunityRide) => void;
   onDelete?: (ride: CommunityRide) => void;
   onCancel?: (ride: CommunityRide) => void;
 }
 
 export const getCommunityRidesTableColumns = ({
   onView,
+  onEdit,
   onDelete,
   onCancel,
 }: CommunityRidesTableColumnsProps = {}): ColumnDef<CommunityRide>[] => [
@@ -107,9 +112,9 @@ export const getCommunityRidesTableColumns = ({
     cell: ({ row }) => getStatusBadge(row.original.status),
   },
   {
-    accessorKey: "difficulty",
-    header: "Difficulty",
-    cell: ({ row }) => getDifficultyBadge(row.original.difficulty),
+    accessorKey: "category",
+    header: "Category",
+    cell: ({ row }) => getCategoryBadge(row.original.category),
   },
   {
     accessorKey: "scheduledAt",
@@ -161,8 +166,8 @@ export const getCommunityRidesTableColumns = ({
     },
   },
   {
-    accessorKey: "difficulty",
-    id: "difficulty_icon",
+    accessorKey: "category",
+    id: "category_icon",
     header: "",
     cell: ({ row }) => {
       const ride = row.original;
@@ -170,7 +175,7 @@ export const getCommunityRidesTableColumns = ({
         <div className="flex items-center gap-1">
           <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-xs text-muted-foreground capitalize">
-            {ride.difficulty}
+            {ride.category}
           </span>
         </div>
       );
@@ -198,6 +203,7 @@ export const getCommunityRidesTableColumns = ({
     id: "actions",
     cell: ({ row }) => {
       const ride = row.original;
+      const canEdit = ride.status !== "completed" && ride.status !== "cancelled";
       const canCancel = ride.status === "upcoming" || ride.status === "active";
       return (
         <DropdownMenu>
@@ -212,6 +218,12 @@ export const getCommunityRidesTableColumns = ({
               <Eye className="mr-2 h-4 w-4" />
               View Details
             </DropdownMenuItem>
+            {canEdit && (
+              <DropdownMenuItem onClick={() => onEdit?.(ride)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+            )}
             {canCancel && (
               <>
                 <DropdownMenuSeparator />

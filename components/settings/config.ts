@@ -491,7 +491,13 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
       },
     ],
     security: [
-      { name: "enforceAdminMfa", label: "Enforce Admin MFA", type: "switch" },
+      {
+        name: "enforceAdminMfa",
+        label: "Enforce Admin MFA",
+        type: "switch",
+        description:
+          "Requires admins to enroll an authenticator app and complete a verification challenge after password sign-in.",
+      },
       {
         name: "adminSessionTimeoutMinutes",
         label: "Admin Session Timeout (Minutes)",

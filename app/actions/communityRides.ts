@@ -10,14 +10,20 @@ import { mockCommunityRides } from "@/data/mockCommunityRides";
 import {
   CommunityRide,
   CommunityRideFiltersSchema,
+  CreateCommunityRideFormData,
   UpdateCommunityRideFormData,
+  createCommunityRideSchema,
 } from "@/schemas";
 
 // Flat selects — no FK-hint joins to avoid PGRST200 schema-cache misses.
 // Rider names are resolved in a second batched query.
 const RIDE_SELECT = `
   id,
+  created_by_user_id,
+  organizer_type,
+  organizer_user_id,
   organizer_rider_id,
+  organizer_name,
   title,
   description,
   scheduled_at,
@@ -27,7 +33,7 @@ const RIDE_SELECT = `
   route_id,
   max_participants,
   bike_types_allowed,
-  difficulty,
+  category,
   status,
   is_public,
   created_at,
@@ -39,6 +45,11 @@ const PARTICIPANT_SELECT = `
 `;
 
 type RiderNameMap = Record<string, string>; // riderId -> full name
+
+type ActivityUserRefs = {
+  userId?: string;
+  actorUserId?: string | null;
+};
 
 /** Batch-fetch display names for a set of rider IDs. */
 async function fetchRiderNames(
@@ -61,18 +72,70 @@ async function fetchRiderNames(
   return map;
 }
 
+async function resolveActivityUserRefs(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  input: {
+    targetUserIds?: Array<string | null | undefined>;
+    actorUserIds?: Array<string | null | undefined>;
+  },
+): Promise<ActivityUserRefs> {
+  const candidates = Array.from(
+    new Set(
+      [...(input.targetUserIds ?? []), ...(input.actorUserIds ?? [])].filter(
+        (value): value is string => Boolean(value),
+      ),
+    ),
+  );
+
+  if (candidates.length === 0) {
+    return {};
+  }
+
+  const { data, error } = await supabase
+    .from("user")
+    .select("id")
+    .in("id", candidates);
+
+  if (error) {
+    console.warn("Failed to resolve activity user refs:", error.message);
+    return {};
+  }
+
+  const existingIds = new Set((data ?? []).map((row) => row.id as string));
+
+  return {
+    userId: (input.targetUserIds ?? []).find(
+      (value): value is string =>
+        typeof value === "string" && existingIds.has(value),
+    ),
+    actorUserId:
+      (input.actorUserIds ?? []).find(
+        (value): value is string =>
+          typeof value === "string" && existingIds.has(value),
+      ) ?? null,
+  };
+}
+
 function buildRide(
   row: Record<string, unknown>,
   nameMap: RiderNameMap,
   participants: Array<{ id: string; rider_id: string; status: string; joined_at: string }>,
 ): CommunityRide {
-  const orgId = String(row.organizer_rider_id ?? "");
+  const orgId =
+    row.organizer_rider_id != null ? String(row.organizer_rider_id) : undefined;
   const activeParticipants = participants.filter((p) => p.status === "joined");
 
   return {
     id: String(row.id ?? ""),
+    organizerType: (row.organizer_type as CommunityRide["organizerType"]) ?? "movrr",
+    organizerUserId: row.organizer_user_id ? String(row.organizer_user_id) : undefined,
     organizerRiderId: orgId,
-    organizerName: nameMap[orgId] ?? orgId,
+    organizerName:
+      row.organizer_name && String(row.organizer_name).trim().length > 0
+        ? String(row.organizer_name)
+        : orgId
+          ? nameMap[orgId] ?? orgId
+          : "MOVRR",
     title: String(row.title ?? ""),
     description: row.description ? String(row.description) : undefined,
     scheduledAt: String(row.scheduled_at ?? ""),
@@ -83,7 +146,7 @@ function buildRide(
     maxParticipants: Number(row.max_participants ?? 0),
     participantCount: activeParticipants.length,
     bikeTypesAllowed: Array.isArray(row.bike_types_allowed) ? (row.bike_types_allowed as string[]) : undefined,
-    difficulty: (row.difficulty as CommunityRide["difficulty"]) ?? "easy",
+    category: (row.category as CommunityRide["category"]) ?? "social",
     status: (row.status as CommunityRide["status"]) ?? "upcoming",
     isPublic: Boolean(row.is_public),
     createdAt: String(row.created_at ?? ""),
@@ -96,6 +159,149 @@ function buildRide(
       joinedAt: p.joined_at,
     })),
   };
+}
+
+export async function createCommunityRide(
+  input: CreateCommunityRideFormData,
+): Promise<{ success: boolean; data?: { id: string }; error?: string }> {
+  const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+
+  if (shouldUseMockData()) {
+    revalidatePath("/community-rides");
+    return { success: true, data: { id: "mock-id" } };
+  }
+
+  const parsed = createCommunityRideSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const {
+    title,
+    description,
+    scheduledAt,
+    meetingPointName,
+    meetingPointLat,
+    meetingPointLng,
+    maxParticipants,
+    bikeTypesAllowed,
+    category,
+    isPublic,
+    organizerType,
+    organizerName,
+    organizerRiderId,
+  } = parsed.data;
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    let resolvedOrganizerUserId: string | null = auth.authUser.id;
+    let resolvedOrganizerRiderId: string | null = null;
+
+    if (organizerType === "rider") {
+      if (!organizerRiderId) {
+        return {
+          success: false,
+          error: "A rider organizer requires a rider ID.",
+        };
+      }
+
+      const { data: riderRow, error: riderError } = await supabase
+        .from("rider")
+        .select("id, user_id")
+        .eq("id", organizerRiderId)
+        .maybeSingle();
+
+      if (riderError) throw riderError;
+
+      if (!riderRow?.id || !riderRow.user_id) {
+        return {
+          success: false,
+          error: "Selected organizer rider could not be found.",
+        };
+      }
+
+      resolvedOrganizerRiderId = riderRow.id as string;
+      resolvedOrganizerUserId = riderRow.user_id as string;
+    }
+
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from("community_ride")
+      .insert({
+        created_by_user_id: auth.authUser.id,
+        organizer_type: organizerType,
+        organizer_user_id: resolvedOrganizerUserId,
+        organizer_rider_id: resolvedOrganizerRiderId,
+        organizer_name: organizerName,
+        title,
+        description: description ?? null,
+        scheduled_at: scheduledAt,
+        meeting_point_name: meetingPointName ?? null,
+        meeting_point_lat: meetingPointLat ?? null,
+        meeting_point_lng: meetingPointLng ?? null,
+        max_participants: maxParticipants,
+        bike_types_allowed: bikeTypesAllowed ?? null,
+        category,
+        status: "upcoming",
+        is_public: isPublic,
+        created_at: now,
+        updated_at: now,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+
+    // For movrr-organized rides the organizer IS the platform, not a specific user.
+    // We log the activity against the admin actor only (not a misleading self-target).
+    const auditTargetUserId =
+      organizerType !== "movrr" ? resolvedOrganizerUserId : null;
+
+    const activityRefs = await resolveActivityUserRefs(supabase, {
+      targetUserIds: [auditTargetUserId, auth.authUser.id],
+      actorUserIds: [auth.authUser.id],
+    });
+
+    const auditAction =
+      organizerType === "movrr"
+        ? "MOVRR community ride created"
+        : "Community ride created";
+    const auditDescription =
+      organizerType === "movrr"
+        ? `Admin created a MOVRR-organised community ride "${title}" scheduled for ${scheduledAt}.`
+        : `Admin created community ride "${title}" for organiser "${organizerName}", scheduled for ${scheduledAt}.`;
+
+    if (activityRefs.userId) {
+      await writeUserActivity(supabase, {
+        user_id: activityRefs.userId,
+        actor_user_id: activityRefs.actorUserId,
+        source: "web",
+        action: auditAction,
+        description: auditDescription,
+        related_entity_type: "community_ride",
+        related_entity_id: (data as { id: string }).id,
+        metadata: {
+          title,
+          category,
+          maxParticipants,
+          isPublic,
+          organizerType,
+          organizerName,
+          organizerUserId: resolvedOrganizerUserId,
+          organizerRiderId: resolvedOrganizerRiderId,
+        },
+      }).catch((err) => console.warn("Community ride creation audit write failed:", err));
+    }
+
+    revalidatePath("/community-rides");
+    return { success: true, data: { id: (data as { id: string }).id } };
+  } catch (err) {
+    console.error("createCommunityRide error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to create ride",
+    };
+  }
 }
 
 export async function getCommunityRides(
@@ -119,8 +325,8 @@ export async function getCommunityRides(
     if (filters?.status && filters.status !== "all") {
       query = query.eq("status", filters.status);
     }
-    if (filters?.difficulty && filters.difficulty !== "all") {
-      query = query.eq("difficulty", filters.difficulty);
+    if (filters?.category && filters.category !== "all") {
+      query = query.eq("category", filters.category);
     }
     if (filters?.dateRange?.from) {
       query = query.gte("scheduled_at", filters.dateRange.from.toISOString());
@@ -153,12 +359,16 @@ export async function getCommunityRides(
       joined_at: string;
     }>;
 
-    // 3. Batch-fetch rider names for organizers + participants
+    // 3. Batch-fetch rider names for rider organizers + participants
     const allRiderIds = Array.from(
-      new Set([
-        ...rows.map((r) => String(r.organizer_rider_id)),
-        ...allParticipants.map((p) => p.rider_id),
-      ]),
+      new Set(
+        [
+          ...rows.map((r) =>
+            r.organizer_rider_id ? String(r.organizer_rider_id) : undefined,
+          ),
+          ...allParticipants.map((p) => p.rider_id),
+        ].filter((value): value is string => Boolean(value)),
+      ),
     );
     const nameMap = await fetchRiderNames(supabase, allRiderIds);
 
@@ -225,7 +435,12 @@ export async function getCommunityRideById(
     }>;
 
     const allRiderIds = Array.from(
-      new Set([String(row.organizer_rider_id), ...participants.map((p) => p.rider_id)]),
+      new Set(
+        [
+          row.organizer_rider_id ? String(row.organizer_rider_id) : undefined,
+          ...participants.map((p) => p.rider_id),
+        ].filter((value): value is string => Boolean(value)),
+      ),
     );
     const nameMap = await fetchRiderNames(supabase, allRiderIds);
 
@@ -238,6 +453,14 @@ export async function getCommunityRideById(
     };
   }
 }
+
+// Valid status transitions an admin may perform.
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  upcoming: ["active", "cancelled"],
+  active: ["completed", "cancelled"],
+  completed: [],
+  cancelled: [],
+};
 
 export async function updateCommunityRide(
   input: UpdateCommunityRideFormData,
@@ -252,18 +475,56 @@ export async function updateCommunityRide(
   try {
     const supabase = createSupabaseAdminClient();
 
-    // Fetch current status before updating so we can detect status transitions
+    // Fetch current state before updating.
     const { data: currentRow } = await supabase
       .from("community_ride")
-      .select("status, organizer_rider_id")
+      .select("status, title, organizer_type, organizer_user_id, organizer_rider_id, organizer_name")
       .eq("id", input.id)
       .maybeSingle();
+
+    const currentStatus = (currentRow?.status as string | undefined) ?? "upcoming";
+
+    // Guard: enforce valid status transitions.
+    if (input.status !== undefined && input.status !== currentStatus) {
+      const allowed = VALID_TRANSITIONS[currentStatus] ?? [];
+      if (!allowed.includes(input.status)) {
+        return {
+          success: false,
+          error: `Cannot transition a ${currentStatus} ride to ${input.status}.`,
+        };
+      }
+    }
+
+    // Server-side guard: cannot reduce maxParticipants below current joined count.
+    if (input.maxParticipants !== undefined) {
+      const { count: joinedCount, error: countError } = await supabase
+        .from("community_ride_participant")
+        .select("id", { count: "exact", head: true })
+        .eq("community_ride_id", input.id)
+        .eq("status", "joined");
+
+      if (countError) throw countError;
+
+      if (input.maxParticipants < (joinedCount ?? 0)) {
+        return {
+          success: false,
+          error: `Cannot set max participants to ${input.maxParticipants} — there are already ${joinedCount} joined riders.`,
+        };
+      }
+    }
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (input.status !== undefined) updates.status = input.status;
     if (input.title !== undefined) updates.title = input.title;
     if (input.description !== undefined) updates.description = input.description;
     if (input.maxParticipants !== undefined) updates.max_participants = input.maxParticipants;
+    if (input.scheduledAt !== undefined) updates.scheduled_at = input.scheduledAt;
+    if (input.meetingPointName !== undefined) updates.meeting_point_name = input.meetingPointName || null;
+    if (input.meetingPointLat !== undefined) updates.meeting_point_lat = input.meetingPointLat ?? null;
+    if (input.meetingPointLng !== undefined) updates.meeting_point_lng = input.meetingPointLng ?? null;
+    if (input.bikeTypesAllowed !== undefined) updates.bike_types_allowed = input.bikeTypesAllowed.length > 0 ? input.bikeTypesAllowed : null;
+    if (input.category !== undefined) updates.category = input.category;
+    if (input.isPublic !== undefined) updates.is_public = input.isPublic;
 
     const { error } = await supabase
       .from("community_ride")
@@ -272,33 +533,53 @@ export async function updateCommunityRide(
 
     if (error) throw error;
 
-    // Audit log — write for status transitions only (most significant admin action)
-    if (input.status !== undefined && input.status !== currentRow?.status) {
-      // Resolve organiser's user_id for the activity log
-      const organizerRiderId = currentRow?.organizer_rider_id as string | undefined;
-      if (organizerRiderId) {
-        const { data: riderRow } = await supabase
-          .from("rider")
-          .select("user_id")
-          .eq("id", organizerRiderId)
-          .maybeSingle();
+    // Audit log — status transitions and field edits.
+    const organizerUserId = currentRow?.organizer_user_id as string | undefined;
+    const organizerRiderId = currentRow?.organizer_rider_id as string | undefined;
+    const rideTitle = (input.title ?? currentRow?.title ?? "Untitled") as string;
 
-        if (riderRow?.user_id) {
-          await writeUserActivity(supabase, {
-            user_id: riderRow.user_id,
-            actor_user_id: auth.authUser.id,
-            source: "system",
+    const isStatusChange = input.status !== undefined && input.status !== currentStatus;
+    const isFieldEdit = !isStatusChange && Object.keys(updates).length > 1; // more than just updated_at
+
+    if (isStatusChange || isFieldEdit) {
+      const auditPayload = isStatusChange
+        ? {
             action: `Community ride ${input.status}`,
-            description: `Community ride status changed from "${currentRow?.status ?? "unknown"}" to "${input.status}" by admin.`,
-            related_entity_type: "community_ride",
-            related_entity_id: input.id,
+            description: `Admin changed ride "${rideTitle}" status from "${currentStatus}" to "${input.status}".`,
             metadata: {
               rideId: input.id,
-              previousStatus: currentRow?.status ?? null,
+              previousStatus: currentStatus,
               newStatus: input.status,
+              organizerType: currentRow?.organizer_type ?? null,
+              organizerName: currentRow?.organizer_name ?? null,
             },
-          }).catch((err) => console.warn("Community ride status audit write failed:", err));
-        }
+          }
+        : {
+            action: "Community ride edited",
+            description: `Admin edited community ride "${rideTitle}".`,
+            metadata: {
+              rideId: input.id,
+              updatedFields: Object.keys(updates).filter((k) => k !== "updated_at"),
+              organizerType: currentRow?.organizer_type ?? null,
+              organizerName: currentRow?.organizer_name ?? null,
+              organizerRiderId: organizerRiderId ?? null,
+            },
+          };
+
+      const activityRefs = await resolveActivityUserRefs(supabase, {
+        targetUserIds: [organizerUserId, auth.authUser.id],
+        actorUserIds: [auth.authUser.id],
+      });
+
+      if (activityRefs.userId) {
+        await writeUserActivity(supabase, {
+          user_id: activityRefs.userId,
+          actor_user_id: activityRefs.actorUserId,
+          source: "web",
+          related_entity_type: "community_ride",
+          related_entity_id: input.id,
+          ...auditPayload,
+        }).catch((err) => console.warn("Community ride update audit write failed:", err));
       }
     }
 
@@ -317,7 +598,7 @@ export async function removeParticipant(
   rideId: string,
   riderId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     revalidatePath("/community-rides");
@@ -333,6 +614,32 @@ export async function removeParticipant(
       .eq("rider_id", riderId);
 
     if (error) throw error;
+
+    // Resolve participant's user_id for audit trail.
+    const { data: riderRow } = await supabase
+      .from("rider")
+      .select("user_id")
+      .eq("id", riderId)
+      .maybeSingle();
+
+    const activityRefs = await resolveActivityUserRefs(supabase, {
+      targetUserIds: [riderRow?.user_id as string | undefined],
+      actorUserIds: [auth.authUser.id],
+    });
+
+    if (activityRefs.userId) {
+      await writeUserActivity(supabase, {
+        user_id: activityRefs.userId,
+        actor_user_id: activityRefs.actorUserId,
+        source: "web",
+        action: "Removed from community ride",
+        description: `Admin removed rider from community ride.`,
+        related_entity_type: "community_ride",
+        related_entity_id: rideId,
+        metadata: { rideId, riderId },
+      }).catch((err) => console.warn("Remove participant audit write failed:", err));
+    }
+
     revalidatePath("/community-rides");
     return { success: true };
   } catch (err) {
@@ -347,7 +654,7 @@ export async function removeParticipant(
 export async function deleteCommunityRide(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     revalidatePath("/community-rides");
@@ -356,12 +663,49 @@ export async function deleteCommunityRide(
 
   try {
     const supabase = createSupabaseAdminClient();
+
+    // Fetch ride title + organizer before deleting for audit record.
+    const { data: rideRow } = await supabase
+      .from("community_ride")
+      .select("title, organizer_type, organizer_user_id, organizer_rider_id, organizer_name")
+      .eq("id", id)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("community_ride")
       .delete()
       .eq("id", id);
 
     if (error) throw error;
+
+    // Audit log against admin actor.
+    const activityRefs = await resolveActivityUserRefs(supabase, {
+      targetUserIds: [
+        rideRow?.organizer_user_id as string | undefined,
+        auth.authUser.id,
+      ],
+      actorUserIds: [auth.authUser.id],
+    });
+
+    if (activityRefs.userId) {
+      await writeUserActivity(supabase, {
+        user_id: activityRefs.userId,
+        actor_user_id: activityRefs.actorUserId,
+        source: "web",
+        action: "Community ride deleted",
+        description: `Admin permanently deleted community ride "${(rideRow?.title as string | undefined) ?? id}".`,
+        related_entity_type: "community_ride",
+        related_entity_id: id,
+        metadata: {
+          rideId: id,
+          organizerType: rideRow?.organizer_type ?? null,
+          organizerUserId: rideRow?.organizer_user_id ?? null,
+          organizerRiderId: rideRow?.organizer_rider_id ?? null,
+          organizerName: rideRow?.organizer_name ?? null,
+        },
+      }).catch((err) => console.warn("Community ride deletion audit write failed:", err));
+    }
+
     revalidatePath("/community-rides");
     return { success: true };
   } catch (err) {

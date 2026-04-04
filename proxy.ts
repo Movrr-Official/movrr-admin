@@ -98,7 +98,10 @@ export async function proxy(request: NextRequest) {
 
   if (!user) {
     const redirectUrl = new URL("/auth/signin", request.url);
-    redirectUrl.searchParams.set("next", pathname);
+    redirectUrl.searchParams.set(
+      "redirectTo",
+      `${pathname}${request.nextUrl.search || ""}`,
+    );
     return applySecurityHeaders(NextResponse.redirect(redirectUrl), request);
   }
 

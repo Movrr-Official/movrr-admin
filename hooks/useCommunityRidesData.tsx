@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { mockCommunityRides } from "@/data/mockCommunityRides";
 import {
+  createCommunityRide,
   getCommunityRides,
   updateCommunityRide,
   removeParticipant,
@@ -10,6 +11,7 @@ import {
 import {
   CommunityRide,
   CommunityRideFiltersSchema,
+  CreateCommunityRideFormData,
   UpdateCommunityRideFormData,
 } from "@/schemas";
 
@@ -31,6 +33,17 @@ export const useCommunityRidesData = (filters?: CommunityRideFiltersSchema) => {
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 1,
+  });
+};
+
+export const useCreateCommunityRide = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateCommunityRideFormData) =>
+      createCommunityRide(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: COMMUNITY_RIDES_QUERY_KEY });
+    },
   });
 };
 

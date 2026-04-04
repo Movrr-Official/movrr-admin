@@ -3,6 +3,14 @@ import type { AuditLog } from "@/schemas";
 export const ADMIN_SESSION_ACTIVITY_ACTION = "dashboard_session_started";
 export const ADMIN_DASHBOARD_SESSION_AUDIT_ACTION =
   "Admin dashboard session started";
+export const ADMIN_MFA_ENROLLED_AUDIT_ACTION = "Admin MFA enrolled";
+export const ADMIN_MFA_CHALLENGE_AUDIT_ACTION = "Admin MFA challenged";
+export const ADMIN_MFA_FACTOR_REMOVED_AUDIT_ACTION = "Admin MFA factor removed";
+export const ADMIN_MFA_RECOVERY_RESET_AUDIT_ACTION = "Admin MFA recovery reset";
+export const ADMIN_MFA_ENROLLED_ACTIVITY_ACTION = "mfa_enrolled";
+export const ADMIN_MFA_CHALLENGE_ACTIVITY_ACTION = "mfa_challenged";
+export const ADMIN_MFA_FACTOR_REMOVED_ACTIVITY_ACTION = "mfa_factor_removed";
+export const ADMIN_MFA_RECOVERY_RESET_ACTIVITY_ACTION = "mfa_recovery_reset";
 
 const readMetadataString = (
   metadata: Record<string, unknown> | undefined,

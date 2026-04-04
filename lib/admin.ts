@@ -8,6 +8,7 @@ import {
   ADMIN_DASHBOARD_SESSION_AUDIT_ACTION,
   ADMIN_SESSION_ACTIVITY_ACTION,
 } from "@/lib/adminAccessMonitoring";
+import { getServerAdminAuthenticatorAssurance } from "@/lib/adminMfa";
 import { logger } from "@/lib/logger";
 import { getPlatformSecurityPolicy } from "@/lib/platformSettings";
 import { writeUserActivity } from "@/lib/userActivity";
@@ -28,6 +29,8 @@ const VALID_ADMIN_ROLES: AdminRole[] = [
 
 const EXCLUDED_PATHS = ["/auth", "/unauthorized"] as const;
 const ADMIN_SESSION_BOOTSTRAP_GRACE_MS = 2 * 60_000;
+const ADMIN_SESSION_TOUCH_INTERVAL_MS = 60_000;
+const ADMIN_SESSION_ABSOLUTE_MAX_MS = 12 * 60 * 60_000;
 
 export type AdminAuthErrorCode =
   | "UNAUTHENTICATED"
@@ -65,6 +68,10 @@ type AdminDashboardSessionRow = {
   source_ip: string | null;
   user_agent: string | null;
 };
+
+type EnforcedSecurityPolicy = Awaited<
+  ReturnType<typeof getPlatformSecurityPolicy>
+>;
 
 const parseTimestamp = (value?: string | null) => {
   if (typeof value !== "string" || !value.trim()) return null;
@@ -110,6 +117,16 @@ const resolveRequestContext = async () => {
 const resolvePathnameFromHeaders = async (): Promise<string | undefined> => {
   const requestContext = await resolveRequestContext();
   return requestContext.pathname;
+};
+
+export const resolveAdminAuthRedirectTarget = async (): Promise<string> => {
+  const pathname = await resolvePathnameFromHeaders();
+
+  if (!pathname || !shouldResolveRoleForPath(pathname)) {
+    return "/";
+  }
+
+  return pathname;
 };
 
 const shouldResolveRoleForPath = (pathname?: string) => {
@@ -182,12 +199,34 @@ const resolveTrustedAdminSession = async (authUser: {
   return activeSession;
 };
 
-const shouldStartTrackedAdminSession = async (authUser: {
-  id: string;
-  last_sign_in_at?: string | null;
-}) => {
-  const trustedSession = await resolveTrustedAdminSession(authUser);
-  return trustedSession === null;
+const computeSessionAges = (
+  trustedSession: AdminDashboardSessionRow,
+  policy: EnforcedSecurityPolicy,
+) => {
+  const now = Date.now();
+  const sessionStartedAt = parseTimestamp(trustedSession.session_started_at);
+  const lastSeenAt = parseTimestamp(trustedSession.last_seen_at);
+  const sessionExpiresAt = parseTimestamp(trustedSession.session_expires_at);
+  const inactivityAgeMinutes =
+    lastSeenAt === null ? null : Math.max(0, (now - lastSeenAt) / 60_000);
+  const absoluteAgeMinutes =
+    sessionStartedAt === null
+      ? null
+      : Math.max(0, (now - sessionStartedAt) / 60_000);
+  const inactivityExpired =
+    sessionExpiresAt !== null
+      ? now > sessionExpiresAt
+      : inactivityAgeMinutes !== null &&
+        inactivityAgeMinutes > policy.adminSessionTimeoutMinutes;
+  const absoluteExpired =
+    sessionStartedAt !== null && now - sessionStartedAt > ADMIN_SESSION_ABSOLUTE_MAX_MS;
+
+  return {
+    inactivityAgeMinutes,
+    absoluteAgeMinutes,
+    inactivityExpired,
+    absoluteExpired,
+  };
 };
 
 const resolveAdminDisplayName = (authUser: {
@@ -205,28 +244,17 @@ const resolveAdminDisplayName = (authUser: {
 const enforceSecurityPolicy = async (authUser: {
   id: string;
   last_sign_in_at?: string | null;
-  app_metadata?: Record<string, unknown>;
-  user_metadata?: Record<string, unknown>;
-}) => {
+}, assuranceLevel?: string | null) => {
   const policy = await getPlatformSecurityPolicy();
   const trustedSession = await resolveTrustedAdminSession(authUser);
   const lastSignInAt = parseTimestamp(authUser.last_sign_in_at);
-  const ageMinutes =
-    trustedSession === null
-      ? null
-      : Math.max(
-          0,
-          (Date.now() - new Date(trustedSession.session_started_at).getTime()) /
-            60_000,
-        );
-  const aal =
-    typeof authUser.app_metadata?.aal === "string"
-      ? authUser.app_metadata.aal
-      : typeof authUser.user_metadata?.aal === "string"
-        ? authUser.user_metadata.aal
-        : undefined;
+  const aal = typeof assuranceLevel === "string" ? assuranceLevel : null;
 
-  if (policy.enforceAdminMfa && aal && aal !== "aal2") {
+  if (policy.enforceAdminMfa && aal !== "aal2") {
+    logger.warn("Admin MFA requirement not satisfied", {
+      userId: authUser.id,
+      aal: aal ?? "missing",
+    });
     throw new AdminAuthError(
       "MFA_REQUIRED",
       "Admin MFA is required by the current security policy.",
@@ -237,8 +265,10 @@ const enforceSecurityPolicy = async (authUser: {
     if (isWithinBootstrapGraceWindow(lastSignInAt)) {
       return {
         policy,
+        trustedSession,
         sessionState: {
-          ageMinutes: null,
+          inactivityAgeMinutes: null,
+          absoluteAgeMinutes: null,
           aal,
           timeoutEnforced: false,
           bootstrapPending: true,
@@ -252,7 +282,21 @@ const enforceSecurityPolicy = async (authUser: {
     );
   }
 
-  if (ageMinutes !== null && ageMinutes > policy.adminSessionTimeoutMinutes) {
+  const {
+    inactivityAgeMinutes,
+    absoluteAgeMinutes,
+    inactivityExpired,
+    absoluteExpired,
+  } = computeSessionAges(trustedSession, policy);
+
+  if (inactivityExpired || absoluteExpired) {
+    logger.info("Admin session expired under security policy", {
+      userId: authUser.id,
+      inactivityAgeMinutes,
+      absoluteAgeMinutes,
+      timeoutMinutes: policy.adminSessionTimeoutMinutes,
+      absoluteMaxMinutes: ADMIN_SESSION_ABSOLUTE_MAX_MS / 60_000,
+    });
     throw new AdminAuthError(
       "SESSION_EXPIRED",
       "Admin session has expired under the current security policy.",
@@ -261,8 +305,10 @@ const enforceSecurityPolicy = async (authUser: {
 
   return {
     policy,
+    trustedSession,
     sessionState: {
-      ageMinutes,
+      inactivityAgeMinutes,
+      absoluteAgeMinutes,
       aal,
       timeoutEnforced: true,
       bootstrapPending: false,
@@ -270,102 +316,13 @@ const enforceSecurityPolicy = async (authUser: {
   };
 };
 
-/**
- * Returns the authenticated admin user with role information
- */
-export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
-  try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !authUser) {
-      return null;
-    }
-
-    const supabaseAdmin = createSupabaseAdminClient();
-    const { data: adminRow, error: adminError } = await supabaseAdmin
-      .from("admin_users")
-      .select("id, user_id, email, role, created_at, updated_at")
-      .eq("user_id", authUser.id)
-      .single();
-
-    if (adminError || !adminRow) {
-      throw new AdminAuthError("NOT_ADMIN", "Not authorized", adminError);
-    }
-
-    // Validate role
-    const role = adminRow.role.toLowerCase() as AdminRole;
-    const isValidRole = VALID_ADMIN_ROLES.includes(role);
-
-    if (!isValidRole) {
-      logger.warn("Invalid admin role found for authenticated user", {
-        userId: authUser.id,
-        role,
-      });
-      throw new AdminAuthError("INVALID_ADMIN_ROLE", "Not authorized");
-    }
-
-    await enforceSecurityPolicy(authUser);
-
-    return {
-      authUser,
-      adminUser: {
-        ...adminRow,
-        role,
-      } as AdminUser,
-    };
-  } catch (error) {
-    if (isAdminAuthError(error)) {
-      throw error;
-    }
-
-    logger.error("getAuthenticatedUser error", error);
-    throw new AdminAuthError(
-      "AUTH_INTERNAL_ERROR",
-      "Authentication service unavailable.",
-      error,
-    );
-  }
-}
-
-/**
- * Check if user has specific permission (for server components/actions)
- */
-export async function requireAdmin(): Promise<AuthenticatedUser> {
-  const user = await getAuthenticatedUser();
-
-  if (!user) {
-    throw new AdminAuthError("UNAUTHENTICATED", "Authentication required");
-  }
-
-  return user;
-}
-
-export async function requireAdminRoles(
-  allowedRoles: readonly string[],
-): Promise<AuthenticatedUser> {
-  const user = await requireAdmin();
-
-  if (!allowedRoles.includes(user.adminUser.role)) {
-    throw new AdminAuthError("NOT_AUTHORIZED", "Not authorized");
-  }
-
-  return user;
-}
-
-export async function trackAdminDashboardSession(
+const persistAdminDashboardSession = async (
   user: AuthenticatedUser,
-): Promise<void> {
-  if (!(await shouldStartTrackedAdminSession(user.authUser))) {
-    return;
-  }
-
+  policy: EnforcedSecurityPolicy,
+  trustedSession: AdminDashboardSessionRow | null,
+) => {
   const requestContext = await resolveRequestContext();
-  const sessionStartedAt = new Date().toISOString();
-  const policy = await getPlatformSecurityPolicy();
+  const now = new Date().toISOString();
   const sessionExpiresAt = new Date(
     Date.now() + policy.adminSessionTimeoutMinutes * 60_000,
   ).toISOString();
@@ -377,6 +334,50 @@ export async function trackAdminDashboardSession(
     role: user.adminUser.role,
   };
 
+  if (trustedSession !== null) {
+    const lastSeenAt = parseTimestamp(trustedSession.last_seen_at);
+    const shouldTouchSession =
+      lastSeenAt === null || Date.now() - lastSeenAt >= ADMIN_SESSION_TOUCH_INTERVAL_MS;
+
+    if (!shouldTouchSession) {
+      return;
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("admin_dashboard_sessions")
+      .upsert(
+        {
+          auth_user_id: user.authUser.id,
+          admin_user_id: user.adminUser.id,
+          auth_last_sign_in_at:
+            trustedSession.auth_last_sign_in_at ?? user.authUser.last_sign_in_at ?? null,
+          session_started_at: trustedSession.session_started_at,
+          last_seen_at: now,
+          session_expires_at: sessionExpiresAt,
+          entry_path: requestContext.pathname ?? trustedSession.entry_path ?? "/",
+          source_ip: requestContext.sourceIp ?? trustedSession.source_ip,
+          user_agent: requestContext.userAgent ?? trustedSession.user_agent,
+          updated_at: now,
+        },
+        { onConflict: "auth_user_id" },
+      );
+
+    if (updateError) {
+      logger.error("Failed to refresh admin dashboard session activity", updateError, {
+        userId: user.authUser.id,
+        pathname: requestContext.pathname,
+      });
+      throw new AdminAuthError(
+        "AUTH_INTERNAL_ERROR",
+        "Unable to refresh the current admin session.",
+        updateError,
+      );
+    }
+
+    return;
+  }
+
+  const sessionStartedAt = now;
   const { error: sessionError } = await supabaseAdmin
     .from("admin_dashboard_sessions")
     .upsert(
@@ -461,6 +462,102 @@ export async function trackAdminDashboardSession(
       },
     );
   }
+};
+
+/**
+ * Returns the authenticated admin user with role information
+ */
+export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user: authUser },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !authUser) {
+      return null;
+    }
+
+    const supabaseAdmin = createSupabaseAdminClient();
+    const { data: adminRow, error: adminError } = await supabaseAdmin
+      .from("admin_users")
+      .select("id, user_id, email, role, created_at, updated_at")
+      .eq("user_id", authUser.id)
+      .single();
+
+    if (adminError || !adminRow) {
+      throw new AdminAuthError("NOT_ADMIN", "Not authorized", adminError);
+    }
+
+    // Validate role
+    const role = adminRow.role.toLowerCase() as AdminRole;
+    const isValidRole = VALID_ADMIN_ROLES.includes(role);
+
+    if (!isValidRole) {
+      logger.warn("Invalid admin role found for authenticated user", {
+        userId: authUser.id,
+        role,
+      });
+      throw new AdminAuthError("INVALID_ADMIN_ROLE", "Not authorized");
+    }
+
+    const authenticatedUser = {
+      authUser,
+      adminUser: {
+        ...adminRow,
+        role,
+      } as AdminUser,
+    };
+    const assuranceData = await getServerAdminAuthenticatorAssurance(authUser);
+    const enforcement = await enforceSecurityPolicy(
+      authUser,
+      assuranceData.currentLevel,
+    );
+    await persistAdminDashboardSession(
+      authenticatedUser,
+      enforcement.policy,
+      enforcement.trustedSession,
+    );
+
+    return authenticatedUser;
+  } catch (error) {
+    if (isAdminAuthError(error)) {
+      throw error;
+    }
+
+    logger.error("getAuthenticatedUser error", error);
+    throw new AdminAuthError(
+      "AUTH_INTERNAL_ERROR",
+      "Authentication service unavailable.",
+      error,
+    );
+  }
+}
+
+/**
+ * Check if user has specific permission (for server components/actions)
+ */
+export async function requireAdmin(): Promise<AuthenticatedUser> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    throw new AdminAuthError("UNAUTHENTICATED", "Authentication required");
+  }
+
+  return user;
+}
+
+export async function requireAdminRoles(
+  allowedRoles: readonly string[],
+): Promise<AuthenticatedUser> {
+  const user = await requireAdmin();
+
+  if (!allowedRoles.includes(user.adminUser.role)) {
+    throw new AdminAuthError("NOT_AUTHORIZED", "Not authorized");
+  }
+
+  return user;
 }
 
 export async function getAdminRoleForLayout(): Promise<AdminRole | undefined> {

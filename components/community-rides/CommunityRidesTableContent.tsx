@@ -8,6 +8,7 @@ import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay"
 import { FilterSummary } from "@/components/filters/FilterSummary";
 import { getCommunityRidesTableColumns } from "./CommunityRidesTableColumns";
 import { CommunityRideDetailsDrawer } from "./CommunityRideDetailsDrawer";
+import { CommunityRideFormDrawer } from "./CommunityRideFormDrawer";
 import { useDataTable } from "@/context/DataTableContext";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -15,6 +16,7 @@ import {
   useDeleteCommunityRide,
 } from "@/hooks/useCommunityRidesData";
 import { CommunityRide } from "@/schemas";
+import { Plus } from "lucide-react";
 
 interface CommunityRidesTableContentProps {
   isLoading: boolean;
@@ -31,7 +33,9 @@ export default function CommunityRidesTableContent({
 }: CommunityRidesTableContentProps) {
   const { toast } = useToast();
   const [selectedRide, setSelectedRide] = useState<CommunityRide | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [formRide, setFormRide] = useState<CommunityRide | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const updateMutation = useUpdateCommunityRide();
   const deleteMutation = useDeleteCommunityRide();
@@ -47,7 +51,17 @@ export default function CommunityRidesTableContent({
 
   const handleView = (ride: CommunityRide) => {
     setSelectedRide(ride);
-    setIsDrawerOpen(true);
+    setIsDetailsOpen(true);
+  };
+
+  const handleEdit = (ride: CommunityRide) => {
+    setFormRide(ride);
+    setIsFormOpen(true);
+  };
+
+  const handleCreate = () => {
+    setFormRide(null);
+    setIsFormOpen(true);
   };
 
   const handleCancel = async (ride: CommunityRide) => {
@@ -83,6 +97,7 @@ export default function CommunityRidesTableContent({
 
   const columns = getCommunityRidesTableColumns({
     onView: handleView,
+    onEdit: handleEdit,
     onCancel: handleCancel,
     onDelete: handleDelete,
   });
@@ -96,6 +111,12 @@ export default function CommunityRidesTableContent({
       <div className="space-y-4">
         {toolbar && (
           <DataTableToolbar
+            additionalActionsLeft={{
+              enabled: true,
+              label: "Create Ride",
+              icon: Plus,
+              onClick: handleCreate,
+            }}
             refresh={{
               enabled: true,
               onRefresh: refetchData,
@@ -129,11 +150,18 @@ export default function CommunityRidesTableContent({
 
       <CommunityRideDetailsDrawer
         ride={selectedRide}
-        isOpen={isDrawerOpen}
+        isOpen={isDetailsOpen}
         onClose={() => {
-          setIsDrawerOpen(false);
+          setIsDetailsOpen(false);
           setSelectedRide(null);
         }}
+      />
+
+      <CommunityRideFormDrawer
+        ride={formRide}
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSaved={refetchData}
       />
     </>
   );

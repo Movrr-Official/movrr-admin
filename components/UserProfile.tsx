@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { User, LogOut, LifeBuoy } from "lucide-react";
+import { User, LogOut, LifeBuoy, ShieldCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { AdminRole } from "@/types/auth";
@@ -30,6 +30,10 @@ export function UserProfile({ email, role }: UserProfileProps) {
   const { toast } = useToast();
   const handleSupport = () => {
     window.open("mailto:admin@movrr.nl", "_blank");
+  };
+
+  const handleManageSecurity = () => {
+    router.push("/account/security");
   };
 
   const handleSignOut = async () => {
@@ -88,6 +92,14 @@ export function UserProfile({ email, role }: UserProfileProps) {
         >
           <LifeBuoy className="h-4 w-4 text-muted-foreground" />
           <span>Support</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          onClick={handleManageSecurity}
+          className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer"
+        >
+          <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+          <span>Account Security</span>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

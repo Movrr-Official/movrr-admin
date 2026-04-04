@@ -3,6 +3,10 @@ import { z } from "zod";
 export const auditActionSchema = z.enum([
   "all",
   "Admin dashboard session started",
+  "Admin MFA enrolled",
+  "Admin MFA challenged",
+  "Admin MFA factor removed",
+  "Admin MFA recovery reset",
   "User Role Changed",
   "User Status Changed",
   "Campaign Created",

@@ -1,5 +1,6 @@
-﻿import React, { Suspense } from "react";
+import React from "react";
 
+import { SignInForm } from "@/components/forms/signin-form";
 import {
   Card,
   CardContent,
@@ -7,9 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SignInForm } from "@/components/forms/signin-form";
+import { getPlatformSecurityPolicy } from "@/lib/platformSettings";
 
-export default function SignInPage() {
+export default async function SignInPage() {
+  const securityPolicy = await getPlatformSecurityPolicy();
+
   return (
     <Card className="border-0">
       <CardHeader className="text-center pb-6">
@@ -21,9 +24,7 @@ export default function SignInPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Suspense>
-          <SignInForm />
-        </Suspense>
+        <SignInForm enforceAdminMfa={securityPolicy.enforceAdminMfa} />
       </CardContent>
     </Card>
   );

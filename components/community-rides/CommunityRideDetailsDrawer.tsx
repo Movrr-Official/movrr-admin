@@ -31,6 +31,11 @@ import {
   UserMinus,
   XCircle,
   Trash2,
+  Pencil,
+  PlayCircle,
+  CheckCircle2,
+  Globe,
+  Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -39,7 +44,8 @@ import {
   useDeleteCommunityRide,
 } from "@/hooks/useCommunityRidesData";
 import { CommunityRide, CommunityRideParticipant } from "@/schemas";
-import { getDifficultyBadge, getStatusBadge } from "./CommunityRidesTableColumns";
+import { getCategoryBadge, getStatusBadge } from "./CommunityRidesTableColumns";
+import { CommunityRideFormDrawer } from "./CommunityRideFormDrawer";
 
 interface CommunityRideDetailsDrawerProps {
   ride: CommunityRide | null;
@@ -59,33 +65,46 @@ export function CommunityRideDetailsDrawer({
 
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmActivate, setConfirmActivate] = useState(false);
+  const [confirmComplete, setConfirmComplete] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [participantToRemove, setParticipantToRemove] =
     useState<CommunityRideParticipant | null>(null);
 
   if (!ride) return null;
 
   const canCancel = ride.status === "upcoming" || ride.status === "active";
+  const canActivate = ride.status === "upcoming";
+  const canComplete = ride.status === "active";
+  const canEdit = ride.status !== "completed" && ride.status !== "cancelled";
   const activeParticipants = (ride.participants ?? []).filter(
     (p) => p.status === "joined",
   );
 
-  const handleCancel = async () => {
-    const result = await updateMutation.mutateAsync({
-      id: ride.id,
-      status: "cancelled",
-    });
+  const handleStatusChange = async (
+    newStatus: "active" | "completed" | "cancelled",
+    closeConfirm: () => void,
+  ) => {
+    const result = await updateMutation.mutateAsync({ id: ride.id, status: newStatus });
     if (result.success) {
-      toast({ title: "Ride cancelled" });
-      setConfirmCancel(false);
+      const labels: Record<string, string> = {
+        active: "Ride marked as active",
+        completed: "Ride marked as completed",
+        cancelled: "Ride cancelled",
+      };
+      toast({ title: labels[newStatus] ?? "Ride updated" });
+      closeConfirm();
       onClose();
     } else {
       toast({
-        title: "Failed to cancel ride",
+        title: "Failed to update ride",
         description: result.error,
         variant: "destructive",
       });
     }
   };
+
+  const handleCancel = () => handleStatusChange("cancelled", () => setConfirmCancel(false));
 
   const handleDelete = async () => {
     const result = await deleteMutation.mutateAsync(ride.id);
@@ -136,7 +155,7 @@ export function CommunityRideDetailsDrawer({
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 {getStatusBadge(ride.status)}
-                {getDifficultyBadge(ride.difficulty)}
+                {getCategoryBadge(ride.category)}
               </div>
             </div>
           </SheetHeader>
@@ -192,7 +211,18 @@ export function CommunityRideDetailsDrawer({
                 <div className="flex items-start gap-3">
                   <Gauge className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <p className="text-sm text-foreground capitalize">
-                    {ride.difficulty} difficulty
+                    {ride.category}
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  {ride.isPublic ? (
+                    <Globe className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <Lock className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  )}
+                  <p className="text-sm text-foreground">
+                    {ride.isPublic ? "Public ride" : "Private ride"}
                   </p>
                 </div>
 
@@ -279,32 +309,119 @@ export function CommunityRideDetailsDrawer({
           </ScrollArea>
 
           {/* Footer actions */}
-          <div className="px-6 py-4 border-t border-border flex gap-2 flex-wrap">
-            {canCancel && (
+          <div className="px-6 py-4 border-t border-border space-y-2">
+            <div className="flex gap-2 flex-wrap">
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditOpen(true)}
+                  disabled={updateMutation.isPending}
+                >
+                  <Pencil className="h-4 w-4 mr-1.5" />
+                  Edit
+                </Button>
+              )}
+              {canActivate && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmActivate(true)}
+                  disabled={updateMutation.isPending}
+                  className="text-success border-success/40 hover:bg-success/10"
+                >
+                  <PlayCircle className="h-4 w-4 mr-1.5" />
+                  Mark Active
+                </Button>
+              )}
+              {canComplete && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmComplete(true)}
+                  disabled={updateMutation.isPending}
+                  className="text-info border-info/40 hover:bg-info/10"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                  Mark Complete
+                </Button>
+              )}
+              {canCancel && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmCancel(true)}
+                  disabled={updateMutation.isPending}
+                  className="text-warning border-warning/40 hover:bg-warning/10"
+                >
+                  <XCircle className="h-4 w-4 mr-1.5" />
+                  Cancel Ride
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setConfirmCancel(true)}
-                disabled={updateMutation.isPending}
-                className="text-warning border-warning/40 hover:bg-warning/10"
+                onClick={() => setConfirmDelete(true)}
+                disabled={deleteMutation.isPending}
+                className="text-destructive border-destructive/40 hover:bg-destructive/10 ml-auto"
               >
-                <XCircle className="h-4 w-4 mr-1.5" />
-                Cancel Ride
+                <Trash2 className="h-4 w-4 mr-1.5" />
+                Delete
               </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setConfirmDelete(true)}
-              disabled={deleteMutation.isPending}
-              className="text-destructive border-destructive/40 hover:bg-destructive/10 ml-auto"
-            >
-              <Trash2 className="h-4 w-4 mr-1.5" />
-              Delete
-            </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Edit form drawer */}
+      <CommunityRideFormDrawer
+        ride={ride}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+      />
+
+      {/* Activate confirmation */}
+      <AlertDialog open={confirmActivate} onOpenChange={setConfirmActivate}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark ride as active?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will set the ride status to <strong>Active</strong>. Riders will
+              see it as in progress. You can still cancel it after activation.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go back</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleStatusChange("active", () => setConfirmActivate(false))}
+              className="bg-success text-success-foreground hover:bg-success/90"
+            >
+              Mark Active
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Complete confirmation */}
+      <AlertDialog open={confirmComplete} onOpenChange={setConfirmComplete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark ride as completed?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will set the ride status to <strong>Completed</strong>. This
+              cannot be reversed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go back</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleStatusChange("completed", () => setConfirmComplete(false))}
+            >
+              Mark Complete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Cancel confirmation */}
       <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>

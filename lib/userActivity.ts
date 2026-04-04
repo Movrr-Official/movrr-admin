@@ -4,11 +4,13 @@ type SupabaseAdminClient = ReturnType<typeof createSupabaseAdminClient>;
 
 export type UserActivitySource =
   | "account"
+  | "admin"
   | "admin_access"
   | "route"
   | "campaign"
   | "reward"
   | "waitlist"
+  | "web"
   | "system";
 
 export type UserActivityRecord = {

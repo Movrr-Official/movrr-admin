@@ -3,7 +3,7 @@ import type { UserRole } from "@/schemas";
 import {
   isAdminAuthError,
   requireAdminRoles,
-  trackAdminDashboardSession,
+  resolveAdminAuthRedirectTarget,
 } from "@/lib/admin";
 import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
 
@@ -16,13 +16,8 @@ export default async function AuthWrapper({
   children,
   allowedRoles,
 }: AuthWrapperProps) {
-  let authenticatedUser;
-
   try {
-    authenticatedUser = await requireAdminRoles(
-      allowedRoles ?? DASHBOARD_ACCESS_ROLES,
-    );
-    await trackAdminDashboardSession(authenticatedUser);
+    await requireAdminRoles(allowedRoles ?? DASHBOARD_ACCESS_ROLES);
   } catch (error) {
     if (isAdminAuthError(error)) {
       if (
@@ -44,8 +39,17 @@ export default async function AuthWrapper({
                 : error.code === "AUTH_INTERNAL_ERROR"
                   ? "auth_unavailable"
                   : "auth_required";
+        const redirectTarget = await resolveAdminAuthRedirectTarget();
 
-        redirect(`/auth/signin?redirectTo=/&reason=${reason}`);
+        if (error.code === "MFA_REQUIRED") {
+          redirect(
+            `/auth/mfa/challenge?redirectTo=${encodeURIComponent(redirectTarget)}`,
+          );
+        }
+
+        redirect(
+          `/auth/signin?redirectTo=${encodeURIComponent(redirectTarget)}&reason=${reason}`,
+        );
       }
 
       redirect("/unauthorized");

@@ -35,7 +35,11 @@ const signInFormSchema = z.object({
 
 type SignInFormData = z.infer<typeof signInFormSchema>;
 
-export function SignInForm() {
+export function SignInForm({
+  enforceAdminMfa,
+}: {
+  enforceAdminMfa: boolean;
+}) {
   const [isPending, startTransition] = useTransition();
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -43,7 +47,8 @@ export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const redirectTo = searchParams.get("redirectTo") || "/";
+  const redirectTo =
+    searchParams.get("redirectTo") || searchParams.get("next") || "/";
   const authReason = searchParams.get("reason");
 
   const authReasonMessage =
@@ -91,11 +96,41 @@ export function SignInForm() {
         if (error) {
           setError(error.message);
         } else {
+          let nextDestination = redirectTo;
+
+          if (enforceAdminMfa) {
+            const [{ data: assuranceData, error: assuranceError }, { data: factorData, error: factorError }] =
+              await Promise.all([
+                supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+                supabase.auth.mfa.listFactors(),
+              ]);
+
+            if (assuranceError) {
+              setError(assuranceError.message);
+              return;
+            }
+
+            if (factorError) {
+              setError(factorError.message);
+              return;
+            }
+
+            const verifiedFactors =
+              factorData?.all?.filter((factor) => factor.status === "verified") ?? [];
+
+            if (assuranceData?.currentLevel !== "aal2") {
+              nextDestination =
+                verifiedFactors.length > 0
+                  ? `/auth/mfa/challenge?redirectTo=${encodeURIComponent(redirectTo)}`
+                  : `/auth/mfa/setup?redirectTo=${encodeURIComponent(redirectTo)}`;
+            }
+          }
+
           queryClient.removeQueries({
             queryKey: ADMIN_USER_QUERY_KEY,
             exact: true,
           });
-          router.push(redirectTo);
+          router.push(nextDestination);
           router.refresh();
         }
       } catch (error) {

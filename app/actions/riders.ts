@@ -13,6 +13,21 @@ import { writeUserActivity } from "@/lib/userActivity";
 import { Rider, RiderFiltersSchema, updateRiderSchema } from "@/schemas";
 import { z } from "zod";
 
+const communityRideCreatorAccessSchema = z.object({
+  userId: z.string().uuid(),
+  riderId: z.string().uuid(),
+  allow: z.boolean(),
+  note: z.string().max(500).optional(),
+});
+
+export type CommunityRideCreatorAccessStatus = {
+  isAllowed: boolean;
+  note?: string;
+  grantedAt?: string;
+  revokedAt?: string;
+  grantedByUserId?: string;
+};
+
 const ACTIVE_ROUTE_STATUSES = ["assigned", "in-progress"];
 const ACTIVE_CAMPAIGN_STATUSES = ["active", "paused"];
 
@@ -28,9 +43,21 @@ const toAvailability = (isAvailable: boolean) => ({
 
 const toVehicleType = (value?: string | null): Rider["vehicle"]["type"] => {
   const normalized = value?.toLowerCase();
-  if (normalized === "e_bike" || normalized === "e-bike" || normalized === "ebike") return "e_bike";
-  if (normalized === "fat_bike" || normalized === "fat-bike" || normalized === "cargo" || normalized === "cargo-bike") return "fat_bike";
-  if (normalized === "standard_bike" || normalized === "bike") return "standard_bike";
+  if (
+    normalized === "e_bike" ||
+    normalized === "e-bike" ||
+    normalized === "ebike"
+  )
+    return "e_bike";
+  if (
+    normalized === "fat_bike" ||
+    normalized === "fat-bike" ||
+    normalized === "cargo" ||
+    normalized === "cargo-bike"
+  )
+    return "fat_bike";
+  if (normalized === "standard_bike" || normalized === "bike")
+    return "standard_bike";
   return "unknown";
 };
 
@@ -323,7 +350,9 @@ export async function getRiders(
     >();
     [...(assignmentRows ?? []), ...(signupRows ?? [])].forEach((row) => {
       if (!row.rider_id) return;
-      const campaign = Array.isArray(row.campaign) ? row.campaign[0] : row.campaign;
+      const campaign = Array.isArray(row.campaign)
+        ? row.campaign[0]
+        : row.campaign;
       if (!campaign?.id) return;
       const existing = campaignsByRider.get(row.rider_id) ?? new Map();
       existing.set(campaign.id, campaign);
@@ -365,7 +394,7 @@ export async function getRiders(
       const lastActive = resolveLatestIsoTimestamp(
         lastActivitySignalMap.get(rider.user_id),
         user?.last_active_at ?? undefined,
-    user?.last_login ?? undefined,
+        user?.last_login ?? undefined,
       );
 
       const mappedRider = mapRiderRow({
@@ -378,7 +407,9 @@ export async function getRiders(
           : undefined,
         currentRoute,
         activeRoutesCount: activeRoutes.length,
-        campaignsCompleted: Number(rider.total_campaigns ?? allCampaigns.length),
+        campaignsCompleted: Number(
+          rider.total_campaigns ?? allCampaigns.length,
+        ),
         activeCampaignsCount,
         pointsBalance: balance?.pointsBalance ?? 0,
         lifetimePointsEarned: balance?.lifetimePointsEarned ?? 0,
@@ -432,7 +463,12 @@ export async function getRiders(
 export async function bulkUpdateRiderStatus(
   riderIds: string[],
   status: "active" | "inactive",
-): Promise<{ success: boolean; updated: number; failed: number; error?: string }> {
+): Promise<{
+  success: boolean;
+  updated: number;
+  failed: number;
+  error?: string;
+}> {
   try {
     const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
@@ -443,24 +479,42 @@ export async function bulkUpdateRiderStatus(
       .select("id, user_id")
       .in("id", riderIds);
 
-    if (lookupError) return { success: false, updated: 0, failed: riderIds.length, error: lookupError.message };
+    if (lookupError)
+      return {
+        success: false,
+        updated: 0,
+        failed: riderIds.length,
+        error: lookupError.message,
+      };
 
     const rows = riderRows ?? [];
     const userIds = rows.map((r) => r.user_id).filter(Boolean) as string[];
 
     const [{ error: riderError }, { error: userError }] = await Promise.all([
-      supabaseAdmin.from("rider").update({ status: dbStatus, updated_at: new Date().toISOString() }).in("id", riderIds),
+      supabaseAdmin
+        .from("rider")
+        .update({ status: dbStatus, updated_at: new Date().toISOString() })
+        .in("id", riderIds),
       userIds.length
-        ? supabaseAdmin.from("user").update({ status: dbStatus, updated_at: new Date().toISOString() }).in("id", userIds)
+        ? supabaseAdmin
+            .from("user")
+            .update({ status: dbStatus, updated_at: new Date().toISOString() })
+            .in("id", userIds)
         : Promise.resolve({ error: null }),
     ]);
 
     if (riderError || userError) {
-      return { success: false, updated: 0, failed: riderIds.length, error: riderError?.message ?? userError?.message };
+      return {
+        success: false,
+        updated: 0,
+        failed: riderIds.length,
+        error: riderError?.message ?? userError?.message,
+      };
     }
 
     // Audit trail for each rider
-    const action = dbStatus === "suspended" ? "Rider suspended" : "Rider activated";
+    const action =
+      dbStatus === "suspended" ? "Rider suspended" : "Rider activated";
     await Promise.all(
       rows.map((row) =>
         row.user_id
@@ -486,7 +540,8 @@ export async function bulkUpdateRiderStatus(
       success: false,
       updated: 0,
       failed: riderIds.length,
-      error: error instanceof Error ? error.message : "Failed to bulk update riders",
+      error:
+        error instanceof Error ? error.message : "Failed to bulk update riders",
     };
   }
 }
@@ -500,9 +555,112 @@ export async function getRiderById(
   }
 
   const rider =
-    result.data?.find((entry) => entry.id === riderId || entry.userId === riderId) ??
-    null;
+    result.data?.find(
+      (entry) => entry.id === riderId || entry.userId === riderId,
+    ) ?? null;
   return { success: true, data: rider };
+}
+
+export async function getCommunityRideCreatorAccess(userId: string): Promise<{
+  success: boolean;
+  data?: CommunityRideCreatorAccessStatus;
+  error?: string;
+}> {
+  try {
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const supabaseAdmin = createSupabaseAdminClient();
+
+    const { data, error } = await supabaseAdmin
+      .from("community_ride_creator_grant")
+      .select("user_id, granted_by_user_id, note, revoked_at, created_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return {
+      success: true,
+      data: {
+        isAllowed: Boolean(data && !data.revoked_at),
+        note: data?.note ?? undefined,
+        grantedAt: data?.created_at ?? undefined,
+        revokedAt: data?.revoked_at ?? undefined,
+        grantedByUserId: data?.granted_by_user_id ?? undefined,
+      },
+    };
+  } catch (error) {
+    console.error("getCommunityRideCreatorAccess error:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch community ride creator access",
+    };
+  }
+}
+
+export async function setCommunityRideCreatorAccess(
+  input: z.infer<typeof communityRideCreatorAccessSchema>,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const supabaseAdmin = createSupabaseAdminClient();
+    const validatedInput = communityRideCreatorAccessSchema.parse(input);
+    const now = new Date().toISOString();
+
+    const { error } = await supabaseAdmin
+      .from("community_ride_creator_grant")
+      .upsert(
+        {
+          user_id: validatedInput.userId,
+          granted_by_user_id: auth.authUser.id,
+          note: validatedInput.note?.trim() || null,
+          revoked_at: validatedInput.allow ? null : now,
+          updated_at: now,
+        },
+        { onConflict: "user_id" },
+      );
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    await writeUserActivity(supabaseAdmin, {
+      user_id: validatedInput.userId,
+      actor_user_id: auth.authUser.id,
+      source: "admin",
+      action: validatedInput.allow
+        ? "Community ride creator access granted"
+        : "Community ride creator access revoked",
+      description: validatedInput.allow
+        ? "Admin granted this rider permission to create community rides."
+        : "Admin revoked this rider's permission to create community rides.",
+      related_entity_type: "rider",
+      related_entity_id: validatedInput.riderId,
+      metadata: {
+        riderId: validatedInput.riderId,
+        note: validatedInput.note?.trim() || null,
+        allow: validatedInput.allow,
+      },
+    }).catch((err) =>
+      console.warn("Community ride creator access audit write failed:", err),
+    );
+
+    revalidatePath("/riders");
+    return { success: true };
+  } catch (error) {
+    console.error("setCommunityRideCreatorAccess error:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update community ride creator access",
+    };
+  }
 }
 
 export async function updateRiderProfile(
@@ -534,7 +692,8 @@ export async function updateRiderProfile(
     };
 
     if (validatedData.name !== undefined) userUpdate.name = validatedData.name;
-    if (validatedData.email !== undefined) userUpdate.email = validatedData.email;
+    if (validatedData.email !== undefined)
+      userUpdate.email = validatedData.email;
     if (validatedData.phone !== undefined) {
       userUpdate.phone = validatedData.phone;
       riderUpdate.phone = validatedData.phone;
@@ -569,23 +728,32 @@ export async function updateRiderProfile(
       riderUpdate.emergency_phone = validatedData.contact.emergencyPhone;
     }
     if (validatedData.availability !== undefined) {
-      const anyAvailable = Object.values(validatedData.availability).some(Boolean);
+      const anyAvailable = Object.values(validatedData.availability).some(
+        Boolean,
+      );
       riderUpdate.availability = anyAvailable;
     }
 
     const [{ error: userError }, { error: riderError }] = await Promise.all([
       Object.keys(userUpdate).length > 1
-        ? supabaseAdmin.from("user").update(userUpdate).eq("id", riderRow.user_id)
+        ? supabaseAdmin
+            .from("user")
+            .update(userUpdate)
+            .eq("id", riderRow.user_id)
         : Promise.resolve({ error: null }),
       Object.keys(riderUpdate).length > 1
-        ? supabaseAdmin.from("rider").update(riderUpdate).eq("id", validatedData.id)
+        ? supabaseAdmin
+            .from("rider")
+            .update(riderUpdate)
+            .eq("id", validatedData.id)
         : Promise.resolve({ error: null }),
     ]);
 
     if (userError || riderError) {
       return {
         success: false,
-        error: userError?.message || riderError?.message || "Failed to update rider",
+        error:
+          userError?.message || riderError?.message || "Failed to update rider",
       };
     }
 
@@ -593,9 +761,11 @@ export async function updateRiderProfile(
     if (validatedData.status !== undefined && riderRow.user_id) {
       const dbStatus = mapUiStatusToDb(validatedData.status);
       const action =
-        dbStatus === "suspended" ? "Rider suspended" :
-        dbStatus === "active" ? "Rider activated" :
-        `Rider status changed to ${dbStatus}`;
+        dbStatus === "suspended"
+          ? "Rider suspended"
+          : dbStatus === "active"
+            ? "Rider activated"
+            : `Rider status changed to ${dbStatus}`;
       await writeUserActivity(supabaseAdmin, {
         user_id: riderRow.user_id,
         actor_user_id: auth.authUser.id,
@@ -605,7 +775,9 @@ export async function updateRiderProfile(
         related_entity_type: "rider",
         related_entity_id: validatedData.id,
         metadata: { riderId: validatedData.id, newStatus: dbStatus },
-      }).catch((err) => console.warn("Rider status change activity write failed:", err));
+      }).catch((err) =>
+        console.warn("Rider status change activity write failed:", err),
+      );
     }
 
     revalidatePath("/riders");
@@ -619,5 +791,3 @@ export async function updateRiderProfile(
     };
   }
 }
-
-

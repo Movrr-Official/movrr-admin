@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -12,7 +12,6 @@ import {
   Coins,
   Download,
   Edit,
-  FileText,
   Gauge,
   Gift,
   History,
@@ -43,7 +42,11 @@ import {
   getUserRoutes,
   sendPasswordResetEmail,
 } from "@/app/actions/users";
-import { updateRiderProfile } from "@/app/actions/riders";
+import {
+  getCommunityRideCreatorAccess,
+  setCommunityRideCreatorAccess,
+  updateRiderProfile,
+} from "@/app/actions/riders";
 import { getRiderPerformanceMetrics } from "@/app/actions/riderPerformance";
 import {
   useRiderBadges,
@@ -138,6 +141,15 @@ export function RiderDetailsDrawer({
   const [performanceMetrics, setPerformanceMetrics] =
     useState<RiderPerformanceMetrics | null>(null);
   const [isLoadingAdditionalData, setIsLoadingAdditionalData] = useState(false);
+  const [communityRideAccess, setCommunityRideAccess] = useState<{
+    isAllowed: boolean;
+    note?: string;
+    grantedAt?: string;
+    revokedAt?: string;
+  } | null>(null);
+  const [communityRideAccessNote, setCommunityRideAccessNote] = useState("");
+  const [isSavingCommunityRideAccess, setIsSavingCommunityRideAccess] =
+    useState(false);
 
   const riderId = rider?.id ?? null;
   const { data: badges = [], isLoading: isBadgesLoading } = useRiderBadges(
@@ -208,6 +220,8 @@ export function RiderDetailsDrawer({
       setRewardTransactions([]);
       setPointsBalance(null);
       setPerformanceMetrics(null);
+      setCommunityRideAccess(null);
+      setCommunityRideAccessNote("");
       setIsLoadingAdditionalData(false);
     }
   }, [open]);
@@ -219,15 +233,23 @@ export function RiderDetailsDrawer({
     const load = async () => {
       setIsLoadingAdditionalData(true);
       try {
-        const [activity, riderRoutes, riderCampaigns, rewards, points, perf] =
-          await Promise.all([
-            getUserActivityLogs(rider.userId),
-            getUserRoutes(rider.userId),
-            getUserCampaigns(rider.userId),
-            getUserRewardTransactions(rider.userId),
-            getUserPointsBalance(rider.userId),
-            getRiderPerformanceMetrics(rider.id),
-          ]);
+        const [
+          activity,
+          riderRoutes,
+          riderCampaigns,
+          rewards,
+          points,
+          perf,
+          rideAccess,
+        ] = await Promise.all([
+          getUserActivityLogs(rider.userId),
+          getUserRoutes(rider.userId),
+          getUserCampaigns(rider.userId),
+          getUserRewardTransactions(rider.userId),
+          getUserPointsBalance(rider.userId),
+          getRiderPerformanceMetrics(rider.id),
+          getCommunityRideCreatorAccess(rider.userId),
+        ]);
 
         if (!mounted) return;
         setActivityLogs(activity.success ? (activity.data ?? []) : []);
@@ -236,6 +258,14 @@ export function RiderDetailsDrawer({
         setRewardTransactions(rewards.success ? (rewards.data ?? []) : []);
         setPointsBalance(points.success ? (points.data ?? null) : null);
         setPerformanceMetrics(perf.success ? (perf.data ?? null) : null);
+        setCommunityRideAccess(
+          rideAccess.success && rideAccess.data ? rideAccess.data : null,
+        );
+        setCommunityRideAccessNote(
+          rideAccess.success && rideAccess.data
+            ? (rideAccess.data.note ?? "")
+            : "",
+        );
       } finally {
         if (mounted) setIsLoadingAdditionalData(false);
       }
@@ -355,6 +385,58 @@ export function RiderDetailsDrawer({
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCommunityRideAccessChange = async (allow: boolean) => {
+    if (!rider) return;
+
+    setIsSavingCommunityRideAccess(true);
+    try {
+      const result = await setCommunityRideCreatorAccess({
+        userId: rider.userId,
+        riderId: rider.id,
+        allow,
+        note: communityRideAccessNote,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to update permission");
+      }
+
+      const refreshed = await getCommunityRideCreatorAccess(rider.userId);
+      if (refreshed.success && refreshed.data) {
+        setCommunityRideAccess(refreshed.data);
+        setCommunityRideAccessNote(refreshed.data.note ?? "");
+      } else {
+        setCommunityRideAccess({
+          isAllowed: allow,
+          note: communityRideAccessNote,
+        });
+      }
+
+      toast({
+        title: allow
+          ? "Community ride access granted"
+          : "Community ride access revoked",
+        description: allow
+          ? `${rider.name} can now create community rides.`
+          : `${rider.name} can no longer create community rides.`,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ["riders"] });
+      onRiderUpdate?.();
+    } catch (error) {
+      toast({
+        title: "Permission update failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update rider permission.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingCommunityRideAccess(false);
     }
   };
 
@@ -1228,6 +1310,121 @@ export function RiderDetailsDrawer({
                       </CardContent>
                     </Card>
                   )}
+
+                  <Card className="glass-card border-0">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <ShieldCheck className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg font-bold">
+                              Community Ride Access
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Control whether this rider can create community
+                              rides from the app.
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant={
+                            communityRideAccess?.isAllowed
+                              ? "success"
+                              : "secondary"
+                          }
+                        >
+                          {communityRideAccess?.isAllowed
+                            ? "Allowed"
+                            : "Not allowed"}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between rounded-xl border border-border/50 bg-muted/20 px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            Allow rider to create rides
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            This enables the mobile app create flow for this
+                            rider.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={communityRideAccess?.isAllowed ?? false}
+                          onCheckedChange={handleCommunityRideAccessChange}
+                          disabled={
+                            isLoadingAdditionalData ||
+                            isSavingCommunityRideAccess
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-foreground">
+                          Admin note
+                        </label>
+                        <Textarea
+                          value={communityRideAccessNote}
+                          onChange={(event) =>
+                            setCommunityRideAccessNote(event.target.value)
+                          }
+                          placeholder="Optional reason or context for this access"
+                          rows={3}
+                          className="resize-none rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                          disabled={isSavingCommunityRideAccess}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                        <div>
+                          Granted:{" "}
+                          {communityRideAccess?.grantedAt
+                            ? format(
+                                new Date(communityRideAccess.grantedAt),
+                                "MMM d, yyyy 'at' h:mm a",
+                              )
+                            : "Not yet"}
+                        </div>
+                        <div>
+                          Revoked:{" "}
+                          {communityRideAccess?.revokedAt
+                            ? format(
+                                new Date(communityRideAccess.revokedAt),
+                                "MMM d, yyyy 'at' h:mm a",
+                              )
+                            : "Active / never"}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={
+                            isSavingCommunityRideAccess ||
+                            isLoadingAdditionalData
+                          }
+                          onClick={() =>
+                            handleCommunityRideAccessChange(
+                              communityRideAccess?.isAllowed ?? false,
+                            )
+                          }
+                        >
+                          {isSavingCommunityRideAccess ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            "Save note"
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   <Card className="glass-card border-0">
                     <CardHeader className="pb-4">

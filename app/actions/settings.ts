@@ -159,7 +159,7 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
     fraudAlertEmail: "",
   },
   security: {
-    enforceAdminMfa: false,
+    enforceAdminMfa: true,
     adminSessionTimeoutMinutes: 60,
     auditRetentionDays: 365,
     allowPasswordResetLinks: true,
@@ -1016,6 +1016,7 @@ export async function updateSettingsSection(input: {
       ...previousSectionValue,
       ...sanitizedInput,
     }) as Record<string, unknown>;
+
     const changedFields = getChangedFields(
       previousSectionValue,
       nextSectionValue,

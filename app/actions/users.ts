@@ -34,7 +34,8 @@ import {
   writeUserActivities,
 } from "@/lib/userActivity";
 
-const mapUiRoleToDb = (role: string) => {
+const mapUiRoleToDb = (role?: string | null) => {
+  if (!role) return "rider";
   if (role === "super_admin") return "super_admin";
   return role;
 };
@@ -139,6 +140,86 @@ const ADMIN_ACCESS_ROLES = new Set([
   "government",
 ]);
 
+const ensurePublicUserProfile = async (
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+  input: {
+    userId: string;
+    email?: string | null;
+    role?: string | null;
+  },
+) => {
+  const { data: existingUser, error: existingUserError } = await supabaseAdmin
+    .from("user")
+    .select("id")
+    .eq("id", input.userId)
+    .maybeSingle();
+
+  if (existingUserError) {
+    throw new Error(existingUserError.message);
+  }
+
+  if (existingUser?.id) {
+    return;
+  }
+
+  const { data: authLookup, error: authLookupError } =
+    await supabaseAdmin.auth.admin.getUserById(input.userId);
+
+  if (authLookupError || !authLookup?.user) {
+    throw new Error(
+      authLookupError?.message ||
+        "Unable to find auth user for public.user bootstrap.",
+    );
+  }
+
+  const authUser = authLookup.user;
+  const fullName =
+    typeof authUser.user_metadata?.full_name === "string" &&
+    authUser.user_metadata.full_name.trim()
+      ? authUser.user_metadata.full_name.trim()
+      : [
+          typeof authUser.user_metadata?.first_name === "string"
+            ? authUser.user_metadata.first_name
+            : "",
+          typeof authUser.user_metadata?.last_name === "string"
+            ? authUser.user_metadata.last_name
+            : "",
+        ]
+          .join(" ")
+          .trim() ||
+        authUser.email?.split("@")[0] ||
+        "Admin User";
+
+  const normalizedRole = mapUiRoleToDb(input.role ?? undefined);
+  const publicUserRole =
+    normalizedRole === "super_admin"
+      ? "super_admin"
+      : ADMIN_ACCESS_ROLES.has(normalizedRole ?? "")
+        ? "admin"
+        : normalizedRole ?? "rider";
+
+  const { error: insertError } = await supabaseAdmin.from("user").insert({
+    id: input.userId,
+    email: input.email ?? authUser.email ?? `${input.userId}@movrr.local`,
+    name: fullName,
+    role: publicUserRole,
+    status: "active",
+    created_at: authUser.created_at ?? new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    email_verified: Boolean(authUser.email_confirmed_at),
+    is_verified: Boolean(authUser.email_confirmed_at),
+    language_preference:
+      typeof authUser.user_metadata?.language === "string" &&
+      authUser.user_metadata.language.trim()
+        ? authUser.user_metadata.language.trim()
+        : "en",
+  });
+
+  if (insertError) {
+    throw new Error(insertError.message);
+  }
+};
+
 const syncAdminAccessRecord = async (
   supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
   input: {
@@ -152,6 +233,20 @@ const syncAdminAccessRecord = async (
   const shouldHaveAdminAccess = Boolean(
     normalizedRole && ADMIN_ACCESS_ROLES.has(normalizedRole),
   );
+
+  if (shouldHaveAdminAccess) {
+    await ensurePublicUserProfile(supabaseAdmin, {
+      userId: input.userId,
+      email: input.email,
+      role: normalizedRole,
+    });
+
+    if (input.createdBy) {
+      await ensurePublicUserProfile(supabaseAdmin, {
+        userId: input.createdBy,
+      });
+    }
+  }
 
   if (!shouldHaveAdminAccess) {
     const { error } = await supabaseAdmin

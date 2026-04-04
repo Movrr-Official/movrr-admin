@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   X,
   MapPin,
@@ -58,6 +61,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { RiderRoute } from "@/schemas";
 import { CopyButton } from "@/components/CopyButton";
 import { useToast } from "@/hooks/useToast";
@@ -124,6 +135,46 @@ type HotZoneEntry = {
   isNew?: boolean;
 };
 
+// ─── Route edit form schema ───────────────────────────────────────────────────
+
+const optNum = z.preprocess(
+  (v) => (v === "" || v == null ? undefined : Number(v)),
+  z.number().optional(),
+);
+
+const routeEditSchema = z.object({
+  name: z.string().min(3, "Route name must be at least 3 characters"),
+  description: z.string().optional(),
+  status: z.enum(["pending", "active", "paused", "completed", "cancelled"]),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+  city: z.string().min(1, "City is required"),
+  country: z.string().optional(),
+  startLat: z.coerce
+    .number({ invalid_type_error: "Required" })
+    .min(-90, "Must be −90 to 90")
+    .max(90, "Must be −90 to 90"),
+  startLng: z.coerce
+    .number({ invalid_type_error: "Required" })
+    .min(-180, "Must be −180 to 180")
+    .max(180, "Must be −180 to 180"),
+  endLat: z.coerce
+    .number({ invalid_type_error: "Required" })
+    .min(-90, "Must be −90 to 90")
+    .max(90, "Must be −90 to 90"),
+  endLng: z.coerce
+    .number({ invalid_type_error: "Required" })
+    .min(-180, "Must be −180 to 180")
+    .max(180, "Must be −180 to 180"),
+  estimatedDurationMinutes: optNum,
+  coverageKm: optNum,
+  tolerance: z.preprocess(
+    (v) => (v === "" || v == null ? undefined : Number(v)),
+    z.number().min(0, "Min 0").max(100, "Max 100").optional(),
+  ),
+});
+
+type RouteEditValues = z.infer<typeof routeEditSchema>;
+
 const createId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -189,22 +240,26 @@ export function RouteDetailsDrawer({
   const [isSavingRoute, setIsSavingRoute] = useState(false);
   const [isSavingZones, setIsSavingZones] = useState(false);
   const [isSavingStops, setIsSavingStops] = useState(false);
-  const [routeForm, setRouteForm] = useState({
-    name: "",
-    description: "",
-    status: "pending",
-    difficulty: "easy",
-    city: "",
-    country: "",
-    startLat: "",
-    startLng: "",
-    endLat: "",
-    endLng: "",
-    estimatedDurationMinutes: "",
-    coverageKm: "",
-    tolerance: "",
-  });
   const [campaignId, setCampaignId] = useState("");
+
+  const routeForm = useForm<RouteEditValues>({
+    resolver: zodResolver(routeEditSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      status: "pending",
+      difficulty: "easy",
+      city: "",
+      country: "",
+      startLat: 0,
+      startLng: 0,
+      endLat: 0,
+      endLng: 0,
+      estimatedDurationMinutes: undefined,
+      coverageKm: undefined,
+      tolerance: undefined,
+    },
+  });
   const [routeStops, setRouteStops] = useState<RouteStopEntry[]>([]);
   const [campaignZones, setCampaignZones] = useState<CampaignZoneEntry[]>([]);
   const [hotZones, setHotZones] = useState<HotZoneEntry[]>([]);
@@ -213,7 +268,6 @@ export function RouteDetailsDrawer({
   const [hotZoneErrors, setHotZoneErrors] = useState<Record<string, string>>(
     {},
   );
-  const [routeErrors, setRouteErrors] = useState<Record<string, string>>({});
 
   const campaignOptions = useMemo(() => {
     return (campaigns ?? []).map((campaign) => ({
@@ -237,7 +291,6 @@ export function RouteDetailsDrawer({
       setPointsAwarded(null);
       setTimeline([]);
       setRejectionReason("");
-      setRouteErrors({});
       setStopErrors({});
       setZoneErrors({});
       setHotZoneErrors({});
@@ -279,39 +332,24 @@ export function RouteDetailsDrawer({
   const hydrateRouteForm = (currentRoute: RiderRoute) => {
     const difficulty = currentRoute.difficulty?.toLowerCase() ?? "easy";
     const templateStatus = currentRoute.templateStatus ?? "pending";
-    setRouteForm({
+    routeForm.reset({
       name: currentRoute.name ?? "",
       description: currentRoute.description ?? "",
-      status: templateStatus,
-      difficulty: ["easy", "medium", "hard"].includes(difficulty)
+      status: (["pending", "active", "paused", "completed", "cancelled"].includes(templateStatus)
+        ? templateStatus
+        : "pending") as RouteEditValues["status"],
+      difficulty: (["easy", "medium", "hard"].includes(difficulty)
         ? difficulty
-        : "easy",
+        : "easy") as RouteEditValues["difficulty"],
       city: currentRoute.city ?? "",
       country: currentRoute.country ?? "",
-      startLat:
-        currentRoute.startLat !== undefined
-          ? String(currentRoute.startLat)
-          : "",
-      startLng:
-        currentRoute.startLng !== undefined
-          ? String(currentRoute.startLng)
-          : "",
-      endLat:
-        currentRoute.endLat !== undefined ? String(currentRoute.endLat) : "",
-      endLng:
-        currentRoute.endLng !== undefined ? String(currentRoute.endLng) : "",
-      estimatedDurationMinutes:
-        currentRoute.estimatedDurationMinutes !== undefined
-          ? String(currentRoute.estimatedDurationMinutes)
-          : "",
-      coverageKm:
-        currentRoute.coverageKm !== undefined
-          ? String(currentRoute.coverageKm)
-          : "",
-      tolerance:
-        currentRoute.tolerance !== undefined
-          ? String(currentRoute.tolerance)
-          : "",
+      startLat: currentRoute.startLat ?? 0,
+      startLng: currentRoute.startLng ?? 0,
+      endLat: currentRoute.endLat ?? 0,
+      endLng: currentRoute.endLng ?? 0,
+      estimatedDurationMinutes: currentRoute.estimatedDurationMinutes,
+      coverageKm: currentRoute.coverageKm,
+      tolerance: currentRoute.tolerance,
     });
     setCampaignId(
       currentRoute.campaignIdPrimary ?? currentRoute.campaignId?.[0] ?? "",
@@ -371,36 +409,54 @@ export function RouteDetailsDrawer({
     return Number.isFinite(parsed) ? parsed : undefined;
   };
 
-  const validateRouteForm = () => {
-    const errors: Record<string, string> = {};
-    if (!routeForm.name.trim() || routeForm.name.trim().length < 3) {
-      errors.name = "Route name must be at least 3 characters.";
-    }
-    if (!routeForm.city.trim()) {
-      errors.city = "City is required.";
-    }
-
-    const startLat = parseNumberValue(routeForm.startLat);
-    const startLng = parseNumberValue(routeForm.startLng);
-    const endLat = parseNumberValue(routeForm.endLat);
-    const endLng = parseNumberValue(routeForm.endLng);
-
-    if (startLat === undefined || startLat < -90 || startLat > 90) {
-      errors.startLat = "Start latitude must be between -90 and 90.";
-    }
-    if (startLng === undefined || startLng < -180 || startLng > 180) {
-      errors.startLng = "Start longitude must be between -180 and 180.";
-    }
-    if (endLat === undefined || endLat < -90 || endLat > 90) {
-      errors.endLat = "End latitude must be between -90 and 90.";
-    }
-    if (endLng === undefined || endLng < -180 || endLng > 180) {
-      errors.endLng = "End longitude must be between -180 and 180.";
+  const handleSaveRoute = routeForm.handleSubmit(async (values: RouteEditValues) => {
+    if (!route) return;
+    if (useMockData) {
+      toast({
+        title: "Mock mode",
+        description: "Route editing is disabled while mock data is enabled.",
+      });
+      return;
     }
 
-    setRouteErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+    const routeTemplateId = route.routeId ?? route.id;
+    if (!routeTemplateId) return;
+
+    setIsSavingRoute(true);
+    const result = await updateRoute({
+      id: routeTemplateId,
+      name: values.name.trim(),
+      description: values.description?.trim() || undefined,
+      campaignId: campaignId || null,
+      status: values.status,
+      difficulty: values.difficulty,
+      city: values.city.trim(),
+      country: values.country?.trim() || undefined,
+      startLat: values.startLat,
+      startLng: values.startLng,
+      endLat: values.endLat,
+      endLng: values.endLng,
+      estimatedDurationMinutes: values.estimatedDurationMinutes,
+      coverageKm: values.coverageKm,
+      tolerance: values.tolerance,
+    });
+    setIsSavingRoute(false);
+
+    if (!result.success) {
+      toast({
+        title: "Update failed",
+        description: result.error ?? "Unable to update route.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Route updated",
+      description: "Route details were saved successfully.",
+    });
+    onRouteUpdate?.();
+  });
 
   const validateStops = () => {
     const errors: Record<string, string> = {};
@@ -458,60 +514,6 @@ export function RouteDetailsDrawer({
     });
     setHotZoneErrors(errors);
     return Object.keys(errors).length === 0;
-  };
-
-  const handleSaveRoute = async () => {
-    if (!route) return;
-    if (useMockData) {
-      toast({
-        title: "Mock mode",
-        description: "Route editing is disabled while mock data is enabled.",
-      });
-      return;
-    }
-
-    if (!validateRouteForm()) return;
-
-    const routeTemplateId = route.routeId ?? route.id;
-    if (!routeTemplateId) return;
-
-    setIsSavingRoute(true);
-    const result = await updateRoute({
-      id: routeTemplateId,
-      name: routeForm.name.trim(),
-      description: routeForm.description.trim() || undefined,
-      campaignId: campaignId || null,
-      status: routeForm.status as any,
-      difficulty: routeForm.difficulty as any,
-      city: routeForm.city.trim(),
-      country: routeForm.country.trim() || undefined,
-      startLat: parseNumberValue(routeForm.startLat),
-      startLng: parseNumberValue(routeForm.startLng),
-      endLat: parseNumberValue(routeForm.endLat),
-      endLng: parseNumberValue(routeForm.endLng),
-      estimatedDurationMinutes: parseNumberValue(
-        routeForm.estimatedDurationMinutes,
-      ),
-      coverageKm: parseNumberValue(routeForm.coverageKm),
-      tolerance: parseNumberValue(routeForm.tolerance),
-    });
-
-    setIsSavingRoute(false);
-
-    if (!result.success) {
-      toast({
-        title: "Update failed",
-        description: result.error ?? "Unable to update route.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Route updated",
-      description: "Route details were saved successfully.",
-    });
-    onRouteUpdate?.();
   };
 
   const handleSaveStops = async () => {
@@ -1533,281 +1535,305 @@ export function RouteDetailsDrawer({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label>Route name</Label>
-                        <Input
-                          value={routeForm.name}
-                          onChange={(event) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              name: event.target.value,
-                            }))
-                          }
-                          placeholder="Downtown Loop"
-                        />
-                        {routeErrors.name && (
-                          <p className="text-xs text-destructive">
-                            {routeErrors.name}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Campaign</Label>
-                        <Select
-                          value={campaignId || "none"}
-                          onValueChange={(value) =>
-                            setCampaignId(value === "none" ? "" : value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select campaign" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No campaign</SelectItem>
-                            {campaignOptions.map((campaign) => (
-                              <SelectItem key={campaign.id} value={campaign.id}>
-                                {campaign.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Description</Label>
-                      <Textarea
-                        value={routeForm.description}
-                        onChange={(event) =>
-                          setRouteForm((prev) => ({
-                            ...prev,
-                            description: event.target.value,
-                          }))
-                        }
-                        placeholder="Add rider guidance or notes."
-                      />
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <div className="space-y-2">
-                        <Label>Status</Label>
-                        <Select
-                          value={routeForm.status}
-                          onValueChange={(value) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              status: value,
-                            }))
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="paused">Paused</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Difficulty</Label>
-                        <Select
-                          value={routeForm.difficulty}
-                          onValueChange={(value) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              difficulty: value,
-                            }))
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select difficulty" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="easy">Easy</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="hard">Hard</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>City</Label>
-                        <Input
-                          value={routeForm.city}
-                          onChange={(event) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              city: event.target.value,
-                            }))
-                          }
-                        />
-                        {routeErrors.city && (
-                          <p className="text-xs text-destructive">
-                            {routeErrors.city}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <div className="space-y-2">
-                        <Label>Country</Label>
-                        <Input
-                          value={routeForm.country}
-                          onChange={(event) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              country: event.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Est. Duration (min)</Label>
-                        <Input
-                          type="number"
-                          min={0}
-                          value={routeForm.estimatedDurationMinutes}
-                          onChange={(event) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              estimatedDurationMinutes: event.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Coverage (km)</Label>
-                        <Input
-                          type="number"
-                          min={0}
-                          step={0.1}
-                          value={routeForm.coverageKm}
-                          onChange={(event) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              coverageKm: event.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-4">
-                      <div className="space-y-2">
-                        <Label>Start latitude</Label>
-                        <Input
-                          type="number"
-                          step={0.0001}
-                          value={routeForm.startLat}
-                          onChange={(event) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              startLat: event.target.value,
-                            }))
-                          }
-                        />
-                        {routeErrors.startLat && (
-                          <p className="text-xs text-destructive">
-                            {routeErrors.startLat}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Start longitude</Label>
-                        <Input
-                          type="number"
-                          step={0.0001}
-                          value={routeForm.startLng}
-                          onChange={(event) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              startLng: event.target.value,
-                            }))
-                          }
-                        />
-                        {routeErrors.startLng && (
-                          <p className="text-xs text-destructive">
-                            {routeErrors.startLng}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label>End latitude</Label>
-                        <Input
-                          type="number"
-                          step={0.0001}
-                          value={routeForm.endLat}
-                          onChange={(event) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              endLat: event.target.value,
-                            }))
-                          }
-                        />
-                        {routeErrors.endLat && (
-                          <p className="text-xs text-destructive">
-                            {routeErrors.endLat}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label>End longitude</Label>
-                        <Input
-                          type="number"
-                          step={0.0001}
-                          value={routeForm.endLng}
-                          onChange={(event) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              endLng: event.target.value,
-                            }))
-                          }
-                        />
-                        {routeErrors.endLng && (
-                          <p className="text-xs text-destructive">
-                            {routeErrors.endLng}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label>Compliance tolerance (%)</Label>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={routeForm.tolerance}
-                          onChange={(event) =>
-                            setRouteForm((prev) => ({
-                              ...prev,
-                              tolerance: event.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="flex items-end justify-end">
-                        <Button
-                          onClick={handleSaveRoute}
-                          disabled={isSavingRoute}
-                        >
-                          {isSavingRoute ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Saving...
-                            </>
-                          ) : (
-                            "Save route details"
+                    <Form {...routeForm}>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <FormField
+                          control={routeForm.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Route name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Downtown Loop" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
                           )}
-                        </Button>
+                        />
+                        <div className="space-y-2">
+                          <Label>Campaign</Label>
+                          <Select
+                            value={campaignId || "none"}
+                            onValueChange={(value) =>
+                              setCampaignId(value === "none" ? "" : value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select campaign" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">No campaign</SelectItem>
+                              {campaignOptions.map((campaign) => (
+                                <SelectItem key={campaign.id} value={campaign.id}>
+                                  {campaign.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                    </div>
+
+                      <FormField
+                        control={routeForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Add rider guidance or notes."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <FormField
+                          control={routeForm.control}
+                          name="status"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Status</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select status" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="active">Active</SelectItem>
+                                  <SelectItem value="paused">Paused</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={routeForm.control}
+                          name="difficulty"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Difficulty</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select difficulty" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="easy">Easy</SelectItem>
+                                  <SelectItem value="medium">Medium</SelectItem>
+                                  <SelectItem value="hard">Hard</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={routeForm.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>City</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <FormField
+                          control={routeForm.control}
+                          name="country"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Country</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={routeForm.control}
+                          name="estimatedDurationMinutes"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Est. Duration (min)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  {...field}
+                                  value={field.value ?? ""}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                                  }
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={routeForm.control}
+                          name="coverageKm"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Coverage (km)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  step={0.1}
+                                  {...field}
+                                  value={field.value ?? ""}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                                  }
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-4">
+                        <FormField
+                          control={routeForm.control}
+                          name="startLat"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start latitude</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  step={0.0001}
+                                  {...field}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.value === "" ? NaN : Number(e.target.value))
+                                  }
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={routeForm.control}
+                          name="startLng"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start longitude</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  step={0.0001}
+                                  {...field}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.value === "" ? NaN : Number(e.target.value))
+                                  }
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={routeForm.control}
+                          name="endLat"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End latitude</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  step={0.0001}
+                                  {...field}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.value === "" ? NaN : Number(e.target.value))
+                                  }
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={routeForm.control}
+                          name="endLng"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End longitude</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  step={0.0001}
+                                  {...field}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.value === "" ? NaN : Number(e.target.value))
+                                  }
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <FormField
+                          control={routeForm.control}
+                          name="tolerance"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Compliance tolerance (%)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  {...field}
+                                  value={field.value ?? ""}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                                  }
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex items-end justify-end">
+                          <Button
+                            onClick={handleSaveRoute}
+                            disabled={isSavingRoute}
+                          >
+                            {isSavingRoute ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              "Save route details"
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </Form>
                   </CardContent>
                 </Card>
 
