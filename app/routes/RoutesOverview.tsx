@@ -4,7 +4,7 @@ import { Route, TrendingUp, CheckCircle2, Activity, Plus } from "lucide-react";
 import { RoutesTable } from "@/components/routes/RoutesTable";
 import { useRouteData } from "@/hooks/useRouteData";
 import { StatsCard } from "@/components/stats/StatsCard";
-import { RouteLocationsMap } from "@/components/routes/RouteLocationsMap";
+import { AdminMap } from "@/components/AdminMap/AdminMap";
 import { RouteOptimizer } from "@/components/routes/RouteOptimizer";
 import { RouteAnalytics } from "@/components/routes/RouteAnalytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -375,7 +375,7 @@ export default function RoutesOverview() {
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_25rem]">
           {/* Location Map */}
           <div className="self-start space-y-6">
-            <RouteLocationsMap routes={routes ?? []} />
+            <AdminMap routes={routes ?? []} defaultMode="route-management" cardShell />
 
             {/* Tabs for Route Analytics and Routes Table */}
             <Tabs defaultValue="table" className="w-full mt-16">

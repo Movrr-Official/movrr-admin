@@ -41,7 +41,8 @@ const publicEnvSchema = z.object({
     .optional(),
   NEXT_PUBLIC_MAP_STYLE_URL: z
     .string()
-    .url("Invalid NEXT_PUBLIC_MAP_STYLE_URL"),
+    .url("Invalid NEXT_PUBLIC_MAP_STYLE_URL")
+    .optional(),
   NEXT_PUBLIC_MAP_STYLE_HOT_ZONES: z
     .string()
     .url("Invalid NEXT_PUBLIC_MAP_STYLE_HOT_ZONES")
@@ -50,6 +51,7 @@ const publicEnvSchema = z.object({
     .string()
     .url("Invalid NEXT_PUBLIC_MAP_STYLE_HYBRID")
     .optional(),
+  NEXT_PUBLIC_MAPTILER_API_KEY: z.string().optional(),
 
   // Cloudinary (public)
   NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: z.string().optional(),
@@ -164,6 +166,7 @@ function getEnv(): PublicEnv | ServerEnv {
       NEXT_PUBLIC_MAP_STYLE_HOT_ZONES:
         process.env.NEXT_PUBLIC_MAP_STYLE_HOT_ZONES,
       NEXT_PUBLIC_MAP_STYLE_HYBRID: process.env.NEXT_PUBLIC_MAP_STYLE_HYBRID,
+      NEXT_PUBLIC_MAPTILER_API_KEY: process.env.NEXT_PUBLIC_MAPTILER_API_KEY,
       NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET:
         process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
       NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME:
@@ -273,6 +276,8 @@ export const NEXT_PUBLIC_MAP_STYLE_URL = env.NEXT_PUBLIC_MAP_STYLE_URL;
 export const NEXT_PUBLIC_MAP_STYLE_HOT_ZONES =
   env.NEXT_PUBLIC_MAP_STYLE_HOT_ZONES;
 export const NEXT_PUBLIC_MAP_STYLE_HYBRID = env.NEXT_PUBLIC_MAP_STYLE_HYBRID;
+export const NEXT_PUBLIC_MAPTILER_API_KEY =
+  env.NEXT_PUBLIC_MAPTILER_API_KEY ?? "";
 export const NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET =
   env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? "";
 export const NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME =
