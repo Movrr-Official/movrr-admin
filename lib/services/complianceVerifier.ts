@@ -1,5 +1,5 @@
 /**
- * Compliance Verifier — Movrr Backend
+ * Compliance Verifier — MOVRR Backend
  * Version: v1  (stored in ride_session.algorithm_version)
  *
  * AUTHORITATIVE compliance logic. This module is the single source of truth
@@ -183,10 +183,7 @@ export function isPointInZonePolygon(
  * Returns true if point is within the bounding box (not conclusive — run
  * full ray-cast after this passes).
  */
-export function isPointInBoundingBox(
-  point: LatLon,
-  ring: LatLon[],
-): boolean {
+export function isPointInBoundingBox(point: LatLon, ring: LatLon[]): boolean {
   if (ring.length === 0) return false;
   let minLat = ring[0].lat;
   let maxLat = ring[0].lat;
@@ -455,7 +452,9 @@ export function runAntiSpoofChecks(params: {
       severity: speedViolations.length > 3 ? "critical" : "high",
       metadata: {
         violation_count: speedViolations.length,
-        max_speed_kmh: Math.max(...speedViolations.map((p) => p.speed_kmh ?? 0)),
+        max_speed_kmh: Math.max(
+          ...speedViolations.map((p) => p.speed_kmh ?? 0),
+        ),
       },
     });
   }

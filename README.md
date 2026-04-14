@@ -1,10 +1,10 @@
-# Movrr Admin Dashboard
+# MOVRR Admin Dashboard
 
-Movrr Admin Dashboard is the internal operations console for the Movrr platform. It is a Next.js 16 + React 19 application that lets admin teams manage riders, campaigns, routes, rewards, waitlist approvals, notifications, and workboard operations from a single interface.
+MOVRR Admin Dashboard is the internal operations console for the MOVRR platform. It is a Next.js 16 + React 19 application that lets admin teams manage riders, campaigns, routes, rewards, waitlist approvals, notifications, and workboard operations from a single interface.
 
 ## Scope and business value
 
-The dashboard addresses the core operational problems in Movrr:
+The dashboard addresses the core operational problems in MOVRR:
 
 - Onboarding and governing users (admins, riders, advertisers, support/moderator roles).
 - Running and monitoring campaign delivery.

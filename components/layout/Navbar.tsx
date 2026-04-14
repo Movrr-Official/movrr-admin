@@ -32,14 +32,14 @@ const Navbar = () => {
         animate="animate"
         className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8"
       >
-        {/* Left Section - Movrr Icon & Search Bar */}
+        {/* Left Section - MOVRR Icon & Search Bar */}
         <div className="flex items-center gap-4 flex-1 max-w-3xl">
-          {/* Movrr Icon - Hidden on desktop, visible on mobile */}
+          {/* MOVRR Icon - Hidden on desktop, visible on mobile */}
           <div className="lg:hidden flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
               <Image
                 src="/movrr-icon.png"
-                alt="Movrr Icon"
+                alt="MOVRR Icon"
                 width={24}
                 height={24}
                 sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 100vw"
@@ -50,7 +50,7 @@ const Navbar = () => {
             </div>
             <div className="flex flex-col">
               <h2 className="text-lg uppercase font-semibold leading-none">
-                Movrr
+                MOVRR
               </h2>
               <span className="text-xs text-muted-foreground leading-none">
                 Admin Portal

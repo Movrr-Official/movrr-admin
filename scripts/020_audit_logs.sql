@@ -1,4 +1,4 @@
--- Audit logs table + policies for Movrr admin dashboard
+-- Audit logs table + policies for MOVRR admin dashboard
 -- Creates: public.audit_log, admin check function, insert helper, indexes
 
 -- 2) Audit log table

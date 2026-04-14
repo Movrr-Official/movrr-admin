@@ -124,7 +124,7 @@ const getResendClient = () => {
 };
 
 const getSenderEmail = () =>
-  FROM_EMAIL ? `Movrr <${FROM_EMAIL}>` : "Movrr <no-reply@movrr.nl>";
+  FROM_EMAIL ? `MOVRR <${FROM_EMAIL}>` : "MOVRR <no-reply@movrr.nl>";
 
 const getRecoveryRedirectUrl = () =>
   new URL("/auth/callback?next=/auth/reset-password", APP_URL).toString();
@@ -208,7 +208,7 @@ const ensurePublicUserProfile = async (
       ? "super_admin"
       : ADMIN_ACCESS_ROLES.has(normalizedRole ?? "")
         ? "admin"
-        : normalizedRole ?? "rider";
+        : (normalizedRole ?? "rider");
 
   const { error: insertError } = await supabaseAdmin.from("user").insert({
     id: input.userId,
@@ -731,7 +731,7 @@ export async function createUser(
           await resend.emails.send({
             from: getSenderEmail(),
             to: validatedData.email,
-            subject: "Set up your Movrr account",
+            subject: "Set up your MOVRR account",
             react: AccountSetupEmail({
               name: validatedData.name,
               setupUrl: buildConfirmUrl(
@@ -1124,7 +1124,7 @@ export async function sendPasswordResetEmail(
     await resend.emails.send({
       from: getSenderEmail(),
       to: email,
-      subject: "Reset your Movrr Admin password",
+      subject: "Reset your MOVRR Admin password",
       react: PasswordResetEmail({
         name: profileRow?.name || "there",
         resetUrl: resetLink,

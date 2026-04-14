@@ -35,12 +35,11 @@ const TYPE_LABELS: Record<
   },
   email_change: {
     title: "Confirm email change",
-    description:
-      "Click the button below to confirm your new email address.",
+    description: "Click the button below to confirm your new email address.",
     cta: "Confirm new email",
   },
   magiclink: {
-    title: "Sign in to Movrr",
+    title: "Sign in to MOVRR",
     description: "Click the button below to complete your sign-in.",
     cta: "Continue to sign in",
   },

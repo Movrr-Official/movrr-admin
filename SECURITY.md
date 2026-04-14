@@ -2,7 +2,7 @@
 
 ## Security model overview
 
-Movrr Admin Dashboard is a privileged admin application with service-role database access on the server side. Security depends on strict auth gating, protected runtime secrets, and careful server-action boundaries.
+MOVRR Admin Dashboard is a privileged admin application with service-role database access on the server side. Security depends on strict auth gating, protected runtime secrets, and careful server-action boundaries.
 
 ## Authentication and authorization controls
 

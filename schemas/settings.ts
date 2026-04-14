@@ -47,7 +47,7 @@ export const maintenanceScopeSchema = z.enum([
 export const generalSettingsSchema = z.object({
   supportEmail: optionalEmailSchema.default("support@movrr.nl"),
   publicSupportEmail: optionalEmailSchema.default("support@movrr.nl"),
-  publicSupportContactName: z.string().trim().max(120).default("Movrr Support"),
+  publicSupportContactName: z.string().trim().max(120).default("MOVRR Support"),
   defaultRegion: nonEmptyTrimmedString.default("NL"),
   timezone: nonEmptyTrimmedString.default("Europe/Amsterdam"),
   defaultLanguage: nonEmptyTrimmedString.default("en"),
@@ -142,7 +142,9 @@ export const suggestedRoutesSettingsSchema = z.object({
   maxPerRouteBonusTotal: nonNegativeInteger.default(10000),
 });
 
-export type SuggestedRoutesSettings = z.infer<typeof suggestedRoutesSettingsSchema>;
+export type SuggestedRoutesSettings = z.infer<
+  typeof suggestedRoutesSettingsSchema
+>;
 
 export const campaignSettingsSchema = z.object({
   defaultMultiplier: nonNegativeNumber.default(1),
@@ -202,9 +204,9 @@ export const integrationsSettingsSchema = z.object({
 });
 
 export const organizationSettingsSchema = z.object({
-  displayName: z.string().trim().min(1).max(120).default("Movrr Media"),
-  legalCompanyName: z.string().trim().max(160).default("Movrr Media"),
-  supportContactName: z.string().trim().max(120).default("Movrr Support"),
+  displayName: z.string().trim().min(1).max(120).default("MOVRR Media"),
+  legalCompanyName: z.string().trim().max(160).default("MOVRR Media"),
+  supportContactName: z.string().trim().max(120).default("MOVRR Support"),
   billingContactEmail: optionalEmailSchema.default(""),
   vatId: z.string().trim().max(80).default(""),
   businessAddress: z.string().trim().max(300).default(""),
@@ -269,9 +271,9 @@ export const settingsActorSchema = z.object({
 export const settingsSectionMetadataSchema = z.object({
   updatedAt: z.string().datetime().optional(),
   updatedBy: settingsActorSchema.optional(),
-  source: z.enum(["database", "environment", "derived", "hybrid"]).default(
-    "database",
-  ),
+  source: z
+    .enum(["database", "environment", "derived", "hybrid"])
+    .default("database"),
   managedBy: z.enum(["admin", "env", "system", "hybrid"]).default("admin"),
   readOnly: z.boolean().default(false),
 });
@@ -326,7 +328,9 @@ export const updateSettingsSectionInputSchema = z.object({
 
 export type GeneralSettings = z.infer<typeof generalSettingsSchema>;
 export type OnboardingSettings = z.infer<typeof onboardingSettingsSchema>;
-export type RideVerificationSettings = z.infer<typeof rideVerificationSettingsSchema>;
+export type RideVerificationSettings = z.infer<
+  typeof rideVerificationSettingsSchema
+>;
 export type ImpactSettings = z.infer<typeof impactSettingsSchema>;
 export type RewardsSettings = z.infer<typeof rewardsSettingsSchema>;
 export type RewardsSettingsPublicConfig = Pick<

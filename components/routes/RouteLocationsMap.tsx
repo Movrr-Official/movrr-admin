@@ -469,7 +469,7 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
         <p className="text-sm text-muted-foreground">
           {useMockData
             ? "Mock rider positions based on route waypoints."
-            : "Live GPS points streamed from Movrr’s backend route tracking service."}
+            : "Live GPS points streamed from MOVRR’s backend route tracking service."}
         </p>
       </CardHeader>
       <CardContent className="space-y-4">

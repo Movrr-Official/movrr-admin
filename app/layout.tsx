@@ -28,14 +28,14 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Movrr - Transform Your Ride, Transform Your City",
+  title: "MOVRR - Transform Your Ride, Transform Your City",
   description:
     "Join the movement. Earn money while cycling and transform city streets into a canvas for brands. Flexible hours, reliable pay, and make an impact.",
   keywords:
     "bike advertising, cycling jobs, gig economy, urban mobility, brand advertising",
-  authors: [{ name: "Movrr" }],
+  authors: [{ name: "MOVRR" }],
   openGraph: {
-    title: "Movrr - Transform Your Ride, Transform Your City",
+    title: "MOVRR - Transform Your Ride, Transform Your City",
     description:
       "Join the movement. Earn money while cycling and transform city streets into a canvas for brands.",
     type: "website",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Movrr - Transform Your Ride, Transform Your City",
+    title: "MOVRR - Transform Your Ride, Transform Your City",
     description:
       "Join the movement. Earn money while cycling and transform city streets into a canvas for brands.",
   },

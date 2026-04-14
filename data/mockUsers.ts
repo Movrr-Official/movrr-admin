@@ -15,7 +15,7 @@ export const mockUsers: User[] = [
     avatarUrl: "https://randomuser.me/api/portraits/men/0.jpg",
     isVerified: true,
     languagePreference: "en",
-    organization: "Movrr Media",
+    organization: "MOVRR Media",
   },
   {
     id: "1",
@@ -30,7 +30,7 @@ export const mockUsers: User[] = [
     avatarUrl: "https://randomuser.me/api/portraits/men/1.jpg",
     isVerified: true,
     languagePreference: "en",
-    organization: "Movrr Media",
+    organization: "MOVRR Media",
   },
   {
     id: "advertiser1",

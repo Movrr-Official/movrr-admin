@@ -107,7 +107,7 @@ export const mockAuditLogs: AuditLog[] = [
     affectedEntity: {
       type: "Account",
       id: "acc1",
-      name: "Movrr Media",
+      name: "MOVRR Media",
     },
     timestamp: "2023-06-23T10:50:00Z",
   },

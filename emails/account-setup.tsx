@@ -25,7 +25,7 @@ export default function AccountSetupEmail({
   return (
     <Html lang={locale.split("-")[0] || "en"}>
       <Head />
-      <Preview>Set up your Movrr account</Preview>
+      <Preview>Set up your MOVRR account</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
@@ -33,7 +33,7 @@ export default function AccountSetupEmail({
               src="https://res.cloudinary.com/dgy9bf37b/image/upload/v1769860718/movrr_logo_icon_green_no_bg_pycuih.png"
               width="150"
               height="50"
-              alt="Movrr Logo"
+              alt="MOVRR Logo"
               style={logo}
             />
             <Text style={tagline}>Account Setup</Text>
@@ -42,7 +42,7 @@ export default function AccountSetupEmail({
           <Section style={content}>
             <Heading style={h1}>Hi {name},</Heading>
             <Text style={text}>
-              Your Movrr account is ready. Use the secure link below to create
+              Your MOVRR account is ready. Use the secure link below to create
               your password and complete your first sign-in.
             </Text>
 
@@ -55,7 +55,7 @@ export default function AccountSetupEmail({
                   lineHeight: "1.2",
                   textDecoration: "none",
                 }}
-                aria-label="Set up your Movrr account"
+                aria-label="Set up your MOVRR account"
                 target="_blank"
                 rel="noopener noreferrer"
               >

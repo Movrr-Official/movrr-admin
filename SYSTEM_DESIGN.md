@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes how data and control flow through Movrr Admin Dashboard, from UI interactions to backend processing and persistence.
+This document describes how data and control flow through MOVRR Admin Dashboard, from UI interactions to backend processing and persistence.
 
 ## Runtime topology
 

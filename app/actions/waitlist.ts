@@ -28,7 +28,7 @@ const getResendClient = () => {
 };
 
 const getSenderEmail = () =>
-  FROM_EMAIL ? `Movrr <${FROM_EMAIL}>` : "Movrr <no-reply@movrr.nl>";
+  FROM_EMAIL ? `MOVRR <${FROM_EMAIL}>` : "MOVRR <no-reply@movrr.nl>";
 
 const getRecoveryRedirectUrl = () =>
   new URL("/auth/callback?next=/auth/reset-password", APP_URL).toString();
@@ -40,8 +40,7 @@ const buildConfirmUrl = (hashedToken: string, type: string): string => {
   return url.toString();
 };
 
-const delay = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const waitForBootstrappedUserProfile = async (
   supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
@@ -186,16 +185,19 @@ async function updateWaitlistStatusInternal(
         );
       }
 
-      const { error: profileError } = await supabaseAdmin.from("user").update({
-        email: authUser.user.email,
-        name: waitlist.name,
-        role: "rider",
-        status: "active",
-        is_verified: false,
-        email_verified: true,
-        verification_level: "basic",
-        updated_at: new Date().toISOString(),
-      }).eq("id", authUser.user.id);
+      const { error: profileError } = await supabaseAdmin
+        .from("user")
+        .update({
+          email: authUser.user.email,
+          name: waitlist.name,
+          role: "rider",
+          status: "active",
+          is_verified: false,
+          email_verified: true,
+          verification_level: "basic",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", authUser.user.id);
 
       if (profileError) {
         if (createdAuthUserId) {
@@ -211,7 +213,11 @@ async function updateWaitlistStatusInternal(
       const setupNotificationsEnabled =
         policies.notifications.onboardingSetupNotificationsEnabled !== false;
 
-      if (!allowAccountSetupLinks || !setupEmailEnabled || !setupNotificationsEnabled) {
+      if (
+        !allowAccountSetupLinks ||
+        !setupEmailEnabled ||
+        !setupNotificationsEnabled
+      ) {
         if (createdAuthUserId) {
           await cleanupCreatedUser(supabaseAdmin, createdAuthUserId);
         }
@@ -256,7 +262,7 @@ async function updateWaitlistStatusInternal(
       const { error: emailError } = await resend.emails.send({
         from: getSenderEmail(),
         to: waitlist.email,
-        subject: "Set up your Movrr account",
+        subject: "Set up your MOVRR account",
         react: AccountSetupEmail({
           name: waitlist.name,
           setupUrl: buildConfirmUrl(
@@ -277,16 +283,16 @@ async function updateWaitlistStatusInternal(
 
       const { data: finalizedWaitlist, error: waitlistConvertedError } =
         await supabase
-        .from("waitlist")
-        .update({
-          status: "approved",
-          status_reason: reason,
-          converted_to_user: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id)
-        .select()
-        .single();
+          .from("waitlist")
+          .update({
+            status: "approved",
+            status_reason: reason,
+            converted_to_user: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", id)
+          .select()
+          .single();
 
       if (waitlistConvertedError) {
         throw new Error(waitlistConvertedError.message);
@@ -299,7 +305,8 @@ async function updateWaitlistStatusInternal(
         actor_user_id: auth.authUser.id,
         source: "waitlist",
         action: "Waitlist approved",
-        description: "Waitlist entry was approved and converted into a rider account.",
+        description:
+          "Waitlist entry was approved and converted into a rider account.",
         related_entity_type: "waitlist",
         related_entity_id: id,
         metadata: {

@@ -29,7 +29,12 @@ import {
   type SettingsSectionId,
 } from "@/schemas/settings";
 
-const LEGACY_KEYS = ["system", "points", "campaignDefaults", "featureFlags"] as const;
+const LEGACY_KEYS = [
+  "system",
+  "points",
+  "campaignDefaults",
+  "featureFlags",
+] as const;
 const SETTINGS_KEYS = [
   "general",
   "onboarding",
@@ -77,7 +82,7 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
   general: {
     supportEmail: SUPPORT_EMAIL || "support@movrr.nl",
     publicSupportEmail: SUPPORT_EMAIL || "support@movrr.nl",
-    publicSupportContactName: "Movrr Support",
+    publicSupportContactName: "MOVRR Support",
     defaultRegion: "NL",
     timezone: "Europe/Amsterdam",
     defaultLanguage: "en",
@@ -176,9 +181,9 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     webhookStatusPageUrl: "",
   },
   organization: {
-    displayName: "Movrr Media",
-    legalCompanyName: "Movrr Media",
-    supportContactName: "Movrr Support",
+    displayName: "MOVRR Media",
+    legalCompanyName: "MOVRR Media",
+    supportContactName: "MOVRR Support",
     billingContactEmail: "",
     vatId: "",
     businessAddress: "",
@@ -228,7 +233,8 @@ export const ENV_MANAGED_FIELDS: Record<SettingsSectionId, string[]> = {
   ],
 };
 
-const getSectionSchema = (section: SettingsSectionId) => sectionSchemas[section];
+const getSectionSchema = (section: SettingsSectionId) =>
+  sectionSchemas[section];
 
 const deriveBillingSection = (values: AdminSettingsValues): BillingSettings =>
   billingSettingsSchema.parse({
@@ -330,7 +336,9 @@ export const mergeSettingsRows = (rows: SettingsRow[]): AdminSettingsValues => {
     const row = rows.find((candidate) => candidate.key === section);
     if (!row?.value) continue;
 
-    (merged as Record<string, unknown>)[section] = getSectionSchema(section).parse({
+    (merged as Record<string, unknown>)[section] = getSectionSchema(
+      section,
+    ).parse({
       ...(merged[section] as Record<string, unknown>),
       ...row.value,
     });
@@ -340,7 +348,9 @@ export const mergeSettingsRows = (rows: SettingsRow[]): AdminSettingsValues => {
 
   // Migration seeding: if no dedicated rideVerification row exists yet, seed from
   // the rewards row so admins don't see a blank section on first visit.
-  const hasRideVerificationRow = rows.some((r) => r.key === "rideVerification" && r.value);
+  const hasRideVerificationRow = rows.some(
+    (r) => r.key === "rideVerification" && r.value,
+  );
   if (!hasRideVerificationRow) {
     merged.rideVerification = rideVerificationSettingsSchema.parse({
       maxAllowedAverageSpeedKmh: merged.rewards.maxAllowedAverageSpeedKmh,
@@ -369,7 +379,9 @@ export const mergeSettingsRows = (rows: SettingsRow[]): AdminSettingsValues => {
     SUPPORT_EMAIL ||
     "support@movrr.nl";
   merged.organization.billingContactEmail =
-    merged.organization.billingContactEmail || merged.general.supportEmail || "";
+    merged.organization.billingContactEmail ||
+    merged.general.supportEmail ||
+    "";
   merged.privacy.privacyContactEmail =
     merged.privacy.privacyContactEmail ||
     merged.general.publicSupportEmail ||
@@ -408,7 +420,8 @@ export async function getPublicOnboardingPolicyValues() {
     requireCountry: values.onboarding.requireCountry,
     autoApproveWaitlist: values.onboarding.autoApproveWaitlist,
     setupEmailEnabled: values.onboarding.setupEmailEnabled,
-    supportEmail: values.general.publicSupportEmail || values.general.supportEmail,
+    supportEmail:
+      values.general.publicSupportEmail || values.general.supportEmail,
     defaultLanguage: values.onboarding.defaultRiderLanguage,
     defaultTimezone: values.onboarding.defaultRiderTimezone,
     maintenanceMode: values.general.maintenanceMode,

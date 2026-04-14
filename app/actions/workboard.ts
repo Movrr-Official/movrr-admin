@@ -5,7 +5,10 @@ import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
 import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { APP_URL, RESEND_API_KEY, FROM_EMAIL } from "@/lib/env";
-import { getPlatformSecurityPolicy, isInviteDomainAllowed } from "@/lib/platformSettings";
+import {
+  getPlatformSecurityPolicy,
+  isInviteDomainAllowed,
+} from "@/lib/platformSettings";
 import { Resend } from "resend";
 
 const roleSchema = z.enum(["owner", "admin", "editor", "viewer"]);
@@ -228,7 +231,7 @@ export async function inviteWorkboardMember(input: {
     const inviteLink = `${APP_URL}/workboard/invite?token=${invite.token}`;
 
     await resend.emails.send({
-      from: FROM_EMAIL ? `Movrr <${FROM_EMAIL}>` : "Movrr <no-reply@movrr.nl>",
+      from: FROM_EMAIL ? `MOVRR <${FROM_EMAIL}>` : "MOVRR <no-reply@movrr.nl>",
       to: payload.email,
       subject: "You have been invited to the MOVRR Workboard",
       html: `<p>You have been invited to join the MOVRR Workboard.</p><p><a href="${inviteLink}">Accept invite</a></p>`,

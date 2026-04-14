@@ -22,7 +22,7 @@ export default function AuthLayout({
             <div className="p-1.5 flex items-center justify-center">
               <Image
                 src="/movrr-icon.png"
-                alt="Movrr Icon"
+                alt="MOVRR Icon"
                 width={50}
                 height={50}
                 sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 100vw"
@@ -31,7 +31,7 @@ export default function AuthLayout({
                 aria-hidden="true"
               />
             </div>
-            <span className="text-2xl uppercase font-bold">Movrr</span>
+            <span className="text-2xl uppercase font-bold">MOVRR</span>
           </div>
           <h1 className="text-4xl font-bold mb-4">
             MOVRR Admin Operations Portal
@@ -50,7 +50,8 @@ export default function AuthLayout({
             <div>
               <h3 className="font-semibold">Admin-Gated Access</h3>
               <p className="opacity-80">
-                Dashboard access is provisioned internally for authorized team members.
+                Dashboard access is provisioned internally for authorized team
+                members.
               </p>
             </div>
           </div>
@@ -61,7 +62,8 @@ export default function AuthLayout({
             <div>
               <h3 className="font-semibold">Operations Control</h3>
               <p className="opacity-80">
-                Manage riders, advertisers, campaigns, rewards, and routes from one surface.
+                Manage riders, advertisers, campaigns, rewards, and routes from
+                one surface.
               </p>
             </div>
           </div>
@@ -72,7 +74,8 @@ export default function AuthLayout({
             <div>
               <h3 className="font-semibold">Security-Scoped Sessions</h3>
               <p className="opacity-80">
-                Authentication, authorization, and audit controls are enforced for internal operators.
+                Authentication, authorization, and audit controls are enforced
+                for internal operators.
               </p>
             </div>
           </div>

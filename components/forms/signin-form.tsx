@@ -35,11 +35,7 @@ const signInFormSchema = z.object({
 
 type SignInFormData = z.infer<typeof signInFormSchema>;
 
-export function SignInForm({
-  enforceAdminMfa,
-}: {
-  enforceAdminMfa: boolean;
-}) {
+export function SignInForm({ enforceAdminMfa }: { enforceAdminMfa: boolean }) {
   const [isPending, startTransition] = useTransition();
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -99,11 +95,13 @@ export function SignInForm({
           let nextDestination = redirectTo;
 
           if (enforceAdminMfa) {
-            const [{ data: assuranceData, error: assuranceError }, { data: factorData, error: factorError }] =
-              await Promise.all([
-                supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
-                supabase.auth.mfa.listFactors(),
-              ]);
+            const [
+              { data: assuranceData, error: assuranceError },
+              { data: factorData, error: factorError },
+            ] = await Promise.all([
+              supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+              supabase.auth.mfa.listFactors(),
+            ]);
 
             if (assuranceError) {
               setError(assuranceError.message);
@@ -116,7 +114,9 @@ export function SignInForm({
             }
 
             const verifiedFactors =
-              factorData?.all?.filter((factor) => factor.status === "verified") ?? [];
+              factorData?.all?.filter(
+                (factor) => factor.status === "verified",
+              ) ?? [];
 
             if (assuranceData?.currentLevel !== "aal2") {
               nextDestination =
@@ -267,7 +267,7 @@ export function SignInForm({
             </Button>
             <p className="text-sm text-muted-foreground text-center">
               Admin access is provisioned internally. If you cannot sign in,
-              contact the Movrr platform owner or support team.
+              contact the MOVRR platform owner or support team.
             </p>
           </>
         )}

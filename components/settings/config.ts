@@ -74,7 +74,8 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
     id: "suggestedRoutes",
     title: "Suggested Routes",
     icon: MapPin,
-    description: "Free Ride Mode: route bonuses, compliance thresholds, and daily caps.",
+    description:
+      "Free Ride Mode: route bonuses, compliance thresholds, and daily caps.",
   },
   {
     id: "features",
@@ -104,7 +105,7 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
     id: "organization",
     title: "Organization",
     icon: Building2,
-    description: "Movrr global business identity and contact metadata.",
+    description: "MOVRR global business identity and contact metadata.",
   },
   {
     id: "privacy",

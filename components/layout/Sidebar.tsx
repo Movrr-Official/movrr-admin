@@ -348,7 +348,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
                   <Image
                     src="/movrr-icon.png"
-                    alt="Movrr Icon"
+                    alt="MOVRR Icon"
                     width={24}
                     height={24}
                     sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, 100vw"
@@ -359,7 +359,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
                 </div>
                 <div className="flex flex-col min-w-0">
                   <h2 className="text-lg uppercase font-semibold truncate">
-                    Movrr
+                    MOVRR
                   </h2>
                   <span className="text-xs text-muted-foreground truncate">
                     Admin Portal

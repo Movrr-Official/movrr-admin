@@ -25,7 +25,7 @@ export default function PasswordResetEmail({
   return (
     <Html lang={locale.split("-")[0] || "en"}>
       <Head />
-      <Preview>Reset your Movrr Admin password — action required</Preview>
+      <Preview>Reset your MOVRR Admin password — action required</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
@@ -33,7 +33,7 @@ export default function PasswordResetEmail({
               src="https://res.cloudinary.com/dgy9bf37b/image/upload/v1769860718/movrr_logo_icon_green_no_bg_pycuih.png"
               width="150"
               height="50"
-              alt="Movrr Logo"
+              alt="MOVRR Logo"
               style={logo}
             />
             <Text style={tagline}>Password Reset</Text>
@@ -42,7 +42,7 @@ export default function PasswordResetEmail({
           <Section style={content}>
             <Heading style={h1}>Hi {name},</Heading>
             <Text style={text}>
-              We received a request to reset your Movrr Admin password. Use the
+              We received a request to reset your MOVRR Admin password. Use the
               link below to set a new password.
             </Text>
 
@@ -55,7 +55,7 @@ export default function PasswordResetEmail({
                   lineHeight: "1.2",
                   textDecoration: "none",
                 }}
-                aria-label="Reset your Movrr Admin password"
+                aria-label="Reset your MOVRR Admin password"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -85,7 +85,7 @@ export function passwordResetText({
   resetUrl: string;
 }) {
   const lines = [];
-  lines.push(`Reset your Movrr Admin password, ${name}`);
+  lines.push(`Reset your MOVRR Admin password, ${name}`);
   lines.push("");
   lines.push(`Reset link: ${resetUrl}`);
   lines.push("");

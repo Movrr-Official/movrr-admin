@@ -2,7 +2,7 @@
 
 ## System context
 
-Movrr Admin Dashboard is a server-rendered and client-interactive admin application built on Next.js App Router. It sits in front of Supabase and an optional route optimizer microservice.
+MOVRR Admin Dashboard is a server-rendered and client-interactive admin application built on Next.js App Router. It sits in front of Supabase and an optional route optimizer microservice.
 
 High-level components:
 

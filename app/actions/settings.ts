@@ -45,7 +45,12 @@ import {
   suggestedRoutesSettingsSchema,
 } from "@/schemas/settings";
 
-const LEGACY_KEYS = ["system", "points", "campaignDefaults", "featureFlags"] as const;
+const LEGACY_KEYS = [
+  "system",
+  "points",
+  "campaignDefaults",
+  "featureFlags",
+] as const;
 const SETTINGS_KEYS = [
   "general",
   "onboarding",
@@ -93,7 +98,7 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
   general: {
     supportEmail: SUPPORT_EMAIL || "support@movrr.nl",
     publicSupportEmail: SUPPORT_EMAIL || "support@movrr.nl",
-    publicSupportContactName: "Movrr Support",
+    publicSupportContactName: "MOVRR Support",
     defaultRegion: "NL",
     timezone: "Europe/Amsterdam",
     defaultLanguage: "en",
@@ -173,9 +178,9 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
     webhookStatusPageUrl: "",
   },
   organization: {
-    displayName: "Movrr Media",
-    legalCompanyName: "Movrr Media",
-    supportContactName: "Movrr Support",
+    displayName: "MOVRR Media",
+    legalCompanyName: "MOVRR Media",
+    supportContactName: "MOVRR Support",
     billingContactEmail: "",
     vatId: "",
     businessAddress: "",
@@ -256,7 +261,8 @@ const parseAdminRecipients = (raw: string | undefined) => {
   return ADMIN_EMAIL ? [ADMIN_EMAIL.toLowerCase()] : [];
 };
 
-const getSectionSchema = (section: SettingsSectionId) => sectionSchemas[section];
+const getSectionSchema = (section: SettingsSectionId) =>
+  sectionSchemas[section];
 
 const mapLegacyRows = (rows: SettingsRow[], merged: AdminSettingsValues) => {
   for (const row of rows) {
@@ -335,7 +341,9 @@ const mergeRows = (rows: SettingsRow[]): AdminSettingsValues => {
     const row = rows.find((candidate) => candidate.key === section);
     if (!row?.value) continue;
 
-    (merged as Record<string, unknown>)[section] = getSectionSchema(section).parse({
+    (merged as Record<string, unknown>)[section] = getSectionSchema(
+      section,
+    ).parse({
       ...(merged[section] as Record<string, unknown>),
       ...row.value,
     });
@@ -352,7 +360,9 @@ const mergeRows = (rows: SettingsRow[]): AdminSettingsValues => {
     SUPPORT_EMAIL ||
     "support@movrr.nl";
   merged.organization.billingContactEmail =
-    merged.organization.billingContactEmail || merged.general.supportEmail || "";
+    merged.organization.billingContactEmail ||
+    merged.general.supportEmail ||
+    "";
   merged.privacy.privacyContactEmail =
     merged.privacy.privacyContactEmail ||
     merged.general.publicSupportEmail ||
@@ -464,8 +474,7 @@ const deriveIntegrationStatus = async (): Promise<IntegrationStatusCard[]> => {
     {
       id: "supabase",
       label: "Supabase Auth & Database",
-      description:
-        "Authentication, primary database, and admin server access.",
+      description: "Authentication, primary database, and admin server access.",
       configured: true,
       status: databaseHealth.ok ? "ok" : "error",
       managedBy: "env",
@@ -603,14 +612,12 @@ const resolveOperationalAlertRoles = (
   }
 };
 
-const createOperationalNotifications = async (
-  input: {
-    title: string;
-    message: string;
-    metadata?: Record<string, unknown>;
-    alertRouting: AdminSettingsValues["notifications"]["alertRouting"];
-  },
-) => {
+const createOperationalNotifications = async (input: {
+  title: string;
+  message: string;
+  metadata?: Record<string, unknown>;
+  alertRouting: AdminSettingsValues["notifications"]["alertRouting"];
+}) => {
   const supabaseAdmin = createSupabaseAdminClient();
   const roles = resolveOperationalAlertRoles(input.alertRouting);
   const { data: recipients, error } = await supabaseAdmin
@@ -634,10 +641,7 @@ const createOperationalNotifications = async (
   await supabaseAdmin.from("notifications").insert(rows);
 };
 
-const sendOperationalEmailAlert = async (
-  subject: string,
-  message: string,
-) => {
+const sendOperationalEmailAlert = async (subject: string, message: string) => {
   if (!RESEND_API_KEY) return;
   const recipients = parseAdminRecipients(ADMIN_EMAILS);
   if (recipients.length === 0) return;
@@ -645,8 +649,8 @@ const sendOperationalEmailAlert = async (
   const resend = new Resend(RESEND_API_KEY);
   await resend.emails.send({
     from: FROM_EMAIL
-      ? `Movrr System <${FROM_EMAIL}>`
-      : "Movrr <no-reply@movrr.nl>",
+      ? `MOVRR System <${FROM_EMAIL}>`
+      : "MOVRR <no-reply@movrr.nl>",
     to: recipients,
     subject,
     html: `<p>${message}</p>`,
@@ -682,43 +686,43 @@ const fetchAuditEntries = async (
   }
 
   const entries = (data ?? []).map((row) => {
-      const metadata = (row.metadata ?? {}) as Record<string, unknown>;
-      const auditSection = metadata.section;
+    const metadata = (row.metadata ?? {}) as Record<string, unknown>;
+    const auditSection = metadata.section;
 
-      if (
-        !auditSection ||
-        !settingsSectionIdSchema.safeParse(auditSection).success
-      ) {
-        return null;
-      }
+    if (
+      !auditSection ||
+      !settingsSectionIdSchema.safeParse(auditSection).success
+    ) {
+      return null;
+    }
 
-      const performedBy = (row.performed_by ?? {}) as Record<string, unknown>;
+    const performedBy = (row.performed_by ?? {}) as Record<string, unknown>;
 
-      return {
-        id: String(row.id),
-        section: auditSection as SettingsSectionId,
-        action: String(row.action ?? "System Settings Changed"),
-        timestamp: String(row.timestamp ?? new Date().toISOString()),
-        performedBy: {
-          id: String(performedBy.id ?? "system"),
-          name: String(performedBy.name ?? "System"),
-          email: String(performedBy.email ?? "system@movrr.nl"),
-          role: String(performedBy.role ?? "system"),
-        },
-        changedFields: Array.isArray(metadata.changedFields)
-          ? metadata.changedFields.map((item) => String(item))
-          : [],
-        previousValue:
-          metadata.previousValue && typeof metadata.previousValue === "object"
-            ? (metadata.previousValue as Record<string, unknown>)
-            : undefined,
-        newValue:
-          metadata.newValue && typeof metadata.newValue === "object"
-            ? (metadata.newValue as Record<string, unknown>)
-            : undefined,
-        snapshotAvailable: Boolean(metadata.snapshot),
-      } as SettingsAuditEntry;
-    });
+    return {
+      id: String(row.id),
+      section: auditSection as SettingsSectionId,
+      action: String(row.action ?? "System Settings Changed"),
+      timestamp: String(row.timestamp ?? new Date().toISOString()),
+      performedBy: {
+        id: String(performedBy.id ?? "system"),
+        name: String(performedBy.name ?? "System"),
+        email: String(performedBy.email ?? "system@movrr.nl"),
+        role: String(performedBy.role ?? "system"),
+      },
+      changedFields: Array.isArray(metadata.changedFields)
+        ? metadata.changedFields.map((item) => String(item))
+        : [],
+      previousValue:
+        metadata.previousValue && typeof metadata.previousValue === "object"
+          ? (metadata.previousValue as Record<string, unknown>)
+          : undefined,
+      newValue:
+        metadata.newValue && typeof metadata.newValue === "object"
+          ? (metadata.newValue as Record<string, unknown>)
+          : undefined,
+      snapshotAvailable: Boolean(metadata.snapshot),
+    } as SettingsAuditEntry;
+  });
 
   return entries
     .filter((entry): entry is SettingsAuditEntry => entry !== null)
@@ -846,8 +850,7 @@ export async function getSettingsSection(section: SettingsSectionId) {
   } catch (error) {
     return {
       success: false as const,
-      error:
-        error instanceof Error ? error.message : "Failed to load section",
+      error: error instanceof Error ? error.message : "Failed to load section",
     };
   }
 }
@@ -952,10 +955,12 @@ export async function executePrivacyRetentionJob() {
     ...(privacyRow?.value ?? currentValues.privacy),
     retentionLastRunAt: executedAt,
   };
-  await supabaseAdmin.from("admin_settings").upsert(
-    { key: "privacy", value: nextPrivacyValue, updated_at: executedAt },
-    { onConflict: "key" },
-  );
+  await supabaseAdmin
+    .from("admin_settings")
+    .upsert(
+      { key: "privacy", value: nextPrivacyValue, updated_at: executedAt },
+      { onConflict: "key" },
+    );
 
   return {
     success: true as const,

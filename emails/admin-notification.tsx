@@ -45,7 +45,7 @@ export default function AdminNotificationEmail({
     <Html lang={locale.split("-")[0] || "en"}>
       <Head />
       <Preview>
-        New Movrr Waitlist Registration - {name} from {city}
+        New MOVRR Waitlist Registration - {name} from {city}
       </Preview>
       <Body style={main}>
         <Container style={container}>
@@ -54,7 +54,7 @@ export default function AdminNotificationEmail({
               src="https://res.cloudinary.com/dgy9bf37b/image/upload/v1769860718/movrr_logo_icon_green_no_bg_pycuih.png"
               width="150"
               height="50"
-              alt="Movrr Logo"
+              alt="MOVRR Logo"
               style={logo}
             />
             <Text style={tagline}>
@@ -66,7 +66,7 @@ export default function AdminNotificationEmail({
             <Heading style={h1}>New Waitlist Signup</Heading>
 
             <Text style={text}>
-              A new potential rider has joined the Movrr waitlist. Details
+              A new potential rider has joined the MOVRR waitlist. Details
               below.
             </Text>
 
@@ -275,7 +275,7 @@ export default function AdminNotificationEmail({
             )}
 
             <Text style={footer}>
-              This is an automated notification from the Movrr waitlist system.
+              This is an automated notification from the MOVRR waitlist system.
             </Text>
           </Section>
         </Container>
@@ -342,7 +342,7 @@ export function adminNotificationText({
   if (adminUrl) lines.push(`Admin dashboard: ${adminUrl}`);
   lines.push("");
   lines.push(
-    "This is an automated notification from the Movrr waitlist system.",
+    "This is an automated notification from the MOVRR waitlist system.",
   );
 
   return lines.join("\n");

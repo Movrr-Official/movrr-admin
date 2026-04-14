@@ -37,7 +37,7 @@ export default function UserConfirmationEmail({
   return (
     <Html lang={locale.split("-")[0] || "en"}>
       <Head />
-      <Preview>Welcome to Movrr — next steps inside</Preview>
+      <Preview>Welcome to MOVRR — next steps inside</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
@@ -45,7 +45,7 @@ export default function UserConfirmationEmail({
               src="https://res.cloudinary.com/dgy9bf37b/image/upload/v1769860718/movrr_logo_icon_green_no_bg_pycuih.png"
               width="150"
               height="50"
-              alt="Movrr Logo"
+              alt="MOVRR Logo"
               style={logo}
             />
             <Text style={tagline}>Ride. Earn. Make Cities Move.</Text>
@@ -153,7 +153,7 @@ export default function UserConfirmationEmail({
 
             <div style={{ marginTop: 8 }}>
               <ul style={{ margin: "8px 0 16px 20px", padding: 0 }}>
-                <li>We'll notify you as soon as Movrr launches in {city}.</li>
+                <li>We'll notify you as soon as MOVRR launches in {city}.</li>
                 <li>You'll get early access to our rider onboarding.</li>
                 <li>Start earning rewards while exploring your city.</li>
                 <li>Join a community of riders making cities more vibrant.</li>
@@ -169,18 +169,18 @@ export default function UserConfirmationEmail({
                   lineHeight: "1.2",
                   textDecoration: "none",
                 }}
-                aria-label="Learn more about Movrr"
+                aria-label="Learn more about MOVRR"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Learn More About Movrr
+                Learn More About MOVRR
               </Link>
             </Section>
 
             <Text style={footer}>
               Questions? Reply to this email — we're here to help!
               <br />
-              The Movrr Team
+              The MOVRR Team
             </Text>
           </Section>
         </Container>
@@ -209,7 +209,7 @@ export function userConfirmationText({
   } as const;
 
   const lines = [];
-  lines.push(`Welcome to Movrr — ${name}`);
+  lines.push(`Welcome to MOVRR — ${name}`);
   lines.push("");
   lines.push(`City: ${city}`);
   lines.push(
@@ -218,14 +218,14 @@ export function userConfirmationText({
   if (id) lines.push(`Signup ID: ${id}`);
   lines.push("");
   lines.push("What happens next:");
-  lines.push("- We will notify you when Movrr launches in your city.");
+  lines.push("- We will notify you when MOVRR launches in your city.");
   lines.push("- You will get early access to onboarding.");
   lines.push("- Start earning rewards while exploring your city.");
   lines.push("");
   if (ctaUrl) lines.push(`Learn more: ${ctaUrl}`);
   lines.push("");
   lines.push("Questions? Reply to this email.");
-  lines.push("The Movrr Team");
+  lines.push("The MOVRR Team");
 
   return lines.join("\n");
 }

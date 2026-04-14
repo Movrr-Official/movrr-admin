@@ -18,7 +18,12 @@
  * - app/api/internal/route-intelligence/route.ts (diagnostics read-only)
  */
 
-import { callLLM, extractJson, getLLMModelName, isLLMConfigured } from "@/lib/llmProvider";
+import {
+  callLLM,
+  extractJson,
+  getLLMModelName,
+  isLLMConfigured,
+} from "@/lib/llmProvider";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getResolvedPlatformSettingsValues } from "@/lib/platformSettings";
 import {
@@ -72,7 +77,10 @@ async function getLLMFlags(): Promise<LLMFlags> {
   }
 }
 
-function isEnabled(flags: LLMFlags, capability: IntelligenceCapability): boolean {
+function isEnabled(
+  flags: LLMFlags,
+  capability: IntelligenceCapability,
+): boolean {
   if (flags.llmGlobalDisable) return false;
   if (!flags.llmShadowModeEnabled) return false;
   switch (capability) {
@@ -113,7 +121,7 @@ async function persistLog(record: RouteIntelligenceLogRecord): Promise<void> {
 
 // ─── Capability: Route Suggestion ─────────────────────────────────────────────
 
-const SUGGESTION_SYSTEM_PROMPT = `You are a cycling route strategy analyst for an urban mobility platform called Movrr.
+const SUGGESTION_SYSTEM_PROMPT = `You are a cycling route strategy analyst for an urban mobility platform called MOVRR.
 Your task: given a cluster of GPS waypoints described by aggregate metadata, suggest a compelling cycling route concept.
 Return ONLY valid JSON matching the following schema — no markdown, no prose, no code fences:
 {
@@ -133,7 +141,10 @@ async function suggestRoute(
 ): Promise<RouteSuggestionOutput | null> {
   const validatedInput = routeSuggestionInputSchema.safeParse(input);
   if (!validatedInput.success) {
-    console.warn("[RouteIntelligence] suggestRoute: invalid input", validatedInput.error.issues);
+    console.warn(
+      "[RouteIntelligence] suggestRoute: invalid input",
+      validatedInput.error.issues,
+    );
     return null;
   }
 
@@ -171,18 +182,28 @@ async function suggestRoute(
         llmOutput = parsed.data;
       } else {
         validationStatus = "validation_failed";
-        errorMessage = parsed.error.issues.map((i) => i.message).join("; ").slice(0, 400);
+        errorMessage = parsed.error.issues
+          .map((i) => i.message)
+          .join("; ")
+          .slice(0, 400);
       }
     } catch (err) {
       validationStatus = "validation_failed";
-      errorMessage = err instanceof Error ? err.message.slice(0, 400) : "JSON extraction failed";
+      errorMessage =
+        err instanceof Error
+          ? err.message.slice(0, 400)
+          : "JSON extraction failed";
     }
   }
 
   await persistLog({
     traceId,
     capability: "route_suggestion",
-    inputSummary: { locationsCount: d.locationsCount, city: d.city ?? null, hasBbox: Boolean(d.boundingBox) },
+    inputSummary: {
+      locationsCount: d.locationsCount,
+      city: d.city ?? null,
+      hasBbox: Boolean(d.boundingBox),
+    },
     deterministicOutputSummary: null,
     llmOutput,
     validationStatus,
@@ -196,7 +217,7 @@ async function suggestRoute(
 
 // ─── Capability: Route Explanation ────────────────────────────────────────────
 
-const EXPLANATION_SYSTEM_PROMPT = `You are a cycling route analyst for Movrr, an urban mobility platform.
+const EXPLANATION_SYSTEM_PROMPT = `You are a cycling route analyst for MOVRR, an urban mobility platform.
 Your task: given summary metrics from a deterministic route optimizer, produce a clear human-readable explanation of why this computed route may be valuable.
 Return ONLY valid JSON matching the following schema — no markdown, no prose, no code fences:
 {
@@ -214,7 +235,10 @@ async function explainRoute(
 ): Promise<RouteExplanationOutput | null> {
   const validatedInput = routeExplanationInputSchema.safeParse(input);
   if (!validatedInput.success) {
-    console.warn("[RouteIntelligence] explainRoute: invalid input", validatedInput.error.issues);
+    console.warn(
+      "[RouteIntelligence] explainRoute: invalid input",
+      validatedInput.error.issues,
+    );
     return null;
   }
 
@@ -254,11 +278,17 @@ async function explainRoute(
         llmOutput = parsed.data;
       } else {
         validationStatus = "validation_failed";
-        errorMessage = parsed.error.issues.map((i) => i.message).join("; ").slice(0, 400);
+        errorMessage = parsed.error.issues
+          .map((i) => i.message)
+          .join("; ")
+          .slice(0, 400);
       }
     } catch (err) {
       validationStatus = "validation_failed";
-      errorMessage = err instanceof Error ? err.message.slice(0, 400) : "JSON extraction failed";
+      errorMessage =
+        err instanceof Error
+          ? err.message.slice(0, 400)
+          : "JSON extraction failed";
     }
   }
 
@@ -283,7 +313,7 @@ async function explainRoute(
 
 // ─── Capability: Policy Translation ──────────────────────────────────────────
 
-const POLICY_TRANSLATION_SYSTEM_PROMPT = `You are a configuration assistant for Movrr, an urban cycling route optimization platform.
+const POLICY_TRANSLATION_SYSTEM_PROMPT = `You are a configuration assistant for MOVRR, an urban cycling route optimization platform.
 Your task: given a natural-language planning policy statement from an admin, extract structured optimizer preferences.
 Return ONLY valid JSON matching the following schema — no markdown, no prose, no code fences:
 {
@@ -307,7 +337,10 @@ async function translatePolicy(
 ): Promise<PolicyTranslationOutput | null> {
   const validatedInput = policyTranslationInputSchema.safeParse(input);
   if (!validatedInput.success) {
-    console.warn("[RouteIntelligence] translatePolicy: invalid input", validatedInput.error.issues);
+    console.warn(
+      "[RouteIntelligence] translatePolicy: invalid input",
+      validatedInput.error.issues,
+    );
     return null;
   }
 
@@ -342,11 +375,17 @@ async function translatePolicy(
         llmOutput = parsed.data;
       } else {
         validationStatus = "validation_failed";
-        errorMessage = parsed.error.issues.map((i) => i.message).join("; ").slice(0, 400);
+        errorMessage = parsed.error.issues
+          .map((i) => i.message)
+          .join("; ")
+          .slice(0, 400);
       }
     } catch (err) {
       validationStatus = "validation_failed";
-      errorMessage = err instanceof Error ? err.message.slice(0, 400) : "JSON extraction failed";
+      errorMessage =
+        err instanceof Error
+          ? err.message.slice(0, 400)
+          : "JSON extraction failed";
     }
   }
 
@@ -444,12 +483,20 @@ export async function runShadowIntelligence(
     }
 
     if (!isLLMConfigured()) {
-      console.warn("[RouteIntelligence] Shadow mode enabled but LLM_API_KEY is not set");
+      console.warn(
+        "[RouteIntelligence] Shadow mode enabled but LLM_API_KEY is not set",
+      );
       return;
     }
 
-    const { traceId, locationsCount, boundingBox, city, preferences, campaignContext } =
-      requestCtx;
+    const {
+      traceId,
+      locationsCount,
+      boundingBox,
+      city,
+      preferences,
+      campaignContext,
+    } = requestCtx;
 
     const tasks: Promise<unknown>[] = [];
 
@@ -460,13 +507,19 @@ export async function runShadowIntelligence(
           { locationsCount, boundingBox, city, preferences, campaignContext },
           traceId,
         ).catch((err) => {
-          console.warn("[RouteIntelligence] suggestRoute error", err instanceof Error ? err.message : String(err));
+          console.warn(
+            "[RouteIntelligence] suggestRoute error",
+            err instanceof Error ? err.message : String(err),
+          );
         }),
       );
     }
 
     // Route explanation — runs when enabled and optimizer produced a result
-    if (isEnabled(flags, "route_explanation") && responseSummary.solverStatus === "solved") {
+    if (
+      isEnabled(flags, "route_explanation") &&
+      responseSummary.solverStatus === "solved"
+    ) {
       const deterministicSummary: Record<string, unknown> = {
         solverStatus: responseSummary.solverStatus,
         distanceKm: responseSummary.distanceKm,
@@ -481,16 +534,23 @@ export async function runShadowIntelligence(
             distanceKm: responseSummary.distanceKm ?? undefined,
             distanceMeters: responseSummary.distanceMeters ?? undefined,
             solverStatus: responseSummary.solverStatus ?? undefined,
-            impressionsEstimate: responseSummary.impressionsEstimate ?? undefined,
+            impressionsEstimate:
+              responseSummary.impressionsEstimate ?? undefined,
             city,
             campaignContext: campaignContext
-              ? { name: campaignContext.name, campaignType: campaignContext.campaignType }
+              ? {
+                  name: campaignContext.name,
+                  campaignType: campaignContext.campaignType,
+                }
               : undefined,
           },
           deterministicSummary,
           traceId,
         ).catch((err) => {
-          console.warn("[RouteIntelligence] explainRoute error", err instanceof Error ? err.message : String(err));
+          console.warn(
+            "[RouteIntelligence] explainRoute error",
+            err instanceof Error ? err.message : String(err),
+          );
         }),
       );
     }
@@ -525,7 +585,9 @@ export async function translatePolicyIfEnabled(
       await persistLog({
         traceId,
         capability: "policy_translation",
-        inputSummary: { policyLength: input.naturalLanguagePolicy?.length ?? 0 },
+        inputSummary: {
+          policyLength: input.naturalLanguagePolicy?.length ?? 0,
+        },
         llmOutput: null,
         validationStatus: "disabled",
         latencyMs: 0,
@@ -541,7 +603,10 @@ export async function translatePolicyIfEnabled(
 
     return await translatePolicy(input, traceId);
   } catch (err) {
-    console.warn("[RouteIntelligence] translatePolicyIfEnabled error", err instanceof Error ? err.message : String(err));
+    console.warn(
+      "[RouteIntelligence] translatePolicyIfEnabled error",
+      err instanceof Error ? err.message : String(err),
+    );
     return null;
   }
 }

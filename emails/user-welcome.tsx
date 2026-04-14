@@ -28,18 +28,18 @@ export default function UserWelcomeEmail({
   return (
     <Html lang={locale.split("-")[0] || "en"}>
       <Head />
-      <Preview>Welcome to Movrr Admin — access details inside</Preview>
+      <Preview>Welcome to MOVRR Admin — access details inside</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Heading style={logo}>Movrr</Heading>
+            <Heading style={logo}>MOVRR</Heading>
             <Text style={tagline}>Admin Access Granted</Text>
           </Section>
 
           <Section style={content}>
             <Heading style={h1}>Welcome, {name}</Heading>
             <Text style={text}>
-              Your Movrr Admin account has been created with the role of
+              Your MOVRR Admin account has been created with the role of
               <strong style={{ fontFamily: main.fontFamily }}> {role}</strong>.
             </Text>
             <Text style={text}>
@@ -55,11 +55,11 @@ export default function UserWelcomeEmail({
                   lineHeight: "1.2",
                   textDecoration: "none",
                 }}
-                aria-label="Open Movrr Admin"
+                aria-label="Open MOVRR Admin"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Open Movrr Admin
+                Open MOVRR Admin
               </Link>
             </Section>
 
@@ -86,7 +86,7 @@ export function userWelcomeText({
   id?: string;
 }) {
   const lines = [];
-  lines.push(`Welcome to Movrr Admin, ${name}`);
+  lines.push(`Welcome to MOVRR Admin, ${name}`);
   lines.push("");
   lines.push(`Role: ${role}`);
   if (id) lines.push(`Invite ID: ${id}`);

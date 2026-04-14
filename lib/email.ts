@@ -36,9 +36,9 @@ export async function sendUserConfirmationEmail(
 ) {
   try {
     const { data, error } = await resend.emails.send({
-      from: `Movrr <${WELCOME_EMAIL}>`,
+      from: `MOVRR <${WELCOME_EMAIL}>`,
       to: [email],
-      subject: "Welcome to Movrr - Transform Your Ride! 🚴‍♂️",
+      subject: "Welcome to MOVRR - Transform Your Ride! 🚴‍♂️",
       react: UserConfirmationEmail({ name, city, bikeOwnership }),
     });
 
@@ -64,7 +64,7 @@ export async function sendAdminNotificationEmail(
 
   try {
     const { data, error } = await resend.emails.send({
-      from: `Movrr System <${SYSTEM_EMAIL}>`,
+      from: `MOVRR System <${SYSTEM_EMAIL}>`,
       to: ADMIN_NOTIFICATION_RECIPIENTS,
       subject: `New Waitlist Registration - ${name} from ${city}`,
       react: AdminNotificationEmail({

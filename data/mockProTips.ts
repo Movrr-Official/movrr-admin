@@ -4,7 +4,7 @@ export const mockProTips: ProTip[] = [
   {
     id: "tip-001",
     icon: "🚲",
-    text: "Every verified bike ride earns Movrr Points — no campaign required. Start a Free Ride any time and earn 1 point per verified minute just for moving.",
+    text: "Every verified bike ride earns MOVRR Points — no campaign required. Start a Free Ride any time and earn 1 point per verified minute just for moving.",
     category: "earning",
     priority: 0,
     isActive: true,

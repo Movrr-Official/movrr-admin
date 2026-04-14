@@ -48,7 +48,7 @@ export async function submitWaitlistForm(data: WaitlistFormData) {
       return {
         success: false,
         message:
-          "Rider onboarding is currently closed. Contact Movrr support for assistance.",
+          "Rider onboarding is currently closed. Contact MOVRR support for assistance.",
       };
     }
 
@@ -138,7 +138,7 @@ export async function submitWaitlistForm(data: WaitlistFormData) {
     return {
       success: true,
       message: policies.onboarding.autoApproveWaitlist
-        ? "Successfully joined Movrr. Check your email to set up your account."
+        ? "Successfully joined MOVRR. Check your email to set up your account."
         : "Successfully joined the waitlist!",
     };
   } catch (error) {

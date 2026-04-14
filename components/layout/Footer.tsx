@@ -11,7 +11,9 @@ import { useSettingsData } from "@/hooks/useSettingsData";
 
 const DashboardFooter = () => {
   const shouldHideFooter = useShouldHideComponent();
-  const { data: settingsData } = useSettingsData({ enabled: !shouldHideFooter });
+  const { data: settingsData } = useSettingsData({
+    enabled: !shouldHideFooter,
+  });
   const { data, isLoading, isError } = useQuery({
     queryKey: ["systemHealth"],
     queryFn: async () => {
@@ -91,7 +93,7 @@ const DashboardFooter = () => {
             variants={itemVariants}
             className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground"
           >
-            <span>© {currentYear} Movrr Media</span>
+            <span>© {currentYear} MOVRR Media</span>
             <span className="hidden md:inline">•</span>
             <span>All rights reserved</span>
             <span className="hidden md:inline">•</span>
@@ -142,9 +144,9 @@ const DashboardFooter = () => {
               variants={itemVariants}
               className="flex items-center gap-3"
             >
-                <Badge variant="outline" className="text-xs font-mono">
-                  v{settingsData?.values?.general?.appVersion ?? "0.1.0"}
-                </Badge>
+              <Badge variant="outline" className="text-xs font-mono">
+                v{settingsData?.values?.general?.appVersion ?? "0.1.0"}
+              </Badge>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <motion.div
                   className={`w-2 h-2 rounded-full ${
