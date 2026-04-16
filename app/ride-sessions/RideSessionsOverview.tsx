@@ -35,9 +35,9 @@ export default function RideSessionsOverview() {
     sessions?.filter((s) => s.verificationStatus === "manual_review").length ??
     0;
 
-  const freeRideSessions =
+  const standardRideSessions =
     sessions?.filter((s) => s.earningMode === "standard_ride").length ?? 0;
-  const campaignRideSessions =
+  const boostedRideSessions =
     sessions?.filter((s) => s.earningMode === "ad_enhanced_ride").length ?? 0;
 
   const totalPoints =
@@ -58,14 +58,14 @@ export default function RideSessionsOverview() {
             icon={Timer}
             badges={[
               {
-                label: `${freeRideSessions} standard ride`,
+                label: `${standardRideSessions} standard ride`,
                 className:
                   "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800",
               },
-              ...(campaignRideSessions > 0
+              ...(boostedRideSessions > 0
                 ? [
                     {
-                      label: `${campaignRideSessions} campaign`,
+                      label: `${boostedRideSessions} boosted ride`,
                       className:
                         "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800",
                     },
@@ -112,13 +112,13 @@ export default function RideSessionsOverview() {
             metrics={[
               {
                 label: "Standard Ride Sessions",
-                value: freeRideSessions,
+                value: standardRideSessions,
                 icon: Bike,
                 iconColor: "text-sky-600",
               },
               {
                 label: "Boosted Ride Sessions",
-                value: campaignRideSessions,
+                value: boostedRideSessions,
                 icon: Megaphone,
                 iconColor: "text-violet-600",
               },

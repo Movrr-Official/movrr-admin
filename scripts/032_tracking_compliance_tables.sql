@@ -207,16 +207,16 @@ COMMENT ON COLUMN public.ride_session.algorithm_version IS
 -- tolerance_m: corridor width for compliance scoring (perpendicular distance).
 
 ALTER TABLE public.suggested_routes
-  ADD COLUMN IF NOT EXISTS mode         TEXT NOT NULL DEFAULT 'free_ride'
-                                          CHECK (mode IN ('free_ride', 'campaign')),
+  ADD COLUMN IF NOT EXISTS mode         TEXT NOT NULL DEFAULT 'standard_ride'
+                                          CHECK (mode IN ('standard_ride', 'campaign')),
   ADD COLUMN IF NOT EXISTS tolerance_m  INTEGER NOT NULL DEFAULT 30
                                           CHECK (tolerance_m > 0 AND tolerance_m <= 500);
 
 COMMENT ON COLUMN public.suggested_routes.mode IS
-  'free_ride = bonus route with compliance scoring. '
+  'standard_ride = bonus route with compliance scoring. '
   'campaign = navigational route shown alongside campaign zones; no compliance scoring.';
 COMMENT ON COLUMN public.suggested_routes.tolerance_m IS
-  'Corridor half-width in metres for free_ride compliance corridor checks. '
+  'Corridor half-width in metres for standard_ride compliance corridor checks. '
   'Points within this distance of the route polyline count as compliant.';
 
 -- ─── Admin live map support: realtime-safe function ──────────────────────────

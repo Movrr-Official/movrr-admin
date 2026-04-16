@@ -39,8 +39,8 @@ export async function getRewardStats(dateRange?: {
     totalTransactions: number;
     /** Points earned via Standard Rides (source = standard_ride) */
     standardRidePoints: number;
-    /** Points earned via Boosted Rides (source = ad_boost | campaign_ride) */
-    campaignRidePoints: number;
+    /** Points earned via Boosted Rides (source = ad_boost | boosted_ride) */
+    boostedRidePoints: number;
     pointsByCampaign: Array<{
       campaignId: string;
       campaignName: string;
@@ -174,12 +174,12 @@ export async function getRewardStats(dateRange?: {
         : sum;
     }, 0);
 
-    const campaignRidePoints = filteredTransactions.reduce((sum, txn) => {
+    const boostedRidePoints = filteredTransactions.reduce((sum, txn) => {
       const direction = txn.metadata?.adjustment_direction as
         | string
         | undefined;
       if (direction === "debit") return sum;
-      return txn.source === "ad_boost" || txn.source === "campaign_ride"
+      return txn.source === "ad_boost" || txn.source === "boosted_ride"
         ? sum + Number(txn.points_earned ?? 0)
         : sum;
     }, 0);
@@ -278,7 +278,7 @@ export async function getRewardStats(dateRange?: {
         totalTransactions:
           filteredTransactions.length + filteredRedemptions.length,
         standardRidePoints,
-        campaignRidePoints,
+        boostedRidePoints,
         pointsByCampaign: Array.from(pointsByCampaign.entries()).map(
           ([campaignId, points]) => ({
             campaignId,

@@ -111,7 +111,7 @@ export function getRewardsTableColumns({
         if (source === "standard_ride") {
           return <Badge variant="info">Standard Ride</Badge>;
         }
-        if (source === "ad_boost" || source === "campaign_ride") {
+        if (source === "ad_boost" || source === "boosted_ride") {
           return <Badge variant="accent">Boosted Ride</Badge>;
         }
         if (source === "bonus") {

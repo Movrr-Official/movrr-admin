@@ -315,7 +315,7 @@ CREATE TABLE public.reward_transactions (
   campaign_id uuid,
   ride_id uuid,
   points_earned integer NOT NULL CHECK (points_earned >= 0),
-  source text NOT NULL DEFAULT 'campaign_ride'::text CHECK (source = ANY (ARRAY['campaign_ride'::text, 'bonus'::text, 'adjustment'::text])),
+  source text NOT NULL DEFAULT 'boosted_ride'::text CHECK (source = ANY (ARRAY['boosted_ride'::text, 'bonus'::text, 'adjustment'::text])),
   metadata jsonb DEFAULT '{}'::jsonb,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   route_tracking_id uuid UNIQUE,

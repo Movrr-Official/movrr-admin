@@ -15,13 +15,13 @@ interface RiderAllocationData {
   color: string;
 }
 
-interface CampaignRiderAllocationChartProps {
+interface BoostedRiderAllocationChartProps {
   data: RiderAllocationData[];
 }
 
-export function CampaignRiderAllocationChart({
+export function BoostedRiderAllocationChart({
   data = [],
-}: CampaignRiderAllocationChartProps) {
+}: BoostedRiderAllocationChartProps) {
   if (data.length === 0) {
     return (
       <Card className="glass-card border-0 animate-slide-up">

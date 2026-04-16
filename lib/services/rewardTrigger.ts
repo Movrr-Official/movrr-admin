@@ -20,8 +20,8 @@ type PolicySnapshot = {
   baseTimeRatePerSecond: number; // points per second
   zoneDwellRatePerSecond: number; // points per impression unit (1 unit = 1s)
   hotZoneMultiplier: number; // applied if zone is a hot zone
-  freeRideRouteMultiplier: number; // applied when corridor compliance met
-  freeRideMinCompliancePct: number; // minimum pct for any bonus
+  standardRideRouteMultiplier: number; // applied when corridor compliance met
+  standardRideMinCompliancePct: number; // minimum pct for any bonus
   dailyCapPoints: number;
 };
 
@@ -30,8 +30,8 @@ const DEFAULT_POLICY: PolicySnapshot = {
   baseTimeRatePerSecond: 0.005,
   zoneDwellRatePerSecond: 0.1,
   hotZoneMultiplier: 2.0,
-  freeRideRouteMultiplier: 1.5,
-  freeRideMinCompliancePct: 60,
+  standardRideRouteMultiplier: 1.5,
+  standardRideMinCompliancePct: 60,
   dailyCapPoints: 500,
 };
 
@@ -91,7 +91,7 @@ export async function triggerRewardUpdate(params: {
     const remaining = policy.dailyCapPoints - todayTotal;
 
     if (session.earning_mode === "ad_enhanced_ride") {
-      await handleCampaignRideReward(
+      await handleBoostedRideReward(
         sessionId,
         session.rider_id,
         policy,
@@ -99,7 +99,7 @@ export async function triggerRewardUpdate(params: {
         supabase,
       );
     } else {
-      await handleFreeRideReward(
+      await handleStandardRideReward(
         sessionId,
         session.rider_id,
         policy,
@@ -117,7 +117,7 @@ export async function triggerRewardUpdate(params: {
 
 // ─── Boosted ride reward ─────────────────────────────────────────────────────
 
-async function handleCampaignRideReward(
+async function handleBoostedRideReward(
   sessionId: string,
   riderId: string,
   policy: PolicySnapshot,
@@ -167,7 +167,7 @@ async function handleCampaignRideReward(
   const { error } = await supabase.from("reward_transactions").insert({
     rider_id: riderId,
     points_earned: pointsToAward,
-    source: "campaign_ride",
+    source: "boosted_ride",
     metadata: {
       sessionId,
       zoneVisitIds: unrewarded.map((v) => v.id),
@@ -180,7 +180,7 @@ async function handleCampaignRideReward(
 
   if (!error) {
     logSessionEvent(logger, "reward_calculated", sessionId, riderId, {
-      mode: "campaign_ride",
+      mode: "boosted_ride",
       impression_units: totalImpressions,
       points_awarded: pointsToAward,
       zone_visit_count: unrewarded.length,
@@ -190,7 +190,7 @@ async function handleCampaignRideReward(
 
 // ─── Standard ride reward ─────────────────────────────────────────────────────────
 
-async function handleFreeRideReward(
+async function handleStandardRideReward(
   sessionId: string,
   riderId: string,
   policy: PolicySnapshot,

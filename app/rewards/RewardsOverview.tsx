@@ -167,7 +167,7 @@ export default function RewardsOverview() {
 
             <StatsCard
               title="Boosted Ride Points"
-              value={(stats?.campaignRidePoints ?? 0).toLocaleString()}
+              value={(stats?.boostedRidePoints ?? 0).toLocaleString()}
               icon={Megaphone}
               description="Earned via campaign assignments"
               size="mini"

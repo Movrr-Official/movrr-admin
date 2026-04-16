@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { mergeCampaignAnalytics } from "@/lib/campaign";
 import { CampaignEngagementByCityChart } from "@/components/campaigns/CampaignEngagementByCityChart";
 import { CampaignDailyImpressionsChart } from "@/components/campaigns/CampaignDailyImpressionsChart";
-import { CampaignRiderAllocationChart } from "@/components/campaigns/CampaignRiderAllocationChart";
+import { BoostedRiderAllocationChart } from "@/components/campaigns/CampaignRiderAllocationChart";
 import { StatsCard } from "@/components/stats/StatsCard";
 import { formatCurrencyEUR, formatCurrencyEURCompact } from "@/lib/currency";
 
@@ -240,7 +240,7 @@ export default function CampaignsOverview() {
           />
 
           {/* Rider Allocation Chart */}
-          <CampaignRiderAllocationChart
+          <BoostedRiderAllocationChart
             data={aggregatedAnalytics.riderAllocation}
           />
         </div>

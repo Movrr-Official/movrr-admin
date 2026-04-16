@@ -92,7 +92,7 @@ export const rewardsSettingsSchema = z.object({
   standardBikeMultiplier: nonNegativeNumber.default(1),
   eBikeMultiplier: nonNegativeNumber.default(0.9),
   fatBikeMultiplier: nonNegativeNumber.default(0.75),
-  campaignRideMultiplier: nonNegativeNumber.default(1.5),
+  boostedRideMultiplier: nonNegativeNumber.default(1.5),
   // Movement verification thresholds (must stay in sync with mobile REWARD_CONFIG)
   maxAllowedAverageSpeedKmh: nonNegativeNumber.default(35),
   maxAllowedPeakSpeedKmh: nonNegativeNumber.default(45),
@@ -128,7 +128,7 @@ export const impactSettingsSchema = z.object({
  */
 export const suggestedRoutesSettingsSchema = z.object({
   /** Whether the Standard Ride Mode bonus system is active platform-wide. */
-  freeRideEnabled: z.boolean().default(true),
+  standardRideEnabled: z.boolean().default(true),
   /** Default multiplier applied to base points when a rider completes a
    *  multiplier-type suggested route. 1.0 = no multiplier. */
   defaultMultiplier: nonNegativeNumber.min(1).default(1.5),
@@ -343,7 +343,7 @@ export type RewardsSettingsPublicConfig = Pick<
   | "standardBikeMultiplier"
   | "eBikeMultiplier"
   | "fatBikeMultiplier"
-  | "campaignRideMultiplier"
+  | "boostedRideMultiplier"
   | "maxAllowedAverageSpeedKmh"
   | "maxAllowedPeakSpeedKmh"
   | "minMovementDistanceMeters"

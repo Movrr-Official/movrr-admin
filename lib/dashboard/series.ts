@@ -76,8 +76,8 @@ interface RideModeTrendLike {
   date?: string | null;
   /** Points from standard_ride (Standard Ride) */
   standardRide: number;
-  /** Points from ad_boost | campaign_ride (Boosted Ride) */
-  campaignRide: number;
+  /** Points from ad_boost | boosted_ride (Boosted Ride) */
+  boostedRide: number;
 }
 
 /**
@@ -87,7 +87,7 @@ interface RideModeTrendLike {
 export function buildRideModeSeries(
   trends: RideModeTrendLike[],
   buckets: TimeBucket[],
-): Array<{ name: string; standardRide: number; campaignRide: number }> {
+): Array<{ name: string; standardRide: number; boostedRide: number }> {
   return buckets.map((bucket) => {
     const periodTrends = trends.filter((trend) => {
       const date = parseDate(trend.date);
@@ -97,11 +97,11 @@ export function buildRideModeSeries(
       (sum, trend) => sum + trend.standardRide,
       0,
     );
-    const campaignRide = periodTrends.reduce(
-      (sum, trend) => sum + trend.campaignRide,
+    const boostedRide = periodTrends.reduce(
+      (sum, trend) => sum + trend.boostedRide,
       0,
     );
-    return { name: bucket.label, standardRide, campaignRide };
+    return { name: bucket.label, standardRide, boostedRide };
   });
 }
 

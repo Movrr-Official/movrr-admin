@@ -58,7 +58,7 @@ const fallbackValues: AdminSettingsValues = adminSettingsValuesSchema.parse({
     requireApproval: false,
   },
   suggestedRoutes: {
-    freeRideEnabled: true,
+    standardRideEnabled: true,
     defaultMultiplier: 1.5,
     complianceThreshold: 0.7,
     maxDailyBonusPoints: 300,

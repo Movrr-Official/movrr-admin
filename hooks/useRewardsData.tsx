@@ -238,7 +238,7 @@ export const useRewardStats = (filters?: RewardStatsFilters) => {
           totalTransactions: transactions.length,
           // Mock data has no source field yet — real data comes from getRewardStats
           standardRidePoints: 0,
-          campaignRidePoints: 0,
+          boostedRidePoints: 0,
           pointsByCampaign: Object.values(campaignPoints),
           pointsByRider: Object.values(riderPoints),
           dailyTrends,

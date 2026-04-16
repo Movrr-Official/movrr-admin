@@ -259,7 +259,7 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
         description: "Points multiplier for fat_bike riders (default 0.75).",
       },
       {
-        name: "campaignRideMultiplier",
+        name: "boostedRideMultiplier",
         label: "Boosted Ride Multiplier",
         type: "number",
         min: 0,
@@ -328,7 +328,7 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
     ],
     suggestedRoutes: [
       {
-        name: "freeRideEnabled",
+        name: "standardRideEnabled",
         label: "Standard Ride Mode Enabled",
         type: "switch",
         description:

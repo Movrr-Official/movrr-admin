@@ -81,7 +81,7 @@ export const routeLineLayer: LayerProps = {
     "line-color": [
       "match",
       ["get", "mode"],
-      "free_ride",  "#22c55e",
+      "standard_ride",  "#22c55e",
       "campaign",   "#f59e0b",
       "assigned",   "#3b82f6",
       /* default */ "#94a3b8",

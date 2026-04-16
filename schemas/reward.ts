@@ -14,7 +14,7 @@ export const rewardTransactionTypeSchema = z.enum([
 export const rewardTransactionSourceSchema = z.enum([
   "standard_ride",
   "ad_boost",
-  "campaign_ride",
+  "boosted_ride",
   "bonus",
   "adjustment",
   "redemption",
@@ -43,7 +43,7 @@ export const rewardTransactionSchema = z.object({
   /** Canonical ride session reference — preferred over routeId for non-boosted rides */
   rideSessionId: z.string().optional(),
   type: rewardTransactionTypeSchema,
-  /** Earning source — standard_ride | ad_boost | campaign_ride | bonus | adjustment | redemption */
+  /** Earning source — standard_ride | ad_boost | boosted_ride | bonus | adjustment | redemption */
   source: rewardTransactionSourceSchema.or(z.string()).optional(),
   /** Earning mode at time of ride — standard_ride (Standard Ride) or ad_enhanced_ride (Boosted Ride) */
   earningMode: earningModeSchema.optional(),

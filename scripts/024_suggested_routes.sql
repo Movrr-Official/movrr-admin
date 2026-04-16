@@ -53,7 +53,7 @@ CREATE INDEX IF NOT EXISTS idx_ride_session_suggested_route_id
   ON public.ride_session(suggested_route_id)
   WHERE suggested_route_id IS NOT NULL;
 
--- ─── reward_transactions: allow free_ride_bonus source ───────────────────────
+-- ─── reward_transactions: allow standard_ride_bonus source ───────────────────────
 -- Drop the old CHECK constraint and recreate it including the new source value.
 
 ALTER TABLE public.reward_transactions
@@ -64,8 +64,8 @@ ALTER TABLE public.reward_transactions
     CHECK (source IN (
       'standard_ride',
       'ad_boost',
-      'campaign_ride',
-      'free_ride_bonus',
+      'boosted_ride',
+      'standard_ride_bonus',
       'bonus',
       'adjustment',
       'redemption'

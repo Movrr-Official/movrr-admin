@@ -48,17 +48,23 @@ export type RiderMapEntry = {
 
 // ─── Zone / route overlays ────────────────────────────────────────────────────
 
-export type ZoneFeature = GeoJSON.Feature<GeoJSON.Polygon, {
-  id: string;
-  status: string;
-  label?: string;
-}>;
+export type ZoneFeature = GeoJSON.Feature<
+  GeoJSON.Polygon,
+  {
+    id: string;
+    status: string;
+    label?: string;
+  }
+>;
 
-export type RouteLineFeature = GeoJSON.Feature<GeoJSON.LineString, {
-  id: string;
-  label: string;
-  mode: "free_ride" | "campaign" | "assigned";
-}>;
+export type RouteLineFeature = GeoJSON.Feature<
+  GeoJSON.LineString,
+  {
+    id: string;
+    label: string;
+    mode: "standard_ride" | "campaign" | "assigned";
+  }
+>;
 
 // ─── Drill-in panels ──────────────────────────────────────────────────────────
 

@@ -113,7 +113,7 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     standardBikeMultiplier: 1,
     eBikeMultiplier: 0.9,
     fatBikeMultiplier: 0.75,
-    campaignRideMultiplier: 1.5,
+    boostedRideMultiplier: 1.5,
     maxAllowedAverageSpeedKmh: 35,
     maxAllowedPeakSpeedKmh: 45,
     minMovementDistanceMeters: 150,
@@ -138,7 +138,7 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     requireApproval: false,
   },
   suggestedRoutes: {
-    freeRideEnabled: true,
+    standardRideEnabled: true,
     defaultMultiplier: 1.5,
     complianceThreshold: 0.7,
     maxDailyBonusPoints: 300,
@@ -476,7 +476,7 @@ export async function getPublicPlatformConfig() {
       standardBikeMultiplier: r.standardBikeMultiplier,
       eBikeMultiplier: r.eBikeMultiplier,
       fatBikeMultiplier: r.fatBikeMultiplier,
-      campaignRideMultiplier: r.campaignRideMultiplier,
+      boostedRideMultiplier: r.boostedRideMultiplier,
       maxAllowedAverageSpeedKmh: rv.maxAllowedAverageSpeedKmh,
       maxAllowedPeakSpeedKmh: rv.maxAllowedPeakSpeedKmh,
       minMovementDistanceMeters: rv.minMovementDistanceMeters,
@@ -501,8 +501,8 @@ export async function getPublicPlatformConfig() {
       realtimeTrackingEnabled: f.realtimeTrackingEnabled,
     },
     // Standard Ride Mode config — synced to mobile for compliance scoring and bonus UI.
-    freeRide: {
-      freeRideEnabled: sr.freeRideEnabled,
+    standardRide: {
+      standardRideEnabled: sr.standardRideEnabled,
       defaultMultiplier: sr.defaultMultiplier,
       complianceThreshold: sr.complianceThreshold,
       maxDailyBonusPoints: sr.maxDailyBonusPoints,
