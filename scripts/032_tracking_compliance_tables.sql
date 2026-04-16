@@ -102,7 +102,7 @@ COMMENT ON TABLE public.zone_visit IS
   'verifier after zone exit confirmation. Primary input for boosted ride rewards.';
 
 -- ─── corridor_compliance ──────────────────────────────────────────────────────
--- Running compliance score for free-ride sessions following a suggested route.
+-- Running compliance score for standard-ride sessions following a suggested route.
 -- Maintained by the backend compliance verifier; updated on each GPS batch.
 
 CREATE TABLE IF NOT EXISTS public.corridor_compliance (
@@ -136,7 +136,7 @@ CREATE POLICY "Riders read own corridor compliance"
   );
 
 COMMENT ON TABLE public.corridor_compliance IS
-  'Running compliance score for free-ride bonus route sessions. '
+  'Running compliance score for standard-ride bonus route sessions. '
   'Updated by the backend compliance verifier. Reward engine reads this to '
   'determine final multiplier/bonus at session end.';
 
@@ -203,7 +203,7 @@ COMMENT ON COLUMN public.ride_session.algorithm_version IS
   'compliance verification to ensure deterministic results.';
 
 -- ─── suggested_routes extensions ─────────────────────────────────────────────
--- mode: distinguishes free-ride bonus routes from campaign-navigational routes.
+-- mode: distinguishes standard-ride bonus routes from campaign-navigational routes.
 -- tolerance_m: corridor width for compliance scoring (perpendicular distance).
 
 ALTER TABLE public.suggested_routes

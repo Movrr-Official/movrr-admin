@@ -9,8 +9,8 @@
  * Exports:
  *   - isPointInPolygon()      — ray-casting, shared geometry primitive
  *   - distanceToPolyline()    — perpendicular distance for corridor compliance
- *   - checkCorridorPoint()    — free-ride compliance decision per GPS point
- *   - runZoneStateMachine()   — campaign-ride zone entry/exit tracking
+ *   - checkCorridorPoint()    — standard-ride compliance decision per GPS point
+ *   - runZoneStateMachine()   — boosted-ride zone entry/exit tracking
  *   - runAntiSpoofChecks()    — flags suspicious GPS streams
  *   - verifyGpsBatch()        — top-level batch processor called by ingest API
  */
@@ -207,7 +207,7 @@ export function isPointInBoundingBox(point: LatLon, ring: LatLon[]): boolean {
 
 /**
  * Perpendicular distance from a point to the nearest segment of a polyline.
- * Used for free-ride corridor compliance.
+ * Used for standard-ride corridor compliance.
  * Returns distance in metres.
  */
 export function distanceToPolyline(
@@ -483,7 +483,7 @@ export function runAntiSpoofChecks(params: {
  * @param rawPoints   - Points as received from mobile, not yet filtered
  * @param lastAccepted - The last GPS point accepted in a previous batch (for jump detection)
  * @param zoneStates  - Current zone state machine states for this session
- * @param corridorSegments - Pre-built corridor segments for free-ride compliance
+ * @param corridorSegments - Pre-built corridor segments for standard-ride compliance
  * @param corridorToleranceM - Tolerance in metres for corridor compliance
  * @param suggestedRouteId - Route ID if session has an active bonus route
  */

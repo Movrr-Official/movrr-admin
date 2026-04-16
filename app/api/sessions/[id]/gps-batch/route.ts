@@ -182,7 +182,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     });
   }
 
-  // ── 6. Load corridor segments for free-ride bonus routes ─────────────────────
+  // ── 6. Load corridor segments for standard-ride bonus routes ─────────────────────
   let corridorSegments: ReturnType<typeof buildCorridorSegments> = [];
   let corridorToleranceM = 30;
 
