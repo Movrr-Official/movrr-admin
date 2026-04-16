@@ -25,16 +25,25 @@ export default function RideSessionsOverview() {
   } = useRideSessionsData();
 
   const total = sessions?.length ?? 0;
-  const verified = sessions?.filter((s) => s.verificationStatus === "verified").length ?? 0;
-  const pending = sessions?.filter((s) => s.verificationStatus === "pending").length ?? 0;
-  const rejected = sessions?.filter((s) => s.verificationStatus === "rejected").length ?? 0;
-  const manualReview = sessions?.filter((s) => s.verificationStatus === "manual_review").length ?? 0;
+  const verified =
+    sessions?.filter((s) => s.verificationStatus === "verified").length ?? 0;
+  const pending =
+    sessions?.filter((s) => s.verificationStatus === "pending").length ?? 0;
+  const rejected =
+    sessions?.filter((s) => s.verificationStatus === "rejected").length ?? 0;
+  const manualReview =
+    sessions?.filter((s) => s.verificationStatus === "manual_review").length ??
+    0;
 
-  const freeRideSessions = sessions?.filter((s) => s.earningMode === "standard_ride").length ?? 0;
-  const campaignRideSessions = sessions?.filter((s) => s.earningMode === "ad_enhanced_ride").length ?? 0;
+  const freeRideSessions =
+    sessions?.filter((s) => s.earningMode === "standard_ride").length ?? 0;
+  const campaignRideSessions =
+    sessions?.filter((s) => s.earningMode === "ad_enhanced_ride").length ?? 0;
 
-  const totalPoints = sessions?.reduce((sum, s) => sum + s.pointsAwarded, 0) ?? 0;
-  const totalVerifiedMinutes = sessions?.reduce((sum, s) => sum + s.verifiedMinutes, 0) ?? 0;
+  const totalPoints =
+    sessions?.reduce((sum, s) => sum + s.pointsAwarded, 0) ?? 0;
+  const totalVerifiedMinutes =
+    sessions?.reduce((sum, s) => sum + s.verifiedMinutes, 0) ?? 0;
 
   const verificationRate = total > 0 ? Math.round((verified / total) * 100) : 0;
 
@@ -49,8 +58,9 @@ export default function RideSessionsOverview() {
             icon={Timer}
             badges={[
               {
-                label: `${freeRideSessions} free ride`,
-                className: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800",
+                label: `${freeRideSessions} standard ride`,
+                className:
+                  "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800",
               },
               ...(campaignRideSessions > 0
                 ? [
@@ -86,7 +96,8 @@ export default function RideSessionsOverview() {
                 ? [
                     {
                       label: `${manualReview} review`,
-                      className: "bg-orange-50 text-orange-700 border-orange-200",
+                      className:
+                        "bg-orange-50 text-orange-700 border-orange-200",
                     },
                   ]
                 : []),
@@ -100,13 +111,13 @@ export default function RideSessionsOverview() {
             icon={Bike}
             metrics={[
               {
-                label: "Free Ride Sessions",
+                label: "Standard Ride Sessions",
                 value: freeRideSessions,
                 icon: Bike,
                 iconColor: "text-sky-600",
               },
               {
-                label: "Campaign Ride Sessions",
+                label: "Boosted Ride Sessions",
                 value: campaignRideSessions,
                 icon: Megaphone,
                 iconColor: "text-violet-600",
@@ -152,12 +163,14 @@ export default function RideSessionsOverview() {
           <TabsList>
             <TabsTrigger value="all">
               All Sessions
-              <Badge variant="secondary" className="ml-2 text-xs">{total}</Badge>
+              <Badge variant="secondary" className="ml-2 text-xs">
+                {total}
+              </Badge>
             </TabsTrigger>
             <TabsTrigger value="queue">
               <ShieldAlert className="h-3.5 w-3.5 mr-1.5" />
               Verification Queue
-              {(pending + rejected + manualReview) > 0 && (
+              {pending + rejected + manualReview > 0 && (
                 <Badge className="ml-2 text-xs bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300">
                   {pending + rejected + manualReview}
                 </Badge>

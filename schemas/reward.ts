@@ -22,8 +22,8 @@ export const rewardTransactionSourceSchema = z.enum([
 
 /**
  * Earning mode — maps to the mobile app's EarningMode.
- * standard_ride = Free Ride (always available, 1× multiplier)
- * ad_enhanced_ride = Campaign Ride (premium, ad-boosted)
+ * standard_ride = Standard Ride (always available, 1× multiplier)
+ * ad_enhanced_ride = Boosted Ride (premium, ad-boosted)
  */
 export const earningModeSchema = z.enum(["standard_ride", "ad_enhanced_ride"]);
 
@@ -40,16 +40,18 @@ export const rewardTransactionSchema = z.object({
   riderId: z.string(),
   campaignId: z.string().optional(),
   routeId: z.string().optional(),
-  /** Canonical ride session reference — preferred over routeId for non-campaign rides */
+  /** Canonical ride session reference — preferred over routeId for non-boosted rides */
   rideSessionId: z.string().optional(),
   type: rewardTransactionTypeSchema,
   /** Earning source — standard_ride | ad_boost | campaign_ride | bonus | adjustment | redemption */
   source: rewardTransactionSourceSchema.or(z.string()).optional(),
-  /** Earning mode at time of ride — standard_ride (Free Ride) or ad_enhanced_ride (Campaign Ride) */
+  /** Earning mode at time of ride — standard_ride (Standard Ride) or ad_enhanced_ride (Boosted Ride) */
   earningMode: earningModeSchema.optional(),
   points: z.number(),
   /** Ride verification status at time of transaction — sourced from ride_verification.status */
-  verificationStatus: z.enum(["pending", "verified", "rejected", "manual_review"]).optional(),
+  verificationStatus: z
+    .enum(["pending", "verified", "rejected", "manual_review"])
+    .optional(),
   description: z.string().optional(),
   balanceAfter: z.number(),
   createdAt: z.string().datetime(),
@@ -81,7 +83,9 @@ export const riderBalanceSchema = z.object({
 
 export type RewardTransaction = z.infer<typeof rewardTransactionSchema>;
 export type RewardTransactionType = z.infer<typeof rewardTransactionTypeSchema>;
-export type RewardTransactionSource = z.infer<typeof rewardTransactionSourceSchema>;
+export type RewardTransactionSource = z.infer<
+  typeof rewardTransactionSourceSchema
+>;
 export type EarningMode = z.infer<typeof earningModeSchema>;
 export type RiderBalance = z.infer<typeof riderBalanceSchema>;
 export type RewardBonusEntry = z.infer<typeof rewardBonusEntrySchema>;

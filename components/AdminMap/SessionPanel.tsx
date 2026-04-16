@@ -45,9 +45,9 @@ type SessionDetail = {
 };
 
 const SEVERITY_CLASS: Record<string, string> = {
-  low:      "bg-yellow-50 text-yellow-700 border-yellow-200",
-  medium:   "bg-orange-50 text-orange-700 border-orange-200",
-  high:     "bg-red-50 text-red-700 border-red-200",
+  low: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  medium: "bg-orange-50 text-orange-700 border-orange-200",
+  high: "bg-red-50 text-red-700 border-red-200",
   critical: "bg-red-100 text-red-900 border-red-400 font-semibold",
 };
 
@@ -97,7 +97,9 @@ export function SessionPanel({
       setLoading(false);
     });
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [rider.sessionId]);
 
   const elapsedMin = session?.started_at
@@ -105,7 +107,8 @@ export function SessionPanel({
     : null;
 
   const totalImpressions = zoneVisits.reduce(
-    (sum, v) => sum + (v.impression_units ?? 0), 0,
+    (sum, v) => sum + (v.impression_units ?? 0),
+    0,
   );
 
   return (
@@ -155,21 +158,40 @@ export function SessionPanel({
 
             {/* Live stats */}
             <div className="px-4 py-3 grid grid-cols-2 gap-2">
-              <Stat label="Ride type" value={rider.rideType === "ad_enhanced_ride" ? "Campaign" : "Free ride"} />
+              <Stat
+                label="Ride type"
+                value={
+                  rider.rideType === "ad_enhanced_ride"
+                    ? "Campaign"
+                    : "Standard ride"
+                }
+              />
               <Stat label="Speed" value={`${rider.speedKmh.toFixed(1)} km/h`} />
-              {elapsedMin !== null && <Stat label="Duration" value={`${elapsedMin} min`} />}
+              {elapsedMin !== null && (
+                <Stat label="Duration" value={`${elapsedMin} min`} />
+              )}
               {session?.total_distance_meters != null && (
-                <Stat label="Distance" value={`${(session.total_distance_meters / 1000).toFixed(2)} km`} />
+                <Stat
+                  label="Distance"
+                  value={`${(session.total_distance_meters / 1000).toFixed(2)} km`}
+                />
               )}
               {rider.rewardPreview != null && (
-                <Stat label="Reward est." value={`${rider.rewardPreview} pts`} />
+                <Stat
+                  label="Reward est."
+                  value={`${rider.rewardPreview} pts`}
+                />
               )}
               {totalImpressions > 0 && (
                 <Stat label="Impressions" value={totalImpressions.toString()} />
               )}
               <Stat
                 label="In zones"
-                value={rider.currentZoneIds.length > 0 ? `${rider.currentZoneIds.length}` : "—"}
+                value={
+                  rider.currentZoneIds.length > 0
+                    ? `${rider.currentZoneIds.length}`
+                    : "—"
+                }
               />
             </div>
 
@@ -194,16 +216,21 @@ export function SessionPanel({
                           {v.campaign_zone_id.slice(0, 8)}…
                         </span>
                         {v.speed_violation && (
-                          <span className="text-red-600 text-[10px] font-medium">⚠ Speed</span>
+                          <span className="text-red-600 text-[10px] font-medium">
+                            ⚠ Speed
+                          </span>
                         )}
                         {!v.exited_at && (
-                          <span className="text-emerald-600 text-[10px] font-medium animate-pulse">● Active</span>
+                          <span className="text-emerald-600 text-[10px] font-medium animate-pulse">
+                            ● Active
+                          </span>
                         )}
                       </div>
                       <div className="mt-0.5 text-muted-foreground">
                         {v.dwell_time_s != null ? `${v.dwell_time_s}s` : "open"}{" "}
                         · {v.impression_units} imp
-                        {v.avg_speed_in_zone_kmh != null && ` · ${v.avg_speed_in_zone_kmh.toFixed(1)} km/h`}
+                        {v.avg_speed_in_zone_kmh != null &&
+                          ` · ${v.avg_speed_in_zone_kmh.toFixed(1)} km/h`}
                       </div>
                     </div>
                   ))}
@@ -259,7 +286,9 @@ export function SessionPanel({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+        {label}
+      </p>
       <p className="text-sm font-medium text-foreground">{value}</p>
     </div>
   );

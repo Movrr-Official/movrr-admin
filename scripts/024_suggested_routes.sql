@@ -1,6 +1,6 @@
--- Migration: Suggested Routes (Free Ride Mode)
+-- Migration: Suggested Routes (Standard Ride Mode)
 -- Creates the suggested_routes table and extends ride_session with
--- Free Ride Mode tracking columns.
+-- Standard Ride Mode tracking columns.
 
 -- ─── suggested_routes ────────────────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ CREATE INDEX IF NOT EXISTS idx_suggested_routes_active_window
   ON public.suggested_routes(active, start_at, end_at);
 
 COMMENT ON TABLE public.suggested_routes IS
-  'Admin-curated cycling routes shown to riders in Free Ride Mode. '
+  'Admin-curated cycling routes shown to riders in Standard Ride Mode. '
   'Riders earn bonus points or multipliers for completing compliant traces.';
 
 -- ─── ride_session extensions ──────────────────────────────────────────────────

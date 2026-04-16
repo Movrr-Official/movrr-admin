@@ -75,7 +75,7 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
     title: "Suggested Routes",
     icon: MapPin,
     description:
-      "Free Ride Mode: route bonuses, compliance thresholds, and daily caps.",
+      "Standard Ride Mode: route bonuses, compliance thresholds, and daily caps.",
   },
   {
     id: "features",
@@ -216,7 +216,7 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
     rewards: [
       {
         name: "basePointsPerMinute",
-        label: "Base Points / Minute (Free Ride)",
+        label: "Base Points / Minute (Standard Ride)",
         type: "number",
         min: 0,
       },
@@ -260,7 +260,7 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
       },
       {
         name: "campaignRideMultiplier",
-        label: "Campaign Ride Multiplier",
+        label: "Boosted Ride Multiplier",
         type: "number",
         min: 0,
         description:
@@ -329,10 +329,10 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
     suggestedRoutes: [
       {
         name: "freeRideEnabled",
-        label: "Free Ride Mode Enabled",
+        label: "Standard Ride Mode Enabled",
         type: "switch",
         description:
-          "Enables the Free Ride Mode bonus system platform-wide. Riders earn bonuses for completing admin-curated suggested routes.",
+          "Enables the Standard Ride Mode bonus system platform-wide. Riders earn bonuses for completing admin-curated suggested routes.",
       },
       {
         name: "defaultMultiplier",

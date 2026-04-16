@@ -109,10 +109,10 @@ export function getRewardsTableColumns({
       cell: ({ row }) => {
         const source = row.original.source;
         if (source === "standard_ride") {
-          return <Badge variant="info">Free Ride</Badge>;
+          return <Badge variant="info">Standard Ride</Badge>;
         }
         if (source === "ad_boost" || source === "campaign_ride") {
-          return <Badge variant="accent">Campaign Ride</Badge>;
+          return <Badge variant="accent">Boosted Ride</Badge>;
         }
         if (source === "bonus") {
           return <Badge variant="warning">Bonus</Badge>;

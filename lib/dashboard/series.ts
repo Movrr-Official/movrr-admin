@@ -32,16 +32,21 @@ export function buildCumulativeUserSeries(
   buckets: TimeBucket[],
   role: "rider" | "advertiser",
 ): Array<{ name: string; value: number }> {
-  return buckets.reduce<Array<{ name: string; value: number }>>((acc, bucket) => {
-    const createdCount = users.filter((user) => {
-      if (user.role !== role) return false;
-      const createdAt = parseDate(user.createdAt);
-      return createdAt ? createdAt >= bucket.start && createdAt <= bucket.end : false;
-    }).length;
-    const previousTotal = acc.length ? acc[acc.length - 1].value : 0;
-    acc.push({ name: bucket.label, value: previousTotal + createdCount });
-    return acc;
-  }, []);
+  return buckets.reduce<Array<{ name: string; value: number }>>(
+    (acc, bucket) => {
+      const createdCount = users.filter((user) => {
+        if (user.role !== role) return false;
+        const createdAt = parseDate(user.createdAt);
+        return createdAt
+          ? createdAt >= bucket.start && createdAt <= bucket.end
+          : false;
+      }).length;
+      const previousTotal = acc.length ? acc[acc.length - 1].value : 0;
+      acc.push({ name: bucket.label, value: previousTotal + createdCount });
+      return acc;
+    },
+    [],
+  );
 }
 
 export function buildCampaignPerformanceSeries(
@@ -51,7 +56,9 @@ export function buildCampaignPerformanceSeries(
   return buckets.map((bucket) => {
     const monthlyCampaigns = campaigns.filter((campaign) => {
       const startDate = parseDate(campaign.startDate);
-      return startDate ? startDate >= bucket.start && startDate <= bucket.end : false;
+      return startDate
+        ? startDate >= bucket.start && startDate <= bucket.end
+        : false;
     });
     const impressions = monthlyCampaigns.reduce(
       (sum, campaign) => sum + Number(campaign.impressions ?? 0),
@@ -67,14 +74,14 @@ export function buildCampaignPerformanceSeries(
 
 interface RideModeTrendLike {
   date?: string | null;
-  /** Points from standard_ride (Free Ride) */
+  /** Points from standard_ride (Standard Ride) */
   standardRide: number;
-  /** Points from ad_boost | campaign_ride (Campaign Ride) */
+  /** Points from ad_boost | campaign_ride (Boosted Ride) */
   campaignRide: number;
 }
 
 /**
- * Build a time-series for the Ride Mode split chart (Free Ride vs Campaign Ride points).
+ * Build a time-series for the Ride Mode split chart (Standard Ride vs Boosted Ride points).
  * Mirrors buildPointsTrendSeries — aggregate by bucket, not cumulative.
  */
 export function buildRideModeSeries(
@@ -108,7 +115,10 @@ export function buildPointsTrendSeries(
       return date ? date >= bucket.start && date <= bucket.end : false;
     });
     const awarded = periodTrends.reduce((sum, trend) => sum + trend.awarded, 0);
-    const redeemed = periodTrends.reduce((sum, trend) => sum + trend.redeemed, 0);
+    const redeemed = periodTrends.reduce(
+      (sum, trend) => sum + trend.redeemed,
+      0,
+    );
     return { name: bucket.label, awarded, redeemed };
   });
 }

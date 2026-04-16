@@ -15,7 +15,8 @@ export default function RidersOverview() {
   const ridersOnRoutes =
     riders?.filter((rider) => (rider.activeRoutesCount ?? 0) > 0).length ?? 0;
   const ridersOnCampaigns =
-    riders?.filter((rider) => (rider.activeCampaignsCount ?? 0) > 0).length ?? 0;
+    riders?.filter((rider) => (rider.activeCampaignsCount ?? 0) > 0).length ??
+    0;
   const certifiedRiders =
     riders?.filter((rider) => rider.isCertified).length ?? 0;
   const averageProfileCompleteness =
@@ -28,7 +29,8 @@ export default function RidersOverview() {
         )
       : 0;
   const totalPointsExposure =
-    riders?.reduce((total, rider) => total + (rider.pointsBalance ?? 0), 0) ?? 0;
+    riders?.reduce((total, rider) => total + (rider.pointsBalance ?? 0), 0) ??
+    0;
 
   return (
     <div className="min-h-screen gradient-bg px-4 py-8 sm:px-6 md:py-12 lg:pt-6">
@@ -51,7 +53,7 @@ export default function RidersOverview() {
             icon={Route}
             badges={[
               {
-                label: `${ridersOnCampaigns} on campaign rides`,
+                label: `${ridersOnCampaigns} on boosted rides`,
                 className: "bg-primary/10 text-primary border-primary/30",
               },
             ]}

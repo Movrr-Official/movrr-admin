@@ -123,11 +123,11 @@ export const impactSettingsSchema = z.object({
 });
 
 /**
- * Free Ride Mode (Suggested Routes) — controls bonuses and compliance thresholds.
+ * Standard Ride Mode (Suggested Routes) — controls bonuses and compliance thresholds.
  * These values are synced to the mobile app via the public platform config endpoint.
  */
 export const suggestedRoutesSettingsSchema = z.object({
-  /** Whether the Free Ride Mode bonus system is active platform-wide. */
+  /** Whether the Standard Ride Mode bonus system is active platform-wide. */
   freeRideEnabled: z.boolean().default(true),
   /** Default multiplier applied to base points when a rider completes a
    *  multiplier-type suggested route. 1.0 = no multiplier. */

@@ -67,14 +67,14 @@ const getEarningModeBadge = (mode: RideSession["earningMode"]) => {
     return (
       <Badge variant="info">
         <Bike className="h-3 w-3 mr-1" />
-        Free Ride
+        Standard Ride
       </Badge>
     );
   }
   return (
     <Badge variant="accent">
       <Megaphone className="h-3 w-3 mr-1" />
-      Campaign Ride
+      Boosted Ride
     </Badge>
   );
 };

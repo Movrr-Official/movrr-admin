@@ -2,7 +2,7 @@
 -- Creates all server-side tables required for the production tracking system:
 --   ride_gps_point, zone_visit, corridor_compliance, session_flag
 -- Extends ride_session with policy_snapshot and algorithm_version.
--- Extends suggested_routes with mode and tolerance_m (Free Ride vs Campaign).
+-- Extends suggested_routes with mode and tolerance_m (Standard Ride vs Campaign).
 --
 -- IDEMPOTENT — safe to run multiple times.
 
@@ -99,7 +99,7 @@ CREATE POLICY "Riders read own zone visits"
 
 COMMENT ON TABLE public.zone_visit IS
   'One row per campaign zone visit per session. Written by the backend compliance '
-  'verifier after zone exit confirmation. Primary input for campaign ride rewards.';
+  'verifier after zone exit confirmation. Primary input for boosted ride rewards.';
 
 -- ─── corridor_compliance ──────────────────────────────────────────────────────
 -- Running compliance score for free-ride sessions following a suggested route.

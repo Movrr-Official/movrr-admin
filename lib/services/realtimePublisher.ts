@@ -15,12 +15,12 @@ import type { AntiSpoofFlag } from "./complianceVerifier";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ComplianceState =
-  | "compliant"       // Inside zone or on corridor, speed valid
-  | "marginal"        // Near boundary (within 2× tolerance)
-  | "non_compliant"   // Outside zone/corridor for > 1 update
-  | "paused"          // Speed < 1 m/s for > 2 min
-  | "signal_lost"     // No update in > 60s (set by admin map, not here)
-  | "under_review";   // Critical anti-spoof flag raised
+  | "compliant" // Inside zone or on corridor, speed valid
+  | "marginal" // Near boundary (within 2× tolerance)
+  | "non_compliant" // Outside zone/corridor for > 1 update
+  | "paused" // Speed < 1 m/s for > 2 min
+  | "signal_lost" // No update in > 60s (set by admin map, not here)
+  | "under_review"; // Critical anti-spoof flag raised
 
 export type RiderPositionPayload = {
   session_id: string;
@@ -53,11 +53,11 @@ function deriveComplianceState(params: {
   if (speedKmh < 1) return "paused";
 
   if (rideType === "ad_enhanced_ride") {
-    // Campaign ride: compliance = currently inside at least one zone
+    // Boosted ride: compliance = currently inside at least one zone
     return currentZoneIds.length > 0 ? "compliant" : "non_compliant";
   }
 
-  // Free ride: always compliant at movement level (corridor bonus is separate)
+  // Standard ride: always compliant at movement level (corridor bonus is separate)
   return "compliant";
 }
 

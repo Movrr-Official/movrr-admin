@@ -159,7 +159,7 @@ export const getRidersTableColumns = ({
           <div className="flex items-center gap-2 text-muted-foreground">
             <Bike className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-xs">
-              {rider.activeCampaignsCount} campaign rides
+              {rider.activeCampaignsCount} boosted rides
             </span>
           </div>
         </div>

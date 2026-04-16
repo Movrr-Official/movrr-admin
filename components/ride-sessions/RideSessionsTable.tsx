@@ -33,7 +33,9 @@ function RideSessionsTableContent({
   refetchData,
   isRefetching,
 }: Omit<RideSessionsTableProps, "sessions">) {
-  const [selectedSession, setSelectedSession] = useState<RideSession | null>(null);
+  const [selectedSession, setSelectedSession] = useState<RideSession | null>(
+    null,
+  );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const {
@@ -151,8 +153,8 @@ export function RideSessionsTable({
       type: "multi-select",
       key: "earningMode",
       options: [
-        { value: "standard_ride", label: "Free Ride" },
-        { value: "ad_enhanced_ride", label: "Campaign Ride" },
+        { value: "standard_ride", label: "Standard Ride" },
+        { value: "ad_enhanced_ride", label: "Boosted Ride" },
       ],
     },
     {

@@ -121,8 +121,8 @@ export function RideSessionDetailsDrawer({
               <div>
                 <p className="text-sm font-semibold">
                   {session.earningMode === "standard_ride"
-                    ? "Free Ride"
-                    : "Campaign Ride"}
+                    ? "Standard Ride"
+                    : "Boosted Ride"}
                 </p>
                 {session.campaignName && (
                   <p className="text-xs text-muted-foreground">

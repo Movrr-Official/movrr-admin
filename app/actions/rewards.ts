@@ -14,9 +14,12 @@ import { writeUserActivity } from "@/lib/userActivity";
 
 const adjustPointsSchema = z.object({
   riderId: z.string(),
-  points: z.number().int().refine((value) => value !== 0, {
-    message: "Points adjustment must be non-zero",
-  }),
+  points: z
+    .number()
+    .int()
+    .refine((value) => value !== 0, {
+      message: "Points adjustment must be non-zero",
+    }),
   description: z.string().optional(),
   type: rewardTransactionTypeSchema,
 });
@@ -34,9 +37,9 @@ export async function getRewardStats(dateRange?: {
     totalPointsRedeemed: number;
     totalPointsOutstanding: number;
     totalTransactions: number;
-    /** Points earned via Free Rides (source = standard_ride) */
+    /** Points earned via Standard Rides (source = standard_ride) */
     standardRidePoints: number;
-    /** Points earned via Campaign Rides (source = ad_boost | campaign_ride) */
+    /** Points earned via Boosted Rides (source = ad_boost | campaign_ride) */
     campaignRidePoints: number;
     pointsByCampaign: Array<{
       campaignId: string;
@@ -160,9 +163,11 @@ export async function getRewardStats(dateRange?: {
       pointsByRider.set(txn.rider_id, current + Number(txn.points_earned ?? 0));
     });
 
-    // Ride mode split — Free Ride vs Campaign Ride points
+    // Ride mode split — Standard Ride vs Boosted Ride points
     const standardRidePoints = filteredTransactions.reduce((sum, txn) => {
-      const direction = txn.metadata?.adjustment_direction as string | undefined;
+      const direction = txn.metadata?.adjustment_direction as
+        | string
+        | undefined;
       if (direction === "debit") return sum;
       return txn.source === "standard_ride"
         ? sum + Number(txn.points_earned ?? 0)
@@ -170,7 +175,9 @@ export async function getRewardStats(dateRange?: {
     }, 0);
 
     const campaignRidePoints = filteredTransactions.reduce((sum, txn) => {
-      const direction = txn.metadata?.adjustment_direction as string | undefined;
+      const direction = txn.metadata?.adjustment_direction as
+        | string
+        | undefined;
       if (direction === "debit") return sum;
       return txn.source === "ad_boost" || txn.source === "campaign_ride"
         ? sum + Number(txn.points_earned ?? 0)
@@ -387,8 +394,12 @@ export async function getRewardTransactions(filters?: {
         ? rawBreakdown.map((entry: any) => ({
             type: String(entry?.type ?? ""),
             label: entry?.label ? String(entry.label) : undefined,
-            multiplier: entry?.multiplier != null ? Number(entry.multiplier) : undefined,
-            addedPoints: entry?.addedPoints != null ? Number(entry.addedPoints) : undefined,
+            multiplier:
+              entry?.multiplier != null ? Number(entry.multiplier) : undefined,
+            addedPoints:
+              entry?.addedPoints != null
+                ? Number(entry.addedPoints)
+                : undefined,
           }))
         : undefined;
 
@@ -407,11 +418,20 @@ export async function getRewardTransactions(filters?: {
         createdAt: txn.created_at ?? new Date().toISOString(),
         createdBy: (meta?.created_by as string | undefined) ?? undefined,
         // Bonus + cap detail
-        basePoints: meta?.basePoints != null ? Number(meta.basePoints) : undefined,
-        multiplier: meta?.multiplier != null ? Number(meta.multiplier) : undefined,
-        campaignBoostMultiplier: meta?.campaignBoostMultiplier != null ? Number(meta.campaignBoostMultiplier) : undefined,
-        wasCapped: meta?.wasCapped != null ? Boolean(meta.wasCapped) : undefined,
-        verifiedMinutes: meta?.verifiedMinutes != null ? Number(meta.verifiedMinutes) : undefined,
+        basePoints:
+          meta?.basePoints != null ? Number(meta.basePoints) : undefined,
+        multiplier:
+          meta?.multiplier != null ? Number(meta.multiplier) : undefined,
+        campaignBoostMultiplier:
+          meta?.campaignBoostMultiplier != null
+            ? Number(meta.campaignBoostMultiplier)
+            : undefined,
+        wasCapped:
+          meta?.wasCapped != null ? Boolean(meta.wasCapped) : undefined,
+        verifiedMinutes:
+          meta?.verifiedMinutes != null
+            ? Number(meta.verifiedMinutes)
+            : undefined,
         bonusBreakdown,
       } as RewardTransaction;
     });

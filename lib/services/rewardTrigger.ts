@@ -17,10 +17,10 @@ import { logSessionEvent } from "./sessionLogger";
 
 type PolicySnapshot = {
   baseDistanceRatePerMeter: number; // points per metre
-  baseTimeRatePerSecond: number;    // points per second
-  zoneDwellRatePerSecond: number;   // points per impression unit (1 unit = 1s)
-  hotZoneMultiplier: number;        // applied if zone is a hot zone
-  freeRideRouteMultiplier: number;  // applied when corridor compliance met
+  baseTimeRatePerSecond: number; // points per second
+  zoneDwellRatePerSecond: number; // points per impression unit (1 unit = 1s)
+  hotZoneMultiplier: number; // applied if zone is a hot zone
+  freeRideRouteMultiplier: number; // applied when corridor compliance met
   freeRideMinCompliancePct: number; // minimum pct for any bonus
   dailyCapPoints: number;
 };
@@ -53,9 +53,7 @@ export async function triggerRewardUpdate(params: {
     // Load session for policy snapshot and rider_id
     const { data: session } = await supabase
       .from("ride_session")
-      .select(
-        "id, rider_id, earning_mode, policy_snapshot, status, started_at",
-      )
+      .select("id, rider_id, earning_mode, policy_snapshot, status, started_at")
       .eq("id", sessionId)
       .maybeSingle();
 
@@ -117,7 +115,7 @@ export async function triggerRewardUpdate(params: {
   }
 }
 
-// ─── Campaign ride reward ─────────────────────────────────────────────────────
+// ─── Boosted ride reward ─────────────────────────────────────────────────────
 
 async function handleCampaignRideReward(
   sessionId: string,
@@ -159,7 +157,9 @@ async function handleCampaignRideReward(
     (sum, v) => sum + (v.impression_units ?? 0),
     0,
   );
-  const rawPoints = Math.round(totalImpressions * policy.zoneDwellRatePerSecond);
+  const rawPoints = Math.round(
+    totalImpressions * policy.zoneDwellRatePerSecond,
+  );
   const pointsToAward = Math.min(rawPoints, remainingCap);
 
   if (pointsToAward <= 0) return;
@@ -179,22 +179,16 @@ async function handleCampaignRideReward(
   });
 
   if (!error) {
-    logSessionEvent(
-      logger,
-      "reward_calculated",
-      sessionId,
-      riderId,
-      {
-        mode: "campaign_ride",
-        impression_units: totalImpressions,
-        points_awarded: pointsToAward,
-        zone_visit_count: unrewarded.length,
-      },
-    );
+    logSessionEvent(logger, "reward_calculated", sessionId, riderId, {
+      mode: "campaign_ride",
+      impression_units: totalImpressions,
+      points_awarded: pointsToAward,
+      zone_visit_count: unrewarded.length,
+    });
   }
 }
 
-// ─── Free ride reward ─────────────────────────────────────────────────────────
+// ─── Standard ride reward ─────────────────────────────────────────────────────────
 
 async function handleFreeRideReward(
   sessionId: string,
@@ -211,10 +205,10 @@ async function handleFreeRideReward(
     .eq("source", "standard_ride")
     .contains("metadata", { sessionId });
 
-  // Free ride base rewards are calculated at session end, not incrementally
-  // (unlike campaign rides where zone visits are discrete events).
-  // This trigger is a no-op for free rides mid-session.
+  // Standard ride base rewards are calculated at session end, not incrementally
+  // (unlike boosted rides where zone visits are discrete events).
+  // This trigger is a no-op for standard rides mid-session.
   if ((count ?? 0) > 0) return;
-  // No-op: free ride base + corridor bonus handled at session completion
+  // No-op: standard ride base + corridor bonus handled at session completion
   // by completeRideSessionTracking in rideSessions.ts
 }

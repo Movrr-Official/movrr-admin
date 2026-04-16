@@ -14,10 +14,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import {
-  NEXT_PUBLIC_SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY,
-} from "@/lib/env";
+import { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import {
   buildCorridorSegments,
@@ -129,7 +126,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       }
     : null;
 
-  // ── 5. Load zone polygons for campaign rides ─────────────────────────────────
+  // ── 5. Load zone polygons for boosted rides ─────────────────────────────────
   let zoneStates: ZoneVisitState[] = [];
 
   if (session.earning_mode === "ad_enhanced_ride" && session.campaign_id) {
@@ -146,14 +143,19 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       .is("exited_at", null);
 
     const openVisitsByZone = new Map<string, string>(
-      (existingVisits.data ?? []).map((v) => [v.campaign_zone_id, v.entered_at]),
+      (existingVisits.data ?? []).map((v) => [
+        v.campaign_zone_id,
+        v.entered_at,
+      ]),
     );
 
     zoneStates = (zoneRows ?? []).map((row): ZoneVisitState => {
       let polygon: ZonePolygon = { outer: [] };
       try {
         const gj =
-          typeof row.geojson === "string" ? JSON.parse(row.geojson) : row.geojson;
+          typeof row.geojson === "string"
+            ? JSON.parse(row.geojson)
+            : row.geojson;
         if (gj?.type === "Polygon" && Array.isArray(gj.coordinates)) {
           const toLL = (c: number[]): LatLon => ({ lat: c[1], lon: c[0] });
           polygon = {
@@ -192,8 +194,11 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       .maybeSingle();
 
     if (routeRow) {
-      const geometry: { lat: number; lng: number }[] =
-        Array.isArray(routeRow.geometry) ? routeRow.geometry : [];
+      const geometry: { lat: number; lng: number }[] = Array.isArray(
+        routeRow.geometry,
+      )
+        ? routeRow.geometry
+        : [];
       const waypoints: LatLon[] = geometry.map((p) => ({
         lat: p.lat,
         lon: p.lng,

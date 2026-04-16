@@ -500,7 +500,7 @@ export async function getPublicPlatformConfig() {
       autoAssignmentEnabled: f.autoAssignmentEnabled,
       realtimeTrackingEnabled: f.realtimeTrackingEnabled,
     },
-    // Free Ride Mode config — synced to mobile for compliance scoring and bonus UI.
+    // Standard Ride Mode config — synced to mobile for compliance scoring and bonus UI.
     freeRide: {
       freeRideEnabled: sr.freeRideEnabled,
       defaultMultiplier: sr.defaultMultiplier,

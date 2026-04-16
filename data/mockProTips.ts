@@ -4,7 +4,7 @@ export const mockProTips: ProTip[] = [
   {
     id: "tip-001",
     icon: "🚲",
-    text: "Every verified bike ride earns MOVRR Points — no campaign required. Start a Free Ride any time and earn 1 point per verified minute just for moving.",
+    text: "Every verified bike ride earns MOVRR Points — no campaign required. Start a Standard Ride any time and earn 1 point per verified minute just for moving.",
     category: "earning",
     priority: 0,
     isActive: true,
@@ -24,7 +24,7 @@ export const mockProTips: ProTip[] = [
   {
     id: "tip-003",
     icon: "🎯",
-    text: "If you're on a Campaign Ride, stay within the route tolerance zone to protect your boost eligibility and completion quality.",
+    text: "If you're on a Boosted Ride, stay within the route tolerance zone to protect your boost eligibility and completion quality.",
     category: "compliance",
     priority: 2,
     isActive: true,
@@ -34,7 +34,7 @@ export const mockProTips: ProTip[] = [
   {
     id: "tip-004",
     icon: "🚴‍♂️",
-    text: "Ride consistently to build your success rate. Free Rides count towards your history and help you qualify for premium campaign boosts.",
+    text: "Ride consistently to build your success rate. Standard Rides count towards your history and help you qualify for premium campaign boosts.",
     category: "performance",
     priority: 3,
     isActive: true,

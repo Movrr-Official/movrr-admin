@@ -156,9 +156,9 @@ export default function RewardsOverview() {
               size="mini"
             />
 
-            {/* Ride Mode Split — Free Ride vs Campaign Ride */}
+            {/* Ride Mode Split — Standard Ride vs Boosted Ride */}
             <StatsCard
-              title="Free Ride Points"
+              title="Standard Ride Points"
               value={(stats?.standardRidePoints ?? 0).toLocaleString()}
               icon={Bike}
               description="Earned via standard rides"
@@ -166,7 +166,7 @@ export default function RewardsOverview() {
             />
 
             <StatsCard
-              title="Campaign Ride Points"
+              title="Boosted Ride Points"
               value={(stats?.campaignRidePoints ?? 0).toLocaleString()}
               icon={Megaphone}
               description="Earned via campaign assignments"
@@ -178,7 +178,7 @@ export default function RewardsOverview() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Points by Campaign Ride
+                Points by Boosted Ride
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Points earned via campaign assignments

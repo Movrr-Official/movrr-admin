@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
-// Mobile fetches active suggested routes for Free Ride Mode discovery.
+// Mobile fetches active suggested routes for Standard Ride Mode discovery.
 // No auth required — routes are public by design (like campaign listings).
 // Short cache: routes change infrequently but deactivations should propagate quickly.
 export const dynamic = "force-dynamic";
@@ -62,7 +62,9 @@ export async function GET(request: Request) {
         { routes: [], total: 0, limit, offset },
         {
           status: 200,
-          headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30" },
+          headers: {
+            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+          },
         },
       );
     }
@@ -78,7 +80,9 @@ export async function GET(request: Request) {
     { routes: data ?? [], total: count ?? 0, limit, offset },
     {
       status: 200,
-      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30" },
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+      },
     },
   );
 }

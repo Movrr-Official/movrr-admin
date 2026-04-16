@@ -538,7 +538,7 @@ export function verifyGpsBatch(params: {
       );
       prevAcceptedDist += segDist;
 
-      // Corridor compliance (free ride mode)
+      // Corridor compliance (standard ride mode)
       if (corridorSegments.length > 0) {
         const inCorridor = checkCorridorPoint(
           { lat: point.lat, lon: point.lon },
@@ -549,7 +549,7 @@ export function verifyGpsBatch(params: {
       }
     }
 
-    // Zone state machine (campaign ride mode)
+    // Zone state machine (boosted ride mode)
     const newZoneStates: ZoneVisitState[] = [];
     for (const zoneState of currentZoneStates) {
       const { state, update } = updateZoneVisitState(

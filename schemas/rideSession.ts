@@ -23,7 +23,7 @@ export const rideSessionSchema = z.object({
   id: z.string(),
   riderId: z.string(),
   riderName: z.string().optional(),
-  /** Earning mode — standard_ride (Free Ride) or ad_enhanced_ride (Campaign Ride) */
+  /** Earning mode — standard_ride (Standard Ride) or ad_enhanced_ride (Boosted Ride) */
   earningMode: rideSessionEarningModeSchema,
   /** Campaign linked to this session, only present for ad_enhanced_ride */
   campaignId: z.string().optional(),
@@ -60,6 +60,10 @@ export const rideSessionFiltersSchema = z.object({
 
 export type RideSession = z.infer<typeof rideSessionSchema>;
 export type RideSessionFilters = z.infer<typeof rideSessionFiltersSchema>;
-export type RideVerificationStatus = z.infer<typeof rideVerificationStatusSchema>;
-export type RideSessionEarningMode = z.infer<typeof rideSessionEarningModeSchema>;
+export type RideVerificationStatus = z.infer<
+  typeof rideVerificationStatusSchema
+>;
+export type RideSessionEarningMode = z.infer<
+  typeof rideSessionEarningModeSchema
+>;
 export type BikeType = z.infer<typeof bikeTypeSchema>;
