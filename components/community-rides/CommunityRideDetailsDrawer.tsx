@@ -28,6 +28,7 @@ import {
   MapPin,
   Users,
   Gauge,
+  Route,
   UserMinus,
   XCircle,
   Trash2,
@@ -85,7 +86,10 @@ export function CommunityRideDetailsDrawer({
     newStatus: "active" | "completed" | "cancelled",
     closeConfirm: () => void,
   ) => {
-    const result = await updateMutation.mutateAsync({ id: ride.id, status: newStatus });
+    const result = await updateMutation.mutateAsync({
+      id: ride.id,
+      status: newStatus,
+    });
     if (result.success) {
       const labels: Record<string, string> = {
         active: "Ride marked as active",
@@ -104,7 +108,8 @@ export function CommunityRideDetailsDrawer({
     }
   };
 
-  const handleCancel = () => handleStatusChange("cancelled", () => setConfirmCancel(false));
+  const handleCancel = () =>
+    handleStatusChange("cancelled", () => setConfirmCancel(false));
 
   const handleDelete = async () => {
     const result = await deleteMutation.mutateAsync(ride.id);
@@ -214,6 +219,17 @@ export function CommunityRideDetailsDrawer({
                     {ride.category}
                   </p>
                 </div>
+
+                {ride.distanceKm != null && (
+                  <div className="flex items-start gap-3">
+                    <Route className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-foreground">
+                      {ride.distanceKm >= 10
+                        ? `${Math.round(ride.distanceKm)} km`
+                        : `${ride.distanceKm.toFixed(1)} km`}
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex items-start gap-3">
                   {ride.isPublic ? (
@@ -386,14 +402,17 @@ export function CommunityRideDetailsDrawer({
           <AlertDialogHeader>
             <AlertDialogTitle>Mark ride as active?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will set the ride status to <strong>Active</strong>. Riders will
-              see it as in progress. You can still cancel it after activation.
+              This will set the ride status to <strong>Active</strong>. Riders
+              will see it as in progress. You can still cancel it after
+              activation.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Go back</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => handleStatusChange("active", () => setConfirmActivate(false))}
+              onClick={() =>
+                handleStatusChange("active", () => setConfirmActivate(false))
+              }
               className="bg-success text-success-foreground hover:bg-success/90"
             >
               Mark Active
@@ -415,7 +434,9 @@ export function CommunityRideDetailsDrawer({
           <AlertDialogFooter>
             <AlertDialogCancel>Go back</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => handleStatusChange("completed", () => setConfirmComplete(false))}
+              onClick={() =>
+                handleStatusChange("completed", () => setConfirmComplete(false))
+              }
             >
               Mark Complete
             </AlertDialogAction>
@@ -451,8 +472,8 @@ export function CommunityRideDetailsDrawer({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this ride?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes the ride and all participant records. This
-              cannot be undone.
+              This permanently deletes the ride and all participant records.
+              This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

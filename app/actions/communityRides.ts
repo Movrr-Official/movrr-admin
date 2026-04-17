@@ -32,6 +32,7 @@ const RIDE_SELECT = `
   meeting_point_lng,
   route_id,
   max_participants,
+  distance_km,
   bike_types_allowed,
   category,
   status,
@@ -65,7 +66,11 @@ async function fetchRiderNames(
 
   const map: RiderNameMap = {};
   for (const row of data ?? []) {
-    const u = (row as { user?: { first_name?: string | null; last_name?: string | null } | null }).user;
+    const u = (
+      row as {
+        user?: { first_name?: string | null; last_name?: string | null } | null;
+      }
+    ).user;
     const name = u ? `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() : "";
     map[row.id as string] = name || (row.id as string);
   }
@@ -119,7 +124,12 @@ async function resolveActivityUserRefs(
 function buildRide(
   row: Record<string, unknown>,
   nameMap: RiderNameMap,
-  participants: Array<{ id: string; rider_id: string; status: string; joined_at: string }>,
+  participants: Array<{
+    id: string;
+    rider_id: string;
+    status: string;
+    joined_at: string;
+  }>,
 ): CommunityRide {
   const orgId =
     row.organizer_rider_id != null ? String(row.organizer_rider_id) : undefined;
@@ -127,25 +137,35 @@ function buildRide(
 
   return {
     id: String(row.id ?? ""),
-    organizerType: (row.organizer_type as CommunityRide["organizerType"]) ?? "movrr",
-    organizerUserId: row.organizer_user_id ? String(row.organizer_user_id) : undefined,
+    organizerType:
+      (row.organizer_type as CommunityRide["organizerType"]) ?? "movrr",
+    organizerUserId: row.organizer_user_id
+      ? String(row.organizer_user_id)
+      : undefined,
     organizerRiderId: orgId,
     organizerName:
       row.organizer_name && String(row.organizer_name).trim().length > 0
         ? String(row.organizer_name)
         : orgId
-          ? nameMap[orgId] ?? orgId
+          ? (nameMap[orgId] ?? orgId)
           : "MOVRR",
     title: String(row.title ?? ""),
     description: row.description ? String(row.description) : undefined,
     scheduledAt: String(row.scheduled_at ?? ""),
-    meetingPointName: row.meeting_point_name ? String(row.meeting_point_name) : undefined,
-    meetingPointLat: row.meeting_point_lat != null ? Number(row.meeting_point_lat) : undefined,
-    meetingPointLng: row.meeting_point_lng != null ? Number(row.meeting_point_lng) : undefined,
+    meetingPointName: row.meeting_point_name
+      ? String(row.meeting_point_name)
+      : undefined,
+    meetingPointLat:
+      row.meeting_point_lat != null ? Number(row.meeting_point_lat) : undefined,
+    meetingPointLng:
+      row.meeting_point_lng != null ? Number(row.meeting_point_lng) : undefined,
     routeId: row.route_id ? String(row.route_id) : undefined,
     maxParticipants: Number(row.max_participants ?? 0),
     participantCount: activeParticipants.length,
-    bikeTypesAllowed: Array.isArray(row.bike_types_allowed) ? (row.bike_types_allowed as string[]) : undefined,
+    distanceKm: row.distance_km != null ? Number(row.distance_km) : null,
+    bikeTypesAllowed: Array.isArray(row.bike_types_allowed)
+      ? (row.bike_types_allowed as string[])
+      : undefined,
     category: (row.category as CommunityRide["category"]) ?? "social",
     status: (row.status as CommunityRide["status"]) ?? "upcoming",
     isPublic: Boolean(row.is_public),
@@ -173,7 +193,10 @@ export async function createCommunityRide(
 
   const parsed = createCommunityRideSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
   }
 
   const {
@@ -184,6 +207,7 @@ export async function createCommunityRide(
     meetingPointLat,
     meetingPointLng,
     maxParticipants,
+    distanceKm,
     bikeTypesAllowed,
     category,
     isPublic,
@@ -240,6 +264,7 @@ export async function createCommunityRide(
         meeting_point_lat: meetingPointLat ?? null,
         meeting_point_lng: meetingPointLng ?? null,
         max_participants: maxParticipants,
+        distance_km: distanceKm ?? null,
         bike_types_allowed: bikeTypesAllowed ?? null,
         category,
         status: "upcoming",
@@ -290,7 +315,9 @@ export async function createCommunityRide(
           organizerUserId: resolvedOrganizerUserId,
           organizerRiderId: resolvedOrganizerRiderId,
         },
-      }).catch((err) => console.warn("Community ride creation audit write failed:", err));
+      }).catch((err) =>
+        console.warn("Community ride creation audit write failed:", err),
+      );
     }
 
     revalidatePath("/community-rides");
@@ -394,7 +421,8 @@ export async function getCommunityRides(
     console.error("getCommunityRides error:", err);
     return {
       success: false,
-      error: err instanceof Error ? err.message : "Failed to fetch community rides",
+      error:
+        err instanceof Error ? err.message : "Failed to fetch community rides",
     };
   }
 }
@@ -413,14 +441,16 @@ export async function getCommunityRideById(
   try {
     const supabase = createSupabaseAdminClient();
 
-    const [{ data: rideData, error: rideError }, { data: partData, error: partError }] =
-      await Promise.all([
-        supabase.from("community_ride").select(RIDE_SELECT).eq("id", id).single(),
-        supabase
-          .from("community_ride_participant")
-          .select(PARTICIPANT_SELECT)
-          .eq("community_ride_id", id),
-      ]);
+    const [
+      { data: rideData, error: rideError },
+      { data: partData, error: partError },
+    ] = await Promise.all([
+      supabase.from("community_ride").select(RIDE_SELECT).eq("id", id).single(),
+      supabase
+        .from("community_ride_participant")
+        .select(PARTICIPANT_SELECT)
+        .eq("community_ride_id", id),
+    ]);
 
     if (rideError) throw rideError;
     if (partError) throw partError;
@@ -478,11 +508,14 @@ export async function updateCommunityRide(
     // Fetch current state before updating.
     const { data: currentRow } = await supabase
       .from("community_ride")
-      .select("status, title, organizer_type, organizer_user_id, organizer_rider_id, organizer_name")
+      .select(
+        "status, title, organizer_type, organizer_user_id, organizer_rider_id, organizer_name",
+      )
       .eq("id", input.id)
       .maybeSingle();
 
-    const currentStatus = (currentRow?.status as string | undefined) ?? "upcoming";
+    const currentStatus =
+      (currentRow?.status as string | undefined) ?? "upcoming";
 
     // Guard: enforce valid status transitions.
     if (input.status !== undefined && input.status !== currentStatus) {
@@ -513,16 +546,28 @@ export async function updateCommunityRide(
       }
     }
 
-    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const updates: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
     if (input.status !== undefined) updates.status = input.status;
     if (input.title !== undefined) updates.title = input.title;
-    if (input.description !== undefined) updates.description = input.description;
-    if (input.maxParticipants !== undefined) updates.max_participants = input.maxParticipants;
-    if (input.scheduledAt !== undefined) updates.scheduled_at = input.scheduledAt;
-    if (input.meetingPointName !== undefined) updates.meeting_point_name = input.meetingPointName || null;
-    if (input.meetingPointLat !== undefined) updates.meeting_point_lat = input.meetingPointLat ?? null;
-    if (input.meetingPointLng !== undefined) updates.meeting_point_lng = input.meetingPointLng ?? null;
-    if (input.bikeTypesAllowed !== undefined) updates.bike_types_allowed = input.bikeTypesAllowed.length > 0 ? input.bikeTypesAllowed : null;
+    if (input.description !== undefined)
+      updates.description = input.description;
+    if (input.maxParticipants !== undefined)
+      updates.max_participants = input.maxParticipants;
+    if (input.scheduledAt !== undefined)
+      updates.scheduled_at = input.scheduledAt;
+    if (input.meetingPointName !== undefined)
+      updates.meeting_point_name = input.meetingPointName || null;
+    if (input.meetingPointLat !== undefined)
+      updates.meeting_point_lat = input.meetingPointLat ?? null;
+    if (input.meetingPointLng !== undefined)
+      updates.meeting_point_lng = input.meetingPointLng ?? null;
+    if (input.bikeTypesAllowed !== undefined)
+      updates.bike_types_allowed =
+        input.bikeTypesAllowed.length > 0 ? input.bikeTypesAllowed : null;
+    if (input.distanceKm !== undefined)
+      updates.distance_km = input.distanceKm ?? null;
     if (input.category !== undefined) updates.category = input.category;
     if (input.isPublic !== undefined) updates.is_public = input.isPublic;
 
@@ -535,10 +580,15 @@ export async function updateCommunityRide(
 
     // Audit log — status transitions and field edits.
     const organizerUserId = currentRow?.organizer_user_id as string | undefined;
-    const organizerRiderId = currentRow?.organizer_rider_id as string | undefined;
-    const rideTitle = (input.title ?? currentRow?.title ?? "Untitled") as string;
+    const organizerRiderId = currentRow?.organizer_rider_id as
+      | string
+      | undefined;
+    const rideTitle = (input.title ??
+      currentRow?.title ??
+      "Untitled") as string;
 
-    const isStatusChange = input.status !== undefined && input.status !== currentStatus;
+    const isStatusChange =
+      input.status !== undefined && input.status !== currentStatus;
     const isFieldEdit = !isStatusChange && Object.keys(updates).length > 1; // more than just updated_at
 
     if (isStatusChange || isFieldEdit) {
@@ -559,7 +609,9 @@ export async function updateCommunityRide(
             description: `Admin edited community ride "${rideTitle}".`,
             metadata: {
               rideId: input.id,
-              updatedFields: Object.keys(updates).filter((k) => k !== "updated_at"),
+              updatedFields: Object.keys(updates).filter(
+                (k) => k !== "updated_at",
+              ),
               organizerType: currentRow?.organizer_type ?? null,
               organizerName: currentRow?.organizer_name ?? null,
               organizerRiderId: organizerRiderId ?? null,
@@ -579,7 +631,9 @@ export async function updateCommunityRide(
           related_entity_type: "community_ride",
           related_entity_id: input.id,
           ...auditPayload,
-        }).catch((err) => console.warn("Community ride update audit write failed:", err));
+        }).catch((err) =>
+          console.warn("Community ride update audit write failed:", err),
+        );
       }
     }
 
@@ -637,7 +691,9 @@ export async function removeParticipant(
         related_entity_type: "community_ride",
         related_entity_id: rideId,
         metadata: { rideId, riderId },
-      }).catch((err) => console.warn("Remove participant audit write failed:", err));
+      }).catch((err) =>
+        console.warn("Remove participant audit write failed:", err),
+      );
     }
 
     revalidatePath("/community-rides");
@@ -646,7 +702,8 @@ export async function removeParticipant(
     console.error("removeParticipant error:", err);
     return {
       success: false,
-      error: err instanceof Error ? err.message : "Failed to remove participant",
+      error:
+        err instanceof Error ? err.message : "Failed to remove participant",
     };
   }
 }
@@ -667,7 +724,9 @@ export async function deleteCommunityRide(
     // Fetch ride title + organizer before deleting for audit record.
     const { data: rideRow } = await supabase
       .from("community_ride")
-      .select("title, organizer_type, organizer_user_id, organizer_rider_id, organizer_name")
+      .select(
+        "title, organizer_type, organizer_user_id, organizer_rider_id, organizer_name",
+      )
       .eq("id", id)
       .maybeSingle();
 
@@ -703,7 +762,9 @@ export async function deleteCommunityRide(
           organizerRiderId: rideRow?.organizer_rider_id ?? null,
           organizerName: rideRow?.organizer_name ?? null,
         },
-      }).catch((err) => console.warn("Community ride deletion audit write failed:", err));
+      }).catch((err) =>
+        console.warn("Community ride deletion audit write failed:", err),
+      );
     }
 
     revalidatePath("/community-rides");

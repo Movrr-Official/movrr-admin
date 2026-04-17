@@ -49,6 +49,7 @@ export const communityRideSchema = z.object({
   routeId: z.string().optional(),
   maxParticipants: z.number().int().min(2).max(100),
   participantCount: z.number().int().min(0),
+  distanceKm: z.number().positive().nullable().optional(),
   bikeTypesAllowed: z.array(z.string()).optional(),
   category: communityRideCategorySchema,
   status: communityRideStatusSchema,
@@ -80,6 +81,14 @@ export const updateCommunityRideSchema = z.object({
   meetingPointLat: z.number().min(-90).max(90).optional(),
   meetingPointLng: z.number().min(-180).max(180).optional(),
   maxParticipants: z.number().int().min(2).max(100).optional(),
+  distanceKm: z.preprocess(
+    (v) => (v === "" || v == null ? undefined : Number(v)),
+    z
+      .number()
+      .positive("Distance must be greater than 0")
+      .nullable()
+      .optional(),
+  ),
   bikeTypesAllowed: z.array(z.string()).optional(),
   category: communityRideCategorySchema.optional(),
   isPublic: z.boolean().optional(),
@@ -93,6 +102,10 @@ export const createCommunityRideSchema = z.object({
   meetingPointLat: z.number().optional(),
   meetingPointLng: z.number().optional(),
   maxParticipants: z.number().int().min(2).max(100),
+  distanceKm: z.preprocess(
+    (v) => (v === "" || v == null ? undefined : Number(v)),
+    z.number().positive("Distance must be greater than 0").optional(),
+  ),
   bikeTypesAllowed: z.array(z.string()).optional(),
   category: communityRideCategorySchema,
   isPublic: z.boolean(),

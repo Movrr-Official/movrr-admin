@@ -66,6 +66,10 @@ const formSchema = z.object({
   meetingPointLat: optCoord(-90, 90),
   meetingPointLng: optCoord(-180, 180),
   maxParticipants: z.number().int().min(2, "Minimum 2").max(100, "Maximum 100"),
+  distanceKm: z.preprocess(
+    (v) => (v === "" || v == null ? undefined : Number(v)),
+    z.number().positive("Must be greater than 0").optional(),
+  ),
   bikeTypesAllowed: z.array(z.string()).optional(),
   category: communityRideCategorySchema,
   isPublic: z.boolean(),
@@ -99,6 +103,7 @@ const DEFAULT_VALUES: FormValues = {
   meetingPointLat: undefined,
   meetingPointLng: undefined,
   maxParticipants: 20,
+  distanceKm: undefined,
   bikeTypesAllowed: [],
   category: "social",
   isPublic: true,
@@ -146,6 +151,7 @@ export function CommunityRideFormDrawer({
               meetingPointLat: ride.meetingPointLat ?? undefined,
               meetingPointLng: ride.meetingPointLng ?? undefined,
               maxParticipants: ride.maxParticipants,
+              distanceKm: ride.distanceKm ?? undefined,
               bikeTypesAllowed: ride.bikeTypesAllowed ?? [],
               category: ride.category,
               isPublic: ride.isPublic,
@@ -171,6 +177,7 @@ export function CommunityRideFormDrawer({
           meetingPointLat: values.meetingPointLat,
           meetingPointLng: values.meetingPointLng,
           maxParticipants: values.maxParticipants,
+          distanceKm: values.distanceKm,
           bikeTypesAllowed: values.bikeTypesAllowed ?? [],
           category: values.category,
           isPublic: values.isPublic,
@@ -183,6 +190,7 @@ export function CommunityRideFormDrawer({
           meetingPointLat: values.meetingPointLat,
           meetingPointLng: values.meetingPointLng,
           maxParticipants: values.maxParticipants,
+          distanceKm: values.distanceKm,
           bikeTypesAllowed: values.bikeTypesAllowed ?? [],
           category: values.category,
           isPublic: values.isPublic,
@@ -205,8 +213,7 @@ export function CommunityRideFormDrawer({
   };
 
   const isTerminal =
-    isEditing &&
-    (ride!.status === "completed" || ride!.status === "cancelled");
+    isEditing && (ride!.status === "completed" || ride!.status === "cancelled");
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -324,7 +331,9 @@ export function CommunityRideFormDrawer({
                               value={field.value ?? ""}
                               onChange={(e) =>
                                 field.onChange(
-                                  e.target.value === "" ? undefined : Number(e.target.value),
+                                  e.target.value === ""
+                                    ? undefined
+                                    : Number(e.target.value),
                                 )
                               }
                             />
@@ -348,7 +357,9 @@ export function CommunityRideFormDrawer({
                               value={field.value ?? ""}
                               onChange={(e) =>
                                 field.onChange(
-                                  e.target.value === "" ? undefined : Number(e.target.value),
+                                  e.target.value === ""
+                                    ? undefined
+                                    : Number(e.target.value),
                                 )
                               }
                             />
@@ -358,6 +369,38 @@ export function CommunityRideFormDrawer({
                       )}
                     />
                   </div>
+
+                  {/* Distance */}
+                  <FormField
+                    control={form.control}
+                    name="distanceKm"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Planned distance (km)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step={0.1}
+                            min={0.1}
+                            placeholder="e.g. 45"
+                            {...field}
+                            value={field.value ?? ""}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value === ""
+                                  ? undefined
+                                  : Number(e.target.value),
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground">
+                          Optional — displayed on ride cards and detail view.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   {/* Category + Max Participants */}
                   <div className="grid grid-cols-2 gap-4">
@@ -378,8 +421,12 @@ export function CommunityRideFormDrawer({
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="beginner">Beginner</SelectItem>
-                              <SelectItem value="intermediate">Intermediate</SelectItem>
-                              <SelectItem value="challenging">Challenging</SelectItem>
+                              <SelectItem value="intermediate">
+                                Intermediate
+                              </SelectItem>
+                              <SelectItem value="challenging">
+                                Challenging
+                              </SelectItem>
                               <SelectItem value="social">Social</SelectItem>
                             </SelectContent>
                           </Select>
@@ -397,7 +444,11 @@ export function CommunityRideFormDrawer({
                           <FormControl>
                             <Input
                               type="number"
-                              min={isEditing ? Math.max(2, ride!.participantCount) : 2}
+                              min={
+                                isEditing
+                                  ? Math.max(2, ride!.participantCount)
+                                  : 2
+                              }
                               max={100}
                               {...field}
                               onChange={(e) =>
@@ -428,7 +479,9 @@ export function CommunityRideFormDrawer({
                         </p>
                         <div className="flex gap-4 pt-1">
                           {BIKE_TYPE_OPTIONS.map((opt) => {
-                            const checked = (field.value ?? []).includes(opt.value);
+                            const checked = (field.value ?? []).includes(
+                              opt.value,
+                            );
                             return (
                               <label
                                 key={opt.value}
@@ -441,7 +494,9 @@ export function CommunityRideFormDrawer({
                                     field.onChange(
                                       next
                                         ? [...current, opt.value]
-                                        : current.filter((v) => v !== opt.value),
+                                        : current.filter(
+                                            (v) => v !== opt.value,
+                                          ),
                                     );
                                   }}
                                 />
@@ -481,7 +536,9 @@ export function CommunityRideFormDrawer({
                               </FormControl>
                               <SelectContent>
                                 <SelectItem value="movrr">MOVRR</SelectItem>
-                                <SelectItem value="admin">Admin user</SelectItem>
+                                <SelectItem value="admin">
+                                  Admin user
+                                </SelectItem>
                                 <SelectItem value="rider">Rider</SelectItem>
                               </SelectContent>
                             </Select>
