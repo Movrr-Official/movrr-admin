@@ -48,7 +48,7 @@ const fallbackValues: AdminSettingsValues = adminSettingsValuesSchema.parse({
   },
   impact: {
     distanceUnit: "km",
-    co2KgPerKm: 0.021,
+    co2KgPerKm: 0.180,
   },
   campaigns: {
     defaultMultiplier: 1,
