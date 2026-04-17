@@ -53,7 +53,7 @@ In practice, operations teams use it to:
 - `Routes`: route templates, assignments, compliance calculations, GPS trace review, optimizer integration.
 - `Rewards`: transaction history, rider balances, manual point adjustments, reward catalog admin.
 - `Notifications`: create and review notifications, with optional preference-respecting targeting.
-- `Settings`: system/points/campaign-defaults/feature flags persisted in `admin_settings`.
+- `Settings`: system/points/campaign-defaults/feature flags persisted in `platform_settings`.
 - `Workboard`: internal kanban boards/cards with invite/member role controls.
 
 ## Authentication and authorization
@@ -74,7 +74,7 @@ The app reads/writes Supabase tables used across operations, including:
 - Rider ops: `rider`, `rider_route`, `route`, `route_stop`, `route_tracking`, `impression_events`.
 - Campaign ops: `campaign`, `campaign_assignment`, `campaign_signup`, `campaign_zone`, `campaign_hot_zone`, `advertiser`.
 - Rewards: `reward_transactions`, `reward_redemptions`, `rider_reward_balance`, `reward_catalog`, `reward_partner`.
-- Admin ops: `notifications`, `user_preferences`, `admin_settings`, `audit_log`/`audit_logs`.
+- Admin ops: `notifications`, `user_preferences`, `platform_settings`, `audit_log`/`audit_logs`.
 - Workboard: `workboard_teams`, `workboard_team_members`, `workboard_boards`, `workboard_cards`, `workboard_invites`.
 - Optimizer audit: `route_optimizer_runs`, `route_optimizer_decisions`.
 

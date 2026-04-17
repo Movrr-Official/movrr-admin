@@ -21,16 +21,30 @@ export async function getRiderPerformanceMetrics(
     const windowStart = new Date();
     windowStart.setDate(windowStart.getDate() - 90);
 
-    // Fetch sessions in the 90-day window
-    const { data: sessions, error: sessionsError } = await supabase
-      .from("ride_session")
-      .select("id, ride_quality_percent, created_at")
-      .eq("rider_id", riderId)
-      .gte("created_at", windowStart.toISOString())
-      .order("created_at", { ascending: false })
-      .limit(200);
+    // Fetch all-time distance in parallel with windowed sessions
+    const [{ data: distanceRows }, { data: sessions, error: sessionsError }] = await Promise.all([
+      supabase
+        .from("ride_session")
+        .select("total_distance_meters")
+        .eq("rider_id", riderId)
+        .not("total_distance_meters", "is", null),
+      supabase
+        .from("ride_session")
+        .select("id, ride_quality_percent, created_at")
+        .eq("rider_id", riderId)
+        .gte("created_at", windowStart.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ]);
 
     if (sessionsError) return { success: false, error: sessionsError.message };
+
+    const totalDistanceMeters = (distanceRows ?? []).reduce(
+      (sum, r) => sum + Number((r as Record<string, unknown>).total_distance_meters ?? 0),
+      0,
+    );
+    const totalDistanceKm = Math.round((totalDistanceMeters / 1000) * 10) / 10;
+    const co2SavedKg = Math.round(totalDistanceKm * 0.180 * 10) / 10;
 
     const rows = sessions ?? [];
     const totalSessions = rows.length;
@@ -45,6 +59,8 @@ export async function getRiderPerformanceMetrics(
           trendDirection: "insufficient_data",
           totalSessions: 0,
           qualityDataAvailable: false,
+          totalDistanceKm: totalDistanceKm || undefined,
+          co2SavedKg: co2SavedKg || undefined,
         },
       };
     }
@@ -123,6 +139,8 @@ export async function getRiderPerformanceMetrics(
         trendDirection,
         totalSessions,
         qualityDataAvailable,
+        totalDistanceKm: totalDistanceKm || undefined,
+        co2SavedKg: co2SavedKg || undefined,
       },
     };
   } catch (error) {

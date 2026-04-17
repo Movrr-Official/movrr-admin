@@ -15,7 +15,8 @@ import {
 import { CampaignsTable } from "@/components/campaigns/CampaignsTable";
 import { useCampaignsData } from "@/hooks/useCampaignsData";
 import { useRouter } from "next/navigation";
-import { mergeCampaignAnalytics } from "@/lib/campaign";
+import { useQuery } from "@tanstack/react-query";
+import { getCampaignAnalyticsData } from "@/app/actions/campaigns";
 import { CampaignEngagementByCityChart } from "@/components/campaigns/CampaignEngagementByCityChart";
 import { CampaignDailyImpressionsChart } from "@/components/campaigns/CampaignDailyImpressionsChart";
 import { BoostedRiderAllocationChart } from "@/components/campaigns/CampaignRiderAllocationChart";
@@ -31,6 +32,29 @@ export default function CampaignsOverview() {
     error,
     refetch,
   } = useCampaignsData();
+
+  // Real analytics sourced from ride_session, campaign_assignment, rider_route.
+  // Scoped to active/confirmed campaign IDs so charts reflect live activity.
+  const activeCampaignIds = React.useMemo(
+    () =>
+      (campaigns ?? [])
+        .filter((c) =>
+          ["active", "confirmed", "open_for_signup", "selection_in_progress"].includes(
+            c.status,
+          ),
+        )
+        .map((c) => c.id),
+    [campaigns],
+  );
+
+  const { data: analyticsResult } = useQuery({
+    queryKey: ["campaignAnalytics", activeCampaignIds],
+    queryFn: () => getCampaignAnalyticsData(activeCampaignIds, 30),
+    enabled: (campaigns?.length ?? 0) > 0,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const realAnalytics = analyticsResult?.data;
 
   // Calculate comprehensive stats for campaign management
   const totalCampaigns = campaigns?.length ?? 0;
@@ -84,39 +108,12 @@ export default function CampaignsOverview() {
         )
       : 0;
 
-  // Aggregate analytics data from all campaigns
-  const aggregatedAnalytics = React.useMemo(() => {
-    if (!campaigns || campaigns.length === 0) {
-      return {
-        engagementByCity: [],
-        dailyImpressions: [],
-        riderAllocation: [],
-      };
-    }
-
-    const analyticsData = campaigns
-      .filter((c) => c.campaignAnalytics)
-      .map((c) => c.campaignAnalytics!);
-
-    if (analyticsData.length === 0) {
-      return {
-        engagementByCity: [],
-        dailyImpressions: [],
-        riderAllocation: [],
-      };
-    }
-
-    // Type assertion needed because campaignAnalytics structure matches but types differ slightly
-    // The mergeCampaignAnalytics function handles the data correctly
-    const merged = mergeCampaignAnalytics(
-      analyticsData as Parameters<typeof mergeCampaignAnalytics>[0],
-    );
-    return {
-      engagementByCity: merged.engagementByCity || [],
-      dailyImpressions: merged.dailyImpressions || [],
-      riderAllocation: merged.riderAllocation || [],
-    };
-  }, [campaigns]);
+  // Real analytics derived from live Supabase data.
+  const aggregatedAnalytics = {
+    engagementByCity: realAnalytics?.engagementByCity ?? [],
+    dailyImpressions: realAnalytics?.dailyImpressions ?? [],
+    riderAllocation: realAnalytics?.riderAllocation ?? [],
+  };
 
   return (
     <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">

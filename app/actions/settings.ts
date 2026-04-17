@@ -45,12 +45,6 @@ import {
   suggestedRoutesSettingsSchema,
 } from "@/schemas/settings";
 
-const LEGACY_KEYS = [
-  "system",
-  "points",
-  "campaignDefaults",
-  "featureFlags",
-] as const;
 const SETTINGS_KEYS = [
   "general",
   "onboarding",
@@ -66,7 +60,6 @@ const SETTINGS_KEYS = [
   "organization",
   "privacy",
   "billing",
-  ...LEGACY_KEYS,
 ] as const;
 
 type PersistedSettingsKey = (typeof SETTINGS_KEYS)[number];
@@ -131,7 +124,7 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
   },
   impact: {
     distanceUnit: "km",
-    co2KgPerKm: 0.021,
+    co2KgPerKm: 0.18,
   },
   campaigns: {
     defaultMultiplier: 1,
@@ -264,63 +257,6 @@ const parseAdminRecipients = (raw: string | undefined) => {
 const getSectionSchema = (section: SettingsSectionId) =>
   sectionSchemas[section];
 
-const mapLegacyRows = (rows: SettingsRow[], merged: AdminSettingsValues) => {
-  for (const row of rows) {
-    if (!row?.key || !row.value) continue;
-
-    switch (row.key) {
-      case "system": {
-        const system = row.value as Record<string, unknown>;
-        merged.general = generalSettingsSchema.parse({
-          ...merged.general,
-          supportEmail: system.supportEmail ?? merged.general.supportEmail,
-          publicSupportEmail:
-            system.supportEmail ?? merged.general.publicSupportEmail,
-          defaultRegion: system.defaultRegion ?? merged.general.defaultRegion,
-          timezone: system.timezone ?? merged.general.timezone,
-          appVersion: system.appVersion ?? merged.general.appVersion,
-          maintenanceMode:
-            system.maintenanceMode ?? merged.general.maintenanceMode,
-        });
-        merged.onboarding = onboardingSettingsSchema.parse({
-          ...merged.onboarding,
-          riderOnboardingMode:
-            system.allowSelfSignup === false
-              ? "waitlist_only"
-              : merged.onboarding.riderOnboardingMode,
-        });
-        break;
-      }
-      case "points":
-        merged.rewards = rewardsSettingsSchema.parse({
-          ...merged.rewards,
-          ...(row.value ?? {}),
-        });
-        break;
-      case "campaignDefaults":
-        merged.campaigns = campaignSettingsSchema.parse({
-          ...merged.campaigns,
-          ...(row.value ?? {}),
-        });
-        break;
-      case "featureFlags": {
-        const next = featureSettingsSchema.parse({
-          ...merged.features,
-          ...(row.value ?? {}),
-        });
-        merged.features = next;
-        merged.notifications = notificationSettingsSchema.parse({
-          ...merged.notifications,
-          operationsEmailEnabled: next.emailNotificationsEnabled,
-        });
-        break;
-      }
-      default:
-        break;
-    }
-  }
-};
-
 const deriveBillingSection = (values: AdminSettingsValues): BillingSettings =>
   billingSettingsSchema.parse({
     connectionStatus: "not_connected",
@@ -348,8 +284,6 @@ const mergeRows = (rows: SettingsRow[]): AdminSettingsValues => {
       ...row.value,
     });
   }
-
-  mapLegacyRows(rows, merged);
 
   merged.general.appVersion = DEFAULT_SETTINGS.general.appVersion;
   merged.general.supportEmail =
@@ -767,7 +701,7 @@ const buildMetadata = async (
 async function loadSettingsRows() {
   const supabaseAdmin = createSupabaseAdminClient();
   const { data, error } = await supabaseAdmin
-    .from("admin_settings")
+    .from("platform_settings")
     .select("key, value, updated_at")
     .in("key", SETTINGS_KEYS);
 
@@ -798,11 +732,18 @@ export async function getAdminSettings(): Promise<{
     );
     const metadata = await buildMetadata(rows, visibleAuditEntries);
 
+    const canonicalSections = Object.keys(sectionSchemas) as SettingsSectionId[];
+    const existingKeys = new Set(rows.map((r) => r.key));
+    const missingSections = canonicalSections.filter(
+      (s) => s !== "billing" && !existingKeys.has(s),
+    );
+
     return {
       success: true,
       data: {
         values,
         metadata,
+        missingSections,
         runtime: {
           integrationStatus,
           adminNotificationRecipients: parseAdminRecipients(ADMIN_EMAILS),
@@ -956,7 +897,7 @@ export async function executePrivacyRetentionJob() {
     retentionLastRunAt: executedAt,
   };
   await supabaseAdmin
-    .from("admin_settings")
+    .from("platform_settings")
     .upsert(
       { key: "privacy", value: nextPrivacyValue, updated_at: executedAt },
       { onConflict: "key" },
@@ -1048,7 +989,7 @@ export async function updateSettingsSection(input: {
 
     const supabaseAdmin = createSupabaseAdminClient();
     const now = new Date().toISOString();
-    const { error } = await supabaseAdmin.from("admin_settings").upsert(
+    const { error } = await supabaseAdmin.from("platform_settings").upsert(
       {
         key: section,
         value: nextSectionValue,
@@ -1133,27 +1074,51 @@ export async function updateSettingsSection(input: {
   }
 }
 
-export async function getLegacySettingsCompatibility() {
-  const result = await getAdminSettings();
-  if (!result.success || !result.data) {
-    return result;
-  }
+export async function syncPlatformSettings(): Promise<{
+  success: boolean;
+  seeded: string[];
+  error?: string;
+}> {
+  try {
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const rows = await loadSettingsRows();
+    const existingKeys = new Set(rows.map((r) => r.key));
+    const values = mergeRows(rows);
+    const supabase = createSupabaseAdminClient();
+    const now = new Date().toISOString();
 
-  const { values } = result.data;
-  return {
-    success: true as const,
-    data: {
-      system: {
-        supportEmail: values.general.supportEmail,
-        defaultRegion: values.general.defaultRegion,
-        timezone: values.general.timezone,
-        appVersion: values.general.appVersion,
-        maintenanceMode: values.general.maintenanceMode,
-        allowSelfSignup: values.onboarding.riderOnboardingMode === "open",
-      },
-      points: values.rewards,
-      campaignDefaults: values.campaigns,
-      featureFlags: values.features,
-    },
-  };
+    const sectionsToSeed = (Object.keys(sectionSchemas) as SettingsSectionId[]).filter(
+      (section) => section !== "billing" && !existingKeys.has(section),
+    );
+
+    if (sectionsToSeed.length === 0) {
+      return { success: true, seeded: [] };
+    }
+
+    const upsertRows = sectionsToSeed.map((section) => ({
+      key: section,
+      value: values[section] as Record<string, unknown>,
+      created_at: now,
+      updated_at: now,
+    }));
+
+    const { error } = await supabase
+      .from("platform_settings")
+      .upsert(upsertRows, { onConflict: "key", ignoreDuplicates: true });
+
+    if (error) {
+      logger.error("syncPlatformSettings failed", error);
+      return { success: false, seeded: [], error: error.message };
+    }
+
+    logger.info("syncPlatformSettings seeded sections", { sections: sectionsToSeed });
+    revalidatePath("/settings");
+    return { success: true, seeded: sectionsToSeed };
+  } catch (error) {
+    return {
+      success: false,
+      seeded: [],
+      error: error instanceof Error ? error.message : "Failed to sync settings",
+    };
+  }
 }

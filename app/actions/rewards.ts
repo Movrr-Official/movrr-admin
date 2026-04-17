@@ -39,6 +39,8 @@ export async function getRewardStats(dateRange?: {
     totalTransactions: number;
     /** Points earned via Standard Rides (source = standard_ride) */
     standardRidePoints: number;
+    /** Points earned via suggested-route compliance bonuses (source = standard_ride_bonus) */
+    suggestedRouteBonusPoints: number;
     /** Points earned via Boosted Rides (source = ad_boost | boosted_ride) */
     boostedRidePoints: number;
     pointsByCampaign: Array<{
@@ -163,13 +165,24 @@ export async function getRewardStats(dateRange?: {
       pointsByRider.set(txn.rider_id, current + Number(txn.points_earned ?? 0));
     });
 
-    // Ride mode split — Standard Ride vs Boosted Ride points
+    // Ride mode split — Standard Ride vs Suggested-Route Bonus vs Boosted Ride points
     const standardRidePoints = filteredTransactions.reduce((sum, txn) => {
       const direction = txn.metadata?.adjustment_direction as
         | string
         | undefined;
       if (direction === "debit") return sum;
       return txn.source === "standard_ride"
+        ? sum + Number(txn.points_earned ?? 0)
+        : sum;
+    }, 0);
+
+    // standard_ride_bonus — suggested-route compliance bonuses (Standard Ride mode only)
+    const suggestedRouteBonusPoints = filteredTransactions.reduce((sum, txn) => {
+      const direction = txn.metadata?.adjustment_direction as
+        | string
+        | undefined;
+      if (direction === "debit") return sum;
+      return txn.source === "standard_ride_bonus"
         ? sum + Number(txn.points_earned ?? 0)
         : sum;
     }, 0);
@@ -278,6 +291,7 @@ export async function getRewardStats(dateRange?: {
         totalTransactions:
           filteredTransactions.length + filteredRedemptions.length,
         standardRidePoints,
+        suggestedRouteBonusPoints,
         boostedRidePoints,
         pointsByCampaign: Array.from(pointsByCampaign.entries()).map(
           ([campaignId, points]) => ({

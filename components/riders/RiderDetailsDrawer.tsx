@@ -16,6 +16,7 @@ import {
   Gift,
   History,
   KeyRound,
+  Leaf,
   Timer,
   Loader2,
   Mail,
@@ -23,6 +24,7 @@ import {
   Megaphone,
   Phone,
   Route,
+  Ruler,
   Save,
   ShieldCheck,
   TrendingDown,
@@ -917,6 +919,35 @@ export function RiderDetailsDrawer({
                                       </div>
                                     </div>
                                   </div>
+                                  {(performanceMetrics.totalDistanceKm != null ||
+                                    performanceMetrics.co2SavedKg != null) && (
+                                    <div className="grid grid-cols-2 gap-3 pt-1">
+                                      {performanceMetrics.totalDistanceKm != null && (
+                                        <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                                          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                                            <Ruler className="h-3.5 w-3.5" />
+                                            Total Distance
+                                          </p>
+                                          <p className="text-2xl font-bold">
+                                            {performanceMetrics.totalDistanceKm.toLocaleString()} km
+                                          </p>
+                                          <p className="text-xs text-muted-foreground mt-1">All-time</p>
+                                        </div>
+                                      )}
+                                      {performanceMetrics.co2SavedKg != null && (
+                                        <div className="p-4 rounded-xl bg-green-50 border border-green-100 dark:bg-green-950 dark:border-green-900">
+                                          <p className="text-xs text-green-700 dark:text-green-400 mb-1 flex items-center gap-1">
+                                            <Leaf className="h-3.5 w-3.5" />
+                                            CO₂ Saved
+                                          </p>
+                                          <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                                            {performanceMetrics.co2SavedKg.toLocaleString()} kg
+                                          </p>
+                                          <p className="text-xs text-green-600 dark:text-green-500 mt-1">vs driving</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                   <p className="text-xs text-muted-foreground">
                                     Based on {performanceMetrics.totalSessions}{" "}
                                     sessions in the last 90 days.
@@ -1173,28 +1204,74 @@ export function RiderDetailsDrawer({
                             </TabsContent>
                             <TabsContent value="rewards" className="mt-4">
                               {rewardTransactions.length ? (
-                                rewardTransactions.map((transaction) => (
-                                  <div
-                                    key={transaction.id}
-                                    className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 p-3 mb-2"
-                                  >
-                                    <div>
-                                      <p className="text-sm font-semibold text-foreground">
-                                        {transaction.source || "Transaction"}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {format(
-                                          new Date(transaction.created_at),
-                                          "MMM d, yyyy",
-                                        )}
-                                      </p>
+                                rewardTransactions.map((transaction) => {
+                                  const breakdown: Array<{ type: string; label?: string; multiplier?: number; addedPoints?: number }> =
+                                    Array.isArray(transaction.bonus_breakdown) ? transaction.bonus_breakdown : [];
+                                  const sourceLabel: Record<string, string> = {
+                                    standard_ride: "Standard Ride",
+                                    ad_boost: "Ad Boost",
+                                    boosted_ride: "Boosted Ride",
+                                    bonus: "Bonus",
+                                    standard_ride_bonus: "Route Compliance Bonus",
+                                    adjustment: "Adjustment",
+                                    redemption: "Redemption",
+                                  };
+                                  const bonusTypeLabel: Record<string, string> = {
+                                    streak_bonus: "Streak Bonus",
+                                    peak_hour_boost: "Peak Hour Boost",
+                                    high_demand_zone_boost: "Hot Zone Boost",
+                                    suggested_route_bonus: "Route Compliance",
+                                    quality_bonus: "Quality Bonus",
+                                  };
+                                  return (
+                                    <div
+                                      key={transaction.id}
+                                      className="rounded-lg border border-border/50 bg-muted/30 p-3 mb-2 space-y-2"
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="text-sm font-semibold text-foreground">
+                                            {sourceLabel[transaction.source] ?? transaction.source ?? "Transaction"}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {format(new Date(transaction.created_at), "MMM d, yyyy")}
+                                          </p>
+                                        </div>
+                                        <p className="text-sm font-semibold text-foreground">
+                                          {(transaction.points_earned ?? 0) > 0 ? "+" : ""}
+                                          {transaction.points_earned || 0} pts
+                                        </p>
+                                      </div>
+                                      {breakdown.length > 0 && (
+                                        <div className="pl-2 border-l-2 border-border/40 space-y-1">
+                                          {transaction.base_points != null && (
+                                            <div className="flex justify-between text-xs text-muted-foreground">
+                                              <span>Base</span>
+                                              <span>{transaction.base_points} pts</span>
+                                            </div>
+                                          )}
+                                          {breakdown.map((entry, i) => (
+                                            <div key={i} className="flex justify-between text-xs">
+                                              <span className="text-muted-foreground">
+                                                {bonusTypeLabel[entry.type] ?? entry.label ?? entry.type}
+                                              </span>
+                                              <span className="font-medium text-amber-600">
+                                                {entry.addedPoints != null
+                                                  ? `+${entry.addedPoints} pts`
+                                                  : entry.multiplier != null
+                                                    ? `×${entry.multiplier}`
+                                                    : ""}
+                                              </span>
+                                            </div>
+                                          ))}
+                                          {transaction.was_capped && (
+                                            <p className="text-xs text-orange-500 mt-1">Daily cap applied</p>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
-                                    <p className="text-sm font-semibold text-foreground">
-                                      {transaction.points_earned > 0 ? "+" : ""}
-                                      {transaction.points_earned || 0} pts
-                                    </p>
-                                  </div>
-                                ))
+                                  );
+                                })
                               ) : (
                                 <div className="text-center py-8 text-muted-foreground">
                                   <Gift className="h-8 w-8 mx-auto mb-2 opacity-50" />

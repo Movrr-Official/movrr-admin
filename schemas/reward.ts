@@ -16,6 +16,9 @@ export const rewardTransactionSourceSchema = z.enum([
   "ad_boost",
   "boosted_ride",
   "bonus",
+  // Suggested-route compliance bonus — written by mobile when a rider completes
+  // a standard-mode suggested route above the compliance threshold.
+  "standard_ride_bonus",
   "adjustment",
   "redemption",
 ]);

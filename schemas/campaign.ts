@@ -3,6 +3,10 @@ import { statCardSchema } from "./dashboard";
 
 export const campaignStatusSchema = z.enum([
   "draft",
+  // Mobile lifecycle states for the rider onboarding flow
+  "open_for_signup",       // Campaign is accepting rider applications
+  "selection_in_progress", // Riders being reviewed and selected
+  "confirmed",             // Rider cohort confirmed, awaiting campaign start
   "active",
   "paused",
   "completed",

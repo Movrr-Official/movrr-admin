@@ -23,6 +23,7 @@ import {
   Timer,
   CalendarClock,
   Lightbulb,
+  Route,
 } from "lucide-react";
 import { FaRoute } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -165,6 +166,13 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         name: "Ride Sessions",
         href: "/ride-sessions",
         icon: Timer,
+        roles: ["admin", "super_admin"],
+        badge: null,
+      },
+      {
+        name: "Suggested Routes",
+        href: "/suggested-routes",
+        icon: Route,
         roles: ["admin", "super_admin"],
         badge: null,
       },

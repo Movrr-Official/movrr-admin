@@ -3,6 +3,8 @@ import { format, formatDistanceToNow } from "date-fns";
 import {
   AlertCircle,
   Bike,
+  CheckCircle2,
+  Circle,
   Clock,
   Coins,
   Eye,
@@ -10,14 +12,16 @@ import {
   MapPin,
   Megaphone,
   MoreHorizontal,
+  PauseCircle,
   ShieldCheck,
   ShieldX,
   Timer,
   User,
+  XCircle,
   Zap,
 } from "lucide-react";
 
-import { RideSession } from "@/schemas";
+import { RideSession, RideSessionStatus } from "@/schemas";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +30,55 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const getLifecycleBadge = (status: RideSessionStatus | undefined) => {
+  switch (status) {
+    case "active":
+      return (
+        <Badge variant="success" className="text-xs font-medium">
+          <Circle className="h-2 w-2 mr-1 fill-current" />
+          Active
+        </Badge>
+      );
+    case "completed":
+      return (
+        <Badge variant="info" className="text-xs font-medium">
+          <CheckCircle2 className="h-3 w-3 mr-1" />
+          Completed
+        </Badge>
+      );
+    case "paused":
+      return (
+        <Badge variant="warning" className="text-xs font-medium">
+          <PauseCircle className="h-3 w-3 mr-1" />
+          Paused
+        </Badge>
+      );
+    case "cancelled":
+      return (
+        <Badge variant="secondary" className="text-xs font-medium">
+          <XCircle className="h-3 w-3 mr-1" />
+          Cancelled
+        </Badge>
+      );
+    case "rejected":
+      return (
+        <Badge variant="destructive" className="text-xs font-medium">
+          <XCircle className="h-3 w-3 mr-1" />
+          Rejected
+        </Badge>
+      );
+    case "draft":
+      return (
+        <Badge variant="secondary" className="text-xs font-medium">
+          <Circle className="h-2 w-2 mr-1" />
+          Draft
+        </Badge>
+      );
+    default:
+      return <Badge variant="secondary" className="text-xs">Unknown</Badge>;
+  }
+};
 
 const getVerificationBadge = (status: RideSession["verificationStatus"]) => {
   switch (status) {
@@ -103,6 +156,11 @@ export function getRideSessionsTableColumns({
           </div>
         );
       },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => getLifecycleBadge(row.original.status),
     },
     {
       accessorKey: "riderId",

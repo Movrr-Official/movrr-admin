@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import {
   Coins,
+  Flame,
+  Loader2,
   TrendingDown,
   Users,
   BarChart3,
@@ -19,6 +21,7 @@ import {
   useRewardStats,
   useRiderBalances,
 } from "@/hooks/useRewardsData";
+import { useStreakLeaderboard } from "@/hooks/useSessionAnalytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard } from "@/components/stats/StatsCard";
 import { RewardCatalogPanel } from "@/components/rewards/RewardCatalogPanel";
@@ -37,6 +40,7 @@ export default function RewardsOverview() {
     refetch: refetchBalances,
   } = useRiderBalances();
   const { data: stats } = useRewardStats();
+  const { data: streakLeaders, isLoading: streakLoading } = useStreakLeaderboard(8);
 
   // Calculate comprehensive stats for rewards management
   const tiltX = useMotionValue(0);
@@ -228,12 +232,16 @@ export default function RewardsOverview() {
           <div className="xl:col-span-9">
             {/* Tabs for Transaction History and Balance Management */}
             <Tabs defaultValue="transactions" className="w-full">
-              <TabsList className="grid w-full max-w-[560px] grid-cols-3">
+              <TabsList className="grid w-full max-w-[740px] grid-cols-4">
                 <TabsTrigger value="transactions">
                   Transaction History
                 </TabsTrigger>
                 <TabsTrigger value="balances">Balance Management</TabsTrigger>
                 <TabsTrigger value="catalog">Reward Catalog</TabsTrigger>
+                <TabsTrigger value="streak">
+                  <Flame className="h-3.5 w-3.5 mr-1.5 text-orange-500" />
+                  Streak Leaders
+                </TabsTrigger>
               </TabsList>
 
               {/* Transaction History Tab */}
@@ -260,6 +268,70 @@ export default function RewardsOverview() {
 
               <TabsContent value="catalog" className="space-y-4 mt-4">
                 <RewardCatalogPanel />
+              </TabsContent>
+
+              <TabsContent value="streak" className="space-y-4 mt-4">
+                <Card className="glass-card border-0">
+                  <CardHeader>
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <Flame className="h-4 w-4 text-orange-500" />
+                      Top Streak Earners
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Riders ranked by total streak bonus points earned. Streak bonuses are awarded when riders complete sessions on consecutive days.
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {streakLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : !streakLeaders?.length ? (
+                      <div className="py-8 text-center text-muted-foreground">
+                        <Flame className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                        <p className="text-sm">No streak data yet.</p>
+                        <p className="text-xs mt-1">Streak bonuses appear here once riders earn them.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {streakLeaders.map((leader, i) => (
+                          <div
+                            key={leader.riderId}
+                            className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-4 py-3"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+                                  i === 0
+                                    ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                                    : i === 1
+                                      ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                      : i === 2
+                                        ? "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
+                                        : "bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                {i + 1}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">{leader.riderName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {leader.streakBonusCount} streak {leader.streakBonusCount === 1 ? "bonus" : "bonuses"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Flame className="h-3.5 w-3.5 text-orange-500" />
+                              <span className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                                +{leader.totalStreakPoints.toLocaleString()} pts
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>

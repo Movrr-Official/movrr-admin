@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { AlertCircle, Eye, Mail } from "lucide-react";
+import { AlertCircle, Eye, Mail, DatabaseZap } from "lucide-react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { BillingSection } from "@/components/settings/BillingSection";
@@ -28,15 +28,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import {
   getSettingsAudit,
   recheckIntegrationStatus,
+  syncPlatformSettings,
   updateSettingsSection,
 } from "@/app/actions/settings";
 import {
-  ADMIN_SETTINGS_QUERY_KEY,
+  PLATFORM_SETTINGS_QUERY_KEY,
   useSettingsData,
 } from "@/hooks/useSettingsData";
 import {
@@ -89,6 +91,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRecheckingIntegrations, setIsRecheckingIntegrations] =
     useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<{
     values: Record<string, unknown>;
     currentValues: Record<string, unknown>;
@@ -185,7 +188,9 @@ export default function SettingsPage() {
 
       setPendingConfirmation(null);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ADMIN_SETTINGS_QUERY_KEY }),
+        queryClient.invalidateQueries({
+          queryKey: PLATFORM_SETTINGS_QUERY_KEY,
+        }),
         queryClient.invalidateQueries({ queryKey: ["settingsAudit", section] }),
       ]);
       toast({
@@ -206,6 +211,29 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const result = await syncPlatformSettings();
+      if (!result.success) throw new Error(result.error || "Sync failed");
+      await queryClient.invalidateQueries({ queryKey: PLATFORM_SETTINGS_QUERY_KEY });
+      toast({
+        title: "Database synced",
+        description: result.seeded.length
+          ? `Seeded ${result.seeded.length} missing section${result.seeded.length > 1 ? "s" : ""}: ${result.seeded.join(", ")}.`
+          : "All sections were already present.",
+      });
+    } catch (err) {
+      toast({
+        title: "Sync failed",
+        description: err instanceof Error ? err.message : "Failed to sync settings.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleIntegrationRecheck = async () => {
     setIsRecheckingIntegrations(true);
     try {
@@ -214,7 +242,7 @@ export default function SettingsPage() {
         throw new Error(result.error || "Failed to refresh integration checks");
       }
       await queryClient.invalidateQueries({
-        queryKey: ADMIN_SETTINGS_QUERY_KEY,
+        queryKey: PLATFORM_SETTINGS_QUERY_KEY,
       });
       toast({
         title: "Integrations refreshed",
@@ -277,6 +305,31 @@ export default function SettingsPage() {
           title="Settings"
           description="Global platform configuration, policy enforcement, and operational diagnostics for MOVRR Admin."
         />
+
+        {settings.missingSections.length > 0 && (
+          <Alert>
+            <DatabaseZap className="h-4 w-4" />
+            <AlertTitle>
+              {settings.missingSections.length} section{settings.missingSections.length > 1 ? "s" : ""} not yet persisted to database
+            </AlertTitle>
+            <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                The following sections are showing hardcoded defaults:{" "}
+                <span className="font-medium">{settings.missingSections.join(", ")}</span>.
+                Sync to write their current values to the database.
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+                disabled={isSyncing}
+                onClick={handleSync}
+              >
+                {isSyncing ? "Syncing…" : "Seed missing sections"}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
           <Card className="glass-card border-0">

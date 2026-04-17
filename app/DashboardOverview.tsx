@@ -28,6 +28,8 @@ import { useRouteData } from "@/hooks/useRouteData";
 import { useCampaignsData } from "@/hooks/useCampaignsData";
 import { useRewardStats } from "@/hooks/useRewardsData";
 import { useAuditLogsData } from "@/hooks/useAuditLogsData";
+import { useDistanceStats } from "@/hooks/useDistanceStats";
+import { useSessionAnalytics } from "@/hooks/useSessionAnalytics";
 import {
   formatRoleLabel,
   getAuditLogEntryPath,
@@ -49,6 +51,8 @@ import {
   Download,
   CheckSquare,
   ChevronRight,
+  Ruler,
+  Leaf,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 
@@ -77,6 +81,7 @@ export default function DashboardOverview() {
   const [routeCompletionView, setRouteCompletionView] = useState<
     "daily" | "weekly" | "monthly"
   >("weekly");
+  const [co2Period, setCo2Period] = useState<7 | 30>(30);
   const rangeDays = useMemo(
     () => ({
       "7d": 7,
@@ -243,6 +248,10 @@ export default function DashboardOverview() {
   } = useAuditLogsData(
     activeDateRange ? { dateRange: activeDateRange } : undefined,
   );
+  const { data: distanceStats, isLoading: distanceLoading } =
+    useDistanceStats();
+  const { data: sessionAnalytics, isLoading: analyticsLoading } =
+    useSessionAnalytics(co2Period);
 
   const isDateWithinRange = (value?: string | null) => {
     if (!value) return false;
@@ -682,7 +691,7 @@ export default function DashboardOverview() {
           ]}
         />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 md:gap-6">
           <StatsCard
             title="Total Users"
             value={statsLoading ? "—" : statsError ? "N/A" : totalUsers}
@@ -705,6 +714,30 @@ export default function DashboardOverview() {
             value={statsLoading ? "—" : statsError ? "N/A" : activeCampaigns}
             icon={ClipboardCheck}
             animationDelay="0.3s"
+          />
+          <StatsCard
+            title="Total Distance"
+            value={
+              distanceLoading
+                ? "—"
+                : distanceStats
+                  ? `${distanceStats.totalDistanceKm.toLocaleString()} km`
+                  : "N/A"
+            }
+            icon={Ruler}
+            animationDelay="0.4s"
+          />
+          <StatsCard
+            title="CO₂ Saved"
+            value={
+              distanceLoading
+                ? "—"
+                : distanceStats
+                  ? `${distanceStats.co2SavedKg.toLocaleString()} kg`
+                  : "N/A"
+            }
+            icon={Leaf}
+            animationDelay="0.5s"
           />
         </div>
 
@@ -1108,7 +1141,216 @@ export default function DashboardOverview() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 md:gap-8"></div>
+        <Card className="glass-card border-0">
+          <CardHeader className="pb-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle className="text-xl font-bold flex items-center gap-2">
+                  <Ruler className="h-5 w-5 text-muted-foreground" />
+                  Distance & CO₂ Impact
+                </CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Daily km ridden and CO₂ avoided vs driving (0.18 kg/km)
+                </p>
+              </div>
+              <div
+                role="group"
+                aria-label="CO₂ trend period"
+                className="flex items-center gap-2 rounded-full bg-muted px-1 py-1 self-start md:self-auto"
+              >
+                <button
+                  type="button"
+                  onClick={() => setCo2Period(7)}
+                  aria-pressed={co2Period === 7}
+                  className={
+                    "rounded-full px-3 py-1 text-xs font-semibold transition " +
+                    (co2Period === 7
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground")
+                  }
+                >
+                  7 days
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCo2Period(30)}
+                  aria-pressed={co2Period === 30}
+                  className={
+                    "rounded-full px-3 py-1 text-xs font-semibold transition " +
+                    (co2Period === 30
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground")
+                  }
+                >
+                  30 days
+                </button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-56">
+              {analyticsLoading ? (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  Loading distance trend...
+                </div>
+              ) : !sessionAnalytics?.distanceTrend?.some(
+                  (d) => d.distanceKm > 0,
+                ) ? (
+                renderChartEmptyState(
+                  "No distance data",
+                  "No ride sessions with distance data were recorded for this period.",
+                )
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsAreaChart
+                    data={sessionAnalytics.distanceTrend.map((d) => ({
+                      name: new Date(d.date).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                      }),
+                      km: d.distanceKm,
+                      co2: d.co2SavedKg,
+                    }))}
+                    margin={{ top: 6, right: 18, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="distanceFill"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#4F7CFF"
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#4F7CFF"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                      <linearGradient id="co2Fill" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor="#22c55e"
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#22c55e"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      vertical={false}
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                      strokeOpacity={0.65}
+                    />
+                    <XAxis
+                      dataKey="name"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={CHART_X_TICK_MARGIN}
+                      fontSize={CHART_AXIS_FONT_SIZE}
+                      interval={co2Period === 7 ? 0 : "preserveStartEnd"}
+                    />
+                    <YAxis
+                      yAxisId="left"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={CHART_Y_TICK_MARGIN}
+                      fontSize={CHART_AXIS_FONT_SIZE}
+                      tickFormatter={(v) => `${v} km`}
+                      width={52}
+                    />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={CHART_Y_TICK_MARGIN}
+                      fontSize={CHART_AXIS_FONT_SIZE}
+                      tickFormatter={(v) => `${v} kg`}
+                      width={52}
+                    />
+                    <Tooltip
+                      content={
+                        <ChartTooltipContent
+                          seriesLabelMap={{
+                            km: "Distance (km)",
+                            co2: "CO₂ Saved (kg)",
+                          }}
+                        />
+                      }
+                    />
+                    <Area
+                      yAxisId="left"
+                      dataKey="km"
+                      type="monotone"
+                      stroke="#4F7CFF"
+                      strokeWidth={2}
+                      fill="url(#distanceFill)"
+                      dot={false}
+                    />
+                    <Area
+                      yAxisId="right"
+                      dataKey="co2"
+                      type="monotone"
+                      stroke="#22c55e"
+                      strokeWidth={2}
+                      fill="url(#co2Fill)"
+                      dot={false}
+                    />
+                  </RechartsAreaChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            {!analyticsLoading &&
+              sessionAnalytics?.distanceTrend?.some(
+                (d) => d.distanceKm > 0,
+              ) && (
+                <div className="mt-4 flex items-center gap-6 pl-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-0.5 w-8 rounded"
+                      style={{ backgroundColor: "#4F7CFF" }}
+                      aria-hidden="true"
+                    />
+                    <span>Distance (km)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-0.5 w-8 rounded"
+                      style={{ backgroundColor: "#22c55e" }}
+                      aria-hidden="true"
+                    />
+                    <span>CO₂ Saved (kg)</span>
+                  </div>
+                  <div className="ml-auto text-xs">
+                    Total:{" "}
+                    <span className="font-semibold text-foreground">
+                      {sessionAnalytics.distanceTrend
+                        .reduce((s, d) => s + d.distanceKm, 0)
+                        .toFixed(1)}{" "}
+                      km
+                    </span>
+                    {" · "}
+                    <span className="font-semibold text-green-600 dark:text-green-400">
+                      {sessionAnalytics.distanceTrend
+                        .reduce((s, d) => s + d.co2SavedKg, 0)
+                        .toFixed(1)}{" "}
+                      kg CO₂
+                    </span>
+                  </div>
+                </div>
+              )}
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 md:gap-8">
           <Card className="glass-card border-0 lg:col-span-8">

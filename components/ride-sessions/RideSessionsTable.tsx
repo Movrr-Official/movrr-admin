@@ -33,9 +33,7 @@ function RideSessionsTableContent({
   refetchData,
   isRefetching,
 }: Omit<RideSessionsTableProps, "sessions">) {
-  const [selectedSession, setSelectedSession] = useState<RideSession | null>(
-    null,
-  );
+  const [selectedSession, setSelectedSession] = useState<RideSession | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const {
@@ -132,6 +130,7 @@ function RideSessionsTableContent({
         session={selectedSession}
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
+        onVerified={refetchData}
       />
     </>
   );

@@ -30,6 +30,10 @@ export const riderPerformanceMetricsSchema = z.object({
   totalSessions: z.number().int().min(0),
   /** Sessions with quality data available */
   qualityDataAvailable: z.boolean(),
+  /** Total km ridden across all sessions (all-time, from total_distance_meters) */
+  totalDistanceKm: z.number().min(0).optional(),
+  /** CO₂ saved vs driving (kg) — totalDistanceKm × 0.180 kg/km car-offset */
+  co2SavedKg: z.number().min(0).optional(),
 });
 
 export const riderContactSchema = z.object({

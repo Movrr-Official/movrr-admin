@@ -9,7 +9,7 @@ import {
 } from "@/schemas/settings";
 import { shouldUseMockData } from "@/lib/dataSource";
 
-export const ADMIN_SETTINGS_QUERY_KEY = ["adminSettings"] as const;
+export const PLATFORM_SETTINGS_QUERY_KEY = ["adminSettings"] as const;
 
 const fallbackValues: AdminSettingsValues = adminSettingsValuesSchema.parse({
   general: {
@@ -122,6 +122,7 @@ const fallbackValues: AdminSettingsValues = adminSettingsValuesSchema.parse({
 
 const fallbackSettings: AdminSettingsResponse = {
   values: fallbackValues,
+  missingSections: [],
   metadata: {
     general: { source: "database", managedBy: "admin", readOnly: false },
     onboarding: { source: "database", managedBy: "admin", readOnly: false },
@@ -184,7 +185,7 @@ export const useSettingsData = (options?: {
   enabled?: boolean;
 }) =>
   useQuery<AdminSettingsResponse>({
-    queryKey: ADMIN_SETTINGS_QUERY_KEY,
+    queryKey: PLATFORM_SETTINGS_QUERY_KEY,
     queryFn: async () => {
       if (shouldUseMockData()) {
         return fallbackSettings;

@@ -29,7 +29,13 @@ export type CommunityRideCreatorAccessStatus = {
 };
 
 const ACTIVE_ROUTE_STATUSES = ["assigned", "in-progress"];
-const ACTIVE_CAMPAIGN_STATUSES = ["active", "paused"];
+const ACTIVE_CAMPAIGN_STATUSES = [
+  "open_for_signup",
+  "selection_in_progress",
+  "confirmed",
+  "active",
+  "paused",
+];
 
 const toAvailability = (isAvailable: boolean) => ({
   monday: isAvailable,

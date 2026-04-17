@@ -83,7 +83,7 @@ Examples:
 ### Internal operations
 
 - `notifications`, `user_preferences`
-- `admin_settings`
+- `platform_settings`
 - `audit_log` or `audit_logs` (dual-table fallback in code)
 - `workboard_*` tables (team/member/board/card/invite)
 
@@ -122,7 +122,7 @@ The admin dashboard does not call rider-device APIs directly in this repository;
 
 ## Settings and feature-control design
 
-Settings are grouped and persisted by key in `admin_settings`:
+Settings are grouped and persisted by key in `platform_settings`:
 
 - `system`
 - `points`

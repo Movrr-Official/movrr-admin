@@ -1,7 +1,31 @@
-import { getCampaignAnalytics } from "@/lib/campaign";
 import { Campaign } from "@/schemas";
 
 import { subDays, isAfter, isBefore, parseISO } from "date-fns";
+
+// Static placeholder analytics used only in mock/dev mode.
+// Production builds source analytics from real Supabase data via getCampaignAnalyticsData().
+const mockAnalytics = {
+  stats: [],
+  engagementByCity: [
+    { city: "Amsterdam", engagement: 4.8, campaigns: 3 },
+    { city: "Rotterdam", engagement: 5.2, campaigns: 2 },
+    { city: "Utrecht", engagement: 3.9, campaigns: 2 },
+  ],
+  dailyImpressions: [
+    { date: "Mon", impressions: 2000 },
+    { date: "Tue", impressions: 2200 },
+    { date: "Wed", impressions: 2600 },
+    { date: "Thu", impressions: 2300 },
+    { date: "Fri", impressions: 2800 },
+    { date: "Sat", impressions: 3000 },
+    { date: "Sun", impressions: 3100 },
+  ],
+  riderAllocation: [
+    { name: "Available", value: 10, color: "var(--chart-1)" },
+    { name: "Assigned", value: 20, color: "var(--chart-3)" },
+    { name: "On Route", value: 8, color: "var(--chart-2)" },
+  ],
+};
 
 const today = new Date();
 const threshold = subDays(today, 30);
@@ -19,7 +43,7 @@ export const mockCampaigns: Campaign[] = [
     startDate: "2025-06-11",
     endDate: "2025-07-01",
     advertiserId: "fd15d91a-235a-4532-b906-622dc6579ee7",
-    campaignAnalytics: getCampaignAnalytics(1),
+    campaignAnalytics: mockAnalytics,
     impressionGoal: 25000,
     impressions: 15000,
     qrScans: 300,
@@ -66,7 +90,7 @@ export const mockCampaigns: Campaign[] = [
     startDate: "2023-06-01",
     endDate: "2023-08-31",
     advertiserId: "advertiser2",
-    campaignAnalytics: getCampaignAnalytics(2),
+    campaignAnalytics: mockAnalytics,
     impressionGoal: 40000,
     impressions: 25000,
     qrScans: 500,
@@ -108,7 +132,7 @@ export const mockCampaigns: Campaign[] = [
     startDate: "2023-08-01",
     endDate: "2023-09-30",
     advertiserId: "advertiser3",
-    campaignAnalytics: getCampaignAnalytics(0),
+    campaignAnalytics: mockAnalytics,
     impressionGoal: 15000,
     impressions: 0,
     qrScans: 0,
@@ -149,7 +173,7 @@ export const mockCampaigns: Campaign[] = [
     startDate: "2023-11-01",
     endDate: "2023-12-31",
     advertiserId: "advertiser4",
-    campaignAnalytics: getCampaignAnalytics(4),
+    campaignAnalytics: mockAnalytics,
     impressionGoal: 50000,
     impressions: 50000,
     qrScans: 1200,
@@ -191,7 +215,7 @@ export const mockCampaigns: Campaign[] = [
     startDate: "2025-06-01",
     endDate: "2025-06-30",
     advertiserId: "fd15d91a-235a-4532-b906-622dc6579ee7",
-    campaignAnalytics: getCampaignAnalytics(5),
+    campaignAnalytics: mockAnalytics,
     impressionGoal: 30000,
     impressions: 20000,
     qrScans: 400,

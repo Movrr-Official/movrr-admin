@@ -39,7 +39,16 @@ const normalizeLifecycleStatus = (value?: string | null) => {
   if (!value) return "draft";
   const status = value.toLowerCase();
   if (
-    ["draft", "active", "paused", "completed", "cancelled"].includes(status)
+    [
+      "draft",
+      "open_for_signup",
+      "selection_in_progress",
+      "confirmed",
+      "active",
+      "paused",
+      "completed",
+      "cancelled",
+    ].includes(status)
   ) {
     return status;
   }
@@ -103,7 +112,16 @@ const updateCampaignAttributesSchema = z.object({
   id: z.string(),
   campaignType: z.enum(["destination_ride", "swarm"]).optional(),
   lifecycleStatus: z
-    .enum(["draft", "active", "paused", "completed", "cancelled"])
+    .enum([
+      "draft",
+      "open_for_signup",
+      "selection_in_progress",
+      "confirmed",
+      "active",
+      "paused",
+      "completed",
+      "cancelled",
+    ])
     .optional(),
   vehicleTypeRequired: z.string().optional(),
   targetZones: z.array(z.string()).optional(),
@@ -873,6 +891,159 @@ export async function upsertCampaignHotZone(
         error instanceof Error
           ? error.message
           : "Failed to upsert campaign hot zone",
+    };
+  }
+}
+
+/**
+ * Real campaign analytics derived from Supabase data.
+ *
+ * Sources of truth (mobile-aligned):
+ *  - Daily impressions  → ride_session.campaign_impact_impressions summed per day
+ *  - Engagement by city → ride_session sessions grouped by city
+ *  - Rider allocation   → campaign_assignment + rider_route live state
+ *
+ * Replaces the former seed-based getCampaignAnalytics() generator which
+ * returned fabricated data unrelated to actual ride activity.
+ */
+export async function getCampaignAnalyticsData(
+  campaignIds?: string[],
+  days: number = 30,
+): Promise<{
+  success: boolean;
+  data?: {
+    dailyImpressions: Array<{ date: string; impressions: number }>;
+    engagementByCity: Array<{
+      city: string;
+      engagement: number;
+      campaigns: number;
+    }>;
+    riderAllocation: Array<{ name: string; value: number; color: string }>;
+    totalImpressions: number;
+    activeRiders: number;
+  };
+  error?: string;
+}> {
+  try {
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const supabaseAdmin = createSupabaseAdminClient();
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+    // ── Daily impressions ──────────────────────────────────────────────────────
+    // Sum campaign_impact_impressions per calendar day from completed sessions.
+    // Falls back to counting sessions if the column is absent (graceful degradation).
+    let sessionsQuery = supabaseAdmin
+      .from("ride_session")
+      .select("campaign_id, ended_at, campaign_impact_impressions, city")
+      .not("ended_at", "is", null)
+      .gte("ended_at", since);
+
+    if (campaignIds && campaignIds.length > 0) {
+      sessionsQuery = sessionsQuery.in("campaign_id", campaignIds);
+    } else {
+      sessionsQuery = sessionsQuery.not("campaign_id", "is", null);
+    }
+
+    const { data: sessionRows } = await sessionsQuery.limit(5000);
+    const rows = sessionRows ?? [];
+
+    // Build day buckets (last `days` days)
+    const dailyMap = new Map<string, number>();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      dailyMap.set(d.toISOString().split("T")[0], 0);
+    }
+
+    let totalImpressions = 0;
+    rows.forEach((row) => {
+      if (!row.ended_at) return;
+      const day = new Date(row.ended_at).toISOString().split("T")[0];
+      const imp = Number(row.campaign_impact_impressions ?? 1);
+      totalImpressions += imp;
+      if (dailyMap.has(day)) dailyMap.set(day, (dailyMap.get(day) ?? 0) + imp);
+    });
+
+    const dailyImpressions = Array.from(dailyMap.entries()).map(
+      ([date, impressions]) => ({ date, impressions }),
+    );
+
+    // ── Engagement by city ─────────────────────────────────────────────────────
+    // Count distinct campaign sessions per city; engagement = sessions / active days
+    const cityMap = new Map<string, { sessions: number; campaignSet: Set<string> }>();
+    rows.forEach((row) => {
+      if (!row.city) return;
+      const entry = cityMap.get(row.city) ?? { sessions: 0, campaignSet: new Set() };
+      entry.sessions += 1;
+      if (row.campaign_id) entry.campaignSet.add(row.campaign_id);
+      cityMap.set(row.city, entry);
+    });
+
+    const engagementByCity = Array.from(cityMap.entries())
+      .map(([city, { sessions, campaignSet }]) => ({
+        city,
+        engagement: Math.round((sessions / Math.max(days, 1)) * 10) / 10,
+        campaigns: campaignSet.size,
+        _sessions: sessions,
+      }))
+      .sort((a, b) => b._sessions - a._sessions)
+      .slice(0, 8)
+      .map(({ _sessions: _s, ...rest }) => rest);
+
+    // ── Rider allocation ───────────────────────────────────────────────────────
+    // Derives live rider state from campaign_assignment and rider_route tables.
+    const [
+      { count: totalActiveRiders },
+      { data: assignmentRows },
+      { data: onRouteRows },
+    ] = await Promise.all([
+      supabaseAdmin
+        .from("rider")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "active"),
+      supabaseAdmin
+        .from("campaign_assignment")
+        .select("rider_id")
+        .in("campaign_id", campaignIds && campaignIds.length > 0 ? campaignIds : ["none"])
+        .not("rider_id", "is", null),
+      supabaseAdmin
+        .from("rider_route")
+        .select("rider_id")
+        .eq("status", "in-progress")
+        .not("rider_id", "is", null),
+    ]);
+
+    const total = totalActiveRiders ?? 0;
+    const assignedSet = new Set((assignmentRows ?? []).map((r) => r.rider_id));
+    const onRouteSet = new Set((onRouteRows ?? []).map((r) => r.rider_id));
+    const onRouteCount = onRouteSet.size;
+    const assignedCount = Math.max(0, assignedSet.size - onRouteCount);
+    const availableCount = Math.max(0, total - assignedSet.size);
+    const activeRiders = assignedSet.size;
+
+    const riderAllocation = [
+      { name: "Available", value: availableCount, color: "var(--chart-1)" },
+      { name: "Assigned", value: assignedCount, color: "var(--chart-3)" },
+      { name: "On Route", value: onRouteCount, color: "var(--chart-2)" },
+    ].filter((r) => r.value > 0);
+
+    return {
+      success: true,
+      data: {
+        dailyImpressions,
+        engagementByCity,
+        riderAllocation,
+        totalImpressions,
+        activeRiders,
+      },
+    };
+  } catch (error) {
+    console.error("Get campaign analytics error:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch campaign analytics",
     };
   }
 }

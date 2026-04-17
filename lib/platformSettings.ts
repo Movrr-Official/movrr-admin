@@ -29,12 +29,6 @@ import {
   type SettingsSectionId,
 } from "@/schemas/settings";
 
-const LEGACY_KEYS = [
-  "system",
-  "points",
-  "campaignDefaults",
-  "featureFlags",
-] as const;
 const SETTINGS_KEYS = [
   "general",
   "onboarding",
@@ -50,7 +44,6 @@ const SETTINGS_KEYS = [
   "organization",
   "privacy",
   "billing",
-  ...LEGACY_KEYS,
 ] as const;
 
 export type PersistedSettingsKey = (typeof SETTINGS_KEYS)[number];
@@ -93,7 +86,7 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     maintenanceMessage:
       "The platform is temporarily unavailable for maintenance. Please check back shortly.",
     distanceUnit: "km" as const,
-    co2KgPerKm: 0.021,
+    co2KgPerKm: 0.18,
   },
   onboarding: {
     riderOnboardingMode: "open",
@@ -128,7 +121,7 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
   },
   impact: {
     distanceUnit: "km" as const,
-    co2KgPerKm: 0.021,
+    co2KgPerKm: 0.18,
   },
   campaigns: {
     defaultMultiplier: 1,
@@ -249,63 +242,6 @@ const deriveBillingSection = (values: AdminSettingsValues): BillingSettings =>
     entitlements: [],
   });
 
-const mapLegacyRows = (rows: SettingsRow[], merged: AdminSettingsValues) => {
-  for (const row of rows) {
-    if (!row?.key || !row.value) continue;
-
-    switch (row.key) {
-      case "system": {
-        const system = row.value as Record<string, unknown>;
-        merged.general = generalSettingsSchema.parse({
-          ...merged.general,
-          supportEmail: system.supportEmail ?? merged.general.supportEmail,
-          publicSupportEmail:
-            system.supportEmail ?? merged.general.publicSupportEmail,
-          defaultRegion: system.defaultRegion ?? merged.general.defaultRegion,
-          timezone: system.timezone ?? merged.general.timezone,
-          appVersion: system.appVersion ?? merged.general.appVersion,
-          maintenanceMode:
-            system.maintenanceMode ?? merged.general.maintenanceMode,
-        });
-        merged.onboarding = onboardingSettingsSchema.parse({
-          ...merged.onboarding,
-          riderOnboardingMode:
-            system.allowSelfSignup === false
-              ? "waitlist_only"
-              : merged.onboarding.riderOnboardingMode,
-        });
-        break;
-      }
-      case "points":
-        merged.rewards = rewardsSettingsSchema.parse({
-          ...merged.rewards,
-          ...(row.value ?? {}),
-        });
-        break;
-      case "campaignDefaults":
-        merged.campaigns = campaignSettingsSchema.parse({
-          ...merged.campaigns,
-          ...(row.value ?? {}),
-        });
-        break;
-      case "featureFlags": {
-        const next = featureSettingsSchema.parse({
-          ...merged.features,
-          ...(row.value ?? {}),
-        });
-        merged.features = next;
-        merged.notifications = notificationSettingsSchema.parse({
-          ...merged.notifications,
-          operationsEmailEnabled: next.emailNotificationsEnabled,
-        });
-        break;
-      }
-      default:
-        break;
-    }
-  }
-};
-
 export const parseAdminRecipients = (raw: string | undefined) => {
   const list = (raw ?? "")
     .split(",")
@@ -344,32 +280,6 @@ export const mergeSettingsRows = (rows: SettingsRow[]): AdminSettingsValues => {
     });
   }
 
-  mapLegacyRows(rows, merged);
-
-  // Migration seeding: if no dedicated rideVerification row exists yet, seed from
-  // the rewards row so admins don't see a blank section on first visit.
-  const hasRideVerificationRow = rows.some(
-    (r) => r.key === "rideVerification" && r.value,
-  );
-  if (!hasRideVerificationRow) {
-    merged.rideVerification = rideVerificationSettingsSchema.parse({
-      maxAllowedAverageSpeedKmh: merged.rewards.maxAllowedAverageSpeedKmh,
-      maxAllowedPeakSpeedKmh: merged.rewards.maxAllowedPeakSpeedKmh,
-      minMovementDistanceMeters: merged.rewards.minMovementDistanceMeters,
-      minMovementGpsPoints: merged.rewards.minMovementGpsPoints,
-      minVerifiedMinutes: merged.rewards.minVerifiedMinutes,
-    });
-  }
-
-  // Migration seeding: if no dedicated impact row exists, seed from general.
-  const hasImpactRow = rows.some((r) => r.key === "impact" && r.value);
-  if (!hasImpactRow) {
-    merged.impact = impactSettingsSchema.parse({
-      distanceUnit: merged.general.distanceUnit,
-      co2KgPerKm: merged.general.co2KgPerKm,
-    });
-  }
-
   merged.general.appVersion = DEFAULT_SETTINGS.general.appVersion;
   merged.general.supportEmail =
     merged.general.supportEmail || SUPPORT_EMAIL || "support@movrr.nl";
@@ -396,7 +306,7 @@ export const mergeSettingsRows = (rows: SettingsRow[]): AdminSettingsValues => {
 export async function loadSettingsRows() {
   const supabaseAdmin = createSupabaseAdminClient();
   const { data, error } = await supabaseAdmin
-    .from("admin_settings")
+    .from("platform_settings")
     .select("key, value, updated_at")
     .in("key", SETTINGS_KEYS);
 
