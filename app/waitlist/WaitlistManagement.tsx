@@ -68,13 +68,16 @@ export default function WaitlistManagement() {
 
   const cityBreakdown = entries?.reduce(
     (acc, entry) => {
-      acc[entry.city] = (acc[entry.city] || 0) + 1;
+      const key = (entry.city ?? "").trim().toLowerCase();
+      if (!key) return acc;
+      if (!acc[key]) acc[key] = { display: (entry.city ?? "").trim(), count: 0 };
+      acc[key].count += 1;
       return acc;
     },
-    {} as Record<string, number>,
+    {} as Record<string, { display: string; count: number }>,
   );
-  const topCities = Object.entries(cityBreakdown ?? {})
-    .sort(([, a], [, b]) => (b as number) - (a as number))
+  const topCities = Object.values(cityBreakdown ?? {})
+    .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
   return (
@@ -216,9 +219,9 @@ export default function WaitlistManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {topCities.map(([city, count], index) => (
+                {topCities.map(({ display, count }, index) => (
                   <div
-                    key={city}
+                    key={display}
                     className="flex items-center justify-between group hover:bg-muted/50 p-3 rounded-xl transition-all duration-200 cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
@@ -226,14 +229,11 @@ export default function WaitlistManagement() {
                         {index + 1}
                       </div>
                       <span className="font-semibold text-foreground">
-                        {city}
+                        {display}
                       </span>
                     </div>
-                    <Badge
-                      variant="secondary"
-                      className="bg-primary/10 text-primary border-primary/20 font-semibold px-3 py-1"
-                    >
-                      {count as number}
+                    <Badge variant="outline" className="text-xs font-medium tabular-nums">
+                      {count}
                     </Badge>
                   </div>
                 ))}
