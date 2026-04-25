@@ -155,9 +155,11 @@ export function RiderDetailsDrawer({
     useState(false);
 
   const riderId = rider?.id ?? null;
-  const { data: badges = [], isLoading: isBadgesLoading } = useRiderBadges(
-    open ? riderId : null,
-  );
+  const {
+    data: badges = [],
+    isLoading: isBadgesLoading,
+    isError: isBadgesError,
+  } = useRiderBadges(open ? riderId : null);
   const { data: badgeDefinitions = [] } = useBadgeDefinitions();
   const revokeMutation = useRevokeRiderBadge(riderId);
   const awardMutation = useAwardRiderBadge(riderId);
@@ -982,6 +984,13 @@ export function RiderDetailsDrawer({
                               {isBadgesLoading ? (
                                 <div className="flex items-center justify-center py-8">
                                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                </div>
+                              ) : isBadgesError ? (
+                                <div className="text-center py-8 text-muted-foreground">
+                                  <ShieldCheck className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                  <p className="text-sm text-destructive">
+                                    Failed to load badges
+                                  </p>
                                 </div>
                               ) : (
                                 <div className="space-y-4">

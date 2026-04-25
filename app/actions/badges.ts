@@ -214,20 +214,39 @@ export async function awardRiderBadge(
       };
     }
 
-    const { error } = await supabase.from("rider_badge_award").insert({
-      rider_id: riderId,
-      badge_definition_id: defRow.id,
-      awarded_at: new Date().toISOString(),
-      source: "admin_manual",
-      metadata: { awardedByAdminId: auth.authUser.id },
-    });
+    // UNIQUE(rider_id, badge_definition_id) — only one row exists per rider per badge.
+    // If a previously-awarded (now revoked) record exists, restore it rather than
+    // inserting a duplicate that would fail with a 23505.
+    const { data: existingAward } = await supabase
+      .from("rider_badge_award")
+      .select("id, revoked_at")
+      .eq("rider_id", riderId)
+      .eq("badge_definition_id", defRow.id)
+      .maybeSingle();
 
-    if (error) {
-      // UNIQUE(rider_id, badge_definition_id) — rider already has this badge
-      if (error.code === "23505") {
+    if (existingAward) {
+      if (!existingAward.revoked_at) {
         return { success: false, error: "This rider already has that badge." };
       }
-      return { success: false, error: error.message };
+      const { error: restoreError } = await supabase
+        .from("rider_badge_award")
+        .update({
+          revoked_at: null,
+          source: "admin_manual",
+          awarded_at: new Date().toISOString(),
+          metadata: { awardedByAdminId: auth.authUser.id, restoredFrom: "revoked" },
+        })
+        .eq("id", existingAward.id);
+      if (restoreError) return { success: false, error: restoreError.message };
+    } else {
+      const { error } = await supabase.from("rider_badge_award").insert({
+        rider_id: riderId,
+        badge_definition_id: defRow.id,
+        awarded_at: new Date().toISOString(),
+        source: "admin_manual",
+        metadata: { awardedByAdminId: auth.authUser.id },
+      });
+      if (error) return { success: false, error: error.message };
     }
 
     const { data: riderRow } = await supabase
