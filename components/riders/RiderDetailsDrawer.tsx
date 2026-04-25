@@ -1001,7 +1001,6 @@ export function RiderDetailsDrawer({
                                               key={def.code}
                                               value={def.code}
                                             >
-                                              {def.emoji ? `${def.emoji} ` : ""}
                                               {def.label}
                                             </SelectItem>
                                           ))}
@@ -1047,20 +1046,23 @@ export function RiderDetailsDrawer({
                                         className={`flex items-start justify-between rounded-lg border p-3 ${badge.isActive ? "border-border/50 bg-muted/30" : "border-border/30 bg-muted/10 opacity-60"}`}
                                       >
                                         <div className="flex items-start gap-2">
-                                          {badge.badgeEmoji && (
-                                            <span className="text-lg leading-none mt-0.5">
-                                              {badge.badgeEmoji}
-                                            </span>
-                                          )}
                                           <div>
                                             <div className="flex items-center gap-2">
                                               <p className="text-sm font-semibold text-foreground">
                                                 {badge.badgeLabel}
                                               </p>
                                               <Badge
-                                                className={`text-xs capitalize ${badge.tier === "hero" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-blue-50 text-blue-700 border-blue-200"}`}
+                                                className={`text-xs capitalize ${
+                                                  badge.category === "hero"
+                                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                    : badge.category === "trophy"
+                                                      ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                                      : badge.category === "milestone"
+                                                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                                                        : "bg-slate-50 text-slate-700 border-slate-200"
+                                                }`}
                                               >
-                                                {badge.tier}
+                                                {badge.category}
                                               </Badge>
                                               {!badge.isActive && (
                                                 <Badge

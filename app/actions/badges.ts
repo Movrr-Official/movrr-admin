@@ -9,7 +9,11 @@ import { RiderBadge } from "@/schemas";
 
 /**
  * Fetch all badge awards for a rider.
- * Joins rider_badge_award with rider_badge_definition.
+ *
+ * rider_badge_award joins to rider_badge_definition via badge_definition_id
+ * (UUID FK). There is no badge_code column on rider_badge_award — the
+ * earlier code that tried to join via badge_code was querying a column that
+ * does not exist, causing a PostgREST 42703 error and a silent empty state.
  */
 export async function getRiderBadges(
   riderId: string,
@@ -21,7 +25,7 @@ export async function getRiderBadges(
     const { data, error } = await supabase
       .from("rider_badge_award")
       .select(
-        "id, rider_id, awarded_at, revoked_at, is_active, source, revoked_by, revoke_reason, badge_definition:badge_code(code, label, description, emoji, variant, tier)",
+        "id, rider_id, badge_definition_id, source, metadata, awarded_at, revoked_at, badge_definition:badge_definition_id(id, code, short_label, description, hero_variant, category, tint, icon, icon_family)",
       )
       .eq("rider_id", riderId)
       .order("awarded_at", { ascending: false });
@@ -31,19 +35,21 @@ export async function getRiderBadges(
     const rows = (data ?? []) as Array<{
       id: string;
       rider_id: string;
+      badge_definition_id: string;
+      source?: string | null;
+      metadata?: Record<string, unknown> | null;
       awarded_at: string;
       revoked_at?: string | null;
-      is_active?: boolean | null;
-      source?: string | null;
-      revoked_by?: string | null;
-      revoke_reason?: string | null;
       badge_definition?: {
+        id?: string | null;
         code?: string | null;
-        label?: string | null;
+        short_label?: string | null;
         description?: string | null;
-        emoji?: string | null;
-        variant?: string | null;
-        tier?: string | null;
+        hero_variant?: string | null;
+        category?: string | null;
+        tint?: string | null;
+        icon?: string | null;
+        icon_family?: string | null;
       } | null;
     }>;
 
@@ -52,24 +58,37 @@ export async function getRiderBadges(
         ? row.badge_definition[0]
         : row.badge_definition;
 
-      const variant = def?.variant;
-      const tier = def?.tier;
+      const tint = def?.tint;
+      const category = def?.category;
+      const meta = (row.metadata ?? {}) as Record<string, unknown>;
 
       return {
         id: row.id,
         riderId: row.rider_id,
-        badgeCode: def?.code ?? row.id,
-        badgeLabel: def?.label ?? def?.code ?? "Badge",
+        badgeDefinitionId: row.badge_definition_id,
+        badgeCode: def?.code ?? row.badge_definition_id,
+        badgeLabel: def?.short_label ?? def?.code ?? "Badge",
         badgeDescription: def?.description ?? undefined,
-        badgeEmoji: def?.emoji ?? undefined,
-        variant: (variant === "warm" || variant === "strong" || variant === "neutral") ? variant : "neutral",
-        tier: (tier === "hero" || tier === "engagement") ? tier : "engagement",
+        tint:
+          tint === "warm" || tint === "brand" || tint === "strong" || tint === "neutral"
+            ? tint
+            : "neutral",
+        category:
+          category === "milestone" ||
+          category === "trophy" ||
+          category === "engagement" ||
+          category === "hero"
+            ? category
+            : "milestone",
+        icon: def?.icon ?? undefined,
+        iconFamily: def?.icon_family ?? undefined,
         awardedAt: row.awarded_at,
         revokedAt: row.revoked_at ?? undefined,
-        isActive: Boolean(row.is_active ?? true),
-        source: row.source ?? "system",
-        revokedBy: row.revoked_by ?? undefined,
-        revokeReason: row.revoke_reason ?? undefined,
+        isActive: !row.revoked_at,
+        source: row.source ?? "system_rule",
+        revokeReason:
+          typeof meta.revokeReason === "string" ? meta.revokeReason : undefined,
+        metadata: meta,
       };
     });
 
@@ -85,7 +104,9 @@ export async function getRiderBadges(
 
 /**
  * Revoke a badge award.
- * Soft-deletes by setting is_active = false and recording who revoked it.
+ * Sets revoked_at and stores the admin ID and optional reason in metadata.
+ * rider_badge_award has no is_active, revoked_by, or revoke_reason columns —
+ * revocation state is tracked solely via revoked_at (NULL = active).
  */
 export async function revokeRiderBadge(
   badgeAwardId: string,
@@ -97,7 +118,7 @@ export async function revokeRiderBadge(
 
     const { data: awardRow, error: fetchError } = await supabase
       .from("rider_badge_award")
-      .select("id, rider_id, badge_code")
+      .select("id, rider_id, badge_definition_id, metadata")
       .eq("id", badgeAwardId)
       .single();
 
@@ -105,19 +126,32 @@ export async function revokeRiderBadge(
       return { success: false, error: fetchError?.message ?? "Badge award not found" };
     }
 
+    const existingMeta = (awardRow.metadata as Record<string, unknown>) ?? {};
+    const updatedMeta = {
+      ...existingMeta,
+      revokedByAdminId: auth.authUser.id,
+      revokeReason: reason ?? null,
+    };
+
     const { error } = await supabase
       .from("rider_badge_award")
       .update({
-        is_active: false,
         revoked_at: new Date().toISOString(),
-        revoked_by: auth.authUser.id,
-        revoke_reason: reason ?? null,
+        metadata: updatedMeta,
       })
       .eq("id", badgeAwardId);
 
     if (error) return { success: false, error: error.message };
 
-    // Fetch rider's user_id for activity log
+    // Fetch badge code for activity log description
+    const { data: defRow } = await supabase
+      .from("rider_badge_definition")
+      .select("code, short_label")
+      .eq("id", awardRow.badge_definition_id)
+      .maybeSingle();
+
+    const badgeLabel = defRow?.short_label ?? defRow?.code ?? awardRow.badge_definition_id;
+
     const { data: riderRow } = await supabase
       .from("rider")
       .select("user_id")
@@ -130,10 +164,14 @@ export async function revokeRiderBadge(
         actor_user_id: auth.authUser.id,
         source: "account",
         action: "Badge revoked",
-        description: `Badge "${awardRow.badge_code}" revoked by admin.${reason ? ` Reason: ${reason}` : ""}`,
+        description: `Badge "${badgeLabel}" revoked by admin.${reason ? ` Reason: ${reason}` : ""}`,
         related_entity_type: "rider",
         related_entity_id: awardRow.rider_id,
-        metadata: { badgeAwardId, badgeCode: awardRow.badge_code, reason: reason ?? null },
+        metadata: {
+          badgeAwardId,
+          badgeDefinitionId: awardRow.badge_definition_id,
+          reason: reason ?? null,
+        },
       }).catch((err) => console.warn("Badge revoke activity write failed:", err));
     }
 
@@ -150,6 +188,9 @@ export async function revokeRiderBadge(
 
 /**
  * Manually award a badge to a rider.
+ * Looks up the definition by code first to obtain badge_definition_id,
+ * which is the only FK on rider_badge_award — there is no badge_code column.
+ * Source must be 'admin_manual' per the rider_badge_award source constraint.
  */
 export async function awardRiderBadge(
   riderId: string,
@@ -159,15 +200,35 @@ export async function awardRiderBadge(
     const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabase = createSupabaseAdminClient();
 
+    const { data: defRow, error: defError } = await supabase
+      .from("rider_badge_definition")
+      .select("id, code, short_label")
+      .eq("code", badgeCode)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (defError || !defRow) {
+      return {
+        success: false,
+        error: defError?.message ?? `Badge definition not found for code: ${badgeCode}`,
+      };
+    }
+
     const { error } = await supabase.from("rider_badge_award").insert({
       rider_id: riderId,
-      badge_code: badgeCode,
+      badge_definition_id: defRow.id,
       awarded_at: new Date().toISOString(),
-      is_active: true,
-      source: "admin",
+      source: "admin_manual",
+      metadata: { awardedByAdminId: auth.authUser.id },
     });
 
-    if (error) return { success: false, error: error.message };
+    if (error) {
+      // UNIQUE(rider_id, badge_definition_id) — rider already has this badge
+      if (error.code === "23505") {
+        return { success: false, error: "This rider already has that badge." };
+      }
+      return { success: false, error: error.message };
+    }
 
     const { data: riderRow } = await supabase
       .from("rider")
@@ -181,10 +242,10 @@ export async function awardRiderBadge(
         actor_user_id: auth.authUser.id,
         source: "account",
         action: "Badge awarded",
-        description: `Badge "${badgeCode}" manually awarded by admin.`,
+        description: `Badge "${defRow.short_label ?? badgeCode}" manually awarded by admin.`,
         related_entity_type: "rider",
         related_entity_id: riderId,
-        metadata: { badgeCode, source: "admin" },
+        metadata: { badgeCode, badgeDefinitionId: defRow.id, source: "admin_manual" },
       }).catch((err) => console.warn("Badge award activity write failed:", err));
     }
 
@@ -200,11 +261,21 @@ export async function awardRiderBadge(
 }
 
 /**
- * Fetch all available badge definitions for the admin to award.
+ * Fetch all active badge definitions for the admin award dropdown.
+ * Columns: short_label (not label), category (not tier). No emoji column exists.
  */
 export async function getBadgeDefinitions(): Promise<{
   success: boolean;
-  data?: Array<{ code: string; label: string; description?: string; emoji?: string; tier: string }>;
+  data?: Array<{
+    id: string;
+    code: string;
+    label: string;
+    description?: string;
+    category: string;
+    tint: string;
+    icon?: string;
+    iconFamily?: string;
+  }>;
   error?: string;
 }> {
   try {
@@ -213,20 +284,24 @@ export async function getBadgeDefinitions(): Promise<{
 
     const { data, error } = await supabase
       .from("rider_badge_definition")
-      .select("code, label, description, emoji, tier")
-      .order("tier")
-      .order("label");
+      .select("id, code, short_label, description, category, tint, icon, icon_family")
+      .eq("is_active", true)
+      .order("category")
+      .order("sort_order");
 
     if (error) return { success: false, error: error.message };
 
     return {
       success: true,
       data: (data ?? []).map((row) => ({
-        code: row.code,
-        label: row.label ?? row.code,
-        description: row.description ?? undefined,
-        emoji: row.emoji ?? undefined,
-        tier: row.tier ?? "engagement",
+        id: row.id as string,
+        code: row.code as string,
+        label: (row.short_label ?? row.code) as string,
+        description: (row.description ?? undefined) as string | undefined,
+        category: (row.category ?? "milestone") as string,
+        tint: (row.tint ?? "neutral") as string,
+        icon: (row.icon ?? undefined) as string | undefined,
+        iconFamily: (row.icon_family ?? undefined) as string | undefined,
       })),
     };
   } catch (error) {
