@@ -86,38 +86,32 @@ const normalizeSectionState = (
   const source = input ?? {};
   return fields.reduce<Record<string, unknown>>((acc, field) => {
     const value = source[field.name];
-
     if (Array.isArray(value)) {
       acc[field.name] = value.map((item) =>
         typeof item === "string" ? item.trim() : item,
       );
       return acc;
     }
-
     if (field.type === "number") {
       if (value === "" || value === null || value === undefined) {
         acc[field.name] = null;
         return acc;
       }
-
       const parsedValue =
         typeof value === "number" ? value : Number(String(value).trim());
       acc[field.name] = Number.isFinite(parsedValue) ? parsedValue : null;
       return acc;
     }
-
     if (field.type === "switch") {
       acc[field.name] =
         typeof value === "string" ? value === "true" : Boolean(value);
       return acc;
     }
-
     if (typeof value === "string") {
       const trimmedValue = value.trim();
       acc[field.name] = trimmedValue === "" ? null : trimmedValue;
       return acc;
     }
-
     acc[field.name] = value ?? null;
     return acc;
   }, {});
@@ -167,20 +161,26 @@ export default function SettingsPage() {
   });
 
   const watchedValues = useWatch({ control: form.control });
+  // Access defaultValues here so RHF subscribes this component to changes after reset.
+  const formDefaultValues = form.formState.defaultValues;
 
   useEffect(() => {
     form.reset(values);
   }, [form, values, section]);
 
+  // Both sides are RHF-internal: they update in the same render, eliminating the race with `values`.
   const hasUnsavedChanges = useMemo(() => {
     const baseline = serializeSectionState(
-      normalizeSectionState(fields, values),
+      normalizeSectionState(
+        fields,
+        (formDefaultValues ?? {}) as Record<string, unknown>,
+      ),
     );
     const current = serializeSectionState(
       normalizeSectionState(fields, watchedValues as Record<string, unknown>),
     );
     return baseline !== current;
-  }, [fields, values, watchedValues]);
+  }, [fields, formDefaultValues, watchedValues]);
 
   const { data: auditEntries = [] } = useQuery<SettingsAuditEntry[]>({
     queryKey: ["settingsAudit", section],
