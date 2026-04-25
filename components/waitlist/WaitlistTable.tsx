@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 
 import { FilterConfig } from "@/lib/applyFilters";
 import { DataTableContainer } from "@/context/DataTableContext";
@@ -28,40 +28,43 @@ export function WaitlistTable({
   refetchData,
   isRefetching = false,
 }: WaitlistTableProps) {
-  const filterValue: FilterConfig[] = [
-    {
-      id: "city",
-      label: "City",
-      type: "multi-select",
-      key: "city",
-      options: [...new Set(entries.map((entry) => entry.city))].map((city) => ({
-        value: city,
-        label: city,
-      })),
-    },
-    {
-      id: "bike_ownership",
-      label: "Bike Ownership",
-      type: "multi-select",
-      key: "bike_ownership",
-      options: [
-        { value: "yes", label: "Owns Bike" },
-        { value: "no", label: "No Bike" },
-        { value: "planning", label: "Planning to Get" },
-      ],
-    },
-    {
-      id: "status",
-      label: "Status",
-      type: "select",
-      key: "status",
-      options: [
-        { value: "pending", label: "Pending" },
-        { value: "approved", label: "Approved" },
-        { value: "rejected", label: "Rejected" },
-      ],
-    },
-  ];
+  const filterValue = useMemo<FilterConfig[]>(
+    () => [
+      {
+        id: "city",
+        label: "City",
+        type: "multi-select",
+        key: "city",
+        options: [...new Set(entries.map((entry) => entry.city))].map((city) => ({
+          value: city,
+          label: city,
+        })),
+      },
+      {
+        id: "bike_ownership",
+        label: "Bike Ownership",
+        type: "multi-select",
+        key: "bike_ownership",
+        options: [
+          { value: "yes", label: "Owns Bike" },
+          { value: "no", label: "No Bike" },
+          { value: "planning", label: "Planning to Get" },
+        ],
+      },
+      {
+        id: "status",
+        label: "Status",
+        type: "select",
+        key: "status",
+        options: [
+          { value: "pending", label: "Pending" },
+          { value: "approved", label: "Approved" },
+          { value: "rejected", label: "Rejected" },
+        ],
+      },
+    ],
+    [entries],
+  );
 
   return (
     <DataTableContainer
