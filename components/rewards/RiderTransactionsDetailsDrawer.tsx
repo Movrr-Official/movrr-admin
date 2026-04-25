@@ -311,8 +311,8 @@ export function RiderTransactionsDetailsDrawer({
                             {bonus.label ?? bonus.type}
                           </span>
                           <span className="font-medium text-green-600">
-                            {bonus.addedPoints != null
-                              ? `+${bonus.addedPoints}`
+                            {bonus.points != null
+                              ? `+${bonus.points}`
                               : bonus.multiplier != null
                                 ? `${bonus.multiplier}×`
                                 : "—"}

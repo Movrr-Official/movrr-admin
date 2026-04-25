@@ -3,7 +3,18 @@
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
 import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { BikeType, RideSession, RideSessionFilters, RideSessionStatus } from "@/schemas";
+import {
+  BikeType,
+  RideSession,
+  RideSessionFilters,
+  RideSessionStatus,
+} from "@/schemas";
+import {
+  DB_TABLES,
+  META_KEYS,
+  REWARD_SOURCE,
+  VERIFICATION_STATUS,
+} from "@/lib/rewardConstants";
 
 /**
  * Platform-wide distance and CO₂ impact aggregation.
@@ -23,7 +34,7 @@ export async function getDistanceStats(): Promise<{
     const supabase = createSupabaseAdminClient();
 
     const { data, error } = await supabase
-      .from("ride_session")
+      .from(DB_TABLES.RIDE_SESSION)
       .select("total_distance_meters")
       .not("total_distance_meters", "is", null);
 
@@ -31,17 +42,24 @@ export async function getDistanceStats(): Promise<{
 
     const rows = data ?? [];
     const totalMeters = rows.reduce(
-      (sum, r) => sum + Number((r as Record<string, unknown>).total_distance_meters ?? 0),
+      (sum, r) =>
+        sum + Number((r as Record<string, unknown>).total_distance_meters ?? 0),
       0,
     );
     const totalDistanceKm = Math.round((totalMeters / 1000) * 10) / 10;
-    const co2SavedKg = Math.round(totalDistanceKm * 0.180 * 10) / 10;
+    const co2SavedKg = Math.round(totalDistanceKm * 0.18 * 10) / 10;
 
-    return { success: true, data: { totalDistanceKm, co2SavedKg, sessionCount: rows.length } };
+    return {
+      success: true,
+      data: { totalDistanceKm, co2SavedKg, sessionCount: rows.length },
+    };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch distance stats",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch distance stats",
     };
   }
 }
@@ -49,13 +67,14 @@ export async function getDistanceStats(): Promise<{
 export type VerificationAction = "approve" | "reject" | "escalate";
 
 const VERIFICATION_STATUS_MAP: Record<VerificationAction, string> = {
-  approve: "verified",
-  reject: "rejected",
-  escalate: "manual_review",
+  approve: VERIFICATION_STATUS.VERIFIED,
+  reject: VERIFICATION_STATUS.REJECTED,
+  escalate: VERIFICATION_STATUS.MANUAL_REVIEW,
 };
 
 const VALID_ACTIONS = new Set<string>(["approve", "reject", "escalate"]);
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Update ride_verification status with audit trail.
@@ -82,7 +101,7 @@ export async function verifyRideSession(input: {
 
     // Upsert: insert if absent, update if present
     const { error: upsertError } = await supabase
-      .from("ride_verification")
+      .from(DB_TABLES.RIDE_VERIFICATION)
       .upsert(
         {
           ride_session_id: input.sessionId,
@@ -110,7 +129,8 @@ export async function verifyRideSession(input: {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Verification action failed",
+      error:
+        error instanceof Error ? error.message : "Verification action failed",
     };
   }
 }
@@ -126,12 +146,17 @@ export async function getRideSessions(
     await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
-    // Fetch ride sessions — includes lifecycle status, quality, distance, and suggested route fields.
-    // The `status` column is added by migration 001; if absent the DB simply omits it.
+    // Fetch ride sessions.
+    // Column contract (mobile source of truth):
+    //   completed_at   ← mobile's ride_session.completed_at  (not ended_at)
+    //   moving_time_ms ← mobile's moving_time in ms          (not moving_time)
+    //   rider_route_id ← mobile's FK to rider_route          (not route_assignment_id)
+    //   verification_result ← JSONB machine verdict written at ride end
+    // points_awarded / verified_minutes are sourced from reward_transactions, NOT ride_session columns.
     const { data: sessionRows, error: sessionError } = await supabaseAdmin
-      .from("ride_session")
+      .from(DB_TABLES.RIDE_SESSION)
       .select(
-        "id, rider_id, campaign_id, route_id, route_assignment_id, suggested_route_id, earning_mode, status, started_at, ended_at, verified_minutes, points_awarded, bike_type, ride_quality_percent, moving_time, total_distance_meters, compliance_score, bonus_applied, multiplier_applied, city, country, created_at",
+        "id, rider_id, campaign_id, route_id, rider_route_id, suggested_route_id, earning_mode, status, started_at, completed_at, bike_type, ride_quality_percent, moving_time_ms, total_distance_meters, compliance_score, bonus_applied, multiplier_applied, city, country, created_at, verification_result",
       )
       .order("created_at", { ascending: false })
       .limit(500);
@@ -147,24 +172,113 @@ export async function getRideSessions(
       ...new Set(rows.map((r) => r.campaign_id).filter(Boolean)),
     ];
 
-    // Fetch verification data — table may not exist; silently skip errors
-    const verificationMap = new Map<
+    // ── Machine verification verdicts ─────────────────────────────────────────
+    // Primary source: ride_session.verification_result JSONB written by mobile at
+    // ride completion. This is the canonical machine verdict — always present for
+    // rides that completed the full verification pipeline.
+    const machineVerdictMap = new Map<
+      string,
+      {
+        status: string;
+        qualityScore?: number;
+        reasonCodes?: string[];
+        detectedMaxSpeedKmh?: number;
+        maxAllowedSpeedKmh?: number;
+        notes?: string;
+      }
+    >();
+    rows.forEach((row) => {
+      const vr = (row as Record<string, unknown>).verification_result as
+        | Record<string, unknown>
+        | null
+        | undefined;
+      if (!vr || typeof vr !== "object") return;
+      machineVerdictMap.set(row.id, {
+        status: String(vr.status ?? VERIFICATION_STATUS.PENDING),
+        qualityScore:
+          vr.qualityScore != null ? Number(vr.qualityScore) : undefined,
+        reasonCodes: Array.isArray(vr.reasonCodes)
+          ? (vr.reasonCodes as unknown[]).map(String)
+          : undefined,
+        detectedMaxSpeedKmh:
+          vr.detectedMaxSpeedKmh != null
+            ? Number(vr.detectedMaxSpeedKmh)
+            : undefined,
+        maxAllowedSpeedKmh:
+          vr.maxAllowedSpeedKmh != null
+            ? Number(vr.maxAllowedSpeedKmh)
+            : undefined,
+        notes: vr.notes ? String(vr.notes) : undefined,
+      });
+    });
+
+    // ── Admin verification overrides ──────────────────────────────────────────
+    // Secondary source: ride_verification table — populated only by admin manual
+    // actions (approve / reject / escalate). Layered ON TOP of machine verdict.
+    // Precedence rule: admin override > machine verdict > "pending".
+    const adminOverrideMap = new Map<
       string,
       { status: string; reason_codes?: string[] }
     >();
     if (sessionIds.length) {
       const { data: verRows } = await supabaseAdmin
-        .from("ride_verification")
+        .from(DB_TABLES.RIDE_VERIFICATION)
         .select("ride_session_id, status, reason_codes")
         .in("ride_session_id", sessionIds);
 
       (verRows ?? []).forEach((v) => {
         if (v.ride_session_id) {
-          verificationMap.set(v.ride_session_id, {
-            status: v.status ?? "pending",
+          adminOverrideMap.set(v.ride_session_id, {
+            status: v.status ?? VERIFICATION_STATUS.PENDING,
             reason_codes: Array.isArray(v.reason_codes) ? v.reason_codes : [],
           });
         }
+      });
+    }
+
+    // ── Canonical reward sourcing from reward_transactions ────────────────────
+    // Mobile awards points via award_movrr_points_for_ride_session RPC into
+    // reward_transactions — it does NOT write back to ride_session.points_awarded
+    // or ride_session.verified_minutes. Both fields must be sourced here.
+    const rewardBySession = new Map<
+      string,
+      { points: number; verifiedMinutes: number }
+    >();
+    if (rows.length && riderIds.length) {
+      const earliestStart = rows.reduce(
+        (min, r) => (r.started_at && r.started_at < min ? r.started_at : min),
+        rows[0]?.started_at ?? new Date(0).toISOString(),
+      );
+      const { data: txRows } = await supabaseAdmin
+        .from(DB_TABLES.REWARD_TRANSACTIONS)
+        .select("rider_id, points_earned, source, metadata")
+        .in("rider_id", riderIds)
+        .gte("created_at", earliestStart)
+        .in("source", [
+          REWARD_SOURCE.STANDARD_RIDE,
+          REWARD_SOURCE.BOOSTED_RIDE,
+          REWARD_SOURCE.AD_BOOST,
+        ]);
+
+      (txRows ?? []).forEach((tx) => {
+        const meta = tx.metadata as Record<string, unknown> | null;
+        const sessionId = meta?.[META_KEYS.RIDE_SESSION_ID] as
+          | string
+          | undefined;
+        if (!sessionId) return;
+        const existing = rewardBySession.get(sessionId) ?? {
+          points: 0,
+          verifiedMinutes: 0,
+        };
+        existing.points += Number(tx.points_earned ?? 0);
+        // verifiedMinutes: take from first matching transaction's metadata
+        if (
+          !existing.verifiedMinutes &&
+          meta?.[META_KEYS.VERIFIED_MINUTES] != null
+        ) {
+          existing.verifiedMinutes = Number(meta[META_KEYS.VERIFIED_MINUTES]);
+        }
+        rewardBySession.set(sessionId, existing);
       });
     }
 
@@ -196,7 +310,8 @@ export async function getRideSessions(
 
         riderIds.forEach((riderId) => {
           const userId = riderToUser.get(riderId);
-          if (userId) riderNameMap.set(riderId, userNameMap.get(userId) ?? "Unknown");
+          if (userId)
+            riderNameMap.set(riderId, userNameMap.get(userId) ?? "Unknown");
         });
       }
     }
@@ -218,16 +333,18 @@ export async function getRideSessions(
       raw?: string,
     ): RideSession["verificationStatus"] => {
       if (
-        raw === "verified" ||
-        raw === "rejected" ||
-        raw === "manual_review" ||
-        raw === "pending"
+        raw === VERIFICATION_STATUS.VERIFIED ||
+        raw === VERIFICATION_STATUS.REJECTED ||
+        raw === VERIFICATION_STATUS.MANUAL_REVIEW ||
+        raw === VERIFICATION_STATUS.PENDING
       )
         return raw;
-      return "pending";
+      return VERIFICATION_STATUS.PENDING;
     };
 
-    const toSessionStatus = (raw?: string | null): RideSessionStatus | undefined => {
+    const toSessionStatus = (
+      raw?: string | null,
+    ): RideSessionStatus | undefined => {
       if (
         raw === "draft" ||
         raw === "active" ||
@@ -237,7 +354,6 @@ export async function getRideSessions(
         raw === "rejected"
       )
         return raw;
-      // If the status column isn't populated yet, infer from ended_at presence
       return undefined;
     };
 
@@ -255,10 +371,29 @@ export async function getRideSessions(
     };
 
     let mapped: RideSession[] = rows.map((row) => {
-      const ver = verificationMap.get(row.id);
-      // Infer lifecycle status: if status column absent, derive from row shape
-      const inferredStatus = toSessionStatus((row as Record<string, unknown>).status as string | null)
-        ?? (row.ended_at ? "completed" : row.started_at ? "active" : "draft");
+      const r = row as Record<string, unknown>;
+      const adminOverride = adminOverrideMap.get(row.id);
+      const machineVerdict = machineVerdictMap.get(row.id);
+      const sessionReward = rewardBySession.get(row.id) ?? {
+        points: 0,
+        verifiedMinutes: 0,
+      };
+
+      // Lifecycle status — prefer DB status column; infer from completed_at / started_at otherwise.
+      const inferredStatus =
+        toSessionStatus(r.status as string | null) ??
+        (r.completed_at ? "completed" : row.started_at ? "active" : "draft");
+
+      // Verification precedence: admin manual override > machine verdict > "pending".
+      const effectiveVerStatus =
+        adminOverride?.status ??
+        machineVerdict?.status ??
+        VERIFICATION_STATUS.PENDING;
+      const effectiveReasonCodes =
+        adminOverride?.reason_codes ?? machineVerdict?.reasonCodes ?? [];
+      const verificationSource: RideSession["verificationSource"] =
+        adminOverride ? "admin" : machineVerdict ? "machine" : undefined;
+
       return {
         id: row.id,
         riderId: row.rider_id,
@@ -269,30 +404,50 @@ export async function getRideSessions(
         campaignName: row.campaign_id
           ? campaignNameMap.get(row.campaign_id)
           : undefined,
-        routeId: (row as Record<string, unknown>).route_id as string | undefined ?? undefined,
-        routeAssignmentId: (row as Record<string, unknown>).route_assignment_id as string | undefined ?? undefined,
-        suggestedRouteId: (row as Record<string, unknown>).suggested_route_id as string | undefined ?? undefined,
-        complianceScore: (row as Record<string, unknown>).compliance_score != null
-          ? Number((row as Record<string, unknown>).compliance_score)
-          : undefined,
-        bonusApplied: (row as Record<string, unknown>).bonus_applied != null
-          ? Number((row as Record<string, unknown>).bonus_applied)
-          : undefined,
-        multiplierApplied: (row as Record<string, unknown>).multiplier_applied != null
-          ? Number((row as Record<string, unknown>).multiplier_applied)
-          : undefined,
+        routeId: r.route_id as string | undefined,
+        routeAssignmentId: r.rider_route_id as string | undefined,
+        suggestedRouteId: r.suggested_route_id as string | undefined,
+        complianceScore:
+          r.compliance_score != null ? Number(r.compliance_score) : undefined,
+        bonusApplied:
+          r.bonus_applied != null ? Number(r.bonus_applied) : undefined,
+        multiplierApplied:
+          r.multiplier_applied != null
+            ? Number(r.multiplier_applied)
+            : undefined,
         startedAt: row.started_at,
-        endedAt: row.ended_at ?? undefined,
-        verifiedMinutes: Number(row.verified_minutes ?? 0),
-        pointsAwarded: Number(row.points_awarded ?? 0),
-        verificationStatus: toVerificationStatus(ver?.status),
-        reasonCodes: ver?.reason_codes ?? [],
-        bikeType: toBikeType(row.bike_type),
-        rideQualityPercent: row.ride_quality_percent != null ? Number(row.ride_quality_percent) : undefined,
-        movingTime: row.moving_time != null ? Number(row.moving_time) : undefined,
-        totalDistanceMeters: (row as Record<string, unknown>).total_distance_meters != null
-          ? Number((row as Record<string, unknown>).total_distance_meters)
+        endedAt: r.completed_at as string | undefined,
+        // Sourced from reward_transactions.metadata — not ride_session columns
+        verifiedMinutes: sessionReward.verifiedMinutes,
+        pointsAwarded: sessionReward.points,
+        verificationStatus: toVerificationStatus(effectiveVerStatus),
+        verificationSource,
+        reasonCodes: effectiveReasonCodes,
+        // Raw machine verdict preserved for auditing — unaffected by admin overrides
+        machineVerification: machineVerdict
+          ? {
+              status: toVerificationStatus(machineVerdict.status),
+              qualityScore: machineVerdict.qualityScore,
+              reasonCodes: machineVerdict.reasonCodes,
+              detectedMaxSpeedKmh: machineVerdict.detectedMaxSpeedKmh,
+              maxAllowedSpeedKmh: machineVerdict.maxAllowedSpeedKmh,
+              notes: machineVerdict.notes,
+            }
           : undefined,
+        bikeType: toBikeType(row.bike_type),
+        rideQualityPercent:
+          row.ride_quality_percent != null
+            ? Number(row.ride_quality_percent)
+            : undefined,
+        // moving_time_ms converted to minutes (÷ 60 000) — mobile stores milliseconds
+        movingTime:
+          r.moving_time_ms != null
+            ? Math.round((Number(r.moving_time_ms) / 60_000) * 100) / 100
+            : undefined,
+        totalDistanceMeters:
+          r.total_distance_meters != null
+            ? Number(r.total_distance_meters)
+            : undefined,
         city: row.city ?? undefined,
         country: row.country ?? undefined,
         createdAt: row.created_at,
@@ -300,17 +455,11 @@ export async function getRideSessions(
     });
 
     // Apply filters
-    if (
-      filters?.earningMode &&
-      filters.earningMode !== "all"
-    ) {
+    if (filters?.earningMode && filters.earningMode !== "all") {
       mapped = mapped.filter((s) => s.earningMode === filters.earningMode);
     }
 
-    if (
-      filters?.verificationStatus &&
-      filters.verificationStatus !== "all"
-    ) {
+    if (filters?.verificationStatus && filters.verificationStatus !== "all") {
       mapped = mapped.filter(
         (s) => s.verificationStatus === filters.verificationStatus,
       );
@@ -337,7 +486,9 @@ export async function getRideSessions(
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to fetch ride sessions",
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch ride sessions",
     };
   }
 }

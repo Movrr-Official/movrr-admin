@@ -14,6 +14,7 @@ import {
   MapPin,
   Megaphone,
   MessageSquare,
+  Receipt,
   Route,
   ShieldCheck,
   ShieldX,
@@ -23,9 +24,20 @@ import {
   User,
   X,
   Zap,
+  Bot,
+  UserCheck,
 } from "lucide-react";
 
-import { verifyRideSession, VerificationAction } from "@/app/actions/rideSessions";
+import {
+  verifyRideSession,
+  VerificationAction,
+} from "@/app/actions/rideSessions";
+import { getSessionRewardTransactions } from "@/app/actions/rewards";
+import { BONUS_TYPE_LABELS, REWARD_SOURCE_LABELS } from "@/lib/rewardConstants";
+import {
+  buildRewardAuditTrail,
+  isAuditTrailClean,
+} from "@/lib/rewardReconstruction";
 import { RideSession } from "@/schemas";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,7 +56,7 @@ async function fetchRouteName(routeId: string): Promise<string | null> {
   try {
     const res = await fetch(`/api/suggested-routes/${routeId}`);
     if (!res.ok) return null;
-    const json = await res.json() as { route?: { name?: string } };
+    const json = (await res.json()) as { route?: { name?: string } };
     return json.route?.name ?? null;
   } catch {
     return null;
@@ -100,9 +112,13 @@ export function RideSessionDetailsDrawer({
   onVerified,
 }: RideSessionDetailsDrawerProps) {
   const { toast } = useToast();
-  const [actionLoading, setActionLoading] = useState<VerificationAction | null>(null);
+  const [actionLoading, setActionLoading] = useState<VerificationAction | null>(
+    null,
+  );
   const [reason, setReason] = useState("");
-  const [showReasonFor, setShowReasonFor] = useState<VerificationAction | null>(null);
+  const [showReasonFor, setShowReasonFor] = useState<VerificationAction | null>(
+    null,
+  );
 
   // Reset action state when drawer closes or the viewed session changes
   useEffect(() => {
@@ -121,6 +137,15 @@ export function RideSessionDetailsDrawer({
     staleTime: 1000 * 60 * 30,
   });
 
+  // Fetch reward transactions for this session from the canonical ledger
+  const { data: rewardTxResult, isLoading: rewardTxLoading } = useQuery({
+    queryKey: ["sessionRewards", session?.id],
+    queryFn: () => getSessionRewardTransactions(session!.id, session!.riderId),
+    enabled: !!session?.id,
+    staleTime: 1000 * 60 * 5,
+  });
+  const rewardTransactions = rewardTxResult?.data ?? [];
+
   if (!session) return null;
 
   const canApprove = session.verificationStatus !== "verified";
@@ -135,15 +160,30 @@ export function RideSessionDetailsDrawer({
       }
     }
     setActionLoading(action);
-    const result = await verifyRideSession({ sessionId: session.id, action, reason: reason || undefined });
+    const result = await verifyRideSession({
+      sessionId: session.id,
+      action,
+      reason: reason || undefined,
+    });
     setActionLoading(null);
     if (result.success) {
-      toast({ title: action === "approve" ? "Session approved" : action === "reject" ? "Session rejected" : "Escalated to manual review" });
+      toast({
+        title:
+          action === "approve"
+            ? "Session approved"
+            : action === "reject"
+              ? "Session rejected"
+              : "Escalated to manual review",
+      });
       setShowReasonFor(null);
       setReason("");
       onVerified?.();
     } else {
-      toast({ title: "Action failed", description: result.error, variant: "destructive" });
+      toast({
+        title: "Action failed",
+        description: result.error,
+        variant: "destructive",
+      });
     }
   };
 
@@ -281,6 +321,165 @@ export function RideSessionDetailsDrawer({
             )}
           </div>
 
+          {/* Reward Provenance */}
+          <Card className="glass-card border-0">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-amber-600" />
+                Reward Provenance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {rewardTxLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Loading…
+                </div>
+              ) : rewardTransactions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {session.verificationStatus === "pending"
+                    ? "No reward transactions yet — session is pending verification."
+                    : "No reward transactions found for this session."}
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {rewardTransactions.map((tx) => {
+                    const audit = buildRewardAuditTrail(tx);
+                    const clean = isAuditTrailClean(audit);
+                    const hasChain =
+                      tx.pointsBeforeBonuses != null ||
+                      tx.pointsBeforeCap != null;
+                    return (
+                      <div key={tx.id} className="space-y-1.5">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold">
+                            {REWARD_SOURCE_LABELS[tx.source ?? ""] ??
+                              tx.source ??
+                              "Transaction"}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {hasChain && (
+                              <span
+                                className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                                  clean
+                                    ? "bg-green-500/10 text-green-600"
+                                    : "bg-amber-500/10 text-amber-600"
+                                }`}
+                                title={
+                                  clean
+                                    ? "Payout chain verified"
+                                    : audit.warnings.join("; ")
+                                }
+                              >
+                                {clean ? "✓ Verified" : "⚠ Inconsistency"}
+                              </span>
+                            )}
+                            <span className="font-semibold text-amber-600 tabular-nums">
+                              {tx.points > 0 ? "+" : ""}
+                              {tx.points.toLocaleString()} pts
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Payout audit chain — step-by-step */}
+                        {hasChain && (
+                          <div className="pl-3 border-l-2 border-border/40 space-y-1 text-xs">
+                            {audit.steps.map((step) => (
+                              <div
+                                key={step.label}
+                                className="flex justify-between"
+                              >
+                                <span
+                                  className={
+                                    step.status === "inconsistent"
+                                      ? "text-amber-600"
+                                      : "text-muted-foreground"
+                                  }
+                                >
+                                  {step.label}
+                                  {step.note && (
+                                    <span className="ml-1 opacity-70">
+                                      ({step.note})
+                                    </span>
+                                  )}
+                                </span>
+                                <span
+                                  className={`tabular-nums ${
+                                    step.status === "inconsistent"
+                                      ? "text-amber-600 font-medium"
+                                      : step.status === "missing"
+                                        ? "text-muted-foreground/50"
+                                        : ""
+                                  }`}
+                                >
+                                  {step.value != null
+                                    ? `${step.value} pts`
+                                    : "—"}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Bonus breakdown (when no full chain) */}
+                        {!hasChain &&
+                          (tx.basePoints != null ||
+                            (tx.bonusBreakdown &&
+                              tx.bonusBreakdown.length > 0)) && (
+                            <div className="pl-3 border-l-2 border-border/40 space-y-1 text-xs">
+                              {tx.basePoints != null && (
+                                <div className="flex justify-between text-muted-foreground">
+                                  <span>Base</span>
+                                  <span className="tabular-nums">
+                                    {tx.basePoints} pts
+                                  </span>
+                                </div>
+                              )}
+                              {tx.bonusBreakdown?.map((entry, i) => (
+                                <div key={i} className="flex justify-between">
+                                  <span className="text-muted-foreground">
+                                    {BONUS_TYPE_LABELS[entry.type] ??
+                                      entry.label ??
+                                      entry.type}
+                                  </span>
+                                  <span className="font-medium tabular-nums text-amber-600">
+                                    {entry.points != null
+                                      ? `+${entry.points} pts`
+                                      : entry.multiplier != null
+                                        ? `×${entry.multiplier}`
+                                        : "—"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                        {tx.wasCapped && (
+                          <p className="text-xs text-amber-600 flex items-center gap-1 pl-3">
+                            <TriangleAlert className="h-3 w-3 shrink-0" />
+                            Daily cap applied
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {rewardTransactions.length > 1 && (
+                    <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border/40">
+                      <span>Total</span>
+                      <span className="text-amber-600 tabular-nums">
+                        +
+                        {rewardTransactions
+                          .reduce((s, tx) => s + tx.points, 0)
+                          .toLocaleString()}{" "}
+                        pts
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Rider Info */}
           <Card className="glass-card border-0">
             <CardHeader className="pb-3">
@@ -342,27 +541,102 @@ export function RideSessionDetailsDrawer({
             </Card>
           )}
 
-          {/* Verification Details */}
-          {session.reasonCodes.length > 0 && (
+          {/* Verification Details — reason codes + machine verdict context */}
+          {(session.reasonCodes.length > 0 || session.machineVerification) && (
             <Card className="glass-card border-0">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-orange-500" />
-                  Verification Reason Codes
+                  Verification Details
+                  {session.verificationSource && (
+                    <span className="ml-auto">
+                      {session.verificationSource === "admin" ? (
+                        <Badge
+                          variant="outline"
+                          className="text-xs gap-1 border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-400"
+                        >
+                          <UserCheck className="h-3 w-3" /> Admin Override
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs gap-1">
+                          <Bot className="h-3 w-3" /> Auto-Verified
+                        </Badge>
+                      )}
+                    </span>
+                  )}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {session.reasonCodes.map((code) => (
-                    <Badge
-                      key={code}
-                      variant="secondary"
-                      className="font-mono text-xs"
-                    >
-                      {code}
-                    </Badge>
-                  ))}
-                </div>
+              <CardContent className="space-y-3">
+                {/* Reason codes */}
+                {session.reasonCodes.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {session.reasonCodes.map((code) => (
+                      <Badge
+                        key={code}
+                        variant="secondary"
+                        className="font-mono text-xs"
+                      >
+                        {code}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {/* Machine verdict evidence — speed detection, quality score */}
+                {session.machineVerification && (
+                  <div className="space-y-1.5 pt-1 border-t border-border/40 text-sm">
+                    {session.machineVerification.qualityScore != null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Machine Quality Score
+                        </span>
+                        <span className="font-medium tabular-nums">
+                          {Math.round(
+                            session.machineVerification.qualityScore * 100,
+                          )}
+                          %
+                        </span>
+                      </div>
+                    )}
+                    {session.machineVerification.detectedMaxSpeedKmh !=
+                      null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Peak Speed Detected
+                        </span>
+                        <span
+                          className={`font-medium tabular-nums ${
+                            session.machineVerification.maxAllowedSpeedKmh !=
+                              null &&
+                            session.machineVerification.detectedMaxSpeedKmh >
+                              session.machineVerification.maxAllowedSpeedKmh
+                              ? "text-red-600 dark:text-red-400"
+                              : ""
+                          }`}
+                        >
+                          {session.machineVerification.detectedMaxSpeedKmh.toFixed(
+                            1,
+                          )}{" "}
+                          km/h
+                        </span>
+                      </div>
+                    )}
+                    {session.machineVerification.maxAllowedSpeedKmh != null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Speed Threshold
+                        </span>
+                        <span className="font-medium tabular-nums">
+                          {session.machineVerification.maxAllowedSpeedKmh} km/h
+                        </span>
+                      </div>
+                    )}
+                    {session.machineVerification.notes && (
+                      <p className="text-xs text-muted-foreground italic pt-1">
+                        {session.machineVerification.notes}
+                      </p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -417,21 +691,26 @@ export function RideSessionDetailsDrawer({
                       className={`h-5 w-5 ${session.complianceScore >= 80 ? "text-green-600" : session.complianceScore >= 50 ? "text-amber-600" : "text-red-600"}`}
                     />
                     <div>
-                      <p className="text-xs text-muted-foreground">Compliance Score</p>
+                      <p className="text-xs text-muted-foreground">
+                        Compliance Score
+                      </p>
                       <p
                         className={`text-lg font-bold ${session.complianceScore >= 80 ? "text-green-600" : session.complianceScore >= 50 ? "text-amber-600" : "text-red-600"}`}
                       >
                         {session.complianceScore}%
                       </p>
                     </div>
-                    {session.bonusApplied != null && session.bonusApplied > 0 && (
-                      <div className="ml-auto text-right">
-                        <p className="text-xs text-muted-foreground">Bonus Applied</p>
-                        <p className="text-sm font-semibold text-amber-600">
-                          +{session.bonusApplied} pts
-                        </p>
-                      </div>
-                    )}
+                    {session.bonusApplied != null &&
+                      session.bonusApplied > 0 && (
+                        <div className="ml-auto text-right">
+                          <p className="text-xs text-muted-foreground">
+                            Bonus Applied
+                          </p>
+                          <p className="text-sm font-semibold text-amber-600">
+                            +{session.bonusApplied} pts
+                          </p>
+                        </div>
+                      )}
                   </div>
                 )}
               </CardContent>
@@ -517,22 +796,44 @@ export function RideSessionDetailsDrawer({
                       disabled={!!actionLoading}
                       onClick={async () => {
                         setActionLoading(showReasonFor);
-                        const result = await verifyRideSession({ sessionId: session.id, action: showReasonFor, reason: reason || undefined });
+                        const result = await verifyRideSession({
+                          sessionId: session.id,
+                          action: showReasonFor,
+                          reason: reason || undefined,
+                        });
                         setActionLoading(null);
                         if (result.success) {
-                          toast({ title: showReasonFor === "reject" ? "Session rejected" : "Escalated to manual review" });
+                          toast({
+                            title:
+                              showReasonFor === "reject"
+                                ? "Session rejected"
+                                : "Escalated to manual review",
+                          });
                           setShowReasonFor(null);
                           setReason("");
                           onVerified?.();
                         } else {
-                          toast({ title: "Action failed", description: result.error, variant: "destructive" });
+                          toast({
+                            title: "Action failed",
+                            description: result.error,
+                            variant: "destructive",
+                          });
                         }
                       }}
                     >
-                      {actionLoading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : null}
+                      {actionLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      ) : null}
                       Confirm {showReasonFor}
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setShowReasonFor(null); setReason(""); }}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setShowReasonFor(null);
+                        setReason("");
+                      }}
+                    >
                       Cancel
                     </Button>
                   </div>

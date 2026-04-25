@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { AlertCircle, Eye, Mail, DatabaseZap } from "lucide-react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -15,6 +15,7 @@ import {
 } from "@/components/settings/config";
 import { IntegrationStatusCards } from "@/components/settings/IntegrationStatusCards";
 import { SettingsAuditPanel } from "@/components/settings/SettingsAuditPanel";
+import { ContractHealthPanel } from "@/components/contracts/ContractHealthPanel";
 import { SettingsSectionForm } from "@/components/settings/SettingsSectionForm";
 import { useAdminUser } from "@/hooks/useAdminUser";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -78,6 +79,53 @@ const SECTION_SCHEMAS = {
 
 const DEFAULT_SECTION: SettingsSectionId = "general";
 
+const normalizeSectionState = (
+  fields: { name: string; type?: string }[],
+  input: Record<string, unknown> | undefined,
+) => {
+  const source = input ?? {};
+  return fields.reduce<Record<string, unknown>>((acc, field) => {
+    const value = source[field.name];
+
+    if (Array.isArray(value)) {
+      acc[field.name] = value.map((item) =>
+        typeof item === "string" ? item.trim() : item,
+      );
+      return acc;
+    }
+
+    if (field.type === "number") {
+      if (value === "" || value === null || value === undefined) {
+        acc[field.name] = null;
+        return acc;
+      }
+
+      const parsedValue =
+        typeof value === "number" ? value : Number(String(value).trim());
+      acc[field.name] = Number.isFinite(parsedValue) ? parsedValue : null;
+      return acc;
+    }
+
+    if (field.type === "switch") {
+      acc[field.name] =
+        typeof value === "string" ? value === "true" : Boolean(value);
+      return acc;
+    }
+
+    if (typeof value === "string") {
+      const trimmedValue = value.trim();
+      acc[field.name] = trimmedValue === "" ? null : trimmedValue;
+      return acc;
+    }
+
+    acc[field.name] = value ?? null;
+    return acc;
+  }, {});
+};
+
+const serializeSectionState = (value: Record<string, unknown>) =>
+  JSON.stringify(value);
+
 export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -118,9 +166,21 @@ export default function SettingsPage() {
     values,
   });
 
+  const watchedValues = useWatch({ control: form.control });
+
   useEffect(() => {
     form.reset(values);
   }, [form, values, section]);
+
+  const hasUnsavedChanges = useMemo(() => {
+    const baseline = serializeSectionState(
+      normalizeSectionState(fields, values),
+    );
+    const current = serializeSectionState(
+      normalizeSectionState(fields, watchedValues as Record<string, unknown>),
+    );
+    return baseline !== current;
+  }, [fields, values, watchedValues]);
 
   const { data: auditEntries = [] } = useQuery<SettingsAuditEntry[]>({
     queryKey: ["settingsAudit", section],
@@ -148,7 +208,7 @@ export default function SettingsPage() {
   const setSection = (nextSection: SettingsSectionId) => {
     if (nextSection === section) return;
 
-    if (form.formState.isDirty) {
+    if (hasUnsavedChanges) {
       toast({
         title: "Unsaved changes",
         description: "Save or discard the current section before switching.",
@@ -158,7 +218,7 @@ export default function SettingsPage() {
 
     const nextParams = new URLSearchParams(searchParams.toString());
     nextParams.set("section", nextSection);
-    router.replace(`/settings?${nextParams.toString()}`);
+    router.replace(`/settings?${nextParams.toString()}`, { scroll: false });
   };
 
   const saveSection = async (
@@ -216,7 +276,9 @@ export default function SettingsPage() {
     try {
       const result = await syncPlatformSettings();
       if (!result.success) throw new Error(result.error || "Sync failed");
-      await queryClient.invalidateQueries({ queryKey: PLATFORM_SETTINGS_QUERY_KEY });
+      await queryClient.invalidateQueries({
+        queryKey: PLATFORM_SETTINGS_QUERY_KEY,
+      });
       toast({
         title: "Database synced",
         description: result.seeded.length
@@ -226,7 +288,8 @@ export default function SettingsPage() {
     } catch (err) {
       toast({
         title: "Sync failed",
-        description: err instanceof Error ? err.message : "Failed to sync settings.",
+        description:
+          err instanceof Error ? err.message : "Failed to sync settings.",
         variant: "destructive",
       });
     } finally {
@@ -310,13 +373,17 @@ export default function SettingsPage() {
           <Alert>
             <DatabaseZap className="h-4 w-4" />
             <AlertTitle>
-              {settings.missingSections.length} section{settings.missingSections.length > 1 ? "s" : ""} not yet persisted to database
+              {settings.missingSections.length} section
+              {settings.missingSections.length > 1 ? "s" : ""} not yet persisted
+              to database
             </AlertTitle>
             <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <span>
                 The following sections are showing hardcoded defaults:{" "}
-                <span className="font-medium">{settings.missingSections.join(", ")}</span>.
-                Sync to write their current values to the database.
+                <span className="font-medium">
+                  {settings.missingSections.join(", ")}
+                </span>
+                . Sync to write their current values to the database.
               </span>
               <Button
                 size="sm"
@@ -343,6 +410,7 @@ export default function SettingsPage() {
                       key={entry.id}
                       type="button"
                       onClick={() => setSection(entry.id)}
+                      aria-pressed={isActive}
                       className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
                         isActive
                           ? "border-primary/50 bg-primary/10"
@@ -417,11 +485,14 @@ export default function SettingsPage() {
             ) : null}
 
             {section === "integrations" ? (
-              <IntegrationStatusCards
-                integrations={settings.runtime.integrationStatus}
-                isRefreshing={isRecheckingIntegrations}
-                onRefresh={handleIntegrationRecheck}
-              />
+              <>
+                <IntegrationStatusCards
+                  integrations={settings.runtime.integrationStatus}
+                  isRefreshing={isRecheckingIntegrations}
+                  onRefresh={handleIntegrationRecheck}
+                />
+                <ContractHealthPanel />
+              </>
             ) : null}
 
             {isReadOnlyRole && (
@@ -449,6 +520,7 @@ export default function SettingsPage() {
                     isSectionReadOnly={
                       Boolean(metadata?.readOnly) || isReadOnlyRole
                     }
+                    hasUnsavedChanges={hasUnsavedChanges}
                     onSubmit={saveSection}
                   />
                 </CardContent>

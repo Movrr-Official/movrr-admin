@@ -35,7 +35,15 @@ export const rewardBonusEntrySchema = z.object({
   type: z.string(),
   label: z.string().optional(),
   multiplier: z.number().optional(),
-  addedPoints: z.number().optional(),
+  points: z.number().optional(),
+});
+
+/** A single applied multiplier — mirrors mobile's RewardModifier */
+export const appliedModifierSchema = z.object({
+  type: z.string(),
+  label: z.string().optional(),
+  multiplier: z.number().optional(),
+  applied: z.boolean(),
 });
 
 export const rewardTransactionSchema = z.object({
@@ -72,6 +80,17 @@ export const rewardTransactionSchema = z.object({
   verifiedMinutes: z.number().optional(),
   /** Itemised bonus entries */
   bonusBreakdown: z.array(rewardBonusEntrySchema).optional(),
+  // ── Payout audit chain — full calculation trace from metadata ──────────────
+  /** basePoints × totalMultiplier before flat bonuses are added */
+  pointsBeforeBonuses: z.number().optional(),
+  /** Sum of all flat-point bonus entries */
+  fixedBonusPoints: z.number().optional(),
+  /** pointsBeforeBonuses + fixedBonusPoints, before cap enforcement */
+  pointsBeforeCap: z.number().optional(),
+  /** Points removed by the per-ride or daily/weekly cap (0 when not capped) */
+  cappedPoints: z.number().optional(),
+  /** Full multiplier chain — one entry per modifier applied during calculation */
+  appliedModifiers: z.array(appliedModifierSchema).optional(),
 });
 
 export const riderBalanceSchema = z.object({
@@ -92,3 +111,4 @@ export type RewardTransactionSource = z.infer<
 export type EarningMode = z.infer<typeof earningModeSchema>;
 export type RiderBalance = z.infer<typeof riderBalanceSchema>;
 export type RewardBonusEntry = z.infer<typeof rewardBonusEntrySchema>;
+export type AppliedModifier = z.infer<typeof appliedModifierSchema>;

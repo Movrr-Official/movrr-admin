@@ -284,7 +284,9 @@ export async function getCampaigns(
           typeof campaign.requirements === "object" &&
           "deliveryMode" in campaign.requirements &&
           ["manual", "automated"].includes(
-            String((campaign.requirements as Record<string, unknown>).deliveryMode),
+            String(
+              (campaign.requirements as Record<string, unknown>).deliveryMode,
+            ),
           )
             ? (String(
                 (campaign.requirements as Record<string, unknown>).deliveryMode,
@@ -436,7 +438,9 @@ export async function updateCampaign(
     if (validatedData.advertiserId !== undefined)
       updateData.advertiser_id = validatedData.advertiserId;
     if (validatedData.campaignType !== undefined)
-      updateData.campaign_type = mapUiCampaignTypeToDb(validatedData.campaignType);
+      updateData.campaign_type = mapUiCampaignTypeToDb(
+        validatedData.campaignType,
+      );
     if (validatedData.targetZones !== undefined)
       updateData.target_zones = validatedData.targetZones;
     if (validatedData.vehicleTypeRequired !== undefined)
@@ -927,16 +931,18 @@ export async function getCampaignAnalyticsData(
   try {
     await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
-    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const since = new Date(
+      Date.now() - days * 24 * 60 * 60 * 1000,
+    ).toISOString();
 
     // ── Daily impressions ──────────────────────────────────────────────────────
     // Sum campaign_impact_impressions per calendar day from completed sessions.
     // Falls back to counting sessions if the column is absent (graceful degradation).
     let sessionsQuery = supabaseAdmin
       .from("ride_session")
-      .select("campaign_id, ended_at, campaign_impact_impressions, city")
-      .not("ended_at", "is", null)
-      .gte("ended_at", since);
+      .select("campaign_id, completed_at, campaign_impact_impressions, city")
+      .not("completed_at", "is", null)
+      .gte("completed_at", since);
 
     if (campaignIds && campaignIds.length > 0) {
       sessionsQuery = sessionsQuery.in("campaign_id", campaignIds);
@@ -956,8 +962,8 @@ export async function getCampaignAnalyticsData(
 
     let totalImpressions = 0;
     rows.forEach((row) => {
-      if (!row.ended_at) return;
-      const day = new Date(row.ended_at).toISOString().split("T")[0];
+      if (!row.completed_at) return;
+      const day = new Date(row.completed_at).toISOString().split("T")[0];
       const imp = Number(row.campaign_impact_impressions ?? 1);
       totalImpressions += imp;
       if (dailyMap.has(day)) dailyMap.set(day, (dailyMap.get(day) ?? 0) + imp);
@@ -969,10 +975,16 @@ export async function getCampaignAnalyticsData(
 
     // ── Engagement by city ─────────────────────────────────────────────────────
     // Count distinct campaign sessions per city; engagement = sessions / active days
-    const cityMap = new Map<string, { sessions: number; campaignSet: Set<string> }>();
+    const cityMap = new Map<
+      string,
+      { sessions: number; campaignSet: Set<string> }
+    >();
     rows.forEach((row) => {
       if (!row.city) return;
-      const entry = cityMap.get(row.city) ?? { sessions: 0, campaignSet: new Set() };
+      const entry = cityMap.get(row.city) ?? {
+        sessions: 0,
+        campaignSet: new Set(),
+      };
       entry.sessions += 1;
       if (row.campaign_id) entry.campaignSet.add(row.campaign_id);
       cityMap.set(row.city, entry);
@@ -1003,7 +1015,10 @@ export async function getCampaignAnalyticsData(
       supabaseAdmin
         .from("campaign_assignment")
         .select("rider_id")
-        .in("campaign_id", campaignIds && campaignIds.length > 0 ? campaignIds : ["none"])
+        .in(
+          "campaign_id",
+          campaignIds && campaignIds.length > 0 ? campaignIds : ["none"],
+        )
         .not("rider_id", "is", null),
       supabaseAdmin
         .from("rider_route")

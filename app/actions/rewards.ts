@@ -9,6 +9,12 @@ import {
   RiderBalance,
   rewardTransactionTypeSchema,
 } from "@/schemas";
+import {
+  DB_TABLES,
+  META_KEYS,
+  REWARD_SOURCE,
+  parseRewardMetadata,
+} from "@/lib/rewardConstants";
 import { z } from "zod";
 import { writeUserActivity } from "@/lib/userActivity";
 
@@ -62,7 +68,7 @@ export async function getRewardStats(dateRange?: {
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: transactions, error: txnError } = await supabaseAdmin
-      .from("reward_transactions")
+      .from(DB_TABLES.REWARD_TRANSACTIONS)
       .select(
         "id, rider_id, campaign_id, points_earned, source, metadata, created_at",
       );
@@ -72,7 +78,7 @@ export async function getRewardStats(dateRange?: {
     }
 
     const { data: redemptions, error: redemptionError } = await supabaseAdmin
-      .from("reward_redemptions")
+      .from(DB_TABLES.REWARD_REDEMPTIONS)
       .select("id, rider_id, points_spent, status, requested_at");
 
     if (redemptionError) {
@@ -118,9 +124,7 @@ export async function getRewardStats(dateRange?: {
     );
 
     const totalPointsAwarded = filteredTransactions.reduce((sum, txn) => {
-      const direction = txn.metadata?.adjustment_direction as
-        | string
-        | undefined;
+      const direction = parseRewardMetadata(txn.metadata).adjustmentDirection;
       const isDebit = direction === "debit";
       return sum + (isDebit ? 0 : Number(txn.points_earned ?? 0));
     }, 0);
@@ -131,9 +135,7 @@ export async function getRewardStats(dateRange?: {
     );
 
     const totalAdjustmentsDebited = filteredTransactions.reduce((sum, txn) => {
-      const direction = txn.metadata?.adjustment_direction as
-        | string
-        | undefined;
+      const direction = parseRewardMetadata(txn.metadata).adjustmentDirection;
       if (direction !== "debit") return sum;
       return sum + Number(txn.points_earned ?? 0);
     }, 0);
@@ -144,9 +146,7 @@ export async function getRewardStats(dateRange?: {
     const pointsByCampaign = new Map<string, number>();
     filteredTransactions.forEach((txn) => {
       if (!txn.campaign_id) return;
-      const direction = txn.metadata?.adjustment_direction as
-        | string
-        | undefined;
+      const direction = parseRewardMetadata(txn.metadata).adjustmentDirection;
       if (direction === "debit") return;
       const current = pointsByCampaign.get(txn.campaign_id) ?? 0;
       pointsByCampaign.set(
@@ -157,9 +157,7 @@ export async function getRewardStats(dateRange?: {
 
     const pointsByRider = new Map<string, number>();
     filteredTransactions.forEach((txn) => {
-      const direction = txn.metadata?.adjustment_direction as
-        | string
-        | undefined;
+      const direction = parseRewardMetadata(txn.metadata).adjustmentDirection;
       if (direction === "debit") return;
       const current = pointsByRider.get(txn.rider_id) ?? 0;
       pointsByRider.set(txn.rider_id, current + Number(txn.points_earned ?? 0));
@@ -167,32 +165,30 @@ export async function getRewardStats(dateRange?: {
 
     // Ride mode split — Standard Ride vs Suggested-Route Bonus vs Boosted Ride points
     const standardRidePoints = filteredTransactions.reduce((sum, txn) => {
-      const direction = txn.metadata?.adjustment_direction as
-        | string
-        | undefined;
+      const direction = parseRewardMetadata(txn.metadata).adjustmentDirection;
       if (direction === "debit") return sum;
-      return txn.source === "standard_ride"
+      return txn.source === REWARD_SOURCE.STANDARD_RIDE
         ? sum + Number(txn.points_earned ?? 0)
         : sum;
     }, 0);
 
     // standard_ride_bonus — suggested-route compliance bonuses (Standard Ride mode only)
-    const suggestedRouteBonusPoints = filteredTransactions.reduce((sum, txn) => {
-      const direction = txn.metadata?.adjustment_direction as
-        | string
-        | undefined;
-      if (direction === "debit") return sum;
-      return txn.source === "standard_ride_bonus"
-        ? sum + Number(txn.points_earned ?? 0)
-        : sum;
-    }, 0);
+    const suggestedRouteBonusPoints = filteredTransactions.reduce(
+      (sum, txn) => {
+        const direction = parseRewardMetadata(txn.metadata).adjustmentDirection;
+        if (direction === "debit") return sum;
+        return txn.source === REWARD_SOURCE.STANDARD_RIDE_BONUS
+          ? sum + Number(txn.points_earned ?? 0)
+          : sum;
+      },
+      0,
+    );
 
     const boostedRidePoints = filteredTransactions.reduce((sum, txn) => {
-      const direction = txn.metadata?.adjustment_direction as
-        | string
-        | undefined;
+      const direction = parseRewardMetadata(txn.metadata).adjustmentDirection;
       if (direction === "debit") return sum;
-      return txn.source === "ad_boost" || txn.source === "boosted_ride"
+      return txn.source === REWARD_SOURCE.AD_BOOST ||
+        txn.source === REWARD_SOURCE.BOOSTED_RIDE
         ? sum + Number(txn.points_earned ?? 0)
         : sum;
     }, 0);
@@ -217,9 +213,7 @@ export async function getRewardStats(dateRange?: {
       const key = new Date(txn.created_at).toISOString().split("T")[0];
       const bucket = dailyMap.get(key);
       if (!bucket) return;
-      const direction = txn.metadata?.adjustment_direction as
-        | string
-        | undefined;
+      const direction = parseRewardMetadata(txn.metadata).adjustmentDirection;
       const points = Number(txn.points_earned ?? 0);
       if (direction === "debit") {
         bucket.redeemed += points;
@@ -335,7 +329,7 @@ export async function getRewardTransactions(filters?: {
     const supabaseAdmin = createSupabaseAdminClient();
 
     let txnQuery = supabaseAdmin
-      .from("reward_transactions")
+      .from(DB_TABLES.REWARD_TRANSACTIONS)
       .select(
         "id, rider_id, campaign_id, route_tracking_id, points_earned, source, metadata, created_at",
       )
@@ -364,7 +358,7 @@ export async function getRewardTransactions(filters?: {
     }
 
     let redemptionQuery = supabaseAdmin
-      .from("reward_redemptions")
+      .from(DB_TABLES.REWARD_REDEMPTIONS)
       .select("id, rider_id, points_spent, status, requested_at")
       .order("requested_at", { ascending: false });
 
@@ -388,7 +382,7 @@ export async function getRewardTransactions(filters?: {
 
     const balanceByRider = new Map<string, number>();
     const { data: balances } = await supabaseAdmin
-      .from("rider_reward_balance")
+      .from(DB_TABLES.RIDER_REWARD_BALANCE)
       .select("rider_id, points_balance");
 
     (balances ?? []).forEach((balance) => {
@@ -396,57 +390,37 @@ export async function getRewardTransactions(filters?: {
     });
 
     const mappedTransactions = (transactions ?? []).map((txn) => {
-      const meta = txn.metadata as Record<string, unknown> | null | undefined;
-      const direction = meta?.adjustment_direction as string | undefined;
-      const isDebit = direction === "debit";
+      const m = parseRewardMetadata(txn.metadata);
+      const isDebit = m.adjustmentDirection === "debit";
       const points = Number(txn.points_earned ?? 0) * (isDebit ? -1 : 1);
-      const type = txn.source === "adjustment" ? "adjusted" : "awarded";
-
-      // Extract bonus breakdown from metadata — mirrors mobile's bonusBreakdown field
-      const rawBreakdown = meta?.bonusBreakdown as unknown[] | undefined;
-      const bonusBreakdown = Array.isArray(rawBreakdown)
-        ? rawBreakdown.map((entry: any) => ({
-            type: String(entry?.type ?? ""),
-            label: entry?.label ? String(entry.label) : undefined,
-            multiplier:
-              entry?.multiplier != null ? Number(entry.multiplier) : undefined,
-            addedPoints:
-              entry?.addedPoints != null
-                ? Number(entry.addedPoints)
-                : undefined,
-          }))
-        : undefined;
+      const type =
+        txn.source === REWARD_SOURCE.ADJUSTMENT ? "adjusted" : "awarded";
 
       return {
         id: txn.id,
         riderId: txn.rider_id,
         campaignId: txn.campaign_id ?? undefined,
         routeId: txn.route_tracking_id ?? undefined,
-        rideSessionId: (meta?.rideSessionId as string | undefined) ?? undefined,
+        rideSessionId: m.rideSessionId,
         type,
         source: txn.source ?? undefined,
-        earningMode: (meta?.earningMode as string | undefined) ?? undefined,
+        earningMode: m.earningMode,
         points,
-        description: (meta?.description as string | undefined) ?? undefined,
+        description: m.description,
         balanceAfter: balanceByRider.get(txn.rider_id) ?? 0,
         createdAt: txn.created_at ?? new Date().toISOString(),
-        createdBy: (meta?.created_by as string | undefined) ?? undefined,
-        // Bonus + cap detail
-        basePoints:
-          meta?.basePoints != null ? Number(meta.basePoints) : undefined,
-        multiplier:
-          meta?.multiplier != null ? Number(meta.multiplier) : undefined,
-        campaignBoostMultiplier:
-          meta?.campaignBoostMultiplier != null
-            ? Number(meta.campaignBoostMultiplier)
-            : undefined,
-        wasCapped:
-          meta?.wasCapped != null ? Boolean(meta.wasCapped) : undefined,
-        verifiedMinutes:
-          meta?.verifiedMinutes != null
-            ? Number(meta.verifiedMinutes)
-            : undefined,
-        bonusBreakdown,
+        createdBy: m.createdBy,
+        basePoints: m.basePoints,
+        multiplier: m.multiplier,
+        campaignBoostMultiplier: m.campaignBoostMultiplier,
+        wasCapped: m.wasCapped,
+        verifiedMinutes: m.verifiedMinutes,
+        bonusBreakdown: m.bonusBreakdown,
+        pointsBeforeBonuses: m.pointsBeforeBonuses,
+        fixedBonusPoints: m.fixedBonusPoints,
+        pointsBeforeCap: m.pointsBeforeCap,
+        cappedPoints: m.cappedPoints,
+        appliedModifiers: m.appliedModifiers,
       } as RewardTransaction;
     });
 
@@ -489,6 +463,76 @@ export async function getRewardTransactions(filters?: {
 }
 
 /**
+ * Fetches all reward_transactions linked to a specific ride session.
+ * Uses rider_id + JSONB-contains filter on metadata.rideSessionId for efficiency.
+ */
+export async function getSessionRewardTransactions(
+  sessionId: string,
+  riderId: string,
+): Promise<{ success: boolean; data?: RewardTransaction[]; error?: string }> {
+  try {
+    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const supabaseAdmin = createSupabaseAdminClient();
+
+    const { data: txns, error } = await supabaseAdmin
+      .from(DB_TABLES.REWARD_TRANSACTIONS)
+      .select(
+        "id, rider_id, campaign_id, route_tracking_id, points_earned, source, metadata, created_at",
+      )
+      .eq("rider_id", riderId)
+      .contains("metadata", { [META_KEYS.RIDE_SESSION_ID]: sessionId })
+      .order("created_at", { ascending: true });
+
+    if (error) return { success: false, error: error.message };
+
+    const mapped = (txns ?? []).map((txn) => {
+      const m = parseRewardMetadata(txn.metadata);
+      const isDebit = m.adjustmentDirection === "debit";
+      const points = Number(txn.points_earned ?? 0) * (isDebit ? -1 : 1);
+      const type =
+        txn.source === REWARD_SOURCE.ADJUSTMENT ? "adjusted" : "awarded";
+
+      return {
+        id: txn.id,
+        riderId: txn.rider_id,
+        campaignId: txn.campaign_id ?? undefined,
+        routeId: txn.route_tracking_id ?? undefined,
+        rideSessionId: m.rideSessionId,
+        type: type as RewardTransaction["type"],
+        source: txn.source ?? undefined,
+        earningMode: m.earningMode,
+        points,
+        description: m.description,
+        balanceAfter: 0,
+        createdAt: txn.created_at ?? new Date().toISOString(),
+        createdBy: m.createdBy,
+        basePoints: m.basePoints,
+        multiplier: m.multiplier,
+        campaignBoostMultiplier: m.campaignBoostMultiplier,
+        wasCapped: m.wasCapped,
+        verifiedMinutes: m.verifiedMinutes,
+        bonusBreakdown: m.bonusBreakdown,
+        pointsBeforeBonuses: m.pointsBeforeBonuses,
+        fixedBonusPoints: m.fixedBonusPoints,
+        pointsBeforeCap: m.pointsBeforeCap,
+        cappedPoints: m.cappedPoints,
+        appliedModifiers: m.appliedModifiers,
+      } as RewardTransaction;
+    });
+
+    return { success: true, data: mapped };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch session rewards",
+    };
+  }
+}
+
+/**
  * Server action to get rider balances
  */
 export async function getRiderBalances(): Promise<{
@@ -501,7 +545,7 @@ export async function getRiderBalances(): Promise<{
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: balances, error } = await supabaseAdmin
-      .from("rider_reward_balance")
+      .from(DB_TABLES.RIDER_REWARD_BALANCE)
       .select("rider_id, points_balance, lifetime_points_earned, updated_at");
 
     if (error) {
@@ -531,7 +575,7 @@ export async function getRiderBalances(): Promise<{
 
     const { data: redemptions } = riderIds.length
       ? await supabaseAdmin
-          .from("reward_redemptions")
+          .from(DB_TABLES.REWARD_REDEMPTIONS)
           .select("rider_id, points_spent, requested_at")
           .in("rider_id", riderIds)
       : { data: [] };
@@ -560,7 +604,7 @@ export async function getRiderBalances(): Promise<{
 
     const { data: transactions } = riderIds.length
       ? await supabaseAdmin
-          .from("reward_transactions")
+          .from(DB_TABLES.REWARD_TRANSACTIONS)
           .select("rider_id, created_at")
           .in("rider_id", riderIds)
       : { data: [] };

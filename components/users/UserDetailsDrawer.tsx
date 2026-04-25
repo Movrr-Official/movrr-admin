@@ -59,7 +59,12 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { User, userRoleSchema, userStatusSchema } from "@/schemas";
+import {
+  User,
+  userRoleSchema,
+  userStatusSchema,
+  RewardTransaction,
+} from "@/schemas";
 import { CopyButton } from "@/components/CopyButton";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -112,7 +117,9 @@ export function UserDetailsDrawer({
   const [activityLogs, setActivityLogs] = useState<any[]>([]);
   const [routes, setRoutes] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [rewardTransactions, setRewardTransactions] = useState<any[]>([]);
+  const [rewardTransactions, setRewardTransactions] = useState<
+    RewardTransaction[]
+  >([]);
   const [pointsBalance, setPointsBalance] = useState<any>(null);
   const [isLoadingAdditionalData, setIsLoadingAdditionalData] = useState(false);
 
@@ -971,13 +978,13 @@ export function UserDetailsDrawer({
                               </div>
                               <div className="text-right">
                                 <p className="text-sm font-semibold text-foreground">
-                                  {transaction.points_amount > 0 ? "+" : ""}
-                                  {transaction.points_amount || 0} pts
+                                  {transaction.points > 0 ? "+" : ""}
+                                  {transaction.points || 0} pts
                                 </p>
-                                {transaction.created_at && (
+                                {transaction.createdAt && (
                                   <p className="text-xs text-muted-foreground">
                                     {format(
-                                      new Date(transaction.created_at),
+                                      new Date(transaction.createdAt),
                                       "MMM d, yyyy",
                                     )}
                                   </p>

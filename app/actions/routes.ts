@@ -6,6 +6,7 @@ import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { writeUserActivities } from "@/lib/userActivity";
 import { RiderRoute, routeStatusSchema } from "@/schemas";
+import { DB_TABLES } from "@/lib/rewardConstants";
 import { z } from "zod";
 
 const updateRouteStatusSchema = z.object({
@@ -1054,7 +1055,8 @@ export async function unassignRouteAssignment(
             action: "Route unassigned",
             description: "A route assignment was cancelled or unassigned.",
             related_entity_type: "route",
-            related_entity_id: assignmentRow.route_id ?? validatedData.riderRouteId,
+            related_entity_id:
+              assignmentRow.route_id ?? validatedData.riderRouteId,
             metadata: {
               riderRouteId: validatedData.riderRouteId,
             },
@@ -1266,10 +1268,9 @@ export async function updateRouteStatus(
             : validatedData.status === "in-progress"
               ? "Route started"
               : "Route status updated";
-        const description =
-          validatedData.reason?.trim()
-            ? `Route status changed to ${validatedData.status}. Reason: ${validatedData.reason}`
-            : `Route status changed to ${validatedData.status}.`;
+        const description = validatedData.reason?.trim()
+          ? `Route status changed to ${validatedData.status}. Reason: ${validatedData.reason}`
+          : `Route status changed to ${validatedData.status}.`;
 
         await writeUserActivities(supabaseAdmin, [
           {
@@ -1287,7 +1288,10 @@ export async function updateRouteStatus(
             },
           },
         ]).catch((activityError) => {
-          console.warn("Update route status activity write failed:", activityError);
+          console.warn(
+            "Update route status activity write failed:",
+            activityError,
+          );
         });
       }
     }
@@ -1330,7 +1334,7 @@ export async function deleteRoute(
         .delete()
         .in("route_tracking_id", trackingIds);
       await supabaseAdmin
-        .from("reward_transactions")
+        .from(DB_TABLES.REWARD_TRANSACTIONS)
         .delete()
         .in("route_tracking_id", trackingIds);
     }
@@ -1477,7 +1481,10 @@ export async function getRouteGPSTracking(
   try {
     await requireAdminRoles(ADMIN_MODERATOR_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
-    const canonicalRouteId = await resolveCanonicalRouteId(supabaseAdmin, routeId);
+    const canonicalRouteId = await resolveCanonicalRouteId(
+      supabaseAdmin,
+      routeId,
+    );
 
     // Fetch GPS tracking data from route_tracking path
     const { data, error } = await supabaseAdmin
@@ -1602,7 +1609,10 @@ export async function getRoutePointsAwarded(
   try {
     await requireAdminRoles(ADMIN_MODERATOR_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
-    const canonicalRouteId = await resolveCanonicalRouteId(supabaseAdmin, routeId);
+    const canonicalRouteId = await resolveCanonicalRouteId(
+      supabaseAdmin,
+      routeId,
+    );
 
     const { data: trackingRows } = await supabaseAdmin
       .from("route_tracking")
@@ -1613,7 +1623,7 @@ export async function getRoutePointsAwarded(
 
     const { data, error } = trackingIds.length
       ? await supabaseAdmin
-          .from("reward_transactions")
+          .from(DB_TABLES.REWARD_TRANSACTIONS)
           .select("*")
           .in("route_tracking_id", trackingIds)
       : { data: [], error: null };
@@ -1659,7 +1669,9 @@ export async function getRouteTimeline(
 
     const { data: routeData, error: routeError } = await supabaseAdmin
       .from("rider_route")
-      .select("route_id, assigned_at, started_at, completed_at, updated_at, status")
+      .select(
+        "route_id, assigned_at, started_at, completed_at, updated_at, status",
+      )
       .eq("id", routeId)
       .single();
 

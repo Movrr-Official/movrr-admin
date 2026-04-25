@@ -57,7 +57,7 @@ export const rideSessionSchema = z.object({
   /** Campaign route FK — present for boosted rides */
   routeId: z.string().optional(),
   routeName: z.string().optional(),
-  /** Rider–route assignment FK */
+  /** Rider–route assignment FK — sourced from ride_session.rider_route_id */
   routeAssignmentId: z.string().optional(),
   /** Suggested route chosen by rider in Standard Ride mode */
   suggestedRouteId: z.string().optional(),
@@ -68,20 +68,46 @@ export const rideSessionSchema = z.object({
   /** Multiplier applied for suggested-route compliance */
   multiplierApplied: z.number().optional(),
   startedAt: z.string().datetime(),
+  /** Session end time — sourced from ride_session.completed_at */
   endedAt: z.string().datetime().optional(),
-  /** Verified ride duration in minutes */
+  /** Verified ride duration in minutes — sourced from reward_transactions.metadata.verifiedMinutes */
   verifiedMinutes: z.number().default(0),
-  /** Points awarded for this session */
+  /** Points awarded for this session — sourced from reward_transactions (canonical ledger) */
   pointsAwarded: z.number().default(0),
-  /** Verification result */
+  /**
+   * Effective verification status — precedence: admin manual override > machine auto-verdict.
+   * Reflects what the admin UI should act on.
+   */
   verificationStatus: rideVerificationStatusSchema,
-  /** Array of reason codes from ride_verification */
+  /**
+   * Source of verificationStatus:
+   * "admin"   = admin manually approved/rejected/escalated via ride_verification table
+   * "machine" = auto-computed by mobile at ride completion, from ride_session.verification_result
+   * undefined = no verdict available yet
+   */
+  verificationSource: z.enum(["machine", "admin"]).optional(),
+  /** Reason codes for the effective verificationStatus (from admin override or machine verdict) */
   reasonCodes: z.array(z.string()).default([]),
+  /**
+   * Raw machine-computed verdict from ride_session.verification_result JSONB.
+   * Always reflects the mobile app's original auto-verdict — not affected by admin overrides.
+   * Use this for audit, diagnostic, and reviewer-context purposes.
+   */
+  machineVerification: z
+    .object({
+      status: rideVerificationStatusSchema,
+      qualityScore: z.number().optional(),
+      reasonCodes: z.array(z.string()).optional(),
+      detectedMaxSpeedKmh: z.number().optional(),
+      maxAllowedSpeedKmh: z.number().optional(),
+      notes: z.string().optional(),
+    })
+    .optional(),
   /** Bike type used for this session — sourced from ride_session.bike_type */
   bikeType: bikeTypeSchema.optional(),
   /** GPS/motion quality score 0–100 — sourced from ride_session.ride_quality_percent */
   rideQualityPercent: z.number().min(0).max(100).optional(),
-  /** Active moving time in minutes (excl. pauses) — sourced from ride_session.moving_time */
+  /** Active moving time in minutes (excl. pauses) — sourced from ride_session.moving_time_ms ÷ 60 000 */
   movingTime: z.number().min(0).optional(),
   /** Total GPS-calculated distance in meters — sourced from route_tracking.total_distance */
   totalDistanceMeters: z.number().min(0).optional(),

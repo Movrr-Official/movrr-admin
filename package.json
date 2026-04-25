@@ -8,7 +8,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "npm run typecheck",
     "start": "next start",
-    "preview-email": "email dev -p 3030"
+    "preview-email": "email dev -p 3030",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -92,6 +94,7 @@
     "react-email": "^5.2.5",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.5"
   }
 }

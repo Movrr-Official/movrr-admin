@@ -39,9 +39,12 @@ export default function CampaignsOverview() {
     () =>
       (campaigns ?? [])
         .filter((c) =>
-          ["active", "confirmed", "open_for_signup", "selection_in_progress"].includes(
-            c.status,
-          ),
+          [
+            "active",
+            "confirmed",
+            "open_for_signup",
+            "selection_in_progress",
+          ].includes(c.status),
         )
         .map((c) => c.id),
     [campaigns],
@@ -75,9 +78,11 @@ export default function CampaignsOverview() {
   const budgetUtilization =
     totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
 
-  // Calculate total impressions and QR scans
+  // Static fallback — used for scan-rate denominator (must stay consistent with totalScans source).
+  // liveImpressions prefers the ride_session.campaign_impact_impressions aggregate when loaded.
   const totalImpressions =
     campaigns?.reduce((sum, c) => sum + (c.impressions || 0), 0) ?? 0;
+  const liveImpressions = realAnalytics?.totalImpressions ?? totalImpressions;
   const totalScans =
     campaigns?.reduce((sum, c) => sum + (c.qrScans || 0), 0) ?? 0;
   const averageScanRate =
@@ -203,7 +208,7 @@ export default function CampaignsOverview() {
             metrics={[
               {
                 label: "Campaign Impressions",
-                value: totalImpressions,
+                value: liveImpressions,
                 icon: Eye,
                 iconColor: "text-primary",
               },

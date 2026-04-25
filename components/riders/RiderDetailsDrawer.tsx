@@ -61,6 +61,7 @@ import { DASHBOARD_COUNTS_QUERY_KEY } from "@/providers/CountProvider";
 import { Rider, RiderPerformanceMetrics, updateRiderSchema } from "@/schemas";
 import { useToast } from "@/hooks/useToast";
 import { exportToJSON } from "@/lib/export";
+import { BONUS_TYPE_LABELS, REWARD_SOURCE_LABELS } from "@/lib/rewardConstants";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -919,31 +920,40 @@ export function RiderDetailsDrawer({
                                       </div>
                                     </div>
                                   </div>
-                                  {(performanceMetrics.totalDistanceKm != null ||
+                                  {(performanceMetrics.totalDistanceKm !=
+                                    null ||
                                     performanceMetrics.co2SavedKg != null) && (
                                     <div className="grid grid-cols-2 gap-3 pt-1">
-                                      {performanceMetrics.totalDistanceKm != null && (
+                                      {performanceMetrics.totalDistanceKm !=
+                                        null && (
                                         <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
                                           <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                                             <Ruler className="h-3.5 w-3.5" />
                                             Total Distance
                                           </p>
                                           <p className="text-2xl font-bold">
-                                            {performanceMetrics.totalDistanceKm.toLocaleString()} km
+                                            {performanceMetrics.totalDistanceKm.toLocaleString()}{" "}
+                                            km
                                           </p>
-                                          <p className="text-xs text-muted-foreground mt-1">All-time</p>
+                                          <p className="text-xs text-muted-foreground mt-1">
+                                            All-time
+                                          </p>
                                         </div>
                                       )}
-                                      {performanceMetrics.co2SavedKg != null && (
+                                      {performanceMetrics.co2SavedKg !=
+                                        null && (
                                         <div className="p-4 rounded-xl bg-green-50 border border-green-100 dark:bg-green-950 dark:border-green-900">
                                           <p className="text-xs text-green-700 dark:text-green-400 mb-1 flex items-center gap-1">
                                             <Leaf className="h-3.5 w-3.5" />
                                             CO₂ Saved
                                           </p>
                                           <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-                                            {performanceMetrics.co2SavedKg.toLocaleString()} kg
+                                            {performanceMetrics.co2SavedKg.toLocaleString()}{" "}
+                                            kg
                                           </p>
-                                          <p className="text-xs text-green-600 dark:text-green-500 mt-1">vs driving</p>
+                                          <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                                            vs driving
+                                          </p>
                                         </div>
                                       )}
                                     </div>
@@ -1205,24 +1215,14 @@ export function RiderDetailsDrawer({
                             <TabsContent value="rewards" className="mt-4">
                               {rewardTransactions.length ? (
                                 rewardTransactions.map((transaction) => {
-                                  const breakdown: Array<{ type: string; label?: string; multiplier?: number; addedPoints?: number }> =
-                                    Array.isArray(transaction.bonus_breakdown) ? transaction.bonus_breakdown : [];
-                                  const sourceLabel: Record<string, string> = {
-                                    standard_ride: "Standard Ride",
-                                    ad_boost: "Ad Boost",
-                                    boosted_ride: "Boosted Ride",
-                                    bonus: "Bonus",
-                                    standard_ride_bonus: "Route Compliance Bonus",
-                                    adjustment: "Adjustment",
-                                    redemption: "Redemption",
-                                  };
-                                  const bonusTypeLabel: Record<string, string> = {
-                                    streak_bonus: "Streak Bonus",
-                                    peak_hour_boost: "Peak Hour Boost",
-                                    high_demand_zone_boost: "Hot Zone Boost",
-                                    suggested_route_bonus: "Route Compliance",
-                                    quality_bonus: "Quality Bonus",
-                                  };
+                                  const breakdown: Array<{
+                                    type: string;
+                                    label?: string;
+                                    multiplier?: number;
+                                    points?: number;
+                                  }> = Array.isArray(transaction.bonusBreakdown)
+                                    ? transaction.bonusBreakdown
+                                    : [];
                                   return (
                                     <div
                                       key={transaction.id}
@@ -1231,15 +1231,24 @@ export function RiderDetailsDrawer({
                                       <div className="flex items-center justify-between">
                                         <div>
                                           <p className="text-sm font-semibold text-foreground">
-                                            {sourceLabel[transaction.source] ?? transaction.source ?? "Transaction"}
+                                            {REWARD_SOURCE_LABELS[
+                                              transaction.source
+                                            ] ??
+                                              transaction.source ??
+                                              "Transaction"}
                                           </p>
                                           <p className="text-xs text-muted-foreground">
-                                            {format(new Date(transaction.created_at), "MMM d, yyyy")}
+                                            {format(
+                                              new Date(transaction.createdAt),
+                                              "MMM d, yyyy",
+                                            )}
                                           </p>
                                         </div>
                                         <p className="text-sm font-semibold text-foreground">
-                                          {(transaction.points_earned ?? 0) > 0 ? "+" : ""}
-                                          {transaction.points_earned || 0} pts
+                                          {(transaction.points ?? 0) > 0
+                                            ? "+"
+                                            : ""}
+                                          {transaction.points || 0} pts
                                         </p>
                                       </div>
                                       {breakdown.length > 0 && (
@@ -1247,17 +1256,26 @@ export function RiderDetailsDrawer({
                                           {transaction.base_points != null && (
                                             <div className="flex justify-between text-xs text-muted-foreground">
                                               <span>Base</span>
-                                              <span>{transaction.base_points} pts</span>
+                                              <span>
+                                                {transaction.base_points} pts
+                                              </span>
                                             </div>
                                           )}
                                           {breakdown.map((entry, i) => (
-                                            <div key={i} className="flex justify-between text-xs">
+                                            <div
+                                              key={i}
+                                              className="flex justify-between text-xs"
+                                            >
                                               <span className="text-muted-foreground">
-                                                {bonusTypeLabel[entry.type] ?? entry.label ?? entry.type}
+                                                {BONUS_TYPE_LABELS[
+                                                  entry.type
+                                                ] ??
+                                                  entry.label ??
+                                                  entry.type}
                                               </span>
                                               <span className="font-medium text-amber-600">
-                                                {entry.addedPoints != null
-                                                  ? `+${entry.addedPoints} pts`
+                                                {entry.points != null
+                                                  ? `+${entry.points} pts`
                                                   : entry.multiplier != null
                                                     ? `×${entry.multiplier}`
                                                     : ""}
@@ -1265,7 +1283,9 @@ export function RiderDetailsDrawer({
                                             </div>
                                           ))}
                                           {transaction.was_capped && (
-                                            <p className="text-xs text-orange-500 mt-1">Daily cap applied</p>
+                                            <p className="text-xs text-orange-500 mt-1">
+                                              Daily cap applied
+                                            </p>
                                           )}
                                         </div>
                                       )}

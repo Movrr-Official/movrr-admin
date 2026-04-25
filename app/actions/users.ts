@@ -11,7 +11,13 @@ import {
   toggleUserStatusSchema,
   userRoleSchema,
   userStatusSchema,
+  RewardTransaction,
 } from "@/schemas";
+import {
+  DB_TABLES,
+  REWARD_SOURCE,
+  parseRewardMetadata,
+} from "@/lib/rewardConstants";
 import { z } from "zod";
 import { Resend } from "resend";
 import AccountSetupEmail from "@/emails/account-setup";
@@ -1778,12 +1784,13 @@ export async function getUserCampaigns(
 }
 
 /**
- * Server action to get user reward transactions
+ * Fetches reward transactions for a user by resolving userId → riderId, then
+ * returning fully-parsed RewardTransaction objects (metadata, bonusBreakdown, etc.).
  */
 export async function getUserRewardTransactions(
   userId: string,
   limit: number = 50,
-): Promise<{ success: boolean; error?: string; data?: any[] }> {
+): Promise<{ success: boolean; error?: string; data?: RewardTransaction[] }> {
   try {
     await requireAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
@@ -1794,25 +1801,56 @@ export async function getUserRewardTransactions(
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (!rider?.id) {
-      return { success: true, data: [] };
-    }
+    if (!rider?.id) return { success: true, data: [] };
 
-    const { data, error } = await supabaseAdmin
-      .from("reward_transactions")
-      .select("*")
+    const { data: txns, error } = await supabaseAdmin
+      .from(DB_TABLES.REWARD_TRANSACTIONS)
+      .select(
+        "id, rider_id, campaign_id, route_tracking_id, points_earned, source, metadata, created_at",
+      )
       .eq("rider_id", rider.id)
       .order("created_at", { ascending: false })
       .limit(limit);
 
-    if (error) {
-      console.error("Get user reward transactions error:", error);
-      return { success: false, error: error.message };
-    }
+    if (error) return { success: false, error: error.message };
 
-    return { success: true, data: data || [] };
+    const mapped = (txns ?? []).map((txn) => {
+      const m = parseRewardMetadata(txn.metadata);
+      const isDebit = m.adjustmentDirection === "debit";
+      const points = Number(txn.points_earned ?? 0) * (isDebit ? -1 : 1);
+
+      return {
+        id: txn.id,
+        riderId: txn.rider_id,
+        campaignId: txn.campaign_id ?? undefined,
+        routeId: txn.route_tracking_id ?? undefined,
+        rideSessionId: m.rideSessionId,
+        type: (txn.source === REWARD_SOURCE.ADJUSTMENT
+          ? "adjusted"
+          : "awarded") as RewardTransaction["type"],
+        source: txn.source ?? undefined,
+        earningMode: m.earningMode,
+        points,
+        description: m.description,
+        balanceAfter: 0,
+        createdAt: txn.created_at ?? new Date().toISOString(),
+        createdBy: m.createdBy,
+        basePoints: m.basePoints,
+        multiplier: m.multiplier,
+        campaignBoostMultiplier: m.campaignBoostMultiplier,
+        wasCapped: m.wasCapped,
+        verifiedMinutes: m.verifiedMinutes,
+        bonusBreakdown: m.bonusBreakdown,
+        pointsBeforeBonuses: m.pointsBeforeBonuses,
+        fixedBonusPoints: m.fixedBonusPoints,
+        pointsBeforeCap: m.pointsBeforeCap,
+        cappedPoints: m.cappedPoints,
+        appliedModifiers: m.appliedModifiers,
+      } as RewardTransaction;
+    });
+
+    return { success: true, data: mapped };
   } catch (error) {
-    console.error("Get user reward transactions error:", error);
     return {
       success: false,
       error:

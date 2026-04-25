@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { AlertCircle, Save } from "lucide-react";
 import { type UseFormReturn } from "react-hook-form";
@@ -13,7 +13,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { SettingsFieldConfig } from "@/components/settings/config";
@@ -24,6 +30,7 @@ type Props = {
   values: Record<string, unknown>;
   isSaving: boolean;
   isSectionReadOnly: boolean;
+  hasUnsavedChanges: boolean;
   onSubmit: (values: Record<string, unknown>) => void;
 };
 
@@ -33,6 +40,7 @@ export function SettingsSectionForm({
   values,
   isSaving,
   isSectionReadOnly,
+  hasUnsavedChanges,
   onSubmit,
 }: Props) {
   const errorEntries = Object.entries(form.formState.errors);
@@ -52,7 +60,8 @@ export function SettingsSectionForm({
             <ul className="space-y-1">
               {errorEntries.map(([key, value]) => (
                 <li key={key}>
-                  {key}: {value?.message ? String(value.message) : "Invalid value"}
+                  {key}:{" "}
+                  {value?.message ? String(value.message) : "Invalid value"}
                 </li>
               ))}
             </ul>
@@ -68,18 +77,26 @@ export function SettingsSectionForm({
               render={({ field }) => {
                 const isReadOnly = isSectionReadOnly || cfg.readOnly;
                 const isDirty = Boolean(
-                  (form.formState.dirtyFields as Record<string, unknown>)?.[cfg.name],
+                  (form.formState.dirtyFields as Record<string, unknown>)?.[
+                    cfg.name
+                  ],
                 );
                 const label = (
                   <div className="flex items-center gap-2">
                     <span>{cfg.label}</span>
                     {isDirty ? (
-                      <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] uppercase tracking-wide"
+                      >
                         Changed
                       </Badge>
                     ) : null}
                     {cfg.readOnly ? (
-                      <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] uppercase tracking-wide"
+                      >
                         Env
                       </Badge>
                     ) : null}
@@ -100,7 +117,9 @@ export function SettingsSectionForm({
                         <div className="space-y-1">
                           <FormLabel>{label}</FormLabel>
                           {cfg.description ? (
-                            <p className="text-xs text-muted-foreground">{cfg.description}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {cfg.description}
+                            </p>
                           ) : null}
                         </div>
                         <FormControl>
@@ -138,7 +157,9 @@ export function SettingsSectionForm({
                         </SelectContent>
                       </Select>
                       {cfg.description ? (
-                        <p className="text-xs text-muted-foreground">{cfg.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {cfg.description}
+                        </p>
                       ) : null}
                       <FormMessage />
                     </FormItem>
@@ -147,7 +168,8 @@ export function SettingsSectionForm({
 
                 if (cfg.type === "textarea") {
                   const value =
-                    cfg.name === "inviteDomainAllowlist" && Array.isArray(field.value)
+                    cfg.name === "inviteDomainAllowlist" &&
+                    Array.isArray(field.value)
                       ? field.value.join("\n")
                       : (field.value ?? "");
 
@@ -174,7 +196,9 @@ export function SettingsSectionForm({
                         />
                       </FormControl>
                       {cfg.description ? (
-                        <p className="text-xs text-muted-foreground">{cfg.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {cfg.description}
+                        </p>
                       ) : null}
                       <FormMessage />
                     </FormItem>
@@ -194,7 +218,9 @@ export function SettingsSectionForm({
                       />
                     </FormControl>
                     {cfg.description ? (
-                      <p className="text-xs text-muted-foreground">{cfg.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {cfg.description}
+                      </p>
                     ) : null}
                     <FormMessage />
                   </FormItem>
@@ -207,7 +233,7 @@ export function SettingsSectionForm({
         <div className="sticky bottom-4 z-10 rounded-2xl border border-border/70 bg-background/95 p-4 shadow-lg backdrop-blur">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="text-sm text-muted-foreground">
-              {form.formState.isDirty
+              {hasUnsavedChanges
                 ? "You have unsaved changes in this section."
                 : "No unsaved changes."}
             </div>
@@ -215,14 +241,14 @@ export function SettingsSectionForm({
               <Button
                 type="button"
                 variant="outline"
-                disabled={!form.formState.isDirty || isSaving}
+                disabled={!hasUnsavedChanges || isSaving}
                 onClick={() => form.reset(values)}
               >
                 Discard
               </Button>
               <Button
                 type="submit"
-                disabled={!form.formState.isDirty || isSaving || isSectionReadOnly}
+                disabled={!hasUnsavedChanges || isSaving || isSectionReadOnly}
               >
                 <Save className="mr-2 h-4 w-4" />
                 {isSaving ? "Saving..." : "Save Section"}
