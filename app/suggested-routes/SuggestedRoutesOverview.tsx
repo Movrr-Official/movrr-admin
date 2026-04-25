@@ -101,18 +101,25 @@ type RouteFormData = z.infer<typeof routeFormSchema>;
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 
-async function fetchRoutes(filter: "all" | "true" | "false"): Promise<ListResponse> {
+async function fetchRoutes(
+  filter: "all" | "true" | "false",
+): Promise<ListResponse> {
   const params = new URLSearchParams({ active: filter, limit: "100" });
   const res = await fetch(`/api/suggested-routes?${params}`);
   if (!res.ok) throw new Error("Failed to fetch suggested routes");
   return res.json();
 }
 
-async function createRoute(data: RouteFormData): Promise<{ route: SuggestedRoute }> {
+async function createRoute(
+  data: RouteFormData,
+): Promise<{ route: SuggestedRoute }> {
   const body = {
     ...data,
     // Placeholder geometry — admins must add waypoints via map (future feature)
-    geometry: [{ lat: 52.37, lng: 4.89 }, { lat: 52.38, lng: 4.9 }],
+    geometry: [
+      { lat: 52.37, lng: 4.89 },
+      { lat: 52.38, lng: 4.9 },
+    ],
     zones: data.city ? [data.city] : [],
   };
   const res = await fetch("/api/suggested-routes", {
@@ -122,12 +129,17 @@ async function createRoute(data: RouteFormData): Promise<{ route: SuggestedRoute
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error((err as { error?: string }).error ?? "Failed to create route");
+    throw new Error(
+      (err as { error?: string }).error ?? "Failed to create route",
+    );
   }
   return res.json();
 }
 
-async function updateRoute(id: string, data: Partial<RouteFormData>): Promise<{ route: SuggestedRoute }> {
+async function updateRoute(
+  id: string,
+  data: Partial<RouteFormData>,
+): Promise<{ route: SuggestedRoute }> {
   const res = await fetch(`/api/suggested-routes/${id}`, {
     method: "PATCH",
     headers: { "content-type": "application/json" },
@@ -135,7 +147,9 @@ async function updateRoute(id: string, data: Partial<RouteFormData>): Promise<{ 
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error((err as { error?: string }).error ?? "Failed to update route");
+    throw new Error(
+      (err as { error?: string }).error ?? "Failed to update route",
+    );
   }
   return res.json();
 }
@@ -179,14 +193,13 @@ export default function SuggestedRoutesOverview() {
 
   const totalActive = (data?.routes ?? []).filter((r) => r.active).length;
   const totalInactive = (data?.routes ?? []).filter((r) => !r.active).length;
-  const avgDistanceKm =
-    routes.length
-      ? Math.round(
-          routes.reduce((sum, r) => sum + r.estimated_distance_meters, 0) /
-            routes.length /
-            100,
-        ) / 10
-      : 0;
+  const avgDistanceKm = routes.length
+    ? Math.round(
+        routes.reduce((sum, r) => sum + r.estimated_distance_meters, 0) /
+          routes.length /
+          100,
+      ) / 10
+    : 0;
 
   const createMutation = useMutation({
     mutationFn: createRoute,
@@ -195,7 +208,12 @@ export default function SuggestedRoutesOverview() {
       queryClient.invalidateQueries({ queryKey: ["suggestedRoutes"] });
       setDialogOpen(false);
     },
-    onError: (e: Error) => toast({ title: "Create failed", description: e.message, variant: "destructive" }),
+    onError: (e: Error) =>
+      toast({
+        title: "Create failed",
+        description: e.message,
+        variant: "destructive",
+      }),
   });
 
   const updateMutation = useMutation({
@@ -207,7 +225,12 @@ export default function SuggestedRoutesOverview() {
       setDialogOpen(false);
       setEditing(null);
     },
-    onError: (e: Error) => toast({ title: "Update failed", description: e.message, variant: "destructive" }),
+    onError: (e: Error) =>
+      toast({
+        title: "Update failed",
+        description: e.message,
+        variant: "destructive",
+      }),
   });
 
   const deactivateMutation = useMutation({
@@ -216,7 +239,12 @@ export default function SuggestedRoutesOverview() {
       toast({ title: "Route deactivated" });
       queryClient.invalidateQueries({ queryKey: ["suggestedRoutes"] });
     },
-    onError: (e: Error) => toast({ title: "Deactivate failed", description: e.message, variant: "destructive" }),
+    onError: (e: Error) =>
+      toast({
+        title: "Deactivate failed",
+        description: e.message,
+        variant: "destructive",
+      }),
   });
 
   const openCreate = () => {
@@ -232,8 +260,6 @@ export default function SuggestedRoutesOverview() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <PageHeader
-        title="Suggested Routes"
-        description="Admin-curated bike routes for Standard Ride Mode. Riders who complete these routes above the compliance threshold earn bonus points."
         action={{
           label: "New Route",
           onClick: openCreate,
@@ -243,9 +269,23 @@ export default function SuggestedRoutesOverview() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard title="Total Routes" value={isLoading ? "—" : (data?.total ?? 0)} icon={Route} />
-        <StatsCard title="Active" value={isLoading ? "—" : totalActive} icon={ChevronRight} animationDelay="0.1s" />
-        <StatsCard title="Inactive" value={isLoading ? "—" : totalInactive} icon={PowerOff} animationDelay="0.2s" />
+        <StatsCard
+          title="Total Routes"
+          value={isLoading ? "—" : (data?.total ?? 0)}
+          icon={Route}
+        />
+        <StatsCard
+          title="Active"
+          value={isLoading ? "—" : totalActive}
+          icon={ChevronRight}
+          animationDelay="0.1s"
+        />
+        <StatsCard
+          title="Inactive"
+          value={isLoading ? "—" : totalInactive}
+          icon={PowerOff}
+          animationDelay="0.2s"
+        />
         <StatsCard
           title="Avg Distance"
           value={isLoading ? "—" : `${avgDistanceKm} km`}
@@ -302,8 +342,15 @@ export default function SuggestedRoutesOverview() {
         <Card className="glass-card border-0">
           <CardContent className="py-12 text-center">
             <Route className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-            <p className="text-sm font-medium text-muted-foreground">No routes found</p>
-            <Button variant="outline" size="sm" className="mt-4" onClick={openCreate}>
+            <p className="text-sm font-medium text-muted-foreground">
+              No routes found
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={openCreate}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create first route
             </Button>
@@ -317,7 +364,10 @@ export default function SuggestedRoutesOverview() {
               route={route}
               onEdit={() => openEdit(route)}
               onDeactivate={() => deactivateMutation.mutate(route.id)}
-              isDeactivating={deactivateMutation.isPending && deactivateMutation.variables === route.id}
+              isDeactivating={
+                deactivateMutation.isPending &&
+                deactivateMutation.variables === route.id
+              }
             />
           ))}
         </div>
@@ -364,7 +414,9 @@ function RouteCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-sm font-semibold truncate">{route.name}</CardTitle>
+            <CardTitle className="text-sm font-semibold truncate">
+              {route.name}
+            </CardTitle>
             {route.city && (
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                 <MapPin className="h-3 w-3" />
@@ -373,10 +425,16 @@ function RouteCard({
             )}
           </div>
           <div className="flex gap-1.5 shrink-0">
-            <Badge variant={route.active ? "success" : "secondary"} className="text-xs">
+            <Badge
+              variant={route.active ? "success" : "secondary"}
+              className="text-xs"
+            >
               {route.active ? "Active" : "Inactive"}
             </Badge>
-            <Badge variant={difficultyVariant(route.difficulty)} className="text-xs capitalize">
+            <Badge
+              variant={difficultyVariant(route.difficulty)}
+              className="text-xs capitalize"
+            >
               {route.difficulty}
             </Badge>
           </div>
@@ -384,7 +442,9 @@ function RouteCard({
       </CardHeader>
       <CardContent className="flex-1 space-y-3">
         {route.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">{route.description}</p>
+          <p className="text-xs text-muted-foreground line-clamp-2">
+            {route.description}
+          </p>
         )}
 
         <div className="grid grid-cols-2 gap-2">
@@ -398,7 +458,9 @@ function RouteCard({
             <p className="text-xs text-muted-foreground flex items-center gap-1 mb-0.5">
               <Clock className="h-3 w-3" /> Duration
             </p>
-            <p className="text-sm font-bold">{route.estimated_duration_minutes} min</p>
+            <p className="text-sm font-bold">
+              {route.estimated_duration_minutes} min
+            </p>
           </div>
           <div className="p-2.5 rounded-lg bg-muted/30 border border-border/40">
             <p className="text-xs text-muted-foreground flex items-center gap-1 mb-0.5">
@@ -415,7 +477,9 @@ function RouteCard({
               <p className="text-xs text-muted-foreground flex items-center gap-1 mb-0.5">
                 <BarChart3 className="h-3 w-3" /> Cap/ride
               </p>
-              <p className="text-sm font-bold">{route.max_bonus_per_ride} pts</p>
+              <p className="text-sm font-bold">
+                {route.max_bonus_per_ride} pts
+              </p>
             </div>
           )}
         </div>
@@ -424,7 +488,12 @@ function RouteCard({
           <p className="text-xs text-muted-foreground flex-1">
             Created {format(new Date(route.created_at), "MMM d, yyyy")}
           </p>
-          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={onEdit}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            onClick={onEdit}
+          >
             <Edit className="h-3.5 w-3.5 mr-1" />
             Edit
           </Button>
@@ -510,14 +579,16 @@ function RouteFormDialog({
         active: true,
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing?.id]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit Route" : "Create Suggested Route"}</DialogTitle>
+          <DialogTitle>
+            {editing ? "Edit Route" : "Create Suggested Route"}
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -529,7 +600,11 @@ function RouteFormDialog({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Canal Ring Loop" className="rounded-xl border-border/50" />
+                    <Input
+                      {...field}
+                      placeholder="Canal Ring Loop"
+                      className="rounded-xl border-border/50"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -564,7 +639,12 @@ function RouteFormDialog({
                   <FormItem>
                     <FormLabel>City</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value ?? ""} placeholder="Amsterdam" className="rounded-xl border-border/50" />
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        placeholder="Amsterdam"
+                        className="rounded-xl border-border/50"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -602,7 +682,12 @@ function RouteFormDialog({
                   <FormItem>
                     <FormLabel>Distance (m)</FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" min={100} className="rounded-xl border-border/50" />
+                      <Input
+                        {...field}
+                        type="number"
+                        min={100}
+                        className="rounded-xl border-border/50"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -615,7 +700,12 @@ function RouteFormDialog({
                   <FormItem>
                     <FormLabel>Duration (min)</FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" min={1} className="rounded-xl border-border/50" />
+                      <Input
+                        {...field}
+                        type="number"
+                        min={1}
+                        className="rounded-xl border-border/50"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -652,7 +742,13 @@ function RouteFormDialog({
                   <FormItem>
                     <FormLabel>Reward Value</FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" min={0} step={0.1} className="rounded-xl border-border/50" />
+                      <Input
+                        {...field}
+                        type="number"
+                        min={0}
+                        step={0.1}
+                        className="rounded-xl border-border/50"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -673,7 +769,13 @@ function RouteFormDialog({
                         type="number"
                         min={0}
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ""
+                              ? undefined
+                              : Number(e.target.value),
+                          )
+                        }
                         className="rounded-xl border-border/50"
                         placeholder="No cap"
                       />
@@ -694,7 +796,13 @@ function RouteFormDialog({
                         type="number"
                         min={0}
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ""
+                              ? undefined
+                              : Number(e.target.value),
+                          )
+                        }
                         className="rounded-xl border-border/50"
                         placeholder="No limit"
                       />
@@ -710,16 +818,26 @@ function RouteFormDialog({
               name="active"
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3">
-                  <FormLabel className="text-sm font-semibold cursor-pointer">Active</FormLabel>
+                  <FormLabel className="text-sm font-semibold cursor-pointer">
+                    Active
+                  </FormLabel>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
                 </FormItem>
               )}
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
