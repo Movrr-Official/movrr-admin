@@ -10,8 +10,11 @@ import {
 } from "@/components/ui/card";
 import { getAdminMfaContext } from "@/lib/adminMfa";
 
-const getRedirectTarget = (value: string | string[] | undefined) =>
-  typeof value === "string" && value.trim() ? value : "/";
+const getRedirectTarget = (value: string | string[] | undefined): string => {
+  if (typeof value !== "string") return "/";
+  const trimmed = value.trim();
+  return trimmed.startsWith("/") && !trimmed.startsWith("//") ? trimmed : "/";
+};
 
 const isAddFactorMode = (value: string | string[] | undefined) =>
   (typeof value === "string" ? value : Array.isArray(value) ? value[0] : "")

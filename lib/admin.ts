@@ -28,7 +28,7 @@ const VALID_ADMIN_ROLES: AdminRole[] = [
 ];
 
 const EXCLUDED_PATHS = ["/auth", "/unauthorized"] as const;
-const ADMIN_SESSION_BOOTSTRAP_GRACE_MS = 2 * 60_000;
+const ADMIN_SESSION_BOOTSTRAP_GRACE_MS = 10 * 60_000;
 const ADMIN_SESSION_TOUCH_INTERVAL_MS = 60_000;
 const ADMIN_SESSION_ABSOLUTE_MAX_MS = 12 * 60 * 60_000;
 

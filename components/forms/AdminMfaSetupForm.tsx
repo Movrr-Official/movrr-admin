@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState, useTransition } from "react";
 import { ShieldCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 
 import { recordAdminMfaEnrollmentSuccess } from "@/app/actions/adminMfa";
@@ -44,7 +43,6 @@ export function AdminMfaSetupForm({
   email: string;
   redirectTo: string;
 }) {
-  const router = useRouter();
   const [deviceName, setDeviceName] = useState("Primary authenticator");
   const [verificationCode, setVerificationCode] = useState("");
   const [enrollment, setEnrollment] = useState<EnrollmentState | null>(null);
@@ -151,8 +149,7 @@ export function AdminMfaSetupForm({
         redirectTo,
       }).catch(() => undefined);
 
-      router.push(redirectTo);
-      router.refresh();
+      window.location.replace(redirectTo);
     });
   };
 

@@ -43,8 +43,12 @@ export function SignInForm({ enforceAdminMfa }: { enforceAdminMfa: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const rawRedirect =
+    searchParams.get("redirectTo") ?? searchParams.get("next") ?? "";
   const redirectTo =
-    searchParams.get("redirectTo") || searchParams.get("next") || "/";
+    rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : "/";
   const authReason = searchParams.get("reason");
 
   const authReasonMessage =

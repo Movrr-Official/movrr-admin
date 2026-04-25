@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { ShieldCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import { recordAdminMfaChallengeEvent } from "@/app/actions/adminMfa";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -24,7 +23,6 @@ export function AdminMfaChallengeForm({
   factors: ChallengeFactor[];
   redirectTo: string;
 }) {
-  const router = useRouter();
   const [selectedFactorId, setSelectedFactorId] = useState(factors[0]?.id ?? "");
   const [verificationCode, setVerificationCode] = useState("");
   const [error, setError] = useState("");
@@ -86,8 +84,7 @@ export function AdminMfaChallengeForm({
         success: true,
       }).catch(() => undefined);
       setInfo("Verification complete. Redirecting to the admin dashboard...");
-      router.push(redirectTo);
-      router.refresh();
+      window.location.replace(redirectTo);
     });
   };
 
