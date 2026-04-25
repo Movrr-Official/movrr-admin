@@ -149,7 +149,7 @@ export function SessionPanel({
                         ? "bg-gray-100 text-gray-700 border-gray-200"
                         : rider.complianceState === "under_review"
                           ? "bg-violet-100 text-violet-800 border-violet-200"
-                          : "bg-amber-100 text-amber-800 border-amber-200"
+                          : "bg-green-100 text-green-800 border-green-200"
                 }
               >
                 {rider.complianceState.replace(/_/g, " ")}

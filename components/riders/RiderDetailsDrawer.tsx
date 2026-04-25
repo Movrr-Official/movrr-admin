@@ -1064,10 +1064,12 @@ export function RiderDetailsDrawer({
                                                 variant="outline"
                                                 className={`text-xs capitalize font-medium ${
                                                   badge.category === "hero"
-                                                    ? "bg-amber-100 text-amber-800 border-amber-300"
-                                                    : badge.category === "trophy"
+                                                    ? "bg-green-100 text-green-800 border-green-300"
+                                                    : badge.category ===
+                                                        "trophy"
                                                       ? "bg-violet-100 text-violet-800 border-violet-300"
-                                                      : badge.category === "milestone"
+                                                      : badge.category ===
+                                                          "milestone"
                                                         ? "bg-sky-100 text-sky-800 border-sky-300"
                                                         : "bg-slate-100 text-slate-600 border-slate-300"
                                                 }`}

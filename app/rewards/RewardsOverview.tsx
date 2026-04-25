@@ -40,7 +40,8 @@ export default function RewardsOverview() {
     refetch: refetchBalances,
   } = useRiderBalances();
   const { data: stats } = useRewardStats();
-  const { data: streakLeaders, isLoading: streakLoading } = useStreakLeaderboard(8);
+  const { data: streakLeaders, isLoading: streakLoading } =
+    useStreakLeaderboard(8);
 
   // Calculate comprehensive stats for rewards management
   const tiltX = useMotionValue(0);
@@ -278,7 +279,9 @@ export default function RewardsOverview() {
                       Top Streak Earners
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Riders ranked by total streak bonus points earned. Streak bonuses are awarded when riders complete sessions on consecutive days.
+                      Riders ranked by total streak bonus points earned. Streak
+                      bonuses are awarded when riders complete sessions on
+                      consecutive days.
                     </p>
                   </CardHeader>
                   <CardContent>
@@ -290,7 +293,9 @@ export default function RewardsOverview() {
                       <div className="py-8 text-center text-muted-foreground">
                         <Flame className="h-8 w-8 mx-auto mb-2 opacity-30" />
                         <p className="text-sm">No streak data yet.</p>
-                        <p className="text-xs mt-1">Streak bonuses appear here once riders earn them.</p>
+                        <p className="text-xs mt-1">
+                          Streak bonuses appear here once riders earn them.
+                        </p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -314,9 +319,14 @@ export default function RewardsOverview() {
                                 {i + 1}
                               </div>
                               <div>
-                                <p className="text-sm font-medium">{leader.riderName}</p>
+                                <p className="text-sm font-medium">
+                                  {leader.riderName}
+                                </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {leader.streakBonusCount} streak {leader.streakBonusCount === 1 ? "bonus" : "bonuses"}
+                                  {leader.streakBonusCount} streak{" "}
+                                  {leader.streakBonusCount === 1
+                                    ? "bonus"
+                                    : "bonuses"}
                                 </p>
                               </div>
                             </div>
