@@ -1,6 +1,24 @@
 "use client";
 
-import { Users, TrendingUp, CheckCircle, Clock } from "lucide-react";
+import {
+  Users,
+  TrendingUp,
+  CheckCircle,
+  Clock,
+  MapPin,
+  Bike,
+  Calendar,
+  Filter,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { WaitlistTable } from "@/components/waitlist/WaitlistTable";
 import { useWaitlistData } from "@/hooks/useWaitlistData";
 import { StatsCard } from "@/components/stats/StatsCard";
@@ -14,34 +32,50 @@ export default function WaitlistManagement() {
     error,
   } = useWaitlistData();
 
-  const stats = [
-    {
-      label: "Total Entries",
-      value: entries?.length,
-      icon: Users,
-      color: "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400",
+  const totalSignups = entries?.length ?? 0;
+  const approvedCount =
+    entries?.filter((e) => e.status === "approved").length ?? 0;
+  const pendingCount =
+    entries?.filter((e) => e.status === "pending").length ?? 0;
+  const approvalRate =
+    totalSignups > 0 ? Math.round((approvedCount / totalSignups) * 100) : 0;
+
+  const citiesCount = new Set(entries?.map((e) => e.city)).size;
+  const bikeOwners =
+    entries?.filter((e) => e.bike_ownership === "yes").length ?? 0;
+  const planningBike =
+    entries?.filter((e) => e.bike_ownership === "planning").length ?? 0;
+  const noBike = entries?.filter((e) => e.bike_ownership === "no").length ?? 0;
+  const bikeOwnersPercent =
+    totalSignups > 0 ? Math.round((bikeOwners / totalSignups) * 100) : 0;
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const recentSignups =
+    entries?.filter((e) => new Date(e.created_at) >= sevenDaysAgo).length ?? 0;
+
+  const oldestSignup =
+    entries && entries.length > 0
+      ? new Date(entries[entries.length - 1].created_at)
+      : new Date();
+  const daysSinceLaunch = Math.max(
+    1,
+    Math.ceil(
+      (new Date().getTime() - oldestSignup.getTime()) / (1000 * 60 * 60 * 24),
+    ),
+  );
+  const dailyAverage = Math.round(totalSignups / daysSinceLaunch);
+
+  const cityBreakdown = entries?.reduce(
+    (acc, entry) => {
+      acc[entry.city] = (acc[entry.city] || 0) + 1;
+      return acc;
     },
-    {
-      label: "Approved",
-      value: entries?.filter((e) => e.status === "approved").length,
-      icon: CheckCircle,
-      color:
-        "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400",
-    },
-    {
-      label: "Pending",
-      value: entries?.filter((e) => e.status === "pending").length,
-      icon: Clock,
-      color:
-        "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400",
-    },
-    {
-      label: "Approval Rate",
-      value: `${Math.round(((entries?.filter((e) => e.status === "approved")?.length ?? 0) / (entries?.length ?? 1)) * 100)}%`,
-      icon: TrendingUp,
-      color: "bg-primary/10 text-primary",
-    },
-  ];
+    {} as Record<string, number>,
+  );
+  const topCities = Object.entries(cityBreakdown ?? {})
+    .sort(([, a], [, b]) => (b as number) - (a as number))
+    .slice(0, 5);
 
   return (
     <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
@@ -58,43 +92,162 @@ export default function WaitlistManagement() {
       </div>
 
       <div className="space-y-6 md:space-y-8">
-        {/* Stats Cards */}
+        {/* Row 1 — Operational stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <StatsCard
-            title="Total Entries"
-            value={stats[0].value ?? 0}
+            title="Total Signups"
+            value={totalSignups}
             icon={Users}
+            description={`${dailyAverage} signups/day average`}
+            trend={
+              recentSignups > 0
+                ? {
+                    value: recentSignups,
+                    type: "increase",
+                    label: "this week",
+                    icon: TrendingUp,
+                  }
+                : undefined
+            }
             animationDelay="0s"
           />
           <StatsCard
             title="Approved"
-            value={stats[1].value ?? 0}
+            value={approvedCount}
             icon={CheckCircle}
             animationDelay="0.1s"
           />
           <StatsCard
             title="Pending"
-            value={stats[2].value ?? 0}
+            value={pendingCount}
             icon={Clock}
             animationDelay="0.2s"
           />
           <StatsCard
             title="Approval Rate"
-            value={stats[3].value ?? "0%"}
+            value={`${approvalRate}%`}
             icon={TrendingUp}
             animationDelay="0.3s"
           />
         </div>
 
-        {/* Waitlist Table */}
-        <WaitlistTable
-          entries={entries ?? []}
-          isLoading={isLoading}
-          isRefetching={isFetching}
-          toolbar={true}
-          searchBar={false}
-          refetchData={refetch}
-        />
+        {/* Row 2 — Left: insight stats above table · Right: Top Cities sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 items-start">
+          {/* Left column (3/4): stats row then table */}
+          <div className="lg:col-span-3 flex flex-col gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+              <StatsCard
+                title="Active Cities"
+                value={citiesCount}
+                icon={MapPin}
+                badges={[
+                  {
+                    label: "Markets",
+                    className: "bg-primary/10 text-primary border-primary/20",
+                  },
+                ]}
+                animationDelay="0.4s"
+              />
+              <StatsCard
+                title="Bike Owners"
+                value={bikeOwners}
+                icon={Bike}
+                trend={{ value: bikeOwnersPercent, type: "increase" }}
+                badges={[
+                  {
+                    label: `${planningBike} planning`,
+                    className: "bg-primary/10 text-primary border-primary/20",
+                  },
+                  {
+                    label: `${noBike} no bike`,
+                    className: "bg-muted text-muted-foreground border-border",
+                  },
+                ]}
+                animationDelay="0.5s"
+              />
+              <StatsCard
+                title="Growth Rate"
+                value={`${dailyAverage}/day`}
+                icon={Calendar}
+                description="Average signups"
+                progress={{
+                  value: Math.min(
+                    100,
+                    (recentSignups / Math.max(1, dailyAverage * 7)) * 100,
+                  ),
+                }}
+                animationDelay="0.6s"
+              />
+            </div>
+
+            <WaitlistTable
+              entries={entries ?? []}
+              isLoading={isLoading}
+              isRefetching={isFetching}
+              toolbar={true}
+              searchBar={false}
+              refetchData={refetch}
+            />
+          </div>
+
+          {/* Right column (1/4): Top Cities sidebar */}
+          <Card
+            className="glass-card border-0 animate-slide-up"
+            style={{ animationDelay: "0.7s" }}
+          >
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-xl font-bold">
+                    Top Cities
+                  </CardTitle>
+                  <CardDescription className="text-muted-foreground">
+                    Cities with the most signups
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {topCities.map(([city, count], index) => (
+                  <div
+                    key={city}
+                    className="flex items-center justify-between group hover:bg-muted/50 p-3 rounded-xl transition-all duration-200 cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center text-sm font-bold text-primary-foreground group-hover:scale-110 transition-transform shadow-md">
+                        {index + 1}
+                      </div>
+                      <span className="font-semibold text-foreground">
+                        {city}
+                      </span>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="bg-primary/10 text-primary border-primary/20 font-semibold px-3 py-1"
+                    >
+                      {count as number}
+                    </Badge>
+                  </div>
+                ))}
+                {topCities.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p className="font-medium">No cities yet</p>
+                    <p className="text-sm">Waiting for signups</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
