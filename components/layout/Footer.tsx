@@ -38,6 +38,17 @@ const DashboardFooter = () => {
 
   const currentYear = new Date().getFullYear();
 
+  const pingEase = [0.15, 0.85, 0.35, 1.0] as const;
+  const dotColor = isError
+    ? "bg-destructive"
+    : isLoading
+      ? "bg-warning"
+      : data?.status === "operational"
+        ? "bg-success"
+        : "bg-warning";
+  const isOperational =
+    !isError && !isLoading && data?.status === "operational";
+
   const socialLinks = [
     {
       name: "Twitter",
@@ -148,26 +159,36 @@ const DashboardFooter = () => {
                 v{settingsData?.values?.general?.appVersion ?? "0.1.0"}
               </Badge>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <motion.div
-                  className={`w-2 h-2 rounded-full ${
-                    isError
-                      ? "bg-destructive"
-                      : isLoading
-                        ? "bg-warning"
-                        : data?.status === "operational"
-                          ? "bg-success"
-                          : "bg-warning"
-                  }`}
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.8, 1, 0.8],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
+                <div className="relative flex h-2 w-2 shrink-0 items-center justify-center">
+                  {isOperational && (
+                    <>
+                      <motion.span
+                        className={`absolute inset-0 rounded-full ${dotColor}`}
+                        animate={{ scale: [1, 2.75], opacity: [0.6, 0] }}
+                        transition={{
+                          duration: 1.05,
+                          repeat: Infinity,
+                          repeatDelay: 1.45,
+                          ease: pingEase,
+                        }}
+                      />
+                      <motion.span
+                        className={`absolute inset-0 rounded-full ${dotColor}`}
+                        animate={{ scale: [1, 2.1], opacity: [0.35, 0] }}
+                        transition={{
+                          duration: 0.85,
+                          repeat: Infinity,
+                          repeatDelay: 1.65,
+                          delay: 0.35,
+                          ease: pingEase,
+                        }}
+                      />
+                    </>
+                  )}
+                  <span
+                    className={`relative block h-2 w-2 rounded-full ${dotColor}`}
+                  />
+                </div>
                 <span>
                   {isError
                     ? "Status unavailable"
