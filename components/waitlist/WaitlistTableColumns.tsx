@@ -18,29 +18,82 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { WaitlistEntry } from "@/types/types";
 
-const getBikeOwnershipBadge = (ownership: string) => {
+const getBikeOwnershipBadge = (ownership: string | null) => {
   switch (ownership) {
-    case "yes":
+    case "own":
       return (
         <Badge variant="default">
           <Bike className="h-3 w-3 mr-1" />
           Owns Bike
         </Badge>
       );
-    case "no":
+    case "interested":
       return (
         <Badge
           variant="secondary"
           className="border-slate-500/25 bg-gradient-to-tl from-slate-700 via-slate-600 to-slate-500 text-white shadow-slate-900/20 hover:from-slate-700 hover:to-slate-500 dark:border-slate-400/25 dark:from-slate-500 dark:via-slate-400 dark:to-slate-300 dark:text-slate-950 font-medium"
         >
-          No Bike
+          Interested
         </Badge>
       );
     case "planning":
       return <Badge variant="info">Planning to Get</Badge>;
+    case null:
+    case undefined:
+      return <span className="text-xs text-muted-foreground">—</span>;
     default:
       return <Badge variant="secondary">{ownership}</Badge>;
   }
+};
+
+const getAudienceBadge = (audience: string | null) => {
+  switch (audience) {
+    case "rider":
+      return <Badge variant="success">Rider</Badge>;
+    case "brand":
+      return <Badge variant="info">Brand</Badge>;
+    case "partner":
+      return <Badge variant="warning">Partner</Badge>;
+    default:
+      return <span className="text-xs text-muted-foreground">—</span>;
+  }
+};
+
+const getSourceBadge = (source: string | null) => {
+  switch (source) {
+    case "movrr_website":
+      return (
+        <Badge variant="default" className="font-medium text-xs">
+          Website
+        </Badge>
+      );
+    case "movrr_waitlist":
+      return (
+        <Badge variant="secondary" className="font-medium text-xs">
+          Waitlist
+        </Badge>
+      );
+    default:
+      return <span className="text-xs text-muted-foreground">—</span>;
+  }
+};
+
+const getChannelBadge = (channel: string | null) => {
+  if (!channel) return <span className="text-xs text-muted-foreground">—</span>;
+  const labels: Record<string, string> = {
+    paid: "Paid",
+    social: "Social",
+    organic_search: "Organic",
+    email: "Email",
+    partner: "Partner",
+    referral: "Referral",
+    direct: "Direct",
+  };
+  return (
+    <span className="text-xs font-medium text-muted-foreground">
+      {labels[channel] ?? channel}
+    </span>
+  );
 };
 
 interface WaitlistTableColumnsProps {
@@ -81,9 +134,24 @@ export const getWaitlistTableColumns = ({
     cell: ({ row }) => <Badge variant="info">{row.getValue("city")}</Badge>,
   },
   {
+    accessorKey: "audience",
+    header: "Audience",
+    cell: ({ row }) => getAudienceBadge(row.getValue("audience")),
+  },
+  {
     accessorKey: "bike_ownership",
-    header: "Bike Status",
+    header: "Bike",
     cell: ({ row }) => getBikeOwnershipBadge(row.getValue("bike_ownership")),
+  },
+  {
+    accessorKey: "source",
+    header: "Source",
+    cell: ({ row }) => getSourceBadge(row.getValue("source")),
+  },
+  {
+    accessorKey: "acquisition_channel",
+    header: "Channel",
+    cell: ({ row }) => getChannelBadge(row.getValue("acquisition_channel")),
   },
   {
     accessorKey: "status",

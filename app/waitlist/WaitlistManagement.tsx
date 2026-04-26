@@ -42,12 +42,18 @@ export default function WaitlistManagement() {
 
   const citiesCount = new Set(entries?.map((e) => e.city)).size;
   const bikeOwners =
-    entries?.filter((e) => e.bike_ownership === "yes").length ?? 0;
+    entries?.filter((e) => e.bike_ownership === "own").length ?? 0;
   const planningBike =
     entries?.filter((e) => e.bike_ownership === "planning").length ?? 0;
-  const noBike = entries?.filter((e) => e.bike_ownership === "no").length ?? 0;
+  const noBike =
+    entries?.filter((e) => e.bike_ownership === "interested").length ?? 0;
   const bikeOwnersPercent =
     totalSignups > 0 ? Math.round((bikeOwners / totalSignups) * 100) : 0;
+
+  const riderCount = entries?.filter((e) => e.audience === "rider").length ?? 0;
+  const brandCount = entries?.filter((e) => e.audience === "brand").length ?? 0;
+  const partnerCount =
+    entries?.filter((e) => e.audience === "partner").length ?? 0;
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -70,7 +76,8 @@ export default function WaitlistManagement() {
     (acc, entry) => {
       const key = (entry.city ?? "").trim().toLowerCase();
       if (!key) return acc;
-      if (!acc[key]) acc[key] = { display: (entry.city ?? "").trim(), count: 0 };
+      if (!acc[key])
+        acc[key] = { display: (entry.city ?? "").trim(), count: 0 };
       acc[key].count += 1;
       return acc;
     },
@@ -138,7 +145,7 @@ export default function WaitlistManagement() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 items-start">
           {/* Left column (3/4): stats row then table */}
           <div className="lg:col-span-3 flex flex-col gap-4 md:gap-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <StatsCard
                 title="Active Cities"
                 value={citiesCount}
@@ -162,11 +169,27 @@ export default function WaitlistManagement() {
                     className: "bg-primary/10 text-primary border-primary/20",
                   },
                   {
-                    label: `${noBike} no bike`,
+                    label: `${noBike} interested`,
                     className: "bg-muted text-muted-foreground border-border",
                   },
                 ]}
                 animationDelay="0.5s"
+              />
+              <StatsCard
+                title="Audience"
+                value={riderCount}
+                icon={Users}
+                badges={[
+                  {
+                    label: `${brandCount} brands`,
+                    className: "bg-primary/10 text-primary border-primary/20",
+                  },
+                  {
+                    label: `${partnerCount} partners`,
+                    className: "bg-muted text-muted-foreground border-border",
+                  },
+                ]}
+                animationDelay="0.55s"
               />
               <StatsCard
                 title="Growth Rate"
@@ -179,7 +202,7 @@ export default function WaitlistManagement() {
                     (recentSignups / Math.max(1, dailyAverage * 7)) * 100,
                   ),
                 }}
-                animationDelay="0.6s"
+                animationDelay="0.65s"
               />
             </div>
 
@@ -232,7 +255,10 @@ export default function WaitlistManagement() {
                         {display}
                       </span>
                     </div>
-                    <Badge variant="outline" className="text-xs font-medium tabular-nums">
+                    <Badge
+                      variant="outline"
+                      className="text-xs font-medium tabular-nums"
+                    >
                       {count}
                     </Badge>
                   </div>

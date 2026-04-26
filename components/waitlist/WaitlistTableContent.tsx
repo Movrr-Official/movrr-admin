@@ -45,7 +45,7 @@ export default function WaitlistTableContent({
   const searchValue = searchParams.get("search") || "";
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<WaitlistEntry | null>(
-    null
+    null,
   );
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -71,7 +71,7 @@ export default function WaitlistTableContent({
   const handleStatusUpdate = async (
     id: string,
     newStatus: "pending" | "approved" | "rejected",
-    reason?: string
+    reason?: string,
   ) => {
     try {
       // Calls server action
@@ -118,13 +118,13 @@ export default function WaitlistTableContent({
   const analyticsData = useMemo(() => {
     const totalSignups = entries.length;
     const bikeOwners = entries.filter(
-      (entry) => entry.bike_ownership === "yes"
+      (entry) => entry.bike_ownership === "own",
     ).length;
     const planningBike = entries.filter(
-      (entry) => entry.bike_ownership === "planning"
+      (entry) => entry.bike_ownership === "planning",
     ).length;
     const noBike = entries.filter(
-      (entry) => entry.bike_ownership === "no"
+      (entry) => entry.bike_ownership === "interested",
     ).length;
 
     // Top cities
@@ -135,7 +135,7 @@ export default function WaitlistTableContent({
         }
         return acc;
       },
-      {} as Record<string, number>
+      {} as Record<string, number>,
     );
 
     const topCities = (Object.entries(cityCounts) as [string, number][])
@@ -188,21 +188,21 @@ export default function WaitlistTableContent({
             category: "owns_bike",
             count: analyticsData.bikeOwners,
             percentage: Math.round(
-              (analyticsData.bikeOwners / analyticsData.totalSignups) * 100
+              (analyticsData.bikeOwners / analyticsData.totalSignups) * 100,
             ),
           },
           {
             category: "planning_bike",
             count: analyticsData.planningBike,
             percentage: Math.round(
-              (analyticsData.planningBike / analyticsData.totalSignups) * 100
+              (analyticsData.planningBike / analyticsData.totalSignups) * 100,
             ),
           },
           {
             category: "no_bike",
             count: analyticsData.noBike,
             percentage: Math.round(
-              (analyticsData.noBike / analyticsData.totalSignups) * 100
+              (analyticsData.noBike / analyticsData.totalSignups) * 100,
             ),
           },
         ],
@@ -212,7 +212,7 @@ export default function WaitlistTableContent({
         borderColor: "border-chart-3/30",
       },
     ],
-    [entries, analyticsData]
+    [entries, analyticsData],
   );
 
   // Sample scheduled exports
@@ -260,7 +260,7 @@ export default function WaitlistTableContent({
         runCount: 4,
       },
     ],
-    []
+    [],
   );
 
   // Loading state when search changes and we have entries

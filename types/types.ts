@@ -53,6 +53,14 @@ export interface WaitlistEntry {
   email: string;
   city: string;
   status: "pending" | "approved" | "rejected";
-  bike_ownership: "yes" | "no" | "planning";
+  status_reason?: string | null;
+  converted_to_user?: boolean;
+  bike_ownership: "own" | "interested" | "planning" | null;
+  audience: "rider" | "brand" | "partner" | null;
+  source: "movrr_website" | "movrr_waitlist" | null;
+  acquisition_channel: string | null;
+  country_code: string | null;
+  geo_city: string | null;
   created_at: string;
+  updated_at?: string;
 }

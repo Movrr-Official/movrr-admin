@@ -35,20 +35,58 @@ export function WaitlistTable({
         label: "City",
         type: "multi-select",
         key: "city",
-        options: [...new Set(entries.map((entry) => entry.city))].map((city) => ({
-          value: city,
-          label: city,
-        })),
+        options: [...new Set(entries.map((entry) => entry.city))].map(
+          (city) => ({
+            value: city,
+            label: city,
+          }),
+        ),
+      },
+      {
+        id: "audience",
+        label: "Audience",
+        type: "multi-select",
+        key: "audience",
+        options: [
+          { value: "rider", label: "Rider" },
+          { value: "brand", label: "Brand" },
+          { value: "partner", label: "Partner" },
+        ],
       },
       {
         id: "bike_ownership",
-        label: "Bike Ownership",
+        label: "Bike",
         type: "multi-select",
         key: "bike_ownership",
         options: [
-          { value: "yes", label: "Owns Bike" },
-          { value: "no", label: "No Bike" },
+          { value: "own", label: "Owns Bike" },
+          { value: "interested", label: "Interested" },
           { value: "planning", label: "Planning to Get" },
+        ],
+      },
+      {
+        id: "source",
+        label: "Source",
+        type: "multi-select",
+        key: "source",
+        options: [
+          { value: "movrr_website", label: "Website" },
+          { value: "movrr_waitlist", label: "Waitlist" },
+        ],
+      },
+      {
+        id: "acquisition_channel",
+        label: "Channel",
+        type: "multi-select",
+        key: "acquisition_channel",
+        options: [
+          { value: "direct", label: "Direct" },
+          { value: "social", label: "Social" },
+          { value: "organic_search", label: "Organic" },
+          { value: "paid", label: "Paid" },
+          { value: "email", label: "Email" },
+          { value: "referral", label: "Referral" },
+          { value: "partner", label: "Partner" },
         ],
       },
       {

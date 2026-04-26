@@ -30,7 +30,7 @@ const waitlistSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   city: z.string().min(2, "City must be at least 2 characters"),
-  bikeOwnership: z.enum(["yes", "no", "planning"], {
+  bikeOwnership: z.enum(["own", "interested", "planning"], {
     required_error: "Please select an option",
   }),
 });
