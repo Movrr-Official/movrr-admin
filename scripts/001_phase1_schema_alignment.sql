@@ -8,7 +8,7 @@
 -- 1. reward_transactions: add 'standard_ride_bonus' to source CHECK constraint
 --    Reason: mobile writes this source for all suggested-route compliance bonuses.
 --    Without this, any standard_ride_bonus row violates the constraint at insert.
---    Backward-safe: existing rows are unaffected; only new rows benefit.
+--    Existing rows are unaffected; only new rows benefit.
 -- ----------------------------------------------------------------------------
 ALTER TABLE public.reward_transactions
   DROP CONSTRAINT IF EXISTS reward_transactions_source_check;

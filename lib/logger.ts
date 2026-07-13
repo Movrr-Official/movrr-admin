@@ -8,6 +8,7 @@ import {
   NODE_ENV,
   NEXT_PUBLIC_APP_URL,
 } from "./env";
+import { redactLogContext } from "./logRedaction";
 
 export enum LogLevel {
   DEBUG = 0,
@@ -56,6 +57,9 @@ class Logger {
     message: string,
     context?: LogContext,
   ): string {
+    const safeContext = context
+      ? (redactLogContext(context) as LogContext)
+      : undefined;
     const payload = {
       timestamp: new Date().toISOString(),
       level,
@@ -63,11 +67,11 @@ class Logger {
       service: this.config.service,
       environment: this.config.environment,
       ...this.config.staticContext,
-      ...(context ? { context } : {}),
+      ...(safeContext ? { context: safeContext } : {}),
     };
 
     if (this.config.prettyPrint) {
-      const contextStr = context ? ` ${JSON.stringify(context)}` : "";
+      const contextStr = safeContext ? ` ${JSON.stringify(safeContext)}` : "";
       return `[${payload.timestamp}] [${payload.level}] ${payload.message}${contextStr}`;
     }
 
@@ -106,7 +110,7 @@ class Logger {
 
   error(message: string, error?: unknown, context?: LogContext): void {
     if (this.shouldLog(LogLevel.ERROR)) {
-      const errorContext = {
+      const errorContext = redactLogContext({
         ...context,
         error:
           error instanceof Error
@@ -116,7 +120,7 @@ class Logger {
                 stack: error.stack,
               }
             : error,
-      };
+      }) as LogContext;
       console.error(this.formatMessage("ERROR", message, errorContext));
 
       // In production, send to error tracking service

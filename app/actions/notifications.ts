@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { NOTIFICATION_ACCESS_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { NOTIFICATION_READ_ROLES, NOTIFICATION_WRITE_ROLES } from "@/lib/authPermissions";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { logger } from "@/lib/logger";
 import {
   AdminNotification,
   CreateNotificationInput,
@@ -75,7 +76,7 @@ export async function getNotificationHistory(
   filters: NotificationFilters = notificationFiltersFallback,
 ): Promise<{ success: boolean; data?: AdminNotification[]; error?: string }> {
   try {
-    await requireAdminRoles(NOTIFICATION_ACCESS_ROLES);
+    await requireAdminRoles(NOTIFICATION_READ_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedFilters = notificationFiltersSchema.parse(filters);
     const limit = validatedFilters.limit ?? 200;
@@ -145,7 +146,9 @@ export async function getNotificationHistory(
       ),
     };
   } catch (error) {
-    console.error("getNotificationHistory error:", error);
+    logger.warn("getNotificationHistory error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       success: false,
       error:
@@ -162,7 +165,7 @@ export async function getNotificationStats(): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdminRoles(NOTIFICATION_ACCESS_ROLES);
+    await requireAdminRoles(NOTIFICATION_READ_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { count: total, error: totalError } = await supabaseAdmin
@@ -213,7 +216,9 @@ export async function getNotificationStats(): Promise<{
       },
     };
   } catch (error) {
-    console.error("getNotificationStats error:", error);
+    logger.warn("getNotificationStats error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       success: false,
       error:
@@ -232,7 +237,7 @@ export async function createNotifications(
   error?: string;
 }> {
   try {
-    await requireAdminRoles(NOTIFICATION_ACCESS_ROLES);
+    await requireMutatingAdminRoles(NOTIFICATION_WRITE_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedPayload = createNotificationSchema.parse(payload);
 
@@ -295,7 +300,9 @@ export async function createNotifications(
       data: { createdCount, recipientCount: recipientIds.length },
     };
   } catch (error) {
-    console.error("createNotifications error:", error);
+    logger.warn("createNotifications error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       success: false,
       error:

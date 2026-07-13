@@ -1,7 +1,7 @@
 "use server";
 
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   BikeType,
@@ -30,7 +30,7 @@ export async function getDistanceStats(): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabase = createSupabaseAdminClient();
 
     const { data, error } = await supabase
@@ -95,7 +95,7 @@ export async function verifyRideSession(input: {
     }
     const reason = input.reason?.trim().slice(0, 2000);
 
-    const admin = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const admin = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabase = createSupabaseAdminClient();
     const newStatus = VERIFICATION_STATUS_MAP[input.action];
 
@@ -143,7 +143,7 @@ export async function getRideSessions(
   filters?: RideSessionFilters,
 ): Promise<{ success: boolean; data?: RideSession[]; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     // Fetch ride sessions.

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/internal/privacy-retention",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import "server-only";
 import { createSupabaseServerClient } from "./supabase-server";
 import { createSupabaseAdminClient } from "./supabase-admin";
 import { headers } from "next/headers";
-import { normalizeAdminRole } from "@/lib/authPermissions";
+import { normalizeAdminRole, isReadOnlyAdminRole, hasAdminPermission } from "@/lib/authPermissions";
 import {
   ADMIN_DASHBOARD_SESSION_AUDIT_ACTION,
   ADMIN_SESSION_ACTIVITY_ACTION,
@@ -550,6 +550,7 @@ export async function requireAdmin(): Promise<AuthenticatedUser> {
 
 export async function requireAdminRoles(
   allowedRoles: readonly string[],
+  options?: { mutation?: boolean; permission?: string },
 ): Promise<AuthenticatedUser> {
   const user = await requireAdmin();
 
@@ -557,7 +558,25 @@ export async function requireAdminRoles(
     throw new AdminAuthError("NOT_AUTHORIZED", "Not authorized");
   }
 
+  if (options?.permission && !hasAdminPermission(user.adminUser.role, options.permission)) {
+    throw new AdminAuthError("NOT_AUTHORIZED", "Missing required permission.");
+  }
+
+  if (options?.mutation && isReadOnlyAdminRole(user.adminUser.role)) {
+    throw new AdminAuthError(
+      "NOT_AUTHORIZED",
+      "Read-only admin role cannot perform this action.",
+    );
+  }
+
   return user;
+}
+
+/** Alias for mutating server actions — blocks read-only dashboard roles. */
+export async function requireMutatingAdminRoles(
+  allowedRoles: readonly string[],
+): Promise<AuthenticatedUser> {
+  return requireAdminRoles(allowedRoles, { mutation: true });
 }
 
 export async function getAdminRoleForLayout(): Promise<AdminRole | undefined> {
@@ -598,4 +617,20 @@ export async function getAdminRoleForLayout(): Promise<AdminRole | undefined> {
   const normalizedRole = normalizeAdminRole(rawRole);
 
   return normalizedRole as AdminRole | undefined;
+}
+
+/** Remove server-side admin session tracking on logout. */
+export async function clearAdminDashboardSession(authUserId: string) {
+  const supabaseAdmin = createSupabaseAdminClient();
+  const { error } = await supabaseAdmin
+    .from("admin_dashboard_sessions")
+    .delete()
+    .eq("auth_user_id", authUserId);
+
+  if (error) {
+    logger.warn("Failed to clear admin dashboard session on logout", {
+      userId: authUserId,
+      message: error.message,
+    });
+  }
 }

@@ -1,8 +1,8 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   User,
@@ -482,7 +482,7 @@ export async function getUsers(
   selectedAdvertiserIds: string[] = [],
 ): Promise<{ success: boolean; data?: User[]; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     let query = supabaseAdmin.from("user").select("*");
@@ -570,7 +570,7 @@ export async function createUser(
   data: z.infer<typeof createUserSchema>,
 ): Promise<{ success: boolean; error?: string; data?: User }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = createUserSchema.parse(data);
     const policies = await getPlatformOperationalPolicies();
@@ -795,7 +795,7 @@ export async function updateUser(
   data: z.infer<typeof updateUserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateUserSchema.parse(data);
 
@@ -905,7 +905,7 @@ export async function updateUserRole(
   data: z.infer<typeof updateUserRoleSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateUserRoleSchema.parse(data);
 
@@ -987,7 +987,7 @@ export async function toggleUserStatus(
   data: z.infer<typeof toggleUserStatusSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = toggleUserStatusSchema.parse(data);
 
@@ -1080,7 +1080,7 @@ export async function sendPasswordResetEmail(
   email: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const securityPolicy = await getPlatformSecurityPolicy();
     const allowPasswordResetLinks =
@@ -1179,7 +1179,7 @@ export async function exportUserData(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     // Fetch user profile
@@ -1299,7 +1299,7 @@ export async function deleteUser(
   data: z.infer<typeof deleteUserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = deleteUserSchema.parse(data);
 
@@ -1429,7 +1429,7 @@ export async function bulkUpdateUserStatus(
   status: "active" | "inactive" | "pending",
 ): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin
@@ -1467,7 +1467,7 @@ export async function getUserActivityLogs(
   limit: number = 12,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const canonicalFeed = await fetchUserActivityFeed(
       supabaseAdmin,
@@ -1686,7 +1686,7 @@ export async function getUserRoutes(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin
@@ -1728,7 +1728,7 @@ export async function getUserCampaigns(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin
@@ -1784,7 +1784,7 @@ export async function getUserCampaigns(
 }
 
 /**
- * Fetches reward transactions for a user by resolving userId → riderId, then
+ * Fetches reward transactions for a user by resolving userId ? riderId, then
  * returning fully-parsed RewardTransaction objects (metadata, bonusBreakdown, etc.).
  */
 export async function getUserRewardTransactions(
@@ -1792,7 +1792,7 @@ export async function getUserRewardTransactions(
   limit: number = 50,
 ): Promise<{ success: boolean; error?: string; data?: RewardTransaction[] }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin
@@ -1868,7 +1868,7 @@ export async function getUserPointsBalance(
   userId: string,
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: rider } = await supabaseAdmin

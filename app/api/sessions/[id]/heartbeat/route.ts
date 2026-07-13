@@ -14,14 +14,48 @@ import { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { triggerRewardUpdate } from "@/lib/services/rewardTrigger";
 import { logSessionEvent } from "@/lib/services/sessionLogger";
+import { authenticateRiderSessionRequest } from "@/lib/riderSessionAuth";
+import { checkDistributedRateLimit } from "@/lib/distributedRateLimit";
+import { getClientIp } from "@/lib/rateLimit";
+import { applySecurityHeaders } from "@/lib/securityHeaders";
 
 const MAX_SESSION_DURATION_H = 8;
 const CHECKPOINT_INTERVAL_MIN = 30;
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function POST(_req: NextRequest, { params }: RouteContext) {
+export async function POST(request: NextRequest, { params }: RouteContext) {
   const { id: sessionId } = await params;
+
+  const rateLimit = await checkDistributedRateLimit(`heartbeat:session:${sessionId}`, {
+    max: 30,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) {
+    return applySecurityHeaders(
+      NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 }),
+      request,
+    );
+  }
+
+  const ipRateLimit = await checkDistributedRateLimit(`heartbeat:ip:${getClientIp(request)}`, {
+    max: 60,
+    windowMs: 60_000,
+  });
+  if (!ipRateLimit.allowed) {
+    return applySecurityHeaders(
+      NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 }),
+      request,
+    );
+  }
+
+  const auth = await authenticateRiderSessionRequest(request, sessionId);
+  if (!auth.ok) {
+    return applySecurityHeaders(
+      NextResponse.json({ error: auth.error }, { status: auth.status }),
+      request,
+    );
+  }
 
   const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -34,13 +68,19 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
     .maybeSingle();
 
   if (!session) {
-    return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    return applySecurityHeaders(
+      NextResponse.json({ error: "Session not found" }, { status: 404 }),
+      request,
+    );
   }
 
   if (!["active", "paused"].includes(session.status)) {
-    return NextResponse.json(
-      { status: session.status, action: "no_op" },
-      { status: 200 },
+    return applySecurityHeaders(
+      NextResponse.json(
+        { status: session.status, action: "no_op" },
+        { status: 200 },
+      ),
+      request,
     );
   }
 
@@ -63,7 +103,10 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
       { reason: "max_duration_exceeded", duration_h: durationH },
     );
 
-    return NextResponse.json({ status: "auto_closed" });
+    return applySecurityHeaders(
+      NextResponse.json({ status: "auto_closed" }),
+      request,
+    );
   }
 
   // Update last_heartbeat_at
@@ -90,5 +133,11 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
     );
   }
 
-  return NextResponse.json({ status: "ok", duration_h: Math.round(durationH * 10) / 10 });
+  return applySecurityHeaders(
+    NextResponse.json({
+      status: "ok",
+      duration_h: Math.round(durationH * 10) / 10,
+    }),
+    request,
+  );
 }

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { writeUserActivity } from "@/lib/userActivity";
@@ -184,7 +184,7 @@ function buildRide(
 export async function createCommunityRide(
   input: CreateCommunityRideFormData,
 ): Promise<{ success: boolean; data?: { id: string }; error?: string }> {
-  const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     revalidatePath("/community-rides");
@@ -334,7 +334,7 @@ export async function createCommunityRide(
 export async function getCommunityRides(
   filters?: CommunityRideFiltersSchema,
 ): Promise<{ success: boolean; data?: CommunityRide[]; error?: string }> {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     return { success: true, data: [...mockCommunityRides] };
@@ -430,7 +430,7 @@ export async function getCommunityRides(
 export async function getCommunityRideById(
   id: string,
 ): Promise<{ success: boolean; data?: CommunityRide; error?: string }> {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     const ride = mockCommunityRides.find((r) => r.id === id);
@@ -495,7 +495,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 export async function updateCommunityRide(
   input: UpdateCommunityRideFormData,
 ): Promise<{ success: boolean; error?: string }> {
-  const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     revalidatePath("/community-rides");
@@ -652,7 +652,7 @@ export async function removeParticipant(
   rideId: string,
   riderId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     revalidatePath("/community-rides");
@@ -711,7 +711,7 @@ export async function removeParticipant(
 export async function deleteCommunityRide(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     revalidatePath("/community-rides");

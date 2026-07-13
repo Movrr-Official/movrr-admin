@@ -1,12 +1,17 @@
 import os
+import hashlib
 import json
 from datetime import datetime, UTC
 from flask import request
 from logging_setup import logger
 
 
+def _hash_rate_limit_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()[:16]
+
+
 def rate_limit_key():
-    """Prefer token-based keys when available, otherwise use remote IP."""
+    """Prefer hashed token-based keys when available, otherwise use remote IP."""
     try:
         auth = None
         if request:
@@ -16,7 +21,7 @@ def rate_limit_key():
 
     if auth:
         token = auth[7:] if auth.startswith("Bearer ") else auth
-        return f"token:{token}"
+        return f"token:{_hash_rate_limit_token(token)}"
 
     ip = request.headers.get("x-forwarded-for") or request.remote_addr or "unknown"
     return f"ip:{ip}"

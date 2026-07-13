@@ -9,11 +9,11 @@ const MAX_BODY_BYTES = 100_000;
 const decisionSchema = z
   .object({
     action: z.enum(["accept", "reject"]),
-    route: z.any().optional(),
+    route: z.record(z.string(), z.unknown()).optional(),
     trace_id: z.string().max(200).optional(),
-    metadata: z.any().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   })
-  .passthrough();
+  .strict();
 
 function makeTraceId(req: Request) {
   try {

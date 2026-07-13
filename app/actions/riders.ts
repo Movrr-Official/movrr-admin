@@ -1,9 +1,9 @@
-ï»¿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import {
   fetchLatestUserActivitySignalMap,
   resolveLatestIsoTimestamp,
@@ -271,7 +271,7 @@ export async function getRiders(
   filters?: RiderFiltersSchema,
 ): Promise<{ success: boolean; data?: Rider[]; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     let query = supabaseAdmin.from("rider").select("*");
@@ -463,7 +463,7 @@ export async function getRiders(
 }
 
 /**
- * Bulk status update â€” suspend or activate multiple riders atomically.
+ * Bulk status update — suspend or activate multiple riders atomically.
  * Each rider update is attempted independently; partial failures are reported.
  */
 export async function bulkUpdateRiderStatus(
@@ -476,7 +476,7 @@ export async function bulkUpdateRiderStatus(
   error?: string;
 }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const dbStatus = mapUiStatusToDb(status);
 
@@ -573,7 +573,7 @@ export async function getCommunityRideCreatorAccess(userId: string): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin
@@ -612,7 +612,7 @@ export async function setCommunityRideCreatorAccess(
   input: z.infer<typeof communityRideCreatorAccessSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedInput = communityRideCreatorAccessSchema.parse(input);
     const now = new Date().toISOString();
@@ -673,7 +673,7 @@ export async function updateRiderProfile(
   data: z.infer<typeof updateRiderSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateRiderSchema.parse(data);
 
@@ -763,7 +763,7 @@ export async function updateRiderProfile(
       };
     }
 
-    // Audit trail â€” record status changes (suspension/activation) to user_activity
+    // Audit trail — record status changes (suspension/activation) to user_activity
     if (validatedData.status !== undefined && riderRow.user_id) {
       const dbStatus = mapUiStatusToDb(validatedData.status);
       const action =

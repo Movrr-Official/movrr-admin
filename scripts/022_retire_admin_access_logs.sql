@@ -1,4 +1,4 @@
--- Retire legacy request-level admin access table after all application reads have
+-- Retire obsolete request-level admin access table after all application reads have
 -- moved to user_activity and audit_log.
 
 begin;

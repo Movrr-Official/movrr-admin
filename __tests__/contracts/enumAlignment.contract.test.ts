@@ -51,14 +51,11 @@ describe("BONUS_TYPE_LABELS — completeness against mobile-written types", () =
     expect(BONUS_TYPE_LABELS[BONUS_TYPE.STREAK_BONUS]).toBeTruthy();
   });
 
-  it("boosted_ride_boost (campaign multiplier) maps to a label", () => {
-    // This was the primary drift point — mobile writes "boosted_ride_boost",
-    // admin previously only had "campaign_boost" which was never written
+  it("boosted_ride_boost maps to a label", () => {
     expect(BONUS_TYPE_LABELS[BONUS_TYPE.BOOSTED_RIDE_BOOST]).toBeTruthy();
   });
 
   it("completion_quality_bonus maps to a label", () => {
-    // mobile writes "completion_quality_bonus", admin previously had "quality_bonus"
     expect(BONUS_TYPE_LABELS[BONUS_TYPE.COMPLETION_QUALITY_BONUS]).toBeTruthy();
   });
 

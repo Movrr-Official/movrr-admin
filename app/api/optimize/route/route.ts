@@ -48,9 +48,9 @@ const optimizeRequestSchema = z
     locations: z.array(locationSchema).min(2).max(MAX_LOCATIONS),
     edge_penalties: z.array(z.array(z.number().finite().min(0))).optional(),
     preferences: preferencesSchema.optional(),
-    context: z.any().optional(),
+    context: z.record(z.string(), z.unknown()).optional(),
   })
-  .passthrough();
+  .strict();
 
 function makeTraceId(req: Request) {
   try {

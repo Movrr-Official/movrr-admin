@@ -9,7 +9,7 @@
  *   - Display label maps
  *
  * CONTRACT RULE: Any key name, table name, or enum value change requires a
- * coordinated mobile + admin deploy. Adding new keys is backwards-compatible;
+ * coordinated mobile + admin deploy. Adding new keys requires updating both apps.
  * renaming or removing is a breaking change.
  */
 
@@ -72,11 +72,7 @@ export const REWARD_SOURCE = {
 
 /**
  * bonusBreakdown[].type values written by the mobile app.
- *
- * DRIFT HISTORY: Admin previously used "campaign_boost" and "quality_bonus"
- * which were never written by mobile. Mobile writes "boosted_ride_boost" and
- * "completion_quality_bonus" respectively. Legacy keys are kept in
- * BONUS_TYPE_LABELS for old DB records only — do not use them in new code.
+ * Admin display labels live in BONUS_TYPE_LABELS below.
  */
 export const BONUS_TYPE = {
   STREAK_BONUS: "streak_bonus",
@@ -243,9 +239,6 @@ export const BONUS_TYPE_LABELS: Record<string, string> = {
   [BONUS_TYPE.COMPLETION_QUALITY_BONUS]: "Quality Bonus",
   [BONUS_TYPE.BOOSTED_RIDE_BOOST]: "Campaign Boost",
   [BONUS_TYPE.MANUAL_ADMIN_ADJUSTMENT]: "Admin Adjustment",
-  // Legacy keys retained for DB records written before contract alignment
-  quality_bonus: "Quality Bonus",
-  campaign_boost: "Campaign Boost",
 };
 
 export const REWARD_SOURCE_LABELS: Record<string, string> = {

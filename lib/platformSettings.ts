@@ -184,6 +184,7 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
   },
   privacy: {
     waitlistRetentionDays: 180,
+    gpsRetentionDays: 90,
     auditRetentionVisibilityDays: 365,
     exportRequestResponseHours: 72,
     deletionPolicyText: "",
@@ -419,12 +420,6 @@ export async function getPublicPlatformConfig() {
       maxPerRouteBonusTotal: sr.maxPerRouteBonusTotal,
     },
   };
-}
-
-/** @deprecated Use getPublicPlatformConfig */
-export async function getPublicRewardsConfig() {
-  const platform = await getPublicPlatformConfig();
-  return platform.config;
 }
 
 export async function getPlatformIntegrationRuntimeDefaults() {

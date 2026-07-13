@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { APP_URL, RESEND_API_KEY, FROM_EMAIL } from "@/lib/env";
 import {
@@ -43,7 +43,7 @@ export type WorkboardBootstrap = {
 };
 
 export async function bootstrapWorkboardTeam(): Promise<WorkboardBootstrap> {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const { data: existingMember } = await supabase
@@ -110,7 +110,7 @@ export async function bootstrapWorkboardTeam(): Promise<WorkboardBootstrap> {
 }
 
 export async function getWorkboardMembers(teamId: string) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   await requireWorkboardMembership(supabase, teamId, auth.authUser.id);
@@ -142,7 +142,7 @@ export async function getWorkboardMembers(teamId: string) {
 }
 
 export async function getWorkboardBoards(teamId: string) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   await requireWorkboardMembership(supabase, teamId, auth.authUser.id);
@@ -157,7 +157,7 @@ export async function getWorkboardBoards(teamId: string) {
 }
 
 export async function getWorkboardCards(teamId: string) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   await requireWorkboardMembership(supabase, teamId, auth.authUser.id);
@@ -176,7 +176,7 @@ export async function inviteWorkboardMember(input: {
   email: string;
   role: "owner" | "admin" | "editor" | "viewer";
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -242,7 +242,7 @@ export async function inviteWorkboardMember(input: {
 }
 
 export async function acceptWorkboardInvite(token: string) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const { data: invite, error } = await supabase
@@ -294,7 +294,7 @@ export async function updateWorkboardMemberRole(input: {
   memberId: string;
   role: "owner" | "admin" | "editor" | "viewer";
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
   const payload = z
     .object({ memberId: z.string().uuid(), role: roleSchema })
@@ -344,7 +344,7 @@ export async function updateWorkboardMemberRole(input: {
 }
 
 export async function removeWorkboardMember(memberId: string) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const { data: targetMember, error: targetMemberError } = await supabase
@@ -394,7 +394,7 @@ export async function createWorkboardBoard(input: {
   statusKey: string;
   position: number;
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -455,7 +455,7 @@ export async function createWorkboardCard(input: {
   effort?: string | null;
   position: number;
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -523,7 +523,7 @@ export async function updateWorkboardBoard(input: {
   title: string;
   helper?: string | null;
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -569,7 +569,7 @@ export async function archiveWorkboardBoard(input: {
   teamId: string;
   boardId: string;
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -609,7 +609,7 @@ export async function updateWorkboardBoardOrder(input: {
   teamId: string;
   boards: { id: string; position: number }[];
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -669,7 +669,7 @@ export async function updateWorkboardCard(input: {
   dueDate?: string | null;
   effort?: string | null;
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -729,7 +729,7 @@ export async function updateWorkboardCardPositions(input: {
   teamId: string;
   updates: { id: string; boardId: string; position: number }[];
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -785,7 +785,7 @@ export async function archiveWorkboardCard(input: {
   teamId: string;
   cardId: string;
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -825,7 +825,7 @@ export async function deleteWorkboardCard(input: {
   teamId: string;
   cardId: string;
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z
@@ -861,7 +861,7 @@ export async function deleteWorkboardBoard(input: {
   teamId: string;
   boardId: string;
 }) {
-  const auth = await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
   const supabase = createSupabaseAdminClient();
 
   const payload = z

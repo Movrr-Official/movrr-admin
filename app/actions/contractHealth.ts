@@ -1,7 +1,7 @@
 "use server";
 
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { DB_TABLES } from "@/lib/rewardConstants";
 import {
@@ -30,7 +30,7 @@ export async function getContractHealthReport(
   | { success: false; error: string }
 > {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
   } catch {
     return { success: false, error: "Unauthorized" };
   }

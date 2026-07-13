@@ -12,28 +12,9 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "@/lib/logger";
 import { logSessionEvent } from "./sessionLogger";
+import { resolveActiveRewardPolicy, type RewardPolicySnapshot } from "./rewardPolicy";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type PolicySnapshot = {
-  baseDistanceRatePerMeter: number; // points per metre
-  baseTimeRatePerSecond: number; // points per second
-  zoneDwellRatePerSecond: number; // points per impression unit (1 unit = 1s)
-  hotZoneMultiplier: number; // applied if zone is a hot zone
-  standardRideRouteMultiplier: number; // applied when corridor compliance met
-  standardRideMinCompliancePct: number; // minimum pct for any bonus
-  dailyCapPoints: number;
-};
-
-const DEFAULT_POLICY: PolicySnapshot = {
-  baseDistanceRatePerMeter: 0.01,
-  baseTimeRatePerSecond: 0.005,
-  zoneDwellRatePerSecond: 0.1,
-  hotZoneMultiplier: 2.0,
-  standardRideRouteMultiplier: 1.5,
-  standardRideMinCompliancePct: 60,
-  dailyCapPoints: 500,
-};
+type PolicySnapshot = RewardPolicySnapshot;
 
 // ─── Main trigger ─────────────────────────────────────────────────────────────
 
@@ -53,16 +34,13 @@ export async function triggerRewardUpdate(params: {
     // Load session for policy snapshot and rider_id
     const { data: session } = await supabase
       .from("ride_session")
-      .select("id, rider_id, earning_mode, policy_snapshot, status, started_at")
+      .select("id, rider_id, earning_mode, status, started_at")
       .eq("id", sessionId)
       .maybeSingle();
 
     if (!session || session.status === "rejected") return;
 
-    const policy: PolicySnapshot = {
-      ...DEFAULT_POLICY,
-      ...(session.policy_snapshot ?? {}),
-    };
+    const policy = await resolveActiveRewardPolicy();
 
     // Check daily cap
     const today = new Date().toISOString().split("T")[0];
@@ -164,18 +142,18 @@ async function handleBoostedRideReward(
 
   if (pointsToAward <= 0) return;
 
-  const { error } = await supabase.from("reward_transactions").insert({
-    rider_id: riderId,
-    points_earned: pointsToAward,
-    source: "boosted_ride",
-    metadata: {
+  const { error } = await supabase.rpc("award_reward_points_capped", {
+    p_rider_id: riderId,
+    p_points: pointsToAward,
+    p_daily_cap: policy.dailyCapPoints,
+    p_source: "boosted_ride",
+    p_metadata: {
       sessionId,
       zoneVisitIds: unrewarded.map((v) => v.id),
       totalImpressions,
       policyRatePerUnit: policy.zoneDwellRatePerSecond,
       cappedFrom: rawPoints > pointsToAward ? rawPoints : undefined,
     },
-    created_at: new Date().toISOString(),
   });
 
   if (!error) {

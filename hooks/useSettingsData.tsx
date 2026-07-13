@@ -104,6 +104,7 @@ const fallbackValues: AdminSettingsValues = adminSettingsValuesSchema.parse({
   },
   privacy: {
     waitlistRetentionDays: 180,
+    gpsRetentionDays: 90,
     auditRetentionVisibilityDays: 365,
     exportRequestResponseHours: 72,
     deletionPolicyText: "",

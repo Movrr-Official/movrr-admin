@@ -239,5 +239,4 @@ export const getWaitlistTableColumns = ({
   },
 ];
 
-// Keep backward compatibility - export the default columns as well
 export const columns = getWaitlistTableColumns();

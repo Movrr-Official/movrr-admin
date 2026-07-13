@@ -14,6 +14,8 @@ type RateLimitResult = {
   retryAfterSeconds: number;
 };
 
+export type { RateLimitConfig, RateLimitResult };
+
 const RATE_LIMIT_STORE_KEY = "__movrr_admin_rate_limit_store__";
 
 function getStore() {
@@ -29,17 +31,17 @@ function getStore() {
 }
 
 export function getClientIp(request: Request): string {
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
     const first = forwarded.split(",")[0]?.trim();
     if (first) return first;
   }
-
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) return realIp;
-
-  const cfIp = request.headers.get("cf-connecting-ip");
-  if (cfIp) return cfIp;
 
   return "unknown";
 }

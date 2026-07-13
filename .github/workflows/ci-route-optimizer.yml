@@ -24,7 +24,9 @@ jobs:
 
       - name: Run container
         run: |
-          docker run -d --rm --name route-opt -p 5000:5000 -e ROUTE_LOG_DIR=/app/logs "$IMAGE"
+          docker run -d --rm --name route-opt -p 5000:5000 \
+            -e ROUTE_OPTIMIZER_TOKEN=ci-smoke-token \
+            -e ROUTE_LOG_DIR=/app/logs "$IMAGE"
 
       - name: Wait for /health
         run: |
@@ -44,9 +46,12 @@ jobs:
           sudo apt-get install -y jq curl
 
       - name: Run smoke tests
+        working-directory: services/route_optimizer_service
+        env:
+          ROUTE_OPTIMIZER_TOKEN: ci-smoke-token
         run: |
-          chmod +x services/route_optimizer_service/run_smoketest.sh
-          ./services/route_optimizer_service/run_smoketest.sh
+          chmod +x run_smoketest.sh
+          ./run_smoketest.sh
 
       - name: Collect container logs
         if: always()

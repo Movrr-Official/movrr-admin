@@ -84,6 +84,10 @@ const serverEnvSchema = publicEnvSchema
   SUPPORT_EMAIL: z.string().email("Invalid SUPPORT_EMAIL").optional(),
   ERROR_WEBHOOK_URL: z.string().url("Invalid ERROR_WEBHOOK_URL").optional(),
   MAINTENANCE_JOB_TOKEN: z.string().optional(),
+  CRON_SECRET: z.string().optional(),
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+  TURNSTILE_SECRET_KEY: z.string().optional(),
 
   // Feature flags
   USE_MOCK_DATA: booleanDefaultFalse,
@@ -244,6 +248,10 @@ export const SUPPORT_EMAIL = serverEnv?.SUPPORT_EMAIL || "support@movrr.nl";
 export const ERROR_WEBHOOK_URL = serverEnv?.ERROR_WEBHOOK_URL ?? "";
 export const MAINTENANCE_JOB_TOKEN =
   serverEnv?.MAINTENANCE_JOB_TOKEN ?? "";
+export const CRON_SECRET = serverEnv?.CRON_SECRET ?? "";
+export const UPSTASH_REDIS_REST_URL = serverEnv?.UPSTASH_REDIS_REST_URL ?? "";
+export const UPSTASH_REDIS_REST_TOKEN = serverEnv?.UPSTASH_REDIS_REST_TOKEN ?? "";
+export const TURNSTILE_SECRET_KEY = serverEnv?.TURNSTILE_SECRET_KEY ?? "";
 export const NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS =
   env.NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS;
 export const NEXT_PUBLIC_USE_MOCK_DATA = env.NEXT_PUBLIC_USE_MOCK_DATA;

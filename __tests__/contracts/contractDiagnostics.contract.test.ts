@@ -35,8 +35,7 @@ describe("isKnownBonusType", () => {
     }
   });
 
-  it("returns false for legacy admin-only keys never written by mobile", () => {
-    // These were dead keys in the old BONUS_TYPE_LABELS — kept for display only
+  it("returns false for admin-only keys never written by mobile", () => {
     expect(isKnownBonusType("quality_bonus")).toBe(false);
     expect(isKnownBonusType("campaign_boost")).toBe(false);
   });

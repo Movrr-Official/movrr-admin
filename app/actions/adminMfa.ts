@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdminRoles } from "@/lib/admin";
+import { getServerAdminAuthenticatorAssurance } from "@/lib/adminMfa";
 import {
   DASHBOARD_ACCESS_ROLES,
 } from "@/lib/authPermissions";
@@ -269,6 +270,9 @@ export async function recordAdminMfaEnrollmentSuccess(input: {
   redirectTo?: string;
 }) {
   try {
+    const auth = await requireAdminRoles(DASHBOARD_ACCESS_ROLES, {
+      mutation: true,
+    });
     await recordAdminMfaEnrollment(input.factorId, {
       redirect_to: input.redirectTo ?? MFA_MANAGEMENT_PATH,
     });
@@ -289,6 +293,20 @@ export async function recordAdminMfaChallengeEvent(input: {
   success: boolean;
 }) {
   try {
+    const auth = await requireAdminRoles(DASHBOARD_ACCESS_ROLES, {
+      mutation: true,
+    });
+
+    if (input.success) {
+      const assurance = await getServerAdminAuthenticatorAssurance(auth.authUser);
+      if (assurance.currentLevel !== "aal2") {
+        return {
+          success: false as const,
+          error: "AAL2 is required before recording successful MFA challenge events.",
+        };
+      }
+    }
+
     await recordAdminMfaChallengeResult(input);
     return { success: true as const };
   } catch (error) {

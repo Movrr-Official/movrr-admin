@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   Campaign,
@@ -146,7 +146,7 @@ export async function getCampaigns(
   advertiserUserIds: string[] = [],
 ): Promise<{ success: boolean; data?: Campaign[]; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: advertisers } = await supabaseAdmin
@@ -349,7 +349,7 @@ export async function createCampaign(
   },
 ): Promise<{ success: boolean; error?: string; data?: Campaign }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = createCampaignSchema.parse(data);
 
@@ -415,7 +415,7 @@ export async function updateCampaign(
   data: z.infer<typeof updateCampaignSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateCampaignSchema.parse(data);
 
@@ -497,7 +497,7 @@ export async function updateCampaignStatus(
   status: z.infer<typeof campaignStatusSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { error } = await supabaseAdmin
@@ -540,7 +540,7 @@ export async function runCampaignSelection(
   data?: { selectedCount: number; rejectedCount: number };
 }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin.rpc("run_campaign_selection", {
@@ -581,7 +581,7 @@ export async function deleteCampaign(
   campaignId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { error } = await supabaseAdmin
@@ -613,7 +613,7 @@ export async function duplicateCampaign(
   campaignId: string,
 ): Promise<{ success: boolean; error?: string; data?: Campaign }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
 
     // Fetch the original campaign
@@ -670,7 +670,7 @@ export async function updateCampaignAttributes(
   data: z.infer<typeof updateCampaignAttributesSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateCampaignAttributesSchema.parse(data);
 
@@ -752,7 +752,7 @@ export async function updateCampaignAttributes(
 }
 
 export async function getCampaignZones(campaignId: string) {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
   const supabaseAdmin = createSupabaseAdminClient();
   return supabaseAdmin
     .from("campaign_zone")
@@ -765,7 +765,7 @@ export async function upsertCampaignZone(
   data: z.infer<typeof campaignZoneSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = campaignZoneSchema.parse(data);
 
@@ -811,7 +811,7 @@ export async function deleteCampaignZone(
   zoneId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const { error } = await supabaseAdmin
       .from("campaign_zone")
@@ -836,7 +836,7 @@ export async function deleteCampaignZone(
 }
 
 export async function getCampaignHotZones(campaignId: string) {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
   const supabaseAdmin = createSupabaseAdminClient();
   return supabaseAdmin
     .from("campaign_hot_zone")
@@ -851,7 +851,7 @@ export async function upsertCampaignHotZone(
   data: z.infer<typeof campaignHotZoneSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = campaignHotZoneSchema.parse(data);
 
@@ -929,7 +929,7 @@ export async function getCampaignAnalyticsData(
   error?: string;
 }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const since = new Date(
       Date.now() - days * 24 * 60 * 60 * 1000,
@@ -1067,7 +1067,7 @@ export async function deleteCampaignHotZone(
   zoneId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabaseAdmin = createSupabaseAdminClient();
     const { error } = await supabaseAdmin
       .from("campaign_hot_zone")

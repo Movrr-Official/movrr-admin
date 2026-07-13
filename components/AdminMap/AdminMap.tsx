@@ -168,7 +168,7 @@ export interface AdminMapProps {
   filterCampaignId?: string;
   /** Controlled height (CSS value). Defaults to "29rem" (matches RouteLocationsMap). */
   height?: string;
-  /** When true, wraps the map in a Card shell (legacy RoutesOverview usage). */
+  /** When true, wraps the map in a Card shell. */
   cardShell?: boolean;
 }
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { RiderPerformanceMetrics } from "@/schemas";
 import { DB_TABLES, VERIFICATION_STATUS } from "@/lib/rewardConstants";
@@ -18,7 +18,7 @@ export async function getRiderPerformanceMetrics(riderId: string): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabase = createSupabaseAdminClient();
 
     const windowStart = new Date();

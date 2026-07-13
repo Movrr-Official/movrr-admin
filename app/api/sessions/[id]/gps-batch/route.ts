@@ -11,11 +11,15 @@
  * feeds the reward engine.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { authenticateRiderSessionRequest } from "@/lib/riderSessionAuth";
+import { checkDistributedRateLimit } from "@/lib/distributedRateLimit";
+import { getClientIp } from "@/lib/rateLimit";
+import { applySecurityHeaders } from "@/lib/securityHeaders";
 import {
   buildCorridorSegments,
   COMPLIANCE_ALGORITHM_VERSION,
@@ -24,6 +28,7 @@ import {
   ZoneVisitState,
   verifyGpsBatch,
   ZonePolygon,
+  ZONE_ENTRY_CONSECUTIVE_POINTS,
 } from "@/lib/services/complianceVerifier";
 import { triggerRewardUpdate } from "@/lib/services/rewardTrigger";
 import { publishRiderPositionUpdate } from "@/lib/services/realtimePublisher";
@@ -35,7 +40,7 @@ const GpsPointSchema = z.object({
   lat: z.number().min(-90).max(90),
   lon: z.number().min(-180).max(180),
   speed_kmh: z.number().min(0).nullable().optional(),
-  accuracy_m: z.number().min(0).nullable().optional(),
+  accuracy_m: z.number().min(0).max(200).nullable().optional(),
   heading: z.number().min(0).max(360).nullable().optional(),
   recorded_at: z.string().datetime(),
   batch_id: z.string().uuid().optional(),
@@ -53,6 +58,36 @@ type RouteContext = { params: Promise<{ id: string }> };
 export async function POST(request: NextRequest, { params }: RouteContext) {
   const { id: sessionId } = await params;
 
+  const ipRateLimit = await checkDistributedRateLimit(`gps-ingest:ip:${getClientIp(request)}`, {
+    max: 120,
+    windowMs: 60_000,
+  });
+  if (!ipRateLimit.allowed) {
+    return applySecurityHeaders(
+      NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 }),
+      request,
+    );
+  }
+
+  const sessionRateLimit = await checkDistributedRateLimit(`gps-ingest:session:${sessionId}`, {
+    max: 60,
+    windowMs: 60_000,
+  });
+  if (!sessionRateLimit.allowed) {
+    return applySecurityHeaders(
+      NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 }),
+      request,
+    );
+  }
+
+  const auth = await authenticateRiderSessionRequest(request, sessionId);
+  if (!auth.ok) {
+    return applySecurityHeaders(
+      NextResponse.json({ error: auth.error }, { status: auth.status }),
+      request,
+    );
+  }
+
   const supabase = createClient(
     NEXT_PUBLIC_SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY,
@@ -64,10 +99,10 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
     const raw = await request.json();
     body = GpsBatchBodySchema.parse(raw);
-  } catch (err) {
-    return NextResponse.json(
-      { error: "Invalid request body", detail: String(err) },
-      { status: 400 },
+  } catch {
+    return applySecurityHeaders(
+      NextResponse.json({ error: "Invalid request body" }, { status: 400 }),
+      request,
     );
   }
 
@@ -75,19 +110,25 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   const { data: session, error: sessionError } = await supabase
     .from("ride_session")
     .select(
-      "id, rider_id, status, earning_mode, campaign_id, suggested_route_id, algorithm_version",
+      "id, rider_id, status, earning_mode, campaign_id, suggested_route_id, algorithm_version, started_at",
     )
     .eq("id", sessionId)
     .maybeSingle();
 
   if (sessionError || !session) {
-    return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    return applySecurityHeaders(
+      NextResponse.json({ error: "Session not found" }, { status: 404 }),
+      request,
+    );
   }
 
   if (!["active", "paused"].includes(session.status)) {
-    return NextResponse.json(
-      { error: "Session is not active", status: session.status },
-      { status: 409 },
+    return applySecurityHeaders(
+      NextResponse.json(
+        { error: "Session is not active", status: session.status },
+        { status: 409 },
+      ),
+      request,
     );
   }
 
@@ -99,9 +140,12 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     .eq("batch_id", body.batch_id);
 
   if ((existingBatchCount ?? 0) > 0) {
-    return NextResponse.json(
-      { status: "duplicate", message: "Batch already received" },
-      { status: 200 },
+    return applySecurityHeaders(
+      NextResponse.json(
+        { status: "duplicate", message: "Batch already received" },
+        { status: 200 },
+      ),
+      request,
     );
   }
 
@@ -175,9 +219,13 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         polygon,
         state: enteredAt ? "inside" : "outside",
         enteredAt,
+        enteredAtServer: enteredAt,
         pointsInZone: 0,
         speedSumInZone: 0,
         hasSpeedViolation: false,
+        consecutiveInsidePoints: enteredAt ? ZONE_ENTRY_CONSECUTIVE_POINTS : 0,
+        consecutiveOutsidePoints: 0,
+        boundaryOscillationCount: 0,
       };
     });
   }
@@ -219,6 +267,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     batch_id: body.batch_id,
   }));
 
+  const serverReceivedAt = new Date().toISOString();
   const result = verifyGpsBatch({
     rawPoints,
     lastAccepted,
@@ -226,6 +275,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     corridorSegments,
     corridorToleranceM,
     suggestedRouteId: session.suggested_route_id ?? null,
+    sessionStartedAt: session.started_at,
+    serverReceivedAt,
   });
 
   // ── 8. Persist GPS points ────────────────────────────────────────────────────
@@ -267,9 +318,12 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         sessionId,
         batchId: body.batch_id,
       });
-      return NextResponse.json(
-        { error: "Failed to store GPS points" },
-        { status: 500 },
+      return applySecurityHeaders(
+        NextResponse.json(
+          { error: "Failed to store GPS points" },
+          { status: 500 },
+        ),
+        request,
       );
     }
   }
@@ -405,10 +459,13 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     flags: result.flags.map((f) => f.flag_type),
   });
 
-  return NextResponse.json({
-    status: "ok",
-    accepted: result.acceptedPoints.length,
-    rejected: result.rejectedPoints.length,
-    flags: result.flags.length,
-  });
+  return applySecurityHeaders(
+    NextResponse.json({
+      status: "ok",
+      accepted: result.acceptedPoints.length,
+      rejected: result.rejectedPoints.length,
+      flags: result.flags.length,
+    }),
+    request,
+  );
 }

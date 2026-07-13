@@ -1,0 +1,49 @@
+name: CI — MOVRR Admin
+
+on:
+  push:
+    paths-ignore:
+      - "services/route_optimizer_service/**"
+      - "docs/**"
+      - "*.md"
+  pull_request:
+    paths-ignore:
+      - "services/route_optimizer_service/**"
+      - "docs/**"
+      - "*.md"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Contract + security tests
+        run: npm test
+
+      - name: Production build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder
+          NEXT_PUBLIC_APP_URL: https://admin.example.com
+          APP_URL: https://admin.example.com
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
+          RESEND_API_KEY: re_ci_placeholder
+          FROM_EMAIL: ci@example.com
+          WELCOME_EMAIL: welcome@example.com
+          SYSTEM_EMAIL: system@example.com
+          ROUTE_OPTIMIZER_URL: https://optimizer.example.com
+        run: npm run build

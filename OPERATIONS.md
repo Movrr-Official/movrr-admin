@@ -173,4 +173,4 @@ Checklist:
 
 - TypeScript build errors are currently not build-blocking (`typescript.ignoreBuildErrors: true` in `next.config.mjs`).
 - Service-role Supabase key is required for many server actions; secret exposure would be high impact.
-- Mixed legacy/new schema conventions require careful migration discipline.
+- Apply SQL migrations in order; `campaign.lifecycle_status` is canonical.

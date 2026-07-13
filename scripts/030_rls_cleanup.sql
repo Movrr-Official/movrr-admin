@@ -1,6 +1,6 @@
 -- Migration 030: RLS Cleanup
 --
--- Drops legacy permissive policies that were left behind from the initial schema.
+-- Drops superseded permissive policies from the initial schema.
 -- These coexist with the hardened policies from later migrations and silently
 -- override them — because Postgres ORs PERMISSIVE policies together.
 --

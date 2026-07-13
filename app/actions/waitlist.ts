@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseServerClient } from "@/supabase/server";
 import { WaitlistEntry } from "@/types/types";
@@ -81,7 +81,7 @@ const cleanupCreatedUser = async (
 export async function getWaitlistData(
   searchValue?: string,
 ): Promise<WaitlistEntry[]> {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
   const supabase = await createSupabaseServerClient();
 
   try {
@@ -117,7 +117,7 @@ export async function updateWaitlistStatus(
   status: "pending" | "approved" | "rejected",
   reason?: string,
 ) {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
   return updateWaitlistStatusInternal(id, status, reason);
 }
 
@@ -130,7 +130,7 @@ async function updateWaitlistStatusInternal(
   status: "pending" | "approved" | "rejected",
   reason?: string,
 ) {
-  const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+  const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
   const supabaseAdmin = createSupabaseAdminClient(); // for Auth + RLS-safe insert
   const supabase = await createSupabaseServerClient(); // for fetching waitlist and updates
 

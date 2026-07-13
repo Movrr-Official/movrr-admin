@@ -4,7 +4,10 @@ import path from "path";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["__tests__/contracts/**/*.test.ts"],
+    include: [
+      "__tests__/contracts/**/*.test.ts",
+      "__tests__/security/**/*.test.ts",
+    ],
     reporters: ["verbose"],
   },
   resolve: {

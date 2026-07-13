@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { logger } from "@/lib/logger";
 import {
@@ -181,6 +181,7 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
   },
   privacy: {
     waitlistRetentionDays: 180,
+    gpsRetentionDays: 90,
     auditRetentionVisibilityDays: 365,
     exportRequestResponseHours: 72,
     deletionPolicyText: "",
@@ -718,7 +719,7 @@ export async function getAdminSettings(): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const [rows, auditEntries, integrationStatus] = await Promise.all([
       loadSettingsRows(),
       fetchAuditEntries(),
@@ -770,7 +771,7 @@ export async function getAdminSettings(): Promise<{
 
 export async function getSettingsSection(section: SettingsSectionId) {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const result = await getAdminSettings();
 
     if (!result.success || !result.data) {
@@ -798,7 +799,7 @@ export async function getSettingsSection(section: SettingsSectionId) {
 
 export async function getSettingsAudit(section?: SettingsSectionId) {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const [rows, entries] = await Promise.all([
       loadSettingsRows(),
       fetchAuditEntries(section),
@@ -824,7 +825,7 @@ export async function getSettingsAudit(section?: SettingsSectionId) {
 
 export async function recheckIntegrationStatus() {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const data = await deriveIntegrationStatus();
     return { success: true as const, data };
   } catch (error) {
@@ -838,83 +839,6 @@ export async function recheckIntegrationStatus() {
   }
 }
 
-export async function executePrivacyRetentionJob() {
-  const supabaseAdmin = createSupabaseAdminClient();
-  const rows = await loadSettingsRows();
-  const values = mergeRows(rows);
-
-  const waitlistCutoff = new Date();
-  waitlistCutoff.setDate(
-    waitlistCutoff.getDate() - values.privacy.waitlistRetentionDays,
-  );
-
-  const auditCutoff = new Date();
-  auditCutoff.setDate(
-    auditCutoff.getDate() - values.security.auditRetentionDays,
-  );
-
-  const { data: staleWaitlistRows } = await supabaseAdmin
-    .from("waitlist")
-    .select("id", { count: "exact" })
-    .lt("created_at", waitlistCutoff.toISOString())
-    .eq("converted_to_user", false);
-
-  const { error: deleteWaitlistError } = await supabaseAdmin
-    .from("waitlist")
-    .delete()
-    .lt("created_at", waitlistCutoff.toISOString())
-    .eq("converted_to_user", false);
-
-  if (deleteWaitlistError) {
-    throw new Error(deleteWaitlistError.message);
-  }
-
-  const { data: staleAuditRows } = await supabaseAdmin
-    .from("audit_log")
-    .select("id", { count: "exact" })
-    .lt("timestamp", auditCutoff.toISOString())
-    .neq("action", "System Settings Changed");
-
-  const { error: deleteAuditError } = await supabaseAdmin
-    .from("audit_log")
-    .delete()
-    .lt("timestamp", auditCutoff.toISOString())
-    .neq("action", "System Settings Changed");
-
-  if (deleteAuditError) {
-    throw new Error(deleteAuditError.message);
-  }
-
-  const executedAt = new Date().toISOString();
-
-  // Stamp retentionLastRunAt into the persisted privacy settings so the admin
-  // UI can surface when the job last ran without a separate table.
-  const currentRows = await loadSettingsRows();
-  const currentValues = mergeRows(currentRows);
-  const privacyRow = currentRows.find((r) => r.key === "privacy");
-  const nextPrivacyValue = {
-    ...(privacyRow?.value ?? currentValues.privacy),
-    retentionLastRunAt: executedAt,
-  };
-  await supabaseAdmin
-    .from("platform_settings")
-    .upsert(
-      { key: "privacy", value: nextPrivacyValue, updated_at: executedAt },
-      { onConflict: "key" },
-    );
-
-  return {
-    success: true as const,
-    data: {
-      waitlistDeleted: staleWaitlistRows?.length ?? 0,
-      auditDeleted: staleAuditRows?.length ?? 0,
-      executedAt,
-      waitlistCutoff: waitlistCutoff.toISOString(),
-      auditCutoff: auditCutoff.toISOString(),
-    },
-  };
-}
-
 export async function updateSettingsSection(input: {
   section: SettingsSectionId;
   data: Record<string, unknown>;
@@ -926,7 +850,7 @@ export async function updateSettingsSection(input: {
   riskyChanges?: string[];
 }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const section = settingsSectionIdSchema.parse(input.section);
 
     if (READ_ONLY_SECTIONS.has(section)) {
@@ -1080,7 +1004,7 @@ export async function syncPlatformSettings(): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const rows = await loadSettingsRows();
     const existingKeys = new Set(rows.map((r) => r.key));
     const values = mergeRows(rows);

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { writeUserActivity } from "@/lib/userActivity";
 import { RiderBadge } from "@/schemas";
@@ -19,7 +19,7 @@ export async function getRiderBadges(
   riderId: string,
 ): Promise<{ success: boolean; data?: RiderBadge[]; error?: string }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabase = createSupabaseAdminClient();
 
     const { data, error } = await supabase
@@ -113,7 +113,7 @@ export async function revokeRiderBadge(
   reason?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabase = createSupabaseAdminClient();
 
     const { data: awardRow, error: fetchError } = await supabase
@@ -197,7 +197,7 @@ export async function awardRiderBadge(
   badgeCode: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabase = createSupabaseAdminClient();
 
     const { data: defRow, error: defError } = await supabase
@@ -298,7 +298,7 @@ export async function getBadgeDefinitions(): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const supabase = createSupabaseAdminClient();
 
     const { data, error } = await supabase

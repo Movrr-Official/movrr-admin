@@ -13,7 +13,18 @@ export function applySecurityHeaders(
   );
   response.headers.set(
     "Content-Security-Policy",
-    "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.maptiler.com https://*.cloudinary.com https://api.movrr.nl https://admin.movrr.nl https://api.anthropic.com",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "form-action 'self'",
+    ].join("; "),
   );
 
   if (request?.nextUrl.protocol === "https:") {

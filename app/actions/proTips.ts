@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { mockProTips } from "@/data/mockProTips";
@@ -29,7 +29,7 @@ function mapTipRow(row: Record<string, unknown>): ProTip {
 export async function getProTips(
   filters?: ProTipFiltersSchema,
 ): Promise<{ success: boolean; data?: ProTip[]; error?: string }> {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     let tips = [...mockProTips];
@@ -85,7 +85,7 @@ export async function getProTips(
 export async function createProTip(
   input: CreateProTipFormData,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     revalidatePath("/pro-tips");
@@ -117,7 +117,7 @@ export async function createProTip(
 export async function updateProTip(
   input: UpdateProTipFormData,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     revalidatePath("/pro-tips");
@@ -155,7 +155,7 @@ export async function updateProTip(
 export async function deleteProTip(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdminRoles(ADMIN_ONLY_ROLES);
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
 
   if (shouldUseMockData()) {
     revalidatePath("/pro-tips");

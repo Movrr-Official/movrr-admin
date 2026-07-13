@@ -46,6 +46,7 @@ import {
   type ExportOptions,
   type ExportableData,
 } from "@/lib/export";
+import { recordDataExport } from "@/app/actions/exportAudit";
 
 interface ExportDialogProps {
   data: ExportableData[];
@@ -53,7 +54,9 @@ interface ExportDialogProps {
   defaultFilename?: string;
   title?: string;
   description?: string;
-  formats?: Array<"csv" | "xlsx" | "pdf" | "json">; // New optional prop
+  formats?: Array<"csv" | "xlsx" | "pdf" | "json">;
+  /** Module name recorded in audit_log on export (e.g. "users", "riders"). */
+  auditModule?: string;
 }
 
 // Available format options
@@ -102,7 +105,8 @@ export function ExportDialog({
   defaultFilename = "export",
   title = "Export Data",
   description = "Configure your export settings",
-  formats = ["csv", "xlsx", "pdf", "json"], // Default to all formats
+  formats = ["csv", "xlsx", "pdf", "json"],
+  auditModule = "dashboard",
 }: ExportDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<
@@ -177,6 +181,12 @@ export function ExportDialog({
       };
 
       await exportData(data, options);
+      await recordDataExport({
+        module: auditModule,
+        format: selectedFormat,
+        rowCount: data.length,
+        filename,
+      });
       setExportSuccess(true);
 
       // Auto-close dialog after successful export

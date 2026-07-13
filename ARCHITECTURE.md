@@ -125,5 +125,5 @@ Identity bootstrap rule:
 ## Notable architectural constraints
 
 - `next.config.mjs` sets `typescript.ignoreBuildErrors: true`; type errors do not fail production builds by default.
-- Data model naming is mixed (`snake_case` and legacy/camel-like columns in SQL history scripts), so action mappings must stay explicit.
+- Data model naming mixes `snake_case` DB columns with camelCase app fields; action mappings must stay explicit.
 - App relies heavily on service-role Supabase client for admin actions; environment security is therefore critical.

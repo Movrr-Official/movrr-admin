@@ -1,14 +1,9 @@
 -- ============================================================
 -- 025_migrate_platform_settings.sql
 --
--- Migrates legacy platform_settings rows (system, points,
--- campaignDefaults, featureFlags) to the canonical section
--- keys used by the current admin settings schema.
---
--- Idempotent: ON CONFLICT (key) DO NOTHING means running this
--- twice is safe — existing canonical rows are never overwritten.
---
--- Run BEFORE deploying the code that removes legacy compat.
+-- One-time migration from pre-canonical platform_settings keys
+-- (system, points, campaignDefaults, featureFlags) to current schema.
+-- Idempotent: ON CONFLICT (key) DO NOTHING — safe to run twice.
 -- ============================================================
 
 BEGIN;
@@ -31,8 +26,8 @@ SET
   updated_at = now()
 WHERE key = 'general';
 
--- ── 2. Insert canonical rows derived from legacy data ────────
--- Each INSERT reads from the corresponding legacy row.
+-- ── 2. Insert canonical rows derived from old section keys ────
+-- Each INSERT reads from the corresponding pre-canonical row.
 -- ON CONFLICT (key) DO NOTHING preserves any row already saved
 -- through the current admin UI.
 
@@ -207,7 +202,7 @@ VALUES (
 )
 ON CONFLICT (key) DO NOTHING;
 
--- ── 3. Delete legacy rows ─────────────────────────────────────
+-- ── 3. Delete pre-canonical rows ──────────────────────────────
 -- All data has been promoted to canonical keys above.
 
 DELETE FROM platform_settings

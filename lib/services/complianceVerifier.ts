@@ -41,9 +41,14 @@ export type ZoneVisitState = {
   polygon: ZonePolygon;
   state: "outside" | "entering" | "inside" | "exiting";
   enteredAt: string | null;
+  /** Server clock when zone entry was confirmed (anti-spoof dwell). */
+  enteredAtServer: string | null;
   pointsInZone: number;
   speedSumInZone: number;
   hasSpeedViolation: boolean;
+  consecutiveInsidePoints: number;
+  consecutiveOutsidePoints: number;
+  boundaryOscillationCount: number;
 };
 
 export type CorridorSegment = {
@@ -121,6 +126,30 @@ export const MIN_ZONE_DWELL_S = 30;
 
 /** Speed above which a zone visit is flagged for review. */
 export const ZONE_SPEED_VIOLATION_KMH = 40;
+
+/** Allowed future skew for client-recorded timestamps (seconds). */
+export const TIMESTAMP_FUTURE_SKEW_S = 120;
+
+/** Minimum points inside a zone before impressions can accrue. */
+export const MIN_ZONE_DWELL_POINTS = 3;
+
+/** Max impression seconds credited per accepted in-zone point. */
+export const MAX_IMPRESSION_SECONDS_PER_POINT = 15;
+
+/** Consecutive inside points required before registering zone entry. */
+export const ZONE_ENTRY_CONSECUTIVE_POINTS = 2;
+
+/** Consecutive outside points required before registering zone exit. */
+export const ZONE_EXIT_CONSECUTIVE_POINTS = 2;
+
+/** Rapid enter/exit oscillations in one batch trigger boundary abuse flag. */
+export const ZONE_BOUNDARY_ABUSE_THRESHOLD = 3;
+
+/** Fraction of in-zone points below this speed triggers stationary_in_zone. */
+export const STATIONARY_ZONE_SPEED_KMH = 1.5;
+
+/** Max gap between consecutive points in a batch (seconds). */
+export const MAX_BATCH_POINT_GAP_S = 300;
 
 // ─── Haversine ───────────────────────────────────────────────────────────────
 
@@ -280,17 +309,15 @@ export function buildCorridorSegments(waypoints: LatLon[]): CorridorSegment[] {
 export function filterGpsPoint(
   point: GpsPoint,
   previousAccepted: GpsPoint | null,
-): "accepted" | "accuracy_gate" | "speed_gate" | "jump_gate" | "noise_gate" {
-  // Accuracy gate
+): "accepted" | "accuracy_gate" | "speed_gate" | "jump_gate" | "noise_gate" | "timestamp_gate" {
   if (
-    point.accuracy_m !== null &&
-    point.accuracy_m !== undefined &&
+    point.accuracy_m === null ||
+    point.accuracy_m === undefined ||
     point.accuracy_m > MAX_ACCURACY_M
   ) {
     return "accuracy_gate";
   }
 
-  // Speed gate (flag and discard — anti-motorised-vehicle)
   if (
     point.speed_kmh !== null &&
     point.speed_kmh !== undefined &&
@@ -309,6 +336,20 @@ export function filterGpsPoint(
         new Date(previousAccepted.recorded_at).getTime()) /
       1000;
 
+    if (elapsedS <= 0) {
+      return "timestamp_gate";
+    }
+
+    if (elapsedS > MAX_BATCH_POINT_GAP_S) {
+      return "timestamp_gate";
+    }
+
+    const impliedSpeedKmh = (distM / elapsedS) * 3.6;
+    const reportedSpeed = point.speed_kmh ?? impliedSpeedKmh;
+    if (reportedSpeed > MAX_SPEED_KMH) {
+      return "speed_gate";
+    }
+
     // Jump gate: distance implausible given elapsed time
     if (distM > MAX_JUMP_DISTANCE_M && elapsedS < 30) {
       return "jump_gate";
@@ -323,30 +364,70 @@ export function filterGpsPoint(
   return "accepted";
 }
 
+export function validatePointTimestamp(
+  recordedAt: string,
+  sessionStartedAt: string,
+  serverNowMs: number = Date.now(),
+): "ok" | "future_skew" | "before_session" {
+  const recordedMs = new Date(recordedAt).getTime();
+  const startedMs = new Date(sessionStartedAt).getTime();
+
+  if (Number.isNaN(recordedMs) || Number.isNaN(startedMs)) {
+    return "before_session";
+  }
+
+  if (recordedMs > serverNowMs + TIMESTAMP_FUTURE_SKEW_S * 1000) {
+    return "future_skew";
+  }
+
+  if (recordedMs < startedMs - TIMESTAMP_FUTURE_SKEW_S * 1000) {
+    return "before_session";
+  }
+
+  return "ok";
+}
+
 // ─── Zone Visit State Machine ─────────────────────────────────────────────────
 
 /**
  * Update zone visit state for a single GPS point.
- * Applies inward (5m) and outward (10m) hysteresis buffers to prevent
- * boundary bounce. Returns a completed ZoneVisitUpdate if a visit ended.
+ * Applies consecutive-point hysteresis and server-clock dwell caps.
  */
 export function updateZoneVisitState(
   point: GpsPoint,
   state: ZoneVisitState,
-  now: string,
+  serverNowIso: string,
 ): { state: ZoneVisitState; update: ZoneVisitUpdate | null } {
   const pt: LatLon = { lat: point.lat, lon: point.lon };
   const isInside = isPointInZonePolygon(pt, state.polygon);
   let completed: ZoneVisitUpdate["completed"] = null;
   let enteredAt: string | null = null;
 
-  const newState = { ...state };
+  const newState: ZoneVisitState = {
+    ...state,
+    consecutiveInsidePoints: state.consecutiveInsidePoints ?? 0,
+    consecutiveOutsidePoints: state.consecutiveOutsidePoints ?? 0,
+    boundaryOscillationCount: state.boundaryOscillationCount ?? 0,
+    enteredAtServer: state.enteredAtServer ?? null,
+  };
+
+  if (isInside) {
+    newState.consecutiveInsidePoints += 1;
+    newState.consecutiveOutsidePoints = 0;
+  } else {
+    newState.consecutiveOutsidePoints += 1;
+    newState.consecutiveInsidePoints = 0;
+  }
 
   switch (state.state) {
     case "outside":
-      if (isInside) {
+      if (
+        isInside &&
+        newState.consecutiveInsidePoints >= ZONE_ENTRY_CONSECUTIVE_POINTS
+      ) {
         newState.state = "inside";
         newState.enteredAt = point.recorded_at;
+        newState.enteredAtServer = serverNowIso;
         newState.pointsInZone = 1;
         newState.speedSumInZone = point.speed_kmh ?? 0;
         newState.hasSpeedViolation =
@@ -356,25 +437,37 @@ export function updateZoneVisitState(
       break;
 
     case "inside":
-      if (!isInside) {
-        // Apply exit hysteresis: check if point is actually outside by
-        // more than ZONE_EXIT_BUFFER_M. For simplicity, we treat a single
-        // point outside the polygon as the exit trigger (PostGIS-level buffer
-        // is applied during zone import). State machine stays simple.
+      if (
+        !isInside &&
+        newState.consecutiveOutsidePoints >= ZONE_EXIT_CONSECUTIVE_POINTS
+      ) {
+        newState.boundaryOscillationCount += 1;
         newState.state = "outside";
-        const dwellS = Math.round(
+        const clientDwellS = Math.round(
           (new Date(point.recorded_at).getTime() -
             new Date(state.enteredAt!).getTime()) /
             1000,
         );
+        const serverDwellS = state.enteredAtServer
+          ? Math.round(
+              (new Date(serverNowIso).getTime() -
+                new Date(state.enteredAtServer).getTime()) /
+                1000,
+            )
+          : clientDwellS;
+        const dwellS = Math.min(clientDwellS, serverDwellS);
         const avgSpeed =
           state.pointsInZone > 0
             ? state.speedSumInZone / state.pointsInZone
             : 0;
-        // Only count impressions for moving dwell time above minimum
         const impressions =
-          dwellS >= MIN_ZONE_DWELL_S && avgSpeed >= MIN_ZONE_SPEED_KMH
-            ? dwellS
+          dwellS >= MIN_ZONE_DWELL_S &&
+          avgSpeed >= MIN_ZONE_SPEED_KMH &&
+          state.pointsInZone >= MIN_ZONE_DWELL_POINTS
+            ? Math.min(
+                dwellS,
+                state.pointsInZone * MAX_IMPRESSION_SECONDS_PER_POINT,
+              )
             : 0;
 
         completed = {
@@ -387,11 +480,11 @@ export function updateZoneVisitState(
           speedViolation: state.hasSpeedViolation,
         };
         newState.enteredAt = null;
+        newState.enteredAtServer = null;
         newState.pointsInZone = 0;
         newState.speedSumInZone = 0;
         newState.hasSpeedViolation = false;
-      } else {
-        // Still inside — accumulate metrics
+      } else if (isInside) {
         newState.pointsInZone++;
         newState.speedSumInZone += point.speed_kmh ?? 0;
         if ((point.speed_kmh ?? 0) > ZONE_SPEED_VIOLATION_KMH) {
@@ -421,8 +514,10 @@ export function runAntiSpoofChecks(params: {
   accepted: GpsPoint[];
   totalInBatch: number;
   existingFlagTypes?: string[];
+  zoneStates?: ZoneVisitState[];
+  inZonePoints?: GpsPoint[];
 }): AntiSpoofFlag[] {
-  const { accepted, totalInBatch } = params;
+  const { accepted, totalInBatch, zoneStates, inZonePoints } = params;
   const flags: AntiSpoofFlag[] = [];
 
   if (totalInBatch === 0) return flags;
@@ -459,6 +554,32 @@ export function runAntiSpoofChecks(params: {
     });
   }
 
+  // GPS jump pattern across accepted points
+  for (let i = 1; i < accepted.length; i++) {
+    const prev = accepted[i - 1];
+    const curr = accepted[i];
+    const distM = haversineMeters(
+      { lat: prev.lat, lon: prev.lon },
+      { lat: curr.lat, lon: curr.lon },
+    );
+    const elapsedS =
+      (new Date(curr.recorded_at).getTime() -
+        new Date(prev.recorded_at).getTime()) /
+      1000;
+    if (elapsedS > 0 && distM / elapsedS > MAX_SPEED_KMH / 3.6) {
+      flags.push({
+        flag_type: "gps_jump",
+        severity: "high",
+        metadata: {
+          distance_m: Math.round(distM),
+          elapsed_s: Math.round(elapsedS),
+          implied_speed_kmh: Math.round((distM / elapsedS) * 3.6),
+        },
+      });
+      break;
+    }
+  }
+
   // Low data quality: fewer than 3 accepted points in a batch of 10+
   if (totalInBatch >= 10 && accepted.length < 3) {
     flags.push({
@@ -469,6 +590,39 @@ export function runAntiSpoofChecks(params: {
         accepted_count: accepted.length,
       },
     });
+  }
+
+  if (zoneStates && zoneStates.length > 0) {
+    const maxOscillation = Math.max(
+      ...zoneStates.map((z) => z.boundaryOscillationCount ?? 0),
+    );
+    if (maxOscillation >= ZONE_BOUNDARY_ABUSE_THRESHOLD) {
+      flags.push({
+        flag_type: "zone_boundary_abuse",
+        severity: maxOscillation >= ZONE_BOUNDARY_ABUSE_THRESHOLD * 2 ? "high" : "medium",
+        metadata: {
+          oscillation_count: maxOscillation,
+          zone_count: zoneStates.length,
+        },
+      });
+    }
+  }
+
+  if (inZonePoints && inZonePoints.length >= MIN_ZONE_DWELL_POINTS) {
+    const stationaryCount = inZonePoints.filter(
+      (p) => (p.speed_kmh ?? 0) < STATIONARY_ZONE_SPEED_KMH,
+    ).length;
+    const stationaryPct = stationaryCount / inZonePoints.length;
+    if (stationaryPct >= 0.8) {
+      flags.push({
+        flag_type: "stationary_in_zone",
+        severity: stationaryPct >= 0.95 ? "high" : "medium",
+        metadata: {
+          stationary_pct: Math.round(stationaryPct * 100),
+          in_zone_points: inZonePoints.length,
+        },
+      });
+    }
   }
 
   return flags;
@@ -494,6 +648,8 @@ export function verifyGpsBatch(params: {
   corridorSegments: CorridorSegment[];
   corridorToleranceM: number;
   suggestedRouteId: string | null;
+  sessionStartedAt?: string | null;
+  serverReceivedAt?: string;
 }): BatchVerificationResult {
   const {
     rawPoints,
@@ -501,10 +657,13 @@ export function verifyGpsBatch(params: {
     corridorSegments,
     corridorToleranceM,
     suggestedRouteId,
+    sessionStartedAt,
+    serverReceivedAt = new Date().toISOString(),
   } = params;
 
   const acceptedPoints: (GpsPoint & { filter_status: "accepted" })[] = [];
   const rejectedPoints: (GpsPoint & { filter_status: string })[] = [];
+  const inZonePoints: GpsPoint[] = [];
 
   let lastAccepted = params.lastAccepted;
   let prevAcceptedDist = 0;
@@ -517,10 +676,30 @@ export function verifyGpsBatch(params: {
   );
 
   // Zone state machine: work with a mutable copy
-  let currentZoneStates = [...zoneStates.map((z) => ({ ...z }))];
+  let currentZoneStates = zoneStates.map((z) => ({
+    ...z,
+    consecutiveInsidePoints: z.consecutiveInsidePoints ?? 0,
+    consecutiveOutsidePoints: z.consecutiveOutsidePoints ?? 0,
+    boundaryOscillationCount: z.boundaryOscillationCount ?? 0,
+    enteredAtServer: z.enteredAtServer ?? null,
+  }));
   const zoneVisitUpdates: ZoneVisitUpdate[] = [];
 
   for (const point of sorted) {
+    if (sessionStartedAt) {
+      const timestampResult = validatePointTimestamp(
+        point.recorded_at,
+        sessionStartedAt,
+      );
+      if (timestampResult !== "ok") {
+        rejectedPoints.push({
+          ...point,
+          filter_status: `timestamp_${timestampResult}`,
+        });
+        continue;
+      }
+    }
+
     const filterResult = filterGpsPoint(point, lastAccepted);
 
     if (filterResult !== "accepted") {
@@ -555,10 +734,19 @@ export function verifyGpsBatch(params: {
       const { state, update } = updateZoneVisitState(
         point,
         zoneState,
-        point.recorded_at,
+        serverReceivedAt,
       );
       newZoneStates.push(state);
       if (update) zoneVisitUpdates.push(update);
+      if (
+        state.state === "inside" &&
+        isPointInZonePolygon(
+          { lat: point.lat, lon: point.lon },
+          state.polygon,
+        )
+      ) {
+        inZonePoints.push(point);
+      }
     }
     currentZoneStates = newZoneStates;
 
@@ -569,6 +757,8 @@ export function verifyGpsBatch(params: {
   const flags = runAntiSpoofChecks({
     accepted: acceptedPoints,
     totalInBatch: rawPoints.length,
+    zoneStates: currentZoneStates,
+    inZonePoints,
   });
 
   // Corridor update

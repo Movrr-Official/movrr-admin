@@ -1,56 +1,9 @@
 "use server";
 
 import { getAuthenticatedUser } from "@/lib/admin";
+import { hasAdminPermission } from "@/lib/authPermissions";
+import { logger } from "@/lib/logger";
 import type { AdminRole } from "@/types/auth";
-
-const rolePermissions: Record<AdminRole, string[]> = {
-  super_admin: ["*"],
-  admin: [
-    "dashboard:read",
-    "users:read",
-    "users:write",
-    "routes:read",
-    "routes:write",
-    "campaigns:read",
-    "campaigns:write",
-    "rewards:read",
-    "rewards:write",
-    "settings:read",
-    "settings:write",
-    "notifications:read",
-    "notifications:write",
-  ],
-  moderator: [
-    "dashboard:read",
-    "users:read",
-    "routes:read",
-    "campaigns:read",
-    "rewards:read",
-    "notifications:read",
-  ],
-  support: [
-    "dashboard:read",
-    "users:read",
-    "routes:read",
-    "campaigns:read",
-    "rewards:read",
-    "notifications:read",
-  ],
-  compliance_officer: [
-    "dashboard:read",
-    "users:read",
-    "campaigns:read",
-    "rewards:read",
-    "notifications:read",
-  ],
-  government: [
-    "dashboard:read",
-    "users:read",
-    "campaigns:read",
-    "rewards:read",
-    "notifications:read",
-  ],
-};
 
 /**
  * Server action to get the current admin user
@@ -60,13 +13,14 @@ export async function getCurrentAdminUser() {
     const user = await getAuthenticatedUser();
 
     if (!user) {
-      // Return null instead of throwing to handle gracefully in client
       return null;
     }
 
     return user.adminUser;
   } catch (error) {
-    console.error("getCurrentAdminUser error:", error);
+    logger.warn("getCurrentAdminUser error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
@@ -87,12 +41,11 @@ export async function checkPermission(permission: string) {
       return false;
     }
 
-    const permissions = rolePermissions[user.adminUser.role];
-    return (
-      permissions.includes("*") || permissions.includes(normalizedPermission)
-    );
+    return hasAdminPermission(user.adminUser.role as AdminRole, normalizedPermission);
   } catch (error) {
-    console.error("checkPermission error:", error);
+    logger.warn("checkPermission error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return false;
   }
 }
@@ -105,7 +58,9 @@ export async function getUserRole() {
     const user = await getAuthenticatedUser();
     return user?.adminUser.role || null;
   } catch (error) {
-    console.error("getUserRole error:", error);
+    logger.warn("getUserRole error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }

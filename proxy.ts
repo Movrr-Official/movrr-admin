@@ -2,6 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { applySecurityHeaders } from "@/lib/securityHeaders";
 import {
+  safeEqualBearerToken,
+  safeEqualString,
+} from "@/lib/secureCompare";
+import {
   NEXT_PUBLIC_SUPABASE_ANON_KEY,
   NEXT_PUBLIC_SUPABASE_URL,
   ROUTE_OPTIMIZER_KEY,
@@ -21,6 +25,12 @@ const PUBLIC_PATHS = [
 
 const PUBLIC_API_PREFIX = "/api/public/";
 
+/** Mobile rider ingest — JWT validated in route handlers, not admin cookies. */
+const RIDER_API_PREFIX = "/api/sessions/";
+
+/** Cron/maintenance jobs — bearer token validated in route handlers. */
+const INTERNAL_API_PREFIX = "/api/internal/";
+
 const DASHBOARD_ACCESS_ROLES = new Set([
   "admin",
   "super_admin",
@@ -37,6 +47,42 @@ function isPublicPath(pathname: string): boolean {
   );
 }
 
+function isRiderApiPath(pathname: string): boolean {
+  return pathname.startsWith(RIDER_API_PREFIX);
+}
+
+function isInternalApiPath(pathname: string): boolean {
+  return pathname.startsWith(INTERNAL_API_PREFIX);
+}
+
+function isOptimizerServiceAuthorized(request: NextRequest): boolean {
+  const expected = ROUTE_OPTIMIZER_TOKEN || ROUTE_OPTIMIZER_KEY || "";
+  const previous =
+    ROUTE_OPTIMIZER_PREV_TOKEN || ROUTE_OPTIMIZER_OLD_TOKEN || "";
+  const authHeader = request.headers.get("authorization") ?? "";
+  const routeToken = request.headers.get("x-route-token") ?? "";
+
+  if (expected) {
+    if (
+      safeEqualBearerToken(authHeader, expected) ||
+      safeEqualString(routeToken, expected)
+    ) {
+      return true;
+    }
+  }
+
+  if (previous) {
+    if (
+      safeEqualBearerToken(authHeader, previous) ||
+      safeEqualString(routeToken, previous)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -44,33 +90,36 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname || "";
 
-  // Simple token-based access for optimizer proxy routes
-  try {
-    if (pathname.startsWith("/api/optimize")) {
-      const expected = ROUTE_OPTIMIZER_TOKEN || ROUTE_OPTIMIZER_KEY || "";
-      const previous =
-        ROUTE_OPTIMIZER_PREV_TOKEN || ROUTE_OPTIMIZER_OLD_TOKEN || "";
+  // Optimizer routes: deny when unconfigured; allow valid service tokens
+  if (pathname.startsWith("/api/optimize")) {
+    const expected = ROUTE_OPTIMIZER_TOKEN || ROUTE_OPTIMIZER_KEY || "";
+    const previous =
+      ROUTE_OPTIMIZER_PREV_TOKEN || ROUTE_OPTIMIZER_OLD_TOKEN || "";
 
-      if (!expected && !previous) {
-        console.warn(
-          "ROUTE_OPTIMIZER_TOKEN and ROUTE_OPTIMIZER_PREV_TOKEN are not set; optimizer proxy will run without a token",
-        );
-      }
+    if (!expected && !previous) {
+      return applySecurityHeaders(
+        NextResponse.json({ error: "optimizer_not_configured" }, { status: 503 }),
+        request,
+      );
     }
-  } catch (e) {
-    console.error("proxy token check error", e);
-    const response = new NextResponse(
-      JSON.stringify({ error: "unauthorized" }),
-      {
-        status: 401,
-        headers: { "content-type": "application/json" },
-      },
-    );
-    return applySecurityHeaders(response, request);
+
+    if (isOptimizerServiceAuthorized(request)) {
+      return applySecurityHeaders(supabaseResponse, request);
+    }
   }
 
   // Public routes — skip auth entirely
   if (isPublicPath(pathname)) {
+    return applySecurityHeaders(supabaseResponse, request);
+  }
+
+  // Rider mobile ingest — bearer JWT validated in route handlers
+  if (isRiderApiPath(pathname)) {
+    return applySecurityHeaders(supabaseResponse, request);
+  }
+
+  // Internal cron/maintenance — bearer validated in route handlers
+  if (isInternalApiPath(pathname)) {
     return applySecurityHeaders(supabaseResponse, request);
   }
 
@@ -94,7 +143,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (userError) {
-    console.error("Auth error:", userError);
+    // Edge middleware: avoid logging auth details; deny via redirect below.
   }
 
   if (!user) {
@@ -114,7 +163,7 @@ export async function proxy(request: NextRequest) {
     .single();
 
   if (adminError) {
-    console.error("Admin user query error:", adminError);
+    // Edge middleware: avoid logging admin lookup failures.
   }
 
   const role = adminUser?.role as string | undefined;

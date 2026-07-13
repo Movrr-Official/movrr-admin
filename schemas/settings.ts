@@ -218,6 +218,7 @@ export const organizationSettingsSchema = z.object({
 
 export const privacySettingsSchema = z.object({
   waitlistRetentionDays: positiveInteger.default(180),
+  gpsRetentionDays: positiveInteger.default(90),
   auditRetentionVisibilityDays: positiveInteger.default(365),
   exportRequestResponseHours: positiveInteger.default(72),
   deletionPolicyText: z.string().trim().max(2000).default(""),
@@ -372,17 +373,3 @@ export type SettingsAuditEntry = z.infer<typeof settingsAuditEntrySchema>;
 export type UpdateSettingsSectionInput = z.infer<
   typeof updateSettingsSectionInputSchema
 >;
-
-export type LegacySettings = {
-  system: {
-    supportEmail: string;
-    defaultRegion: string;
-    timezone: string;
-    appVersion: string;
-    maintenanceMode: boolean;
-    allowSelfSignup: boolean;
-  };
-  points: RewardsSettings;
-  campaignDefaults: CampaignSettings;
-  featureFlags: FeatureSettings;
-};

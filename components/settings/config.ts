@@ -579,6 +579,14 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
         min: 1,
       },
       {
+        name: "gpsRetentionDays",
+        label: "GPS Point Retention (Days)",
+        type: "number",
+        min: 1,
+        description:
+          "Raw GPS points older than this window are purged by the privacy retention job.",
+      },
+      {
         name: "auditRetentionVisibilityDays",
         label: "Audit Visibility Window (Days)",
         type: "number",

@@ -1,39 +1,66 @@
-﻿import { NextResponse } from "next/server";
-import { MAINTENANCE_JOB_TOKEN } from "@/lib/env";
-import { executePrivacyRetentionJob } from "@/app/actions/settings";
+﻿import { NextResponse, type NextRequest } from "next/server";
+import { executePrivacyRetentionJob } from "@/lib/services/privacyRetention";
+import { isAuthorizedMaintenanceRequest } from "@/lib/maintenanceAuth";
+import { checkDistributedRateLimit } from "@/lib/distributedRateLimit";
+import { getClientIp } from "@/lib/rateLimit";
+import { applySecurityHeaders } from "@/lib/securityHeaders";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const isAuthorizedJobRequest = (request: Request) => {
-  if (!MAINTENANCE_JOB_TOKEN) return false;
-  const authHeader = request.headers.get("authorization") || "";
-  return authHeader === `Bearer ${MAINTENANCE_JOB_TOKEN}`;
-};
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    if (!isAuthorizedJobRequest(request)) {
-      return NextResponse.json(
-        { success: false, error: "unauthorized" },
-        { status: 401, headers: { "cache-control": "no-store" } },
+    const rateLimit = await checkDistributedRateLimit(
+      `privacy-retention:${getClientIp(request)}`,
+      { max: 6, windowMs: 60 * 60_000 },
+    );
+
+    if (!rateLimit.allowed) {
+      return applySecurityHeaders(
+        NextResponse.json(
+          { success: false, error: "rate_limited" },
+          {
+            status: 429,
+            headers: {
+              "cache-control": "no-store",
+              "retry-after": String(rateLimit.retryAfterSeconds),
+            },
+          },
+        ),
+        request,
+      );
+    }
+
+    if (!isAuthorizedMaintenanceRequest(request)) {
+      return applySecurityHeaders(
+        NextResponse.json(
+          { success: false, error: "unauthorized" },
+          { status: 401, headers: { "cache-control": "no-store" } },
+        ),
+        request,
       );
     }
 
     const result = await executePrivacyRetentionJob();
-    return NextResponse.json(result, {
-      headers: { "cache-control": "no-store" },
-    });
+    return applySecurityHeaders(
+      NextResponse.json(result, {
+        headers: { "cache-control": "no-store" },
+      }),
+      request,
+    );
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to execute privacy retention job",
-      },
-      { status: 500, headers: { "cache-control": "no-store" } },
+    return applySecurityHeaders(
+      NextResponse.json(
+        {
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to execute privacy retention job",
+        },
+        { status: 500, headers: { "cache-control": "no-store" } },
+      ),
+      request,
     );
   }
 }

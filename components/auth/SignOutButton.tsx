@@ -5,6 +5,7 @@ import { LogOut } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@/supabase/client";
 import { ADMIN_USER_QUERY_KEY } from "@/hooks/useAdminUser";
+import { signOutAdmin } from "@/app/actions/signOut";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -17,6 +18,7 @@ export function SignOutButton() {
     setIsLoading(true);
 
     try {
+      await signOutAdmin();
       const supabase = createSupabaseBrowserClient();
       await supabase.auth.signOut();
       queryClient.setQueryData(ADMIN_USER_QUERY_KEY, null);
