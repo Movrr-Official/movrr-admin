@@ -44,6 +44,8 @@ export const communityRideSchema = z.object({
   description: z.string().optional(),
   scheduledAt: z.string(),
   meetingPointName: z.string().optional(),
+  /** Full address from the rider app's place search. Read-only in admin. */
+  meetingPointAddress: z.string().optional(),
   meetingPointLat: z.number().optional(),
   meetingPointLng: z.number().optional(),
   routeId: z.string().optional(),
@@ -56,6 +58,13 @@ export const communityRideSchema = z.object({
   isPublic: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  /**
+   * Cover image. `coverImagePath` is the bucket-relative object path and is what a
+   * removal deletes; `coverImageUrl` is the public URL the UI renders. Both are kept
+   * because the URL alone cannot be turned back into a path reliably.
+   */
+  coverImageUrl: z.string().nullable().optional(),
+  coverImagePath: z.string().nullable().optional(),
   participants: z.array(communityRideParticipantSchema).optional(),
 });
 

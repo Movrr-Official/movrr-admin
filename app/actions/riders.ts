@@ -463,7 +463,7 @@ export async function getRiders(
 }
 
 /**
- * Bulk status update — suspend or activate multiple riders atomically.
+ * Bulk status update â€” suspend or activate multiple riders atomically.
  * Each rider update is attempted independently; partial failures are reported.
  */
 export async function bulkUpdateRiderStatus(
@@ -763,7 +763,7 @@ export async function updateRiderProfile(
       };
     }
 
-    // Audit trail — record status changes (suspension/activation) to user_activity
+    // Audit trail â€” record status changes (suspension/activation) to user_activity
     if (validatedData.status !== undefined && riderRow.user_id) {
       const dbStatus = mapUiStatusToDb(validatedData.status);
       const action =
