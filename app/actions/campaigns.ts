@@ -938,22 +938,42 @@ export async function getCampaignAnalyticsData(
     // ── Daily impressions ──────────────────────────────────────────────────────
     // Sum campaign_impact_impressions per calendar day from completed sessions.
     // Falls back to counting sessions if the column is absent (graceful degradation).
-    // Built without reassignment on purpose.
+    // The builder is narrowed to a tiny local interface on purpose.
     //
-    // Reassigning a PostgrestFilterBuilder through a `let` in two branches — `.in(...)`
-    // in one and `.not(...)` in the other — makes TypeScript unify two deeply generic
-    // builder types, and it exhausts the instantiation depth limit:
-    // "Type instantiation is excessively deep and possibly infinite". It compiles under a
-    // lenient TS resolution and fails the production build under a stricter one, which is
-    // the worst of both worlds: green locally, red on deploy.
+    // Applying a filter to a PostgrestFilterBuilder produces another deeply generic
+    // builder type. Branching — `.in(...)` down one path and `.not(...)` down the other —
+    // makes TypeScript unify two of them, and the instantiation depth explodes:
+    // "Type instantiation is excessively deep and possibly infinite". It is not the `let`
+    // and not the ternary; it is the union of two generic builders, however it is
+    // written. Rearranging the branch just moves the error.
     //
-    // Branching once and never reassigning keeps each chain a single concrete type. The
-    // query is otherwise identical.
+    // Casting once to `SessionsQuery` severs the generic chain at the point where the
+    // branch happens. The interface is self-referential and carries no type parameters,
+    // so there is nothing left to instantiate deeply — while the call sites below stay
+    // typed: only the columns and operators this query actually uses are permitted, and
+    // the rows come back as SessionRow rather than `any`.
+    //
+    // This matters beyond tidiness: the error only appears under a strict TS resolution,
+    // so the repo typechecks locally and fails the production build. Green here, red on
+    // deploy is the worst place for a type error to live.
+    type SessionRow = {
+      campaign_id: string | null;
+      completed_at: string | null;
+      campaign_impact_impressions: number | null;
+      city: string | null;
+    };
+
+    interface SessionsQuery {
+      in(column: "campaign_id", values: string[]): SessionsQuery;
+      not(column: "campaign_id", operator: "is", value: null): SessionsQuery;
+      limit(count: number): PromiseLike<{ data: SessionRow[] | null }>;
+    }
+
     const sessionsBase = supabaseAdmin
       .from("ride_session")
       .select("campaign_id, completed_at, campaign_impact_impressions, city")
       .not("completed_at", "is", null)
-      .gte("completed_at", since);
+      .gte("completed_at", since) as unknown as SessionsQuery;
 
     const sessionsQuery =
       campaignIds && campaignIds.length > 0
@@ -961,7 +981,7 @@ export async function getCampaignAnalyticsData(
         : sessionsBase.not("campaign_id", "is", null);
 
     const { data: sessionRows } = await sessionsQuery.limit(5000);
-    const rows = sessionRows ?? [];
+    const rows: SessionRow[] = sessionRows ?? [];
 
     // Build day buckets (last `days` days)
     const dailyMap = new Map<string, number>();
