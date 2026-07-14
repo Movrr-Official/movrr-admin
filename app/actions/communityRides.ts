@@ -34,6 +34,7 @@ const RIDE_SELECT = `
   description,
   scheduled_at,
   meeting_point_name,
+  meeting_point_address,
   meeting_point_lat,
   meeting_point_lng,
   route_id,
@@ -162,6 +163,12 @@ function buildRide(
     scheduledAt: String(row.scheduled_at ?? ""),
     meetingPointName: row.meeting_point_name
       ? String(row.meeting_point_name)
+      : undefined,
+    // Set by the rider app's place search. Admin has no place picker, so this is
+    // read-only here — and admin's update uses patch semantics, so it is never
+    // clobbered by an edit that simply does not mention it.
+    meetingPointAddress: row.meeting_point_address
+      ? String(row.meeting_point_address)
       : undefined,
     meetingPointLat:
       row.meeting_point_lat != null ? Number(row.meeting_point_lat) : undefined,

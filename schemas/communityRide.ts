@@ -44,6 +44,8 @@ export const communityRideSchema = z.object({
   description: z.string().optional(),
   scheduledAt: z.string(),
   meetingPointName: z.string().optional(),
+  /** Full address from the rider app's place search. Read-only in admin. */
+  meetingPointAddress: z.string().optional(),
   meetingPointLat: z.number().optional(),
   meetingPointLng: z.number().optional(),
   routeId: z.string().optional(),

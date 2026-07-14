@@ -938,17 +938,27 @@ export async function getCampaignAnalyticsData(
     // ── Daily impressions ──────────────────────────────────────────────────────
     // Sum campaign_impact_impressions per calendar day from completed sessions.
     // Falls back to counting sessions if the column is absent (graceful degradation).
-    let sessionsQuery = supabaseAdmin
+    // Built without reassignment on purpose.
+    //
+    // Reassigning a PostgrestFilterBuilder through a `let` in two branches — `.in(...)`
+    // in one and `.not(...)` in the other — makes TypeScript unify two deeply generic
+    // builder types, and it exhausts the instantiation depth limit:
+    // "Type instantiation is excessively deep and possibly infinite". It compiles under a
+    // lenient TS resolution and fails the production build under a stricter one, which is
+    // the worst of both worlds: green locally, red on deploy.
+    //
+    // Branching once and never reassigning keeps each chain a single concrete type. The
+    // query is otherwise identical.
+    const sessionsBase = supabaseAdmin
       .from("ride_session")
       .select("campaign_id, completed_at, campaign_impact_impressions, city")
       .not("completed_at", "is", null)
       .gte("completed_at", since);
 
-    if (campaignIds && campaignIds.length > 0) {
-      sessionsQuery = sessionsQuery.in("campaign_id", campaignIds);
-    } else {
-      sessionsQuery = sessionsQuery.not("campaign_id", "is", null);
-    }
+    const sessionsQuery =
+      campaignIds && campaignIds.length > 0
+        ? sessionsBase.in("campaign_id", campaignIds)
+        : sessionsBase.not("campaign_id", "is", null);
 
     const { data: sessionRows } = await sessionsQuery.limit(5000);
     const rows = sessionRows ?? [];
