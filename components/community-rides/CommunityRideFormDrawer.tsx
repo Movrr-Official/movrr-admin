@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -36,6 +36,15 @@ import {
   useCreateCommunityRide,
   useUpdateCommunityRide,
 } from "@/hooks/useCommunityRidesData";
+import {
+  removeCommunityRideCoverImage,
+  uploadCommunityRideCoverImage,
+} from "@/app/actions/communityRides";
+import {
+  COMMUNITY_RIDE_ALLOWED_MIME_TYPES,
+  COMMUNITY_RIDE_IMAGE_MAX_BYTES,
+  validateCommunityRideImage,
+} from "@/lib/communityRideImage";
 import {
   CommunityRide,
   communityRideCategorySchema,
@@ -132,7 +141,48 @@ export function CommunityRideFormDrawer({
   const createMutation = useCreateCommunityRide();
   const updateMutation = useUpdateCommunityRide();
   const isEditing = !!ride;
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  /**
+   * Cover image.
+   *
+   * The image cannot be uploaded with the rest of the form: its storage path contains the
+   * ride id, so on create there is nothing to name the object after until the row exists.
+   * The ride is saved first and the cover attached second — the same order the rider app
+   * uses. `coverRemoved` is tracked separately because "no new file chosen" and "remove
+   * the existing one" are different intentions that both leave `coverFile` null.
+   */
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverRemoved, setCoverRemoved] = useState(false);
+  const [coverError, setCoverError] = useState<string | null>(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+
+  const existingCoverUrl = ride?.coverImageUrl ?? null;
+  const shownCoverUrl = coverRemoved ? null : (coverPreview ?? existingCoverUrl);
+
+  const handleCoverChange = (file: File | null) => {
+    setCoverError(null);
+
+    if (!file) {
+      setCoverFile(null);
+      setCoverPreview(null);
+      return;
+    }
+
+    // Checked here so the admin is told immediately, rather than after a round trip that
+    // the bucket would reject anyway.
+    const validation = validateCommunityRideImage(file.type, file.size);
+    if (!validation.valid) {
+      setCoverError(validation.error);
+      return;
+    }
+
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+    setCoverRemoved(false);
+  };
+
+  const isPending =
+    createMutation.isPending || updateMutation.isPending || isUploadingCover;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -161,6 +211,14 @@ export function CommunityRideFormDrawer({
             }
           : DEFAULT_VALUES,
       );
+
+      // The drawer is reused across rides. Without this, a cover picked for one ride
+      // would still be staged when the drawer reopens on another — and would be uploaded
+      // to it.
+      setCoverFile(null);
+      setCoverPreview(null);
+      setCoverRemoved(false);
+      setCoverError(null);
     }
   }, [isOpen, ride, form]);
 
@@ -199,17 +257,55 @@ export function CommunityRideFormDrawer({
           organizerRiderId: values.organizerRiderId?.trim() || undefined,
         });
 
-    if (result.success) {
-      toast({ title: isEditing ? "Ride updated" : "Community ride created" });
-      onClose();
-      onSaved?.();
-    } else {
+    if (!result.success) {
       toast({
         title: isEditing ? "Failed to update ride" : "Failed to create ride",
         description: result.error,
         variant: "destructive",
       });
+      return;
     }
+
+    // The ride is saved. Attach or clear the cover second, now that a ride id exists to
+    // name the storage object after.
+    // Only the create action returns an id; on edit we already have one.
+    const rideId = isEditing
+      ? ride!.id
+      : (result as { data?: { id: string } }).data?.id;
+
+    if (rideId && (coverFile || coverRemoved)) {
+      setIsUploadingCover(true);
+      try {
+        const coverResult = coverFile
+          ? await (async () => {
+              const formData = new FormData();
+              formData.append("file", coverFile);
+              return uploadCommunityRideCoverImage(rideId, formData);
+            })()
+          : await removeCommunityRideCoverImage(rideId);
+
+        if (!coverResult.success) {
+          // The ride itself saved. Say what actually happened rather than reporting a
+          // blanket failure for a ride that is sitting in the table, saved.
+          toast({
+            title: isEditing
+              ? "Ride updated, but the cover image did not"
+              : "Ride created, but the cover image did not upload",
+            description: coverResult.error,
+            variant: "destructive",
+          });
+          onClose();
+          onSaved?.();
+          return;
+        }
+      } finally {
+        setIsUploadingCover(false);
+      }
+    }
+
+    toast({ title: isEditing ? "Ride updated" : "Community ride created" });
+    onClose();
+    onSaved?.();
   };
 
   const isTerminal =
@@ -280,6 +376,86 @@ export function CommunityRideFormDrawer({
                       </FormItem>
                     )}
                   />
+
+                  {/* Cover image */}
+                  <FormItem>
+                    <FormLabel>Cover image</FormLabel>
+
+                    {shownCoverUrl ? (
+                      <div className="space-y-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- Supabase Storage URL; next/image would need a remotePatterns entry per environment. */}
+                        <img
+                          src={shownCoverUrl}
+                          alt="Community ride cover"
+                          className="h-40 w-full rounded-md object-cover border"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={isPending}
+                            onClick={() =>
+                              document
+                                .getElementById("community-ride-cover-input")
+                                ?.click()
+                            }
+                          >
+                            Replace
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={isPending}
+                            onClick={() => {
+                              // Marks the intent. Nothing is deleted until the form is
+                              // saved — an admin who changes their mind can just close it.
+                              setCoverFile(null);
+                              setCoverPreview(null);
+                              setCoverRemoved(true);
+                              setCoverError(null);
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isPending}
+                        onClick={() =>
+                          document
+                            .getElementById("community-ride-cover-input")
+                            ?.click()
+                        }
+                      >
+                        Choose an image
+                      </Button>
+                    )}
+
+                    <input
+                      id="community-ride-cover-input"
+                      type="file"
+                      accept={COMMUNITY_RIDE_ALLOWED_MIME_TYPES.join(",")}
+                      className="hidden"
+                      onChange={(e) =>
+                        handleCoverChange(e.target.files?.[0] ?? null)
+                      }
+                    />
+
+                    <p className="text-xs text-muted-foreground">
+                      JPEG, PNG or WebP, up to{" "}
+                      {COMMUNITY_RIDE_IMAGE_MAX_BYTES / (1024 * 1024)} MB. Saved
+                      when you save the ride.
+                    </p>
+
+                    {coverError && (
+                      <p className="text-xs text-destructive">{coverError}</p>
+                    )}
+                  </FormItem>
 
                   {/* Date & Time */}
                   <FormField

@@ -6,6 +6,12 @@ import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { writeUserActivity } from "@/lib/userActivity";
+import { logger } from "@/lib/logger";
+import {
+  deleteCommunityRideImage,
+  uploadCommunityRideImage,
+  validateCommunityRideImage,
+} from "@/lib/communityRideImage";
 import { mockCommunityRides } from "@/data/mockCommunityRides";
 import {
   CommunityRide,
@@ -37,6 +43,8 @@ const RIDE_SELECT = `
   category,
   status,
   is_public,
+  cover_image_url,
+  cover_image_path,
   created_at,
   updated_at
 `;
@@ -160,6 +168,8 @@ function buildRide(
     meetingPointLng:
       row.meeting_point_lng != null ? Number(row.meeting_point_lng) : undefined,
     routeId: row.route_id ? String(row.route_id) : undefined,
+    coverImageUrl: row.cover_image_url ? String(row.cover_image_url) : null,
+    coverImagePath: row.cover_image_path ? String(row.cover_image_path) : null,
     maxParticipants: Number(row.max_participants ?? 0),
     participantCount: activeParticipants.length,
     distanceKm: row.distance_km != null ? Number(row.distance_km) : null,
@@ -774,6 +784,199 @@ export async function deleteCommunityRide(
     return {
       success: false,
       error: err instanceof Error ? err.message : "Failed to delete ride",
+    };
+  }
+}
+
+// ── Cover image ───────────────────────────────────────────────────────────────
+
+/**
+ * Set (or replace) a community ride's cover image.
+ *
+ * The ride must already exist: the storage path contains the ride id, so there is nothing
+ * to name an object after until the row is written. The create flow therefore inserts the
+ * ride first and calls this second — the same order the rider app uses.
+ *
+ * The object is written under the ORGANISER's user id, not the admin's. That is the path
+ * contract the rider app depends on (see lib/communityRideImage.ts): it keeps the bucket's
+ * owner-scoped write policy meaningful, and it means a rider can later replace a cover an
+ * admin set for them, from their own phone.
+ */
+export async function uploadCommunityRideCoverImage(
+  rideId: string,
+  formData: FormData,
+): Promise<{ success: boolean; error?: string; coverImageUrl?: string }> {
+  const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+
+  if (shouldUseMockData()) {
+    revalidatePath("/community-rides");
+    return { success: true };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { success: false, error: "No image was provided." };
+  }
+
+  const validation = validateCommunityRideImage(file.type, file.size);
+  if (!validation.valid) {
+    return { success: false, error: validation.error };
+  }
+
+  try {
+    const supabase = createSupabaseAdminClient();
+
+    // The organiser owns the storage path, so the ride has to tell us who that is.
+    const { data: rideRow, error: rideError } = await supabase
+      .from("community_ride")
+      .select("organizer_user_id, cover_image_path, title")
+      .eq("id", rideId)
+      .maybeSingle();
+
+    if (rideError) throw rideError;
+    if (!rideRow?.organizer_user_id) {
+      return {
+        success: false,
+        error: "Ride not found, or it has no organizer to attribute the image to.",
+      };
+    }
+
+    const organizerUserId = String(rideRow.organizer_user_id);
+    const previousPath = rideRow.cover_image_path
+      ? String(rideRow.cover_image_path)
+      : null;
+
+    const { path, publicUrl } = await uploadCommunityRideImage(
+      await file.arrayBuffer(),
+      validation.mimeType,
+      organizerUserId,
+      rideId,
+    );
+
+    const { error: updateError } = await supabase
+      .from("community_ride")
+      .update({
+        cover_image_url: publicUrl,
+        cover_image_path: path,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", rideId);
+
+    if (updateError) {
+      // The object is uploaded but the ride does not point at it. Remove it rather than
+      // leave an orphan nobody can find or clean up.
+      await deleteCommunityRideImage(path);
+      throw updateError;
+    }
+
+    // A replacement under a different extension (jpg → png) writes a NEW object rather
+    // than upserting the old one, so the previous file would linger. Only remove it once
+    // the record safely points at the new one.
+    if (previousPath && previousPath !== path) {
+      await deleteCommunityRideImage(previousPath);
+    }
+
+    const activityRefs = await resolveActivityUserRefs(supabase, {
+      targetUserIds: [organizerUserId, auth.authUser.id],
+      actorUserIds: [auth.authUser.id],
+    });
+
+    if (activityRefs.userId) {
+      await writeUserActivity(supabase, {
+        user_id: activityRefs.userId,
+        actor_user_id: activityRefs.actorUserId,
+        source: "web",
+        action: "Community ride cover image updated",
+        description: `Admin set the cover image for "${String(rideRow.title ?? "")}".`,
+        metadata: { rideId, path },
+      });
+    }
+
+    revalidatePath("/community-rides");
+    return { success: true, coverImageUrl: publicUrl };
+  } catch (err) {
+    logger.error("Failed to upload community ride cover image", err, { rideId });
+    return {
+      success: false,
+      error:
+        err instanceof Error ? err.message : "Failed to upload cover image",
+    };
+  }
+}
+
+/**
+ * Remove a community ride's cover image.
+ *
+ * The record is cleared first and the object second. If the storage delete fails we are
+ * left with an orphaned file, which is untidy; if we did it the other way round and the
+ * record update failed, the ride would point at an image that no longer exists, which is
+ * a broken page. Untidy beats broken.
+ */
+export async function removeCommunityRideCoverImage(
+  rideId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+
+  if (shouldUseMockData()) {
+    revalidatePath("/community-rides");
+    return { success: true };
+  }
+
+  try {
+    const supabase = createSupabaseAdminClient();
+
+    const { data: rideRow, error: rideError } = await supabase
+      .from("community_ride")
+      .select("cover_image_path, organizer_user_id, title")
+      .eq("id", rideId)
+      .maybeSingle();
+
+    if (rideError) throw rideError;
+    if (!rideRow) return { success: false, error: "Ride not found." };
+
+    const path = rideRow.cover_image_path
+      ? String(rideRow.cover_image_path)
+      : null;
+
+    const { error: updateError } = await supabase
+      .from("community_ride")
+      .update({
+        cover_image_url: null,
+        cover_image_path: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", rideId);
+
+    if (updateError) throw updateError;
+
+    if (path) await deleteCommunityRideImage(path);
+
+    const activityRefs = await resolveActivityUserRefs(supabase, {
+      targetUserIds: [
+        rideRow.organizer_user_id ? String(rideRow.organizer_user_id) : auth.authUser.id,
+        auth.authUser.id,
+      ],
+      actorUserIds: [auth.authUser.id],
+    });
+
+    if (activityRefs.userId) {
+      await writeUserActivity(supabase, {
+        user_id: activityRefs.userId,
+        actor_user_id: activityRefs.actorUserId,
+        source: "web",
+        action: "Community ride cover image removed",
+        description: `Admin removed the cover image from "${String(rideRow.title ?? "")}".`,
+        metadata: { rideId },
+      });
+    }
+
+    revalidatePath("/community-rides");
+    return { success: true };
+  } catch (err) {
+    logger.error("Failed to remove community ride cover image", err, { rideId });
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to remove cover image",
     };
   }
 }
