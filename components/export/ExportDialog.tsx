@@ -75,7 +75,7 @@ const allFormatOptions = [
     label: "Excel",
     description: "Microsoft Excel format with styling",
     icon: FileSpreadsheet,
-    color: "text-blue-600",
+    color: "text-primary",
     bgColor: "bg-blue-50 dark:bg-blue-950",
     borderColor: "border-blue-200 dark:border-blue-800",
   },
@@ -94,7 +94,7 @@ const allFormatOptions = [
     description: "Structured data for developers",
     icon: Database,
     color: "text-purple-600",
-    bgColor: "bg-purple-50 dark:bg-purple-950",
+    bgColor: "bg-secondary",
     borderColor: "border-purple-200 dark:border-purple-800",
   },
 ];

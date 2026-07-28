@@ -142,7 +142,7 @@ export function SessionPanel({
               <Badge
                 className={
                   rider.complianceState === "compliant"
-                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                    ? "bg-success/12 text-success border-success/20"
                     : rider.complianceState === "non_compliant"
                       ? "bg-red-100 text-red-800 border-red-200"
                       : rider.complianceState === "paused"
@@ -221,7 +221,7 @@ export function SessionPanel({
                           </span>
                         )}
                         {!v.exited_at && (
-                          <span className="text-emerald-600 text-[10px] font-medium animate-pulse">
+                          <span className="text-success text-[10px] font-medium animate-pulse">
                             ● Active
                           </span>
                         )}

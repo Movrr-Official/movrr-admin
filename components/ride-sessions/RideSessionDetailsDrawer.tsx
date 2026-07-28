@@ -553,7 +553,7 @@ export function RideSessionDetailsDrawer({
                       {session.verificationSource === "admin" ? (
                         <Badge
                           variant="outline"
-                          className="text-xs gap-1 border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-400"
+                          className="text-xs gap-1 border-primary/30 text-primary"
                         >
                           <UserCheck className="h-3 w-3" /> Admin Override
                         </Badge>

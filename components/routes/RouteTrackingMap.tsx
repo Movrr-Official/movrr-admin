@@ -110,7 +110,7 @@ export function RouteTrackingMap({ points }: { points: any[] }) {
           </Source>
           {startPoint && (
             <Marker latitude={startPoint.lat} longitude={startPoint.lng}>
-              <div className="h-3 w-3 rounded-full bg-emerald-500 shadow" />
+              <div className="h-3 w-3 rounded-full bg-success shadow" />
             </Marker>
           )}
           {endPoint && (

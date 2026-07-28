@@ -158,7 +158,7 @@ export default function UsersOverview() {
                       {
                         label: `${pendingUsers} pending`,
                         className:
-                          "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300",
+                          "bg-primary/12 text-primary border-primary/20",
                       },
                     ]
                   : []),
@@ -181,7 +181,7 @@ export default function UsersOverview() {
                   label: "Advertisers",
                   value: advertisersCount,
                   icon: Building2,
-                  iconColor: "text-blue-600",
+                  iconColor: "text-primary",
                 },
                 {
                   label: "Admins",

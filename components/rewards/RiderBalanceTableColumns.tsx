@@ -92,8 +92,8 @@ export function getRiderBalanceTableColumns({
         const points = row.original.totalPointsRedeemed;
         return (
           <div className="flex items-center gap-2">
-            <TrendingDown className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-600">
+            <TrendingDown className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">
               {points.toLocaleString()}
             </span>
           </div>

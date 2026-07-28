@@ -28,8 +28,8 @@ export function RoutePanel({
   onClose: () => void;
 }) {
   const statusColor =
-    route.status === "in-progress" ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-    : route.status === "assigned"    ? "bg-blue-100 text-blue-800 border-blue-200"
+    route.status === "in-progress" ? "bg-success/12 text-success border-success/20"
+    : route.status === "assigned"    ? "bg-primary/12 text-primary border-primary/20"
     : route.status === "completed"   ? "bg-slate-100 text-slate-700 border-slate-200"
     :                                  "bg-red-100 text-red-800 border-red-200";
 

@@ -302,7 +302,7 @@ export default function RoutesOverview() {
                     {
                       label: `${assignedRoutes} assigned`,
                       className:
-                        "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300",
+                        "bg-primary/12 text-primary border-primary/20",
                     },
                   ]
                 : []),

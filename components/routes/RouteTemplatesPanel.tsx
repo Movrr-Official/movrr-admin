@@ -54,7 +54,7 @@ import { shouldUseMockData } from "@/lib/dataSource";
 
 const STATUS_STYLES: Record<TemplateStatus, string> = {
   active:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300",
+    "bg-success/12 text-success border-success/20",
   draft:
     "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950 dark:text-slate-300",
   paused:

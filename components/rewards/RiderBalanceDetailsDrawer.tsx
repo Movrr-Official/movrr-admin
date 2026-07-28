@@ -271,8 +271,8 @@ export function RiderBalanceDetailsDrawer({
                           Total Points Redeemed
                         </span>
                         <div className="flex items-center gap-2">
-                          <TrendingDown className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm font-semibold text-blue-600">
+                          <TrendingDown className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-semibold text-primary">
                             {balance.totalPointsRedeemed.toLocaleString()}
                           </span>
                         </div>

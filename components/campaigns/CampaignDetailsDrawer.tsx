@@ -854,7 +854,7 @@ export function CampaignDetailsDrawer({
                           QR Scans
                         </p>
                         <div className="flex items-center gap-2">
-                          <MousePointerClick className="h-4 w-4 text-blue-600" />
+                          <MousePointerClick className="h-4 w-4 text-primary" />
                           <p className="text-lg font-bold text-foreground">
                             {campaign.qrScans.toLocaleString()}
                           </p>
