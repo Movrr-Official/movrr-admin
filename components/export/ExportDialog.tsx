@@ -67,8 +67,8 @@ const allFormatOptions = [
     description: "Comma-separated values for spreadsheets",
     icon: FileText,
     color: "text-success",
-    bgColor: "bg-success/12 dark:bg-success",
-    borderColor: "border-success/20 dark:border-success/20",
+    bgColor: "bg-success/12 dark:bg-success/20",
+    borderColor: "border-success/20 dark:border-success/40",
   },
   {
     value: "xlsx" as const,
@@ -76,8 +76,8 @@ const allFormatOptions = [
     description: "Microsoft Excel format with styling",
     icon: FileSpreadsheet,
     color: "text-primary",
-    bgColor: "bg-primary/12 dark:bg-primary",
-    borderColor: "border-primary/20 dark:border-primary/20",
+    bgColor: "bg-primary/12 dark:bg-primary/20",
+    borderColor: "border-primary/20 dark:border-primary/40",
   },
   {
     value: "pdf" as const,
@@ -85,8 +85,8 @@ const allFormatOptions = [
     description: "Formatted document for sharing",
     icon: FileImage,
     color: "text-destructive",
-    bgColor: "bg-destructive/10 dark:bg-destructive",
-    borderColor: "border-destructive/20 dark:border-destructive/20",
+    bgColor: "bg-destructive/10 dark:bg-destructive/20",
+    borderColor: "border-destructive/20 dark:border-destructive/40",
   },
   {
     value: "json" as const,
@@ -219,8 +219,8 @@ export function ExportDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 gap-3 group px-6 py-3 rounded-xl font-semibold">
-            <Download className="h-5 w-5 group-hover:scale-110 transition-transform" />
+          <Button className="gap-2">
+            <Download className="h-4 w-4" />
             Export Data
           </Button>
         )}
@@ -229,11 +229,11 @@ export function ExportDialog({
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-primary/15 to-secondary/10 rounded-3xl border border-primary/20 shadow-lg">
-                <Download className="h-8 w-8 text-primary" />
+              <div className="rounded-[14px] border border-border bg-muted p-3">
+                <Download className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                <DialogTitle className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
                   {title}
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground text-lg font-medium mt-2">

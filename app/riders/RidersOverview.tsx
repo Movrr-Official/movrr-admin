@@ -67,7 +67,7 @@ export default function RidersOverview() {
             badges={[
               {
                 label: `${certifiedRiders} certified`,
-                className: "bg-info/10 text-info border-info/30",
+                className: "bg-info/10 text-info border-info/30 dark:bg-primary/15 dark:text-primary dark:border-primary/35",
               },
             ]}
             animationDelay="0.2s"

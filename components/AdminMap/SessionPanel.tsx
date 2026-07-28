@@ -149,7 +149,7 @@ export function SessionPanel({
                         ? "bg-muted text-muted-foreground border-border"
                         : rider.complianceState === "under_review"
                           ? "bg-secondary text-secondary-foreground border-border"
-                          : "bg-warning/15 text-warning-foreground border-warning/25"
+                          : "bg-warning/15 text-warning-foreground border-warning/25 dark:bg-warning/20 dark:text-warning dark:border-warning/40"
                 }
               >
                 {rider.complianceState.replace(/_/g, " ")}

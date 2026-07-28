@@ -268,7 +268,7 @@ export function DataTableToolbar({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-primary gap-2 group"
+                className="gap-2 group"
                 disabled={!hasExportData}
               >
                 <Download className="h-4 w-4 group-hover:scale-110 transition-transform" />
@@ -288,7 +288,7 @@ export function DataTableToolbar({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-primary gap-2 group"
+                className="gap-2 group"
                 disabled={!batchExportData}
               >
                 <Package className="h-4 w-4 group-hover:scale-110 transition-transform" />
@@ -306,7 +306,7 @@ export function DataTableToolbar({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-primary gap-2 group"
+                className="gap-2 group"
                 disabled={!scheduledExportData}
               >
                 <Clock className="h-4 w-4 group-hover:scale-110 transition-transform" />

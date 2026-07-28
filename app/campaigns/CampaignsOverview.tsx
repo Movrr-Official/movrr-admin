@@ -318,9 +318,9 @@ export default function CampaignsOverview() {
                       {averageProgress}%
                     </span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                  <div className="w-full bg-muted dark:bg-white/15 rounded-full h-3 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-primary to-primary/80 h-3 rounded-full transition-all duration-1000 ease-out"
+                      className="h-3 rounded-full bg-primary transition-all duration-1000 ease-out"
                       style={{
                         width: `${averageProgress}%`,
                       }}

@@ -76,14 +76,14 @@ export function StatusUpdateDialog({
       label: "Approve",
       icon: CheckCircle,
       color:
-        "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success",
+        "bg-success/12 text-success border-success/25 dark:bg-success/20 dark:text-success dark:border-success/40",
     },
     {
       value: "rejected" as const,
       label: "Reject",
       icon: XCircle,
       color:
-        "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive dark:text-destructive",
+        "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/20 dark:text-destructive dark:border-destructive/40",
     },
   ];
 

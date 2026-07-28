@@ -223,8 +223,8 @@ export function ScheduledExportDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="bg-gradient-to-r from-chart-4 to-chart-4/90 hover:from-chart-4/90 hover:to-chart-4/80 text-white shadow-xl hover:shadow-2xl transition-all duration-300 gap-3 group px-6 py-3 rounded-xl font-semibold">
-            <Clock className="h-5 w-5 group-hover:scale-110 transition-transform" />
+          <Button variant="outline" className="gap-2">
+            <Clock className="h-4 w-4" />
             Schedule Export
           </Button>
         )}
@@ -233,11 +233,11 @@ export function ScheduledExportDialog({
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-primary/15 to-secondary/10 rounded-3xl border border-primary/20 shadow-lg">
-                <Clock className="h-8 w-8 text-primary" />
+              <div className="rounded-[14px] border border-border bg-muted p-3">
+                <Clock className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                <DialogTitle className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
                   Schedule Export
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground text-lg font-medium mt-2">

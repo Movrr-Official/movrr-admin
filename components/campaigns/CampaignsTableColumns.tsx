@@ -163,7 +163,7 @@ export const getCampaignsTableColumns = ({
               / {formatCurrencyEUR(budget)}
             </span>
           </div>
-          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-muted dark:bg-white/15 rounded-full h-1.5 overflow-hidden">
             <div
               className="bg-primary h-1.5 rounded-full transition-all duration-300"
               style={{
@@ -220,9 +220,9 @@ export const getCampaignsTableColumns = ({
               {progress}%
             </span>
           </div>
-          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-muted dark:bg-white/15 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-300"
+              className="h-2 rounded-full bg-primary transition-all duration-300"
               style={{
                 width: `${progress}%`,
               }}
@@ -253,7 +253,7 @@ export const getCampaignsTableColumns = ({
             to {format(endDate, "MMM d, yyyy")}
           </div>
           {isActive && (
-            <Badge className="w-fit bg-success/12 text-success border-success/20 text-xs dark:bg-success dark:text-success">
+            <Badge className="w-fit bg-success/12 text-success border-success/25 text-xs dark:bg-success/20 dark:text-success dark:border-success/40">
               Active
             </Badge>
           )}

@@ -30,6 +30,7 @@ import type { RiderRoute } from "@/schemas";
 const SIGNAL_LOSS_MS = 60_000;
 const TRAIL_MAX_POINTS = 12;
 const POLL_INTERVAL_MS = 15_000;
+const EMPTY_POLLED: never[] = [];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -41,6 +42,29 @@ function routeStatusToCompliance(status: string): ComplianceState {
   if (status === "in-progress") return "compliant";
   if (status === "assigned") return "marginal";
   return "signal_lost";
+}
+
+function mapsEqualShallow(
+  a: Map<string, RiderMapEntry>,
+  b: Map<string, RiderMapEntry>,
+): boolean {
+  if (a === b) return true;
+  if (a.size !== b.size) return false;
+  for (const [key, value] of a) {
+    const other = b.get(key);
+    if (!other) return false;
+    if (
+      other.lat !== value.lat ||
+      other.lon !== value.lon ||
+      other.updatedAt !== value.updatedAt ||
+      other.complianceState !== value.complianceState ||
+      other.routeId !== value.routeId ||
+      other.routeStatus !== value.routeStatus
+    ) {
+      return false;
+    }
+  }
+  return true;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -92,7 +116,7 @@ export function useAdminMapData({ routes = [], enabled = true }: UseAdminMapData
   );
 
   // ── Polling source (route_tracking) ────────────────────────────────────────
-  const { data: polledLocations = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["admin-map-route-tracking", activeRouteIds],
     queryFn: async () => {
       if (activeRouteIds.length === 0) return [];
@@ -112,6 +136,9 @@ export function useAdminMapData({ routes = [], enabled = true }: UseAdminMapData
     refetchInterval: POLL_INTERVAL_MS,
     enabled: enabled && activeRouteIds.length > 0,
   });
+  // Stable empty fallback — inline `= []` creates a new array every render and
+  // retriggers the merge effect → maximum update depth.
+  const polledLocations = data ?? EMPTY_POLLED;
 
   // ── Merge polling data into riders map ─────────────────────────────────────
   useEffect(() => {
@@ -173,7 +200,7 @@ export function useAdminMapData({ routes = [], enabled = true }: UseAdminMapData
         }
       });
 
-      return next;
+      return mapsEqualShallow(prev, next) ? prev : next;
     });
   }, [polledLocations, routeLookup]);
 

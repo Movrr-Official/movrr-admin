@@ -219,7 +219,7 @@ export function RideSessionDetailsDrawer({
           <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
             <div className="flex items-center gap-3">
               {session.earningMode === "standard_ride" ? (
-                <div className="p-2 bg-primary/12 rounded-lg dark:bg-primary">
+                <div className="p-2 bg-primary/12 rounded-lg dark:bg-primary/20">
                   <Bike className="h-5 w-5 text-primary dark:text-primary" />
                 </div>
               ) : (
@@ -360,7 +360,7 @@ export function RideSessionDetailsDrawer({
                           <div className="flex items-center gap-2">
                             {hasChain && (
                               <span
-                                className={`text-xs font-medium px-1.5 py-0.5 rounded ${ clean ? "bg-success text-success" : "bg-warning/10 text-warning" }`}
+                                className={`text-xs font-medium px-1.5 py-0.5 rounded ${ clean ? "bg-success/20 text-success" : "bg-warning/10 text-warning dark:bg-warning/20" }`}
                                 title={
                                   clean
                                     ? "Payout chain verified"
@@ -714,7 +714,7 @@ export function RideSessionDetailsDrawer({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-success border-success/20 hover:bg-success/12 dark:hover:bg-success dark:text-success dark:border-success/20"
+                    className="text-success border-success/20 hover:bg-success/12 dark:hover:bg-success/20 dark:text-success dark:border-success/40"
                     disabled={!!actionLoading}
                     onClick={() => handleAction("approve")}
                   >

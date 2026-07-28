@@ -451,7 +451,7 @@ export function RiderDetailsDrawer({
     <>
       <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="w-full sm:w-[320px] lg:max-w-[59rem]! p-0 h-full">
-          <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
+          <div className="flex h-full flex-col bg-background">
             <DrawerHeader className="px-6 py-4 border-b border-border">
               <div className="flex items-center justify-between">
                 <DrawerTitle className="text-2xl font-bold">
@@ -944,16 +944,16 @@ export function RiderDetailsDrawer({
                                       )}
                                       {performanceMetrics.co2SavedKg !=
                                         null && (
-                                        <div className="p-4 rounded-xl bg-success/12 border border-success/20 dark:bg-success dark:border-success/20">
-                                          <p className="text-xs text-success dark:text-success mb-1 flex items-center gap-1">
+                                        <div className="p-4 rounded-xl bg-success/12 border border-success/20 dark:bg-success/20 dark:border-success/40">
+                                          <p className="text-xs text-success mb-1 flex items-center gap-1">
                                             <Leaf className="h-3.5 w-3.5" />
                                             CO₂ Saved
                                           </p>
-                                          <p className="text-2xl font-bold text-success dark:text-success">
+                                          <p className="text-2xl font-bold text-success">
                                             {performanceMetrics.co2SavedKg.toLocaleString()}{" "}
                                             kg
                                           </p>
-                                          <p className="text-xs text-success dark:text-success mt-1">
+                                          <p className="text-xs text-success mt-1">
                                             vs driving
                                           </p>
                                         </div>
@@ -1717,7 +1717,7 @@ export function RiderDetailsDrawer({
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="mb-2 flex items-center gap-3">
-              <div className="rounded-xl bg-destructive/10 p-2 dark:bg-destructive">
+              <div className="rounded-xl bg-destructive/10 p-2 dark:bg-destructive/20">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
               </div>
               <AlertDialogTitle>Delete rider account</AlertDialogTitle>

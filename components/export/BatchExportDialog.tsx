@@ -251,8 +251,8 @@ export function BatchExportDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="bg-gradient-to-r from-secondary to-secondary/90 hover:from-secondary/90 hover:to-secondary/80 text-secondary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 gap-3 group px-6 py-3 rounded-xl font-semibold">
-            <Package className="h-5 w-5 group-hover:scale-110 transition-transform" />
+          <Button variant="secondary" className="gap-2">
+            <Package className="h-4 w-4" />
             Batch Export
           </Button>
         )}
@@ -261,11 +261,11 @@ export function BatchExportDialog({
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-primary/15 to-secondary/10 rounded-3xl border border-primary/20 shadow-lg">
-                <Package className="h-8 w-8 text-primary" />
+              <div className="rounded-[14px] border border-border bg-muted p-3">
+                <Package className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                <DialogTitle className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
                   {title}
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground text-lg font-medium mt-2">

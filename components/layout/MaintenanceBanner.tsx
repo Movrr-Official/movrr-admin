@@ -60,7 +60,7 @@ const MaintenanceBanner = () => {
     "Admin dashboard updates are in progress. You can continue browsing, but some actions may be temporarily limited.";
 
   return (
-    <div className="w-full bg-warning/15 text-warning-foreground border-b border-warning/30">
+    <div className="w-full bg-warning/15 text-warning-foreground border-b border-warning/30 dark:text-warning">
       <div className="mx-auto w-full px-4 sm:px-6 py-1.5 text-xs flex items-center justify-between gap-3">
         <div className="flex items-center justify-center gap-2">
           <span className="font-semibold uppercase tracking-wide">

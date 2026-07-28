@@ -39,11 +39,13 @@ export const getRoleBadge = (role: AdminRole) => {
       displayName: "SUPPORT",
     },
     compliance_officer: {
-      className: "bg-info/10 text-info border-info/30",
+      className:
+        "bg-info/10 text-info border-info/30 dark:bg-primary/15 dark:text-primary dark:border-primary/35",
       displayName: "COMPLIANCE OFFICER",
     },
     government: {
-      className: "bg-warning/10 text-warning border-warning/30",
+      className:
+        "bg-warning/10 text-warning-foreground border-warning/30 dark:bg-warning/20 dark:text-warning dark:border-warning/40",
       displayName: "GOVERNMENT",
     },
   };

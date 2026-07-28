@@ -205,7 +205,7 @@ export default function UsersOverview() {
                 {
                   label: `${recentlyActiveUsers} recently active`,
                   className:
-                    "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success",
+                    "bg-success/12 text-success border-success/25 dark:bg-success/20 dark:text-success dark:border-success/40",
                 },
               ]}
               animationDelay="0.3s"
@@ -219,8 +219,8 @@ export default function UsersOverview() {
           >
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-success/12 dark:bg-success rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-success dark:text-success" />
+                <div className="p-2 bg-success/12 dark:bg-success/20 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-success" />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-bold">
@@ -244,8 +244,8 @@ export default function UsersOverview() {
                     className={cn(
                       "font-semibold",
                       growthRate >= 0
-                        ? "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success"
-                        : "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive dark:text-destructive",
+                        ? "bg-success/12 text-success border-success/25 dark:bg-success/20 dark:text-success dark:border-success/40"
+                        : "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/20 dark:text-destructive dark:border-destructive/40",
                     )}
                   >
                     {growthRate >= 0 ? "+" : ""}
@@ -272,9 +272,9 @@ export default function UsersOverview() {
                     {verifiedUsers}
                   </span>
                 </div>
-                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-muted dark:bg-white/15 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-1000 ease-out"
+                    className="h-2 rounded-full bg-primary transition-all duration-1000 ease-out"
                     style={{
                       width: `${verificationRate}%`,
                     }}

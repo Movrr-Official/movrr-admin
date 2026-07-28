@@ -278,7 +278,7 @@ export default function RoutesOverview() {
               {
                 label: `${completedRoutes} completed`,
                 className:
-                  "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success",
+                  "bg-success/12 text-success border-success/25 dark:bg-success/20 dark:text-success dark:border-success/40",
               },
               ...(inProgressRoutes > 0
                 ? [
@@ -333,7 +333,7 @@ export default function RoutesOverview() {
                     {
                       label: `${highPerformanceRoutes} high`,
                       className:
-                        "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success",
+                        "bg-success/12 text-success border-success/25 dark:bg-success/20 dark:text-success dark:border-success/40",
                     },
                   ]
                 : []),
@@ -364,7 +364,7 @@ export default function RoutesOverview() {
               {
                 label: `${completedRoutes} completed`,
                 className:
-                  "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success",
+                  "bg-success/12 text-success border-success/25 dark:bg-success/20 dark:text-success dark:border-success/40",
               },
             ]}
             animationDelay="0.3s"

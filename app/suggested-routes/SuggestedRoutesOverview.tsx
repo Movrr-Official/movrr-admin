@@ -258,7 +258,7 @@ export default function SuggestedRoutesOverview() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="page-canvas flex flex-col gap-6">
       <PageHeader
         action={{
           label: "New Route",

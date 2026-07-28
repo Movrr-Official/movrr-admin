@@ -93,13 +93,13 @@ export function SettingsAuditPanel({ entries }: Props) {
                             {humanize(field)}
                           </span>
                           <span className="flex min-w-0 items-center gap-1.5">
-                            <span className="truncate rounded bg-destructive/10 px-1.5 py-0.5 font-mono text-destructive/80 line-through">
+                            <span className="truncate rounded bg-destructive/15 px-1.5 py-0.5 font-mono text-destructive line-through">
                               {from}
                             </span>
                             <span className="shrink-0 text-muted-foreground">
                               →
                             </span>
-                            <span className="truncate rounded bg-success px-1.5 py-0.5 font-mono text-success dark:text-success">
+                            <span className="truncate rounded bg-success/20 px-1.5 py-0.5 font-mono text-success">
                               {to}
                             </span>
                           </span>

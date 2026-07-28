@@ -250,7 +250,7 @@ export function AdvertiserDetailsDrawer({
     <>
       <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="w-full sm:w-[320px] lg:max-w-[55rem]! p-0 h-full">
-          <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
+          <div className="flex h-full flex-col bg-background">
             <DrawerHeader className="px-6 py-4 border-b border-border">
               <div className="flex items-center justify-between">
                 <DrawerTitle className="text-2xl font-bold">
@@ -772,7 +772,7 @@ export function AdvertiserDetailsDrawer({
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="mb-2 flex items-center gap-3">
-              <div className="rounded-xl bg-destructive/10 p-2 dark:bg-destructive">
+              <div className="rounded-xl bg-destructive/10 p-2 dark:bg-destructive/20">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
               </div>
               <AlertDialogTitle>Delete advertiser profile</AlertDialogTitle>

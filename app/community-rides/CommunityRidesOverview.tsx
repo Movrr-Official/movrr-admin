@@ -54,7 +54,7 @@ export default function CommunityRidesOverview() {
             badges={[
               {
                 label: `${upcoming} upcoming`,
-                className: "bg-info/10 text-info border-info/30",
+                className: "bg-info/10 text-info border-info/30 dark:bg-primary/15 dark:text-primary dark:border-primary/35",
               },
               ...(active > 0
                 ? [

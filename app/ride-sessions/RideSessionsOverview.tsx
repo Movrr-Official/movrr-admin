@@ -131,7 +131,7 @@ export default function RideSessionsOverview() {
               {
                 label: `${standardRideSessions} standard ride`,
                 className:
-                  "bg-primary/12 text-primary border-primary/20 dark:bg-primary dark:text-primary dark:border-primary/20",
+                  "bg-primary/12 text-primary border-primary/20 dark:bg-primary/20 dark:text-primary dark:border-primary/40",
               },
               ...(boostedRideSessions > 0
                 ? [
@@ -753,7 +753,7 @@ function TriageCard({
             <Button
               size="sm"
               variant="outline"
-              className="h-7 px-2 text-xs text-success border-success/20 hover:bg-success/12 dark:text-success dark:border-success/20 dark:hover:bg-success"
+              className="h-7 px-2 text-xs text-success border-success/20 hover:bg-success/12 dark:text-success dark:border-success/40 dark:hover:bg-success/20"
               disabled={isLoading}
               onClick={onApprove}
             >

@@ -568,11 +568,11 @@ export default function SettingsPage() {
                         {label}
                       </p>
                       <div className="mt-1.5 flex items-center gap-2 text-xs">
-                        <span className="rounded bg-destructive/10 px-1.5 py-0.5 font-mono text-destructive/80 line-through">
+                        <span className="rounded bg-destructive/15 px-1.5 py-0.5 font-mono text-destructive line-through">
                           {fmt(oldVal)}
                         </span>
-                        <span className="text-muted-foreground">?</span>
-                        <span className="rounded bg-success px-1.5 py-0.5 font-mono text-success dark:text-success">
+                        <span className="text-muted-foreground">→</span>
+                        <span className="rounded bg-success/20 px-1.5 py-0.5 font-mono text-success">
                           {fmt(newVal)}
                         </span>
                       </div>

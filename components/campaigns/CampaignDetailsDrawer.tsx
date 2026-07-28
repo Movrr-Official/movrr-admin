@@ -482,7 +482,7 @@ export function CampaignDetailsDrawer({
     <>
       <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="w-full sm:w-[320px] lg:max-w-[55rem]! p-0 h-full">
-          <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
+          <div className="flex h-full flex-col bg-background">
             <DrawerHeader className="px-6 py-4 border-b border-border">
               <div className="flex items-center justify-between">
                 <DrawerTitle className="text-2xl font-bold">
@@ -873,9 +873,9 @@ export function CampaignDetailsDrawer({
                             {campaign.progress}%
                           </p>
                         </div>
-                        <div className="w-full bg-muted rounded-full h-2 mt-2 overflow-hidden">
+                        <div className="w-full bg-muted dark:bg-white/15 rounded-full h-2 mt-2 overflow-hidden">
                           <div
-                            className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-300"
+                            className="h-2 rounded-full bg-primary transition-all duration-300"
                             style={{ width: `${campaign.progress}%` }}
                           ></div>
                         </div>
@@ -927,9 +927,9 @@ export function CampaignDetailsDrawer({
                           {budgetUtilization}%
                         </p>
                       </div>
-                      <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                      <div className="w-full bg-muted dark:bg-white/15 rounded-full h-3 overflow-hidden">
                         <div
-                          className="bg-gradient-to-r from-primary to-primary/80 h-3 rounded-full transition-all duration-300"
+                          className="h-3 rounded-full bg-primary transition-all duration-300"
                           style={{
                             width: `${Math.min(100, budgetUtilization)}%`,
                           }}
@@ -1370,7 +1370,7 @@ export function CampaignDetailsDrawer({
         <AlertDialogContent className="border-border">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-destructive/10 dark:bg-destructive rounded-xl">
+              <div className="p-3 bg-destructive/10 dark:bg-destructive/20 rounded-xl">
                 <Trash2 className="h-6 w-6 text-destructive" />
               </div>
               <AlertDialogTitle className="text-xl font-bold text-destructive">

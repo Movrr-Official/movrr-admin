@@ -90,14 +90,14 @@ const typeTone: Record<WorkboardCard["type"], string> = {
   Engineering: `${workboardBadgeBase} bg-muted text-muted-foreground`,
   Operations: `${workboardBadgeBase} bg-success/12 text-success`,
   Campaign: `${workboardBadgeBase} bg-primary/12 text-primary`,
-  Product: `${workboardBadgeBase} bg-warning/15 text-warning-foreground`,
+  Product: `${workboardBadgeBase} bg-warning/15 text-warning-foreground dark:text-warning dark:bg-warning/20`,
   Growth: `${workboardBadgeBase} bg-secondary text-secondary-foreground`,
 };
 
 const priorityTone: Record<WorkboardCard["priority"], string> = {
   Low: `${workboardBadgeBase} bg-muted text-muted-foreground`,
   Medium: `${workboardBadgeBase} bg-primary/10 text-primary`,
-  High: `${workboardBadgeBase} bg-warning/15 text-warning-foreground`,
+  High: `${workboardBadgeBase} bg-warning/15 text-warning-foreground dark:text-warning dark:bg-warning/20`,
   Critical: `${workboardBadgeBase} bg-destructive/10 text-destructive`,
 };
 
@@ -105,7 +105,7 @@ const boardToneCount: Record<WorkboardBoard["tone"], string> = {
   slate: `${workboardBadgeBase} bg-muted text-muted-foreground`,
   indigo: `${workboardBadgeBase} bg-primary/12 text-primary`,
   emerald: `${workboardBadgeBase} bg-success/12 text-success`,
-  amber: `${workboardBadgeBase} bg-warning/15 text-warning-foreground`,
+  amber: `${workboardBadgeBase} bg-warning/15 text-warning-foreground dark:text-warning dark:bg-warning/20`,
 };
 
 const workboardMetaBadge =

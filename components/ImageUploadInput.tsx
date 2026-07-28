@@ -255,9 +255,9 @@ const ImageUploadInput = ({
           <MdOutlineCloudUpload className="w-14 h-14 text-4xl mb-2" />
 
           {uploadProgress !== null && (
-            <div className="bg-muted rounded-full w-80 h-3.5 mb-4">
+            <div className="bg-muted dark:bg-white/15 rounded-full w-80 h-3.5 mb-4">
               <div
-                className="bg-muted h-3.5 rounded-full"
+                className="bg-primary h-3.5 rounded-full"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
               <p className="text-muted-foreground text-center font-semibold mt-2">

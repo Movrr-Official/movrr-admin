@@ -150,7 +150,7 @@ export const getCommunityRidesTableColumns = ({
               {ride.participantCount} / {ride.maxParticipants}
             </span>
           </div>
-          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-muted dark:bg-white/15 rounded-full h-1.5 overflow-hidden">
             <div
               className={`h-1.5 rounded-full transition-all duration-300 ${isFull ? "bg-destructive" : "bg-primary"}`}
               style={{

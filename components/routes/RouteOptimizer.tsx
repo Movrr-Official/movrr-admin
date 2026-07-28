@@ -865,7 +865,7 @@ export function RouteOptimizer({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-4 rounded-lg border ${ optimizationSucceeded ? "bg-success/12 dark:bg-success border-success/20 dark:border-success/20" : "bg-warning/15 dark:bg-warning/15 border-warning/20 dark:border-warning/20" }`}
+            className={`p-4 rounded-lg border ${ optimizationSucceeded ? "bg-success/12 dark:bg-success/20 border-success/20 dark:border-success/40" : "bg-warning/15 dark:bg-warning/15 border-warning/20 dark:border-warning/20" }`}
           >
             <div className="flex items-center mb-2">
               <TrendingUp

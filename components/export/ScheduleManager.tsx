@@ -108,7 +108,7 @@ export function ScheduleManager({
       return (
         <Badge
           variant="outline"
-          className="bg-destructive/10 text-destructive border-destructive/20 font-semibold dark:bg-destructive dark:text-destructive dark:border-destructive/20"
+          className="bg-destructive/10 text-destructive border-destructive/20 font-semibold dark:bg-destructive/20 dark:text-destructive dark:border-destructive/40"
         >
           <AlertCircle className="h-3 w-3 mr-1" />
           Overdue
@@ -119,7 +119,7 @@ export function ScheduleManager({
     return (
       <Badge
         variant="outline"
-        className="bg-success/12 text-success border-success/20 font-semibold dark:bg-success dark:text-success dark:border-success/20"
+        className="bg-success/12 text-success border-success/25 font-semibold dark:bg-success/20 dark:text-success dark:border-success/40"
       >
         <CheckCircle2 className="h-3 w-3 mr-1" />
         Active
@@ -129,9 +129,9 @@ export function ScheduleManager({
 
   const getFormatBadge = (format: string) => {
     const colors = {
-      csv: "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success dark:border-success/20",
+      csv: "bg-success/12 text-success border-success/25 dark:bg-success/20 dark:text-success dark:border-success/40",
       xlsx: "bg-primary/12 text-primary border-primary/20",
-      pdf: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive dark:text-destructive dark:border-destructive/20",
+      pdf: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/20 dark:text-destructive dark:border-destructive/40",
       json: "bg-secondary text-secondary-foreground border-border",
     };
 

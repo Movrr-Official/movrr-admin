@@ -29,7 +29,7 @@ export default function AuditPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="page-canvas">
       <h1 className="text-2xl font-semibold mb-4">Optimizer Audit</h1>
 
       <div className="flex items-center gap-2 mb-4">
@@ -55,7 +55,7 @@ export default function AuditPage() {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-card rounded border p-4">
+      <div className="rounded border border-border bg-card p-4">
         {!result && (
           <div className="text-sm text-muted-foreground">
             No data yet. Click Refresh.

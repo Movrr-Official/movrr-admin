@@ -111,7 +111,7 @@ export default function RewardsOverview() {
             }}
           >
             <motion.div
-              className="h-full border-0 overflow-hidden min-h-[100px] bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md rounded-xl"
+              className="h-full overflow-hidden min-h-[100px] rounded-xl border border-border bg-primary text-primary-foreground shadow-none"
               style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
             >
               <div className="h-full flex flex-col items-center justify-center text-center gap-5 p-6 md:p-8">

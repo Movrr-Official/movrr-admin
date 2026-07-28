@@ -174,7 +174,7 @@ export function getRoutesTableColumns({
         return (
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">{coverage}%</span>
-            <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+            <div className="w-16 h-2 bg-muted dark:bg-white/15 rounded-full overflow-hidden">
               <div
                 className={`h-full ${ coverage >= 90 ? "bg-success" : coverage >= 70 ? "bg-warning" : "bg-destructive" }`}
                 style={{ width: `${coverage}%` }}

@@ -401,7 +401,7 @@ export function UserDetailsDrawer({
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="w-full sm:w-[320px] lg:max-w-[55rem]! p-0 h-full">
-        <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
+        <div className="flex h-full flex-col bg-background">
           <DrawerHeader className="px-6 py-4 border-b border-border">
             <div className="flex items-center justify-between">
               <DrawerTitle className="text-2xl font-bold">

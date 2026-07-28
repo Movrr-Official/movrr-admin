@@ -12,19 +12,19 @@ const badgeVariants = cva(
         default:
           "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/80",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/80",
+          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/80 dark:border-white/10",
         success:
-          "bg-success/12 text-success border-success/20 dark:bg-success/18 dark:border-success/25",
-        info: "bg-info/12 text-info border-info/20 dark:bg-info/18 dark:border-info/25",
+          "bg-success/12 text-success border-success/25 dark:bg-success/20 dark:text-success dark:border-success/40",
+        info: "bg-info/12 text-info border-info/25 dark:bg-primary/15 dark:text-primary dark:border-primary/35",
         warning:
-          "bg-warning/15 text-warning-foreground border-warning/25 dark:bg-warning/20",
+          "bg-warning/15 text-warning-foreground border-warning/25 dark:bg-warning/20 dark:text-warning dark:border-warning/40",
         mock: "bg-muted text-muted-foreground border-border",
         accent:
-          "bg-primary/12 text-primary border-primary/20 dark:bg-primary/18 dark:border-primary/25",
+          "bg-primary/12 text-primary border-primary/20 dark:bg-primary/18 dark:border-primary/35",
         destructive:
-          "bg-destructive/10 text-destructive border-destructive/20 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40",
+          "bg-destructive/10 text-destructive border-destructive/20 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:text-destructive dark:border-destructive/40 dark:focus-visible:ring-destructive/40",
         outline:
-          "border-border text-foreground [a&]:hover:bg-muted [a&]:hover:text-muted-foreground",
+          "border-border text-foreground dark:border-white/12 [a&]:hover:bg-muted [a&]:hover:text-muted-foreground",
         ghost: "border-0 bg-transparent shadow-none",
       },
     },

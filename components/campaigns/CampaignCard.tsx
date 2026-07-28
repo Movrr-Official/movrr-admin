@@ -220,7 +220,7 @@ export function CampaignCard({
               )}
             </span>
           </div>
-          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-muted dark:bg-white/15 rounded-full h-2 overflow-hidden">
             <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{

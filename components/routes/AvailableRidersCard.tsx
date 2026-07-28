@@ -109,26 +109,29 @@ export function AvailableRidersCard() {
               return (
                 <div
                   key={rider.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-border/40 bg-muted/30 p-3"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar className="h-9 w-9 shrink-0">
                       <AvatarImage
                         src={rider.avatarUrl ?? ""}
                         alt={rider.name}
                       />
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="text-sm font-semibold">{rider.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{rider.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">
                         {hasRoute
                           ? (rider.currentRoute?.name ?? "Assigned route")
                           : "Ready for assignment"}
                       </p>
                     </div>
                   </div>
-                  <Badge variant={hasRoute ? "secondary" : "outline"}>
+                  <Badge
+                    variant={hasRoute ? "secondary" : "outline"}
+                    className="shrink-0"
+                  >
                     {hasRoute ? "Assigned" : "Ready"}
                   </Badge>
                 </div>

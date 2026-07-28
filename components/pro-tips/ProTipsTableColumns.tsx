@@ -14,12 +14,16 @@ import {
 import { ProTip } from "@/schemas";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  earning: "bg-success/12 text-success border-success/20",
-  timing: "bg-primary/12 text-primary border-primary/20",
-  compliance: "bg-warning/15 text-warning-foreground border-warning/25",
-  performance: "bg-secondary text-secondary-foreground border-border",
-  technical: "bg-info/12 text-info border-info/20",
-  planning: "bg-warning/15 text-warning-foreground border-warning/25",
+  earning: "bg-success/12 text-success border-success/25 dark:bg-success/20 dark:border-success/40",
+  timing: "bg-primary/12 text-primary border-primary/20 dark:bg-primary/15 dark:border-primary/35",
+  compliance:
+    "bg-warning/15 text-warning-foreground border-warning/25 dark:bg-warning/20 dark:text-warning dark:border-warning/40",
+  performance:
+    "bg-secondary text-secondary-foreground border-border dark:border-white/15",
+  technical:
+    "bg-info/12 text-info border-info/25 dark:bg-primary/15 dark:text-primary dark:border-primary/35",
+  planning:
+    "bg-warning/15 text-warning-foreground border-warning/25 dark:bg-warning/20 dark:text-warning dark:border-warning/40",
 };
 
 interface ProTipsTableColumnsProps {

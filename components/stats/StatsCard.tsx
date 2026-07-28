@@ -272,7 +272,7 @@ export function StatsCard({
 
           {progress && (
             <div className="mb-2">
-              <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-muted dark:bg-white/15">
                 <div
                   className="h-2 rounded-full bg-primary transition-all duration-500 ease-out"
                   style={{

@@ -102,12 +102,13 @@
   --popover: var(--movrr-bg-tertiary);
   --popover-foreground: var(--movrr-text-inverse);
   --primary: var(--movrr-accent);
-  --primary-foreground: var(--movrr-green-dark);
-  --secondary: var(--movrr-bg-tertiary);
+  --primary-foreground: var(--movrr-green-ink);
+  /* Lift secondary/muted off card so chips, tracks, and hovers remain visible */
+  --secondary: color-mix(in oklab, var(--movrr-text-inverse) 16%, var(--movrr-bg-card-dark));
   --secondary-foreground: var(--movrr-text-inverse);
-  --muted: var(--movrr-bg-tertiary);
-  --muted-foreground: color-mix(in oklab, var(--movrr-text-inverse) 65%, transparent);
-  --accent: color-mix(in oklab, var(--movrr-success) 18%, var(--movrr-bg-card-dark));
+  --muted: color-mix(in oklab, var(--movrr-text-inverse) 14%, var(--movrr-bg-card-dark));
+  --muted-foreground: oklch(0.78 0.02 160);
+  --accent: color-mix(in oklab, var(--movrr-success) 22%, var(--movrr-bg-card-dark));
   --accent-foreground: var(--movrr-text-inverse);
   --destructive: oklch(0.65 0.22 27);
   --destructive-foreground: var(--movrr-white);
@@ -115,10 +116,12 @@
   --success-foreground: var(--movrr-green-ink);
   --warning: var(--movrr-warning);
   --warning-foreground: var(--movrr-green-ink);
-  --info: var(--movrr-green-light);
-  --info-foreground: var(--movrr-white);
-  --border: color-mix(in oklab, var(--movrr-text-inverse) 12%, transparent);
-  --input: color-mix(in oklab, var(--movrr-text-inverse) 12%, transparent);
+  /* Light signal green for info text/chips — not dark green-light */
+  --info: var(--movrr-accent);
+  --info-foreground: var(--movrr-green-ink);
+  /* Quiet hairlines — readable, not bright cool-grey rims */
+  --border: color-mix(in oklab, var(--movrr-text-inverse) 14%, transparent);
+  --input: color-mix(in oklab, var(--movrr-text-inverse) 18%, transparent);
   --ring: var(--movrr-accent);
   --chart-1: var(--movrr-success-soft);
   --chart-2: var(--movrr-accent);
@@ -128,10 +131,10 @@
   --sidebar: var(--movrr-bg-card-dark);
   --sidebar-foreground: var(--movrr-text-inverse);
   --sidebar-primary: var(--movrr-accent);
-  --sidebar-primary-foreground: var(--movrr-green-dark);
-  --sidebar-accent: var(--movrr-bg-tertiary);
+  --sidebar-primary-foreground: var(--movrr-green-ink);
+  --sidebar-accent: color-mix(in oklab, var(--movrr-text-inverse) 14%, var(--movrr-bg-card-dark));
   --sidebar-accent-foreground: var(--movrr-text-inverse);
-  --sidebar-border: color-mix(in oklab, var(--movrr-text-inverse) 12%, transparent);
+  --sidebar-border: color-mix(in oklab, var(--movrr-text-inverse) 14%, transparent);
   --sidebar-ring: var(--movrr-accent);
   color-scheme: dark;
 }
