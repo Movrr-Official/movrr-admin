@@ -258,7 +258,7 @@ export const getCampaignsTableColumns = ({
             </Badge>
           )}
           {isUpcoming && (
-            <Badge className="w-fit bg-blue-50 text-blue-700 border-blue-200 text-xs dark:bg-blue-950 dark:text-blue-300">
+            <Badge className="w-fit bg-primary/12 text-primary border-primary/20 text-xs">
               Upcoming
             </Badge>
           )}
