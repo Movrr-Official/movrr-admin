@@ -50,7 +50,7 @@ const DashboardFooter = () => {
   return (
     <footer className="flex h-16 shrink-0 items-center border-t border-border bg-background px-6">
       <div className="flex w-full flex-col items-center justify-between gap-2 text-xs text-muted-foreground sm:flex-row">
-        <span>&copy; {currentYear} MOVRR Media</span>
+        <span>&copy; {currentYear} MOVRR</span>
 
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="text-xs font-mono">

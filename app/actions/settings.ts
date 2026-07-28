@@ -171,8 +171,8 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
     webhookStatusPageUrl: "",
   },
   organization: {
-    displayName: "MOVRR Media",
-    legalCompanyName: "MOVRR Media",
+    displayName: "MOVRR",
+    legalCompanyName: "MOVRR",
     supportContactName: "MOVRR Support",
     billingContactEmail: "",
     vatId: "",

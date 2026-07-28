@@ -174,8 +174,8 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     webhookStatusPageUrl: "",
   },
   organization: {
-    displayName: "MOVRR Media",
-    legalCompanyName: "MOVRR Media",
+    displayName: "MOVRR",
+    legalCompanyName: "MOVRR",
     supportContactName: "MOVRR Support",
     billingContactEmail: "",
     vatId: "",

@@ -207,8 +207,8 @@ export const integrationsSettingsSchema = z.object({
 });
 
 export const organizationSettingsSchema = z.object({
-  displayName: z.string().trim().min(1).max(120).default("MOVRR Media"),
-  legalCompanyName: z.string().trim().max(160).default("MOVRR Media"),
+  displayName: z.string().trim().min(1).max(120).default("MOVRR"),
+  legalCompanyName: z.string().trim().max(160).default("MOVRR"),
   supportContactName: z.string().trim().max(120).default("MOVRR Support"),
   billingContactEmail: optionalEmailSchema.default(""),
   vatId: z.string().trim().max(80).default(""),

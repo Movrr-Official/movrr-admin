@@ -188,7 +188,7 @@ ON CONFLICT (key) DO NOTHING;
 INSERT INTO platform_settings (key, value, created_at, updated_at)
 VALUES (
   'organization',
-  '{"displayName":"MOVRR Media","legalCompanyName":"MOVRR Media","supportContactName":"MOVRR Support","billingContactEmail":"","vatId":"","businessAddress":"","brandPrimaryLogoUrl":""}'::jsonb,
+  '{"displayName":"MOVRR","legalCompanyName":"MOVRR","supportContactName":"MOVRR Support","billingContactEmail":"","vatId":"","businessAddress":"","brandPrimaryLogoUrl":""}'::jsonb,
   now(), now()
 )
 ON CONFLICT (key) DO NOTHING;
