@@ -30,7 +30,7 @@ const Navbar = () => {
         variants={fadeInUp}
         initial="initial"
         animate="animate"
-        className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8"
+        className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-border bg-background"
       >
         {/* Left Section - MOVRR Icon & Search Bar */}
         <div className="flex items-center gap-4 flex-1 max-w-3xl">

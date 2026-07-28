@@ -334,7 +334,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "flex flex-col bg-background h-full z-50",
+          "flex h-full flex-col border-r border-border bg-background z-50",
           isMobile ? "fixed" : "relative",
           "shadow-sm lg:shadow-none",
         )}
@@ -441,7 +441,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         </ScrollArea>
 
         {/* Footer */}
-        <div className="p-3 border-t border-border">
+        <div className="flex h-16 shrink-0 items-center border-t border-border px-3">
           <Button
             variant="ghost"
             onClick={handleSignOut}
