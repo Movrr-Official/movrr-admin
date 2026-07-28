@@ -8,16 +8,19 @@
 
 **Tech Stack:** Next.js 16, React 19, Supabase (Auth + Postgres), Zod, Vitest, existing `lib/supabase-admin.ts` / JWT verification patterns.
 
-**Spec:** `docs/superpowers/specs/2026-07-28-reward-fulfilment-engine-design.md`
+**Spec:** `docs/superpowers/specs/2026-07-28-reward-fulfilment-engine-design.md`  
+**Programme:** `docs/superpowers/plans/2026-07-28-reward-fulfilment-engine-programme.md`
 
-## Plan series (do not collapse into one PR mega-merge)
+## Plan series (one programme, sequential phases)
 
-| Plan | Scope | Repo |
-|------|--------|------|
-| **1 (this)** | Foundation + Engine + `/api/v1` + jobs + tests | movrr-admin |
-| **2** | Admin ops UI consuming Platform APIs | movrr-admin |
-| **3** | Mobile redeem cutover + fulfilment UX | movrr-mobile |
-| **4** | Partner workspace | movrr-app (+ admin org APIs if gaps) |
+| Phase | Plan | Scope | Repo |
+|-------|------|--------|------|
+| **1 (this)** | Plan 1 | Foundation + Engine + `/api/v1` + jobs + tests | movrr-admin |
+| **2** | [Plan 2](./2026-07-28-reward-fulfilment-engine-plan-2-admin-ops-ui.md) | Admin Operations UI | movrr-admin |
+| **3** | [Plan 3](./2026-07-28-reward-fulfilment-engine-plan-3-mobile-integration.md) | Mobile integration & migration | movrr-mobile |
+| **4** | [Plan 4](./2026-07-28-reward-fulfilment-engine-plan-4-partner-workspace.md) | Reward Partner workspace | movrr-app |
+
+After all four plans are approved, execute phases sequentially without further approval between phases unless an architectural change, spec conflict, or unforeseen design decision is required.
 
 ## Global Constraints
 
@@ -427,16 +430,9 @@ it("rejects completed → ready", () => { /* expect fail */ });
 
 ## Execution handoff
 
-**Plan 1 complete and saved to** `docs/superpowers/plans/2026-07-28-reward-fulfilment-engine-plan-1-foundation-engine.md`.
+**Plan 1** is part of the [Implementation Programme](./2026-07-28-reward-fulfilment-engine-programme.md).
 
-**Follow-on plans to write next (separate files):**
-- Plan 2 — Admin ops UI
-- Plan 3 — movrr-mobile integration
-- Plan 4 — movrr-app Partner workspace
+**Do not start coding until Plans 1–4 have been reviewed and approved together.**
 
-**Two execution options for Plan 1:**
+**Execution mode (approved intent):** Subagent-Driven Development — fresh subagent per task, review between tasks; then proceed to Plan 2 → 3 → 4 sequentially under programme continuity rules.
 
-1. **Subagent-Driven (recommended)** — fresh subagent per task, review between tasks  
-2. **Inline Execution** — execute tasks in this session with checkpoints  
-
-**Which approach?** Also confirm whether you want Plans 2–4 written now before any coding starts.
