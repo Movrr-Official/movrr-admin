@@ -21,7 +21,7 @@ export default function AuthLayout({
           <div className="mb-8 flex items-center space-x-1">
             <div className="flex items-center justify-center p-1.5">
               <Image
-                src="/movrr-icon.png"
+                src="/movrr-icon-mark.png"
                 alt="MOVRR Icon"
                 width={50}
                 height={50}

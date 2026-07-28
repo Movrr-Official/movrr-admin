@@ -38,7 +38,7 @@ const Navbar = () => {
           <div className="lg:hidden flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
               <Image
-                src="/movrr-icon.png"
+                src="/movrr-icon-mark.png"
                 alt="MOVRR Icon"
                 width={24}
                 height={24}

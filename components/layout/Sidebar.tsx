@@ -355,7 +355,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
               >
                 <div className="w-8 h-8 bg-movrr-bg-primary rounded-[10px] flex items-center justify-center flex-shrink-0">
                   <Image
-                    src="/movrr-icon.png"
+                    src="/movrr-icon-mark.png"
                     alt="MOVRR Icon"
                     width={24}
                     height={24}
