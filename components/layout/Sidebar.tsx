@@ -353,7 +353,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
                 transition={{ duration: 0.15 }}
                 className="flex items-center gap-2 flex-1 min-w-0"
               >
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-movrr-bg-primary rounded-[10px] flex items-center justify-center flex-shrink-0">
                   <Image
                     src="/movrr-icon.png"
                     alt="MOVRR Icon"
@@ -447,7 +447,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
             onClick={handleSignOut}
             disabled={isPending}
             className={cn(
-              "w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer",
+              "w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer",
               !sidebarOpen && "justify-center",
             )}
             aria-busy={isPending}

@@ -1,11 +1,9 @@
 "use client";
 
-import { FaXTwitter, FaLinkedin, FaFacebook } from "react-icons/fa6";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
-import { Heart } from "lucide-react";
 import useShouldHideComponent from "@/hooks/useShouldHideComponent";
 import { useSettingsData } from "@/hooks/useSettingsData";
 
@@ -33,7 +31,7 @@ const DashboardFooter = () => {
   });
 
   if (shouldHideFooter) {
-    return null; // Do not render Footer
+    return null;
   }
 
   const currentYear = new Date().getFullYear();
@@ -49,161 +47,59 @@ const DashboardFooter = () => {
   const isOperational =
     !isError && !isLoading && data?.status === "operational";
 
-  const socialLinks = [
-    {
-      name: "Twitter",
-      href: "https://twitter.com/movrr",
-      icon: FaXTwitter,
-      color: "hover:text-foreground",
-    },
-    {
-      name: "LinkedIn",
-      href: "https://linkedin.com/company/movrr",
-      icon: FaLinkedin,
-      color: "hover:text-foreground",
-    },
-    {
-      name: "Facebook",
-      href: "https://facebook.com/movrr",
-      icon: FaFacebook,
-      color: "hover:text-foreground",
-    },
-  ];
-
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3 },
-    },
-  };
-
   return (
-    <motion.footer
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <div className="w-full gradient-bg px-10 pb-3 mx-auto">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* Copyright and made with love */}
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground"
-          >
-            <span>© {currentYear} MOVRR Media</span>
-            <span className="hidden md:inline">•</span>
-            <span>All rights reserved</span>
-            <span className="hidden md:inline">•</span>
-            <div className="flex items-center gap-x-1">
-              <span>Made with</span>
-              <Heart className="w-4 h-4 text-primary fill-current" />
-              <span>in The Netherlands</span>
-            </div>
-          </motion.div>
+    <footer className="flex h-16 shrink-0 items-center border-t border-border bg-background px-6">
+      <div className="flex w-full flex-col items-center justify-between gap-2 text-xs text-muted-foreground sm:flex-row">
+        <span>&copy; {currentYear} MOVRR Media</span>
 
-          {/* Right side content */}
-          <div className="flex flex-col sm:flex-row items-center gap-6">
-            {/* Social Links */}
-            <motion.div
-              variants={itemVariants}
-              className="flex items-center gap-4"
-            >
-              <span className="text-sm text-muted-foreground hidden sm:inline">
-                Follow us:
-              </span>
-              <div className="flex gap-3">
-                {socialLinks.map((social) => (
-                  <motion.a
-                    key={social.name}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{
-                      scale: 1.15,
-                      transition: {
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 10,
-                      },
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="text-xs font-mono">
+            v{settingsData?.values?.general?.appVersion ?? "0.1.0"}
+          </Badge>
+          <div className="flex items-center gap-2">
+            <div className="relative flex h-2 w-2 shrink-0 items-center justify-center">
+              {isOperational && (
+                <>
+                  <motion.span
+                    className={`absolute inset-0 rounded-full ${dotColor}`}
+                    animate={{ scale: [1, 2.75], opacity: [0.6, 0] }}
+                    transition={{
+                      duration: 1.05,
+                      repeat: Infinity,
+                      repeatDelay: 1.45,
+                      ease: pingEase,
                     }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`p-2 text-muted-foreground ${social.color} transition-colors`}
-                    aria-label={social.name}
-                  >
-                    <social.icon className="w-5 h-5" />
-                  </motion.a>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Version Info */}
-            <motion.div
-              variants={itemVariants}
-              className="flex items-center gap-3"
-            >
-              <Badge variant="outline" className="text-xs font-mono">
-                v{settingsData?.values?.general?.appVersion ?? "0.1.0"}
-              </Badge>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <div className="relative flex h-2 w-2 shrink-0 items-center justify-center">
-                  {isOperational && (
-                    <>
-                      <motion.span
-                        className={`absolute inset-0 rounded-full ${dotColor}`}
-                        animate={{ scale: [1, 2.75], opacity: [0.6, 0] }}
-                        transition={{
-                          duration: 1.05,
-                          repeat: Infinity,
-                          repeatDelay: 1.45,
-                          ease: pingEase,
-                        }}
-                      />
-                      <motion.span
-                        className={`absolute inset-0 rounded-full ${dotColor}`}
-                        animate={{ scale: [1, 2.1], opacity: [0.35, 0] }}
-                        transition={{
-                          duration: 0.85,
-                          repeat: Infinity,
-                          repeatDelay: 1.65,
-                          delay: 0.35,
-                          ease: pingEase,
-                        }}
-                      />
-                    </>
-                  )}
-                  <span
-                    className={`relative block h-2 w-2 rounded-full ${dotColor}`}
                   />
-                </div>
-                <span>
-                  {isError
-                    ? "Status unavailable"
-                    : isLoading
-                      ? "Checking status"
-                      : data?.status === "operational"
-                        ? "All systems operational"
-                        : "Degraded service"}
-                </span>
-              </div>
-            </motion.div>
+                  <motion.span
+                    className={`absolute inset-0 rounded-full ${dotColor}`}
+                    animate={{ scale: [1, 2.1], opacity: [0.35, 0] }}
+                    transition={{
+                      duration: 0.85,
+                      repeat: Infinity,
+                      repeatDelay: 1.65,
+                      delay: 0.35,
+                      ease: pingEase,
+                    }}
+                  />
+                </>
+              )}
+              <span
+                className={`relative block h-2 w-2 rounded-full ${dotColor}`}
+              />
+            </div>
+            <span>
+              {isError
+                ? "Status unavailable"
+                : isLoading
+                  ? "Checking status"
+                  : data?.status === "operational"
+                    ? "All systems operational"
+                    : "Degraded service"}
+            </span>
           </div>
         </div>
       </div>
-    </motion.footer>
+    </footer>
   );
 };
 
