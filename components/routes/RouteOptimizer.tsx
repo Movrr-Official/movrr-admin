@@ -865,24 +865,14 @@ export function RouteOptimizer({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-4 rounded-lg border ${
-              optimizationSucceeded
-                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-                : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
-            }`}
+            className={`p-4 rounded-lg border ${ optimizationSucceeded ? "bg-success/12 dark:bg-success border-success/20 dark:border-success/20" : "bg-warning/15 dark:bg-warning/15 border-warning/20 dark:border-warning/20" }`}
           >
             <div className="flex items-center mb-2">
               <TrendingUp
-                className={`h-4 w-4 mr-2 ${
-                  optimizationSucceeded ? "text-green-600" : "text-amber-600"
-                }`}
+                className={`h-4 w-4 mr-2 ${ optimizationSucceeded ? "text-success" : "text-warning" }`}
               />
               <span
-                className={`text-sm font-medium ${
-                  optimizationSucceeded
-                    ? "text-green-800 dark:text-green-200"
-                    : "text-amber-800 dark:text-amber-200"
-                }`}
+                className={`text-sm font-medium ${ optimizationSucceeded ? "text-success dark:text-success" : "text-warning dark:text-warning" }`}
               >
                 {optimizationSucceeded
                   ? "Optimization Complete"
@@ -891,7 +881,7 @@ export function RouteOptimizer({
             </div>
 
             {optimizationSucceeded && (
-              <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
+              <div className="text-xs text-success dark:text-success space-y-1">
                 <p>
                   • Impression proxy (estimate):{" "}
                   {candidateRoute?.score?.impressions_estimate ?? "—"}
@@ -914,7 +904,7 @@ export function RouteOptimizer({
                 </p>
                 <p>• Trace ID: {candidateRoute?.trace_id ?? "—"}</p>
                 {candidateRoute?.score?.is_estimate && (
-                  <p className="text-xs text-green-600 dark:text-green-400 italic">
+                  <p className="text-xs text-success dark:text-success italic">
                     * Impression figure is a distance-based heuristic estimate, not a model prediction.
                   </p>
                 )}
@@ -930,11 +920,11 @@ export function RouteOptimizer({
 
             {optimizationSucceeded && (
               <div className="mt-4 flex flex-wrap items-center gap-3 text-xs">
-                <div className="rounded border bg-white/70 dark:bg-slate-800/70 px-3 py-2">
+                <div className="rounded border bg-card/70 dark:bg-card/70 px-3 py-2">
                   Routes evaluated:{" "}
                   {optimizationInsights?.existingRoutes.count ?? "—"}
                 </div>
-                <div className="rounded border bg-white/70 dark:bg-slate-800/70 px-3 py-2">
+                <div className="rounded border bg-card/70 dark:bg-card/70 px-3 py-2">
                   Total changes:{" "}
                   {optimizationInsights?.newRoute
                     ? optimizationInsights.newRoute.addedStops.length +
@@ -942,7 +932,7 @@ export function RouteOptimizer({
                       optimizationInsights.newRoute.reorderedStops
                     : "—"}
                 </div>
-                <div className="rounded border bg-white/70 dark:bg-slate-800/70 px-3 py-2">
+                <div className="rounded border bg-card/70 dark:bg-card/70 px-3 py-2">
                   Zones missing:{" "}
                   {optimizationInsights
                     ? optimizationInsights.existingRoutes.campaignZones
@@ -977,7 +967,7 @@ export function RouteOptimizer({
 
             {/* Admin review: show candidate if available */}
             {optimizationSucceeded && candidateRoute && (
-              <div className="mt-4 p-3 bg-white dark:bg-slate-800 rounded border">
+              <div className="mt-4 p-3 bg-white dark:bg-card rounded border">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-medium">
                     Proposed Route (prototype)
@@ -1107,7 +1097,7 @@ export function RouteOptimizer({
             )}
             {optimizeError && (
               <div className="mt-3">
-                <div className="text-sm text-red-700 dark:text-red-300">
+                <div className="text-sm text-destructive dark:text-destructive">
                   {serviceUnavailable ? (
                     <>
                       Route optimization service is temporarily unavailable.
@@ -1140,7 +1130,7 @@ export function RouteOptimizer({
             )}
             {/* Audit results */}
             {auditResult && (
-              <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-900 rounded border">
+              <div className="mt-3 p-3 bg-muted dark:bg-background rounded border">
                 <div className="text-sm font-medium mb-2">
                   Previous-token audit
                 </div>
@@ -1151,7 +1141,7 @@ export function RouteOptimizer({
                   {auditResult.entries.map((e: any, i: number) => (
                     <div
                       key={i}
-                      className="p-2 bg-white dark:bg-slate-800 rounded border"
+                      className="p-2 bg-white dark:bg-card rounded border"
                     >
                       <pre className="whitespace-pre-wrap text-xs">
                         {JSON.stringify(e, null, 2)}

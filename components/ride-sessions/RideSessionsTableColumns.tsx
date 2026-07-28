@@ -215,7 +215,7 @@ export function getRideSessionsTableColumns({
       header: "Points",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Coins className="h-3.5 w-3.5 text-amber-600" />
+          <Coins className="h-3.5 w-3.5 text-warning" />
           <span className="text-sm font-semibold">
             +{row.original.pointsAwarded.toLocaleString()}
           </span>
@@ -249,7 +249,7 @@ export function getRideSessionsTableColumns({
             {bikeType ? (
               <div className="flex items-center gap-1.5">
                 {bikeType === "e_bike" ? (
-                  <Zap className="h-3 w-3 text-violet-500" />
+                  <Zap className="h-3 w-3 text-secondary-foreground" />
                 ) : (
                   <Bike className="h-3 w-3 text-muted-foreground" />
                 )}
@@ -269,10 +269,10 @@ export function getRideSessionsTableColumns({
             {rideQualityPercent != null && (
               <div className="flex items-center gap-1">
                 <Gauge
-                  className={`h-3 w-3 ${rideQualityPercent >= 70 ? "text-green-600" : rideQualityPercent >= 40 ? "text-amber-500" : "text-red-500"}`}
+                  className={`h-3 w-3 ${rideQualityPercent >= 70 ? "text-success" : rideQualityPercent >= 40 ? "text-warning" : "text-destructive"}`}
                 />
                 <span
-                  className={`text-xs font-medium ${rideQualityPercent >= 70 ? "text-green-600" : rideQualityPercent >= 40 ? "text-amber-500" : "text-red-500"}`}
+                  className={`text-xs font-medium ${rideQualityPercent >= 70 ? "text-success" : rideQualityPercent >= 40 ? "text-warning" : "text-destructive"}`}
                 >
                   {rideQualityPercent}%
                 </span>
@@ -314,7 +314,7 @@ export function getRideSessionsTableColumns({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="border-border backdrop-blur-xl"
+              className="border-border"
             >
               {onView && (
                 <DropdownMenuItem onClick={() => onView(session)}>

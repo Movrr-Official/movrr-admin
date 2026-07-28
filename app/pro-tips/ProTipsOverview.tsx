@@ -27,7 +27,7 @@ export default function ProTipsOverview() {
     Object.entries(categoryCounts).sort(([, a], [, b]) => b - a)[0]?.[0];
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
         {/* Header */}
         <div>

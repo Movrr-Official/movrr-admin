@@ -53,7 +53,7 @@ export default function RecentActivityPage() {
   const actionOptions = auditActionSchema.options;
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
         <PageHeader
           title="Recent activity"
@@ -121,11 +121,7 @@ export default function RecentActivityPage() {
                 {pageItems.map((log) => (
                   <div
                     key={log.id}
-                    className={`rounded-xl border px-4 py-3 ${
-                      isAdminDashboardSessionLog(log)
-                        ? "border-info/30 bg-info/5"
-                        : "border-border/60 bg-background"
-                    }`}
+                    className={`rounded-xl border px-4 py-3 ${ isAdminDashboardSessionLog(log) ? "border-info/30 bg-info/5" : "border-border/60 bg-background" }`}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="space-y-1">

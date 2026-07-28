@@ -69,21 +69,21 @@ export function StatusUpdateDialog({
       label: "Pending",
       icon: Clock,
       color:
-        "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300",
+        "bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning",
     },
     {
       value: "approved" as const,
       label: "Approve",
       icon: CheckCircle,
       color:
-        "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300",
+        "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success",
     },
     {
       value: "rejected" as const,
       label: "Reject",
       icon: XCircle,
       color:
-        "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300",
+        "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive dark:text-destructive",
     },
   ];
 

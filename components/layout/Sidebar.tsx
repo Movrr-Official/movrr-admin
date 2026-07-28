@@ -381,7 +381,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
             variant="ghost"
             size="sm"
             onClick={() => dispatch(toggleSidebar())}
-            className="hover:bg-muted hover:text-black p-1"
+            className="hover:bg-muted hover:text-foreground p-1"
             aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarOpen ? (

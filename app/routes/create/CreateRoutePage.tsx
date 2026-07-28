@@ -391,7 +391,7 @@ export default function CreateRoutePage() {
   };
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="max-w-5xl mx-auto space-y-6">
         <PageHeader
           title="Create Route"

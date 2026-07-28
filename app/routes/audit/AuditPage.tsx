@@ -55,7 +55,7 @@ export default function AuditPage() {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded border p-4">
+      <div className="bg-white dark:bg-card rounded border p-4">
         {!result && (
           <div className="text-sm text-muted-foreground">
             No data yet. Click Refresh.
@@ -63,7 +63,7 @@ export default function AuditPage() {
         )}
 
         {result && result.error && (
-          <div className="text-sm text-red-600">
+          <div className="text-sm text-destructive">
             Error: {String(result.error)}
           </div>
         )}
@@ -86,7 +86,7 @@ export default function AuditPage() {
                 .map((e: any, i: number) => (
                   <div
                     key={i}
-                    className="p-2 border rounded bg-slate-50 dark:bg-slate-900 text-xs"
+                    className="p-2 border rounded bg-muted dark:bg-background text-xs"
                   >
                     <pre className="whitespace-pre-wrap">
                       {JSON.stringify(e, null, 2)}

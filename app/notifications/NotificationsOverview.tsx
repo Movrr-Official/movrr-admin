@@ -174,7 +174,7 @@ export default function NotificationsOverview() {
   };
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <StatsCard

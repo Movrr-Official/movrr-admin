@@ -54,7 +54,7 @@ export default function OptimizationResultsPage() {
 
   if (!results) {
     return (
-      <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+      <div className="min-h-screen page-canvas">
         <Card className="border-border max-w-3xl mx-auto">
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
@@ -87,7 +87,7 @@ export default function OptimizationResultsPage() {
     : [];
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="max-w-5xl mx-auto space-y-6">
         <Card className="border-border">
           <CardHeader className="flex flex-col gap-2">
@@ -109,13 +109,13 @@ export default function OptimizationResultsPage() {
             </div>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded border bg-white/70 dark:bg-slate-800/70 p-3">
+            <div className="rounded border bg-card/70 dark:bg-card/70 p-3">
               <div className="text-sm text-muted-foreground">Impressions</div>
               <div className="text-2xl font-semibold">
                 {route?.score?.impressions_estimate ?? "—"}
               </div>
             </div>
-            <div className="rounded border bg-white/70 dark:bg-slate-800/70 p-3">
+            <div className="rounded border bg-card/70 dark:bg-card/70 p-3">
               <div className="text-sm text-muted-foreground">Distance</div>
               <div className="text-2xl font-semibold">
                 {typeof route?.metrics?.approx_distance_units === "number"
@@ -123,13 +123,13 @@ export default function OptimizationResultsPage() {
                   : "—"}
               </div>
             </div>
-            <div className="rounded border bg-white/70 dark:bg-slate-800/70 p-3">
+            <div className="rounded border bg-card/70 dark:bg-card/70 p-3">
               <div className="text-sm text-muted-foreground">Stops</div>
               <div className="text-2xl font-semibold">
                 {route?.metrics?.locations_count ?? "—"}
               </div>
             </div>
-            <div className="rounded border bg-white/70 dark:bg-slate-800/70 p-3">
+            <div className="rounded border bg-card/70 dark:bg-card/70 p-3">
               <div className="text-sm text-muted-foreground">Trace ID</div>
               <div className="text-base font-medium break-all">
                 {route?.trace_id ?? "—"}
@@ -204,7 +204,7 @@ export default function OptimizationResultsPage() {
                   stops.
                 </div>
                 {insights?.existingRoutes.outOfZoneStops?.length ? (
-                  <div className="text-amber-700 dark:text-amber-300">
+                  <div className="text-warning dark:text-warning">
                     {insights.existingRoutes.outOfZoneStops.length} stop(s) fall
                     outside campaign zones.
                   </div>
@@ -224,7 +224,7 @@ export default function OptimizationResultsPage() {
                   </div>
                 )}
                 {insights?.newRoute?.outOfZoneStops?.length ? (
-                  <div className="text-amber-700 dark:text-amber-300">
+                  <div className="text-warning dark:text-warning">
                     {insights.newRoute.outOfZoneStops.length} stop(s) fall
                     outside campaign zones.
                   </div>

@@ -66,9 +66,9 @@ const allFormatOptions = [
     label: "CSV",
     description: "Comma-separated values for spreadsheets",
     icon: FileText,
-    color: "text-green-600",
-    bgColor: "bg-green-50 dark:bg-green-950",
-    borderColor: "border-green-200 dark:border-green-800",
+    color: "text-success",
+    bgColor: "bg-success/12 dark:bg-success",
+    borderColor: "border-success/20 dark:border-success/20",
   },
   {
     value: "xlsx" as const,
@@ -76,26 +76,26 @@ const allFormatOptions = [
     description: "Microsoft Excel format with styling",
     icon: FileSpreadsheet,
     color: "text-primary",
-    bgColor: "bg-blue-50 dark:bg-blue-950",
-    borderColor: "border-blue-200 dark:border-blue-800",
+    bgColor: "bg-primary/12 dark:bg-primary",
+    borderColor: "border-primary/20 dark:border-primary/20",
   },
   {
     value: "pdf" as const,
     label: "PDF",
     description: "Formatted document for sharing",
     icon: FileImage,
-    color: "text-red-600",
-    bgColor: "bg-red-50 dark:bg-red-950",
-    borderColor: "border-red-200 dark:border-red-800",
+    color: "text-destructive",
+    bgColor: "bg-destructive/10 dark:bg-destructive",
+    borderColor: "border-destructive/20 dark:border-destructive/20",
   },
   {
     value: "json" as const,
     label: "JSON",
     description: "Structured data for developers",
     icon: Database,
-    color: "text-purple-600",
+    color: "text-secondary-foreground",
     bgColor: "bg-secondary",
-    borderColor: "border-purple-200 dark:border-purple-800",
+    borderColor: "border-border dark:border-border",
   },
 ];
 
@@ -225,11 +225,11 @@ export function ExportDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col border-border backdrop-blur-xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col border-border p-0 overflow-hidden">
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-primary/15 to-secondary/10 rounded-3xl backdrop-blur-sm border border-primary/20 shadow-lg">
+              <div className="p-4 bg-gradient-to-br from-primary/15 to-secondary/10 rounded-3xl border border-primary/20 shadow-lg">
                 <Download className="h-8 w-8 text-primary" />
               </div>
               <div>
@@ -242,7 +242,7 @@ export function ExportDialog({
               </div>
             </div>
 
-            <div className="flex items-center gap-4 p-4 bg-card/60 backdrop-blur-sm rounded-2xl border border-border/50">
+            <div className="flex items-center gap-4 p-4 bg-card/60 rounded-2xl border border-border/50">
               <div className="flex items-center gap-2">
                 <Database className="h-5 w-5 text-primary" />
                 <span className="font-semibold text-foreground">
@@ -338,7 +338,7 @@ export function ExportDialog({
                       value={filename}
                       onChange={(e) => setFilename(e.target.value)}
                       placeholder="Enter filename"
-                      className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                      className="rounded-xl border-border/50 bg-background/60 font-medium"
                     />
                   </div>
 
@@ -392,7 +392,7 @@ export function ExportDialog({
                             start: e.target.value,
                           }))
                         }
-                        className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                        className="rounded-xl border-border/50 bg-background/60 font-medium"
                       />
                     </div>
                     <div className="space-y-2">
@@ -412,7 +412,7 @@ export function ExportDialog({
                             end: e.target.value,
                           }))
                         }
-                        className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                        className="rounded-xl border-border/50 bg-background/60 font-medium"
                       />
                     </div>
                   </div>

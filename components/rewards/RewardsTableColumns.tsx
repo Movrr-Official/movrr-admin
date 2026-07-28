@@ -173,14 +173,12 @@ export function getRewardsTableColumns({
         return (
           <div className="flex items-center gap-2">
             {isPositive ? (
-              <TrendingUp className="h-4 w-4 text-green-600" />
+              <TrendingUp className="h-4 w-4 text-success" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-600" />
+              <TrendingDown className="h-4 w-4 text-destructive" />
             )}
             <span
-              className={`text-sm font-semibold ${
-                isPositive ? "text-green-600" : "text-red-600"
-              }`}
+              className={`text-sm font-semibold ${ isPositive ? "text-success" : "text-destructive" }`}
             >
               {isPositive ? "+" : ""}
               {points.toLocaleString()}
@@ -196,7 +194,7 @@ export function getRewardsTableColumns({
         const balance = row.original.balanceAfter;
         return (
           <div className="flex items-center gap-2">
-            <Coins className="h-4 w-4 text-amber-600" />
+            <Coins className="h-4 w-4 text-warning" />
             <span className="text-sm font-medium">
               {balance.toLocaleString()}
             </span>
@@ -261,7 +259,7 @@ export function getRewardsTableColumns({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="border-border backdrop-blur-xl"
+              className="border-border"
             >
               {onView && (
                 <DropdownMenuItem onClick={() => onView(transaction)}>

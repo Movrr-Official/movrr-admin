@@ -203,7 +203,7 @@ export default function CreateUserPage() {
   const isRiderRole = watchedValues.role === "rider";
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <PageHeader
@@ -236,29 +236,19 @@ export default function CreateUserPage() {
                 <div key={step.key} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
                     <div
-                      className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
-                        isActive
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : isCompleted
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-muted bg-muted text-muted-foreground"
-                      }`}
+                      className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${ isActive ? "border-primary bg-primary text-primary-foreground" : isCompleted ? "border-primary bg-primary/10 text-primary" : "border-muted bg-muted text-muted-foreground" }`}
                     >
                       <StepIcon className="h-5 w-5" />
                     </div>
                     <span
-                      className={`mt-2 text-xs font-medium ${
-                        isActive ? "text-primary" : "text-muted-foreground"
-                      }`}
+                      className={`mt-2 text-xs font-medium ${ isActive ? "text-primary" : "text-muted-foreground" }`}
                     >
                       {step.label}
                     </span>
                   </div>
                   {index < 2 && (
                     <div
-                      className={`flex-1 h-0.5 mx-4 transition-all ${
-                        isCompleted ? "bg-primary" : "bg-muted"
-                      }`}
+                      className={`flex-1 h-0.5 mx-4 transition-all ${ isCompleted ? "bg-primary" : "bg-muted" }`}
                     />
                   )}
                 </div>
@@ -299,7 +289,7 @@ export default function CreateUserPage() {
                           <FormControl>
                             <Input
                               placeholder="Enter full name"
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                              className="rounded-xl border-border/50 bg-background/60"
                               {...field}
                             />
                           </FormControl>
@@ -320,7 +310,7 @@ export default function CreateUserPage() {
                             <Input
                               type="email"
                               placeholder="user@example.com"
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                              className="rounded-xl border-border/50 bg-background/60"
                               {...field}
                             />
                           </FormControl>
@@ -343,7 +333,7 @@ export default function CreateUserPage() {
                             <Input
                               type="tel"
                               placeholder="+31 6 12345678"
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                              className="rounded-xl border-border/50 bg-background/60"
                               {...field}
                             />
                           </FormControl>
@@ -365,7 +355,7 @@ export default function CreateUserPage() {
                           <FormControl>
                             <Input
                               placeholder="Company or organization name"
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                              className="rounded-xl border-border/50 bg-background/60"
                               {...field}
                             />
                           </FormControl>
@@ -390,7 +380,7 @@ export default function CreateUserPage() {
                             <FormControl>
                               <Input
                                 placeholder="Amsterdam"
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                                 {...field}
                               />
                             </FormControl>
@@ -412,7 +402,7 @@ export default function CreateUserPage() {
                             <FormControl>
                               <Input
                                 placeholder="Netherlands"
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                                 {...field}
                               />
                             </FormControl>
@@ -461,7 +451,7 @@ export default function CreateUserPage() {
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                              <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
                                 <SelectValue placeholder="Select role" />
                               </SelectTrigger>
                             </FormControl>
@@ -551,7 +541,7 @@ export default function CreateUserPage() {
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                              <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
                                 <SelectValue placeholder="Select status" />
                               </SelectTrigger>
                             </FormControl>
@@ -608,7 +598,7 @@ export default function CreateUserPage() {
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                              <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
                                 <SelectValue placeholder="Select language" />
                               </SelectTrigger>
                             </FormControl>
@@ -717,7 +707,7 @@ export default function CreateUserPage() {
                         <FormControl>
                           <Textarea
                             placeholder="Add any notes about this user account..."
-                            className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm min-h-[100px] resize-none"
+                            className="rounded-xl border-border/50 bg-background/60 min-h-[100px] resize-none"
                             {...field}
                           />
                         </FormControl>
@@ -796,13 +786,7 @@ export default function CreateUserPage() {
                       </p>
                       <Badge
                         variant="outline"
-                        className={`capitalize ${
-                          watchedValues.status === "active"
-                            ? "bg-success/10 text-success border-success/30"
-                            : watchedValues.status === "pending"
-                              ? "bg-warning/10 text-warning border-warning/30"
-                              : "bg-muted text-muted-foreground border-border"
-                        }`}
+                        className={`capitalize ${ watchedValues.status === "active" ? "bg-success/10 text-success border-success/30" : watchedValues.status === "pending" ? "bg-warning/10 text-warning border-warning/30" : "bg-muted text-muted-foreground border-border" }`}
                       >
                         {watchedValues.status || "—"}
                       </Badge>

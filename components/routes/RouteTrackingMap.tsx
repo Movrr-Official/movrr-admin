@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { NavigationControl } from "react-map-gl/maplibre";
 import { NEXT_PUBLIC_MAP_STYLE_URL } from "@/lib/env";
+import { MOVRR_MAP } from "@/lib/movrr-map-colors";
 
 const DEFAULT_CENTER = { latitude: 52.0705, longitude: 4.3007 };
 
@@ -69,7 +70,7 @@ export function RouteTrackingMap({ points }: { points: any[] }) {
     id: "route-path",
     type: "line",
     paint: {
-      "line-color": "#22c55e",
+      "line-color": MOVRR_MAP.signal,
       "line-width": 4,
     },
   };
@@ -115,7 +116,7 @@ export function RouteTrackingMap({ points }: { points: any[] }) {
           )}
           {endPoint && (
             <Marker latitude={endPoint.lat} longitude={endPoint.lng}>
-              <div className="h-3 w-3 rounded-full bg-red-500 shadow" />
+              <div className="h-3 w-3 rounded-full bg-destructive shadow" />
             </Marker>
           )}
         </MapGL>

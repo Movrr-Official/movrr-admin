@@ -253,7 +253,7 @@ export const getCampaignsTableColumns = ({
             to {format(endDate, "MMM d, yyyy")}
           </div>
           {isActive && (
-            <Badge className="w-fit bg-green-50 text-green-700 border-green-200 text-xs dark:bg-green-950 dark:text-green-300">
+            <Badge className="w-fit bg-success/12 text-success border-success/20 text-xs dark:bg-success dark:text-success">
               Active
             </Badge>
           )}

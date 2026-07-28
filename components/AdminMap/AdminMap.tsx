@@ -1034,7 +1034,7 @@ export function AdminMap({
                 setReplayPlaying(false);
                 setReplayIdx(Number(e.target.value));
               }}
-              className="w-48 h-1 accent-indigo-500"
+              className="w-48 h-1 accent-primary"
             />
 
             <span className="text-[10px] text-muted-foreground tabular-nums w-28">

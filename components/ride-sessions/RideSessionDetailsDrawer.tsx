@@ -219,12 +219,12 @@ export function RideSessionDetailsDrawer({
           <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
             <div className="flex items-center gap-3">
               {session.earningMode === "standard_ride" ? (
-                <div className="p-2 bg-sky-50 rounded-lg dark:bg-sky-950">
-                  <Bike className="h-5 w-5 text-sky-600 dark:text-sky-300" />
+                <div className="p-2 bg-primary/12 rounded-lg dark:bg-primary">
+                  <Bike className="h-5 w-5 text-primary dark:text-primary" />
                 </div>
               ) : (
-                <div className="p-2 bg-violet-50 rounded-lg dark:bg-violet-950">
-                  <Megaphone className="h-5 w-5 text-violet-600 dark:text-violet-300" />
+                <div className="p-2 bg-secondary rounded-lg dark:bg-secondary">
+                  <Megaphone className="h-5 w-5 text-secondary-foreground dark:text-secondary-foreground" />
                 </div>
               )}
               <div>
@@ -256,10 +256,10 @@ export function RideSessionDetailsDrawer({
             </div>
             <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
               <div className="flex items-center gap-2 mb-1">
-                <Coins className="h-4 w-4 text-amber-600" />
+                <Coins className="h-4 w-4 text-warning" />
                 <p className="text-xs text-muted-foreground">Points Awarded</p>
               </div>
-              <p className="text-2xl font-bold text-amber-600">
+              <p className="text-2xl font-bold text-warning">
                 +{session.pointsAwarded.toLocaleString()}
               </p>
             </div>
@@ -287,12 +287,12 @@ export function RideSessionDetailsDrawer({
               <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
                 <div className="flex items-center gap-2 mb-1">
                   <Gauge
-                    className={`h-4 w-4 ${session.rideQualityPercent >= 70 ? "text-green-600" : session.rideQualityPercent >= 40 ? "text-amber-600" : "text-red-600"}`}
+                    className={`h-4 w-4 ${session.rideQualityPercent >= 70 ? "text-success" : session.rideQualityPercent >= 40 ? "text-warning" : "text-destructive"}`}
                   />
                   <p className="text-xs text-muted-foreground">Quality Score</p>
                 </div>
                 <p
-                  className={`text-2xl font-bold ${session.rideQualityPercent >= 70 ? "text-green-600" : session.rideQualityPercent >= 40 ? "text-amber-600" : "text-red-600"}`}
+                  className={`text-2xl font-bold ${session.rideQualityPercent >= 70 ? "text-success" : session.rideQualityPercent >= 40 ? "text-warning" : "text-destructive"}`}
                 >
                   {session.rideQualityPercent}%
                 </p>
@@ -325,7 +325,7 @@ export function RideSessionDetailsDrawer({
           <Card className="border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Receipt className="h-4 w-4 text-amber-600" />
+                <Receipt className="h-4 w-4 text-warning" />
                 Reward Provenance
               </CardTitle>
             </CardHeader>
@@ -360,11 +360,7 @@ export function RideSessionDetailsDrawer({
                           <div className="flex items-center gap-2">
                             {hasChain && (
                               <span
-                                className={`text-xs font-medium px-1.5 py-0.5 rounded ${
-                                  clean
-                                    ? "bg-green-500/10 text-green-600"
-                                    : "bg-amber-500/10 text-amber-600"
-                                }`}
+                                className={`text-xs font-medium px-1.5 py-0.5 rounded ${ clean ? "bg-success text-success" : "bg-warning/10 text-warning" }`}
                                 title={
                                   clean
                                     ? "Payout chain verified"
@@ -374,7 +370,7 @@ export function RideSessionDetailsDrawer({
                                 {clean ? "✓ Verified" : "⚠ Inconsistency"}
                               </span>
                             )}
-                            <span className="font-semibold text-amber-600 tabular-nums">
+                            <span className="font-semibold text-warning tabular-nums">
                               {tx.points > 0 ? "+" : ""}
                               {tx.points.toLocaleString()} pts
                             </span>
@@ -392,7 +388,7 @@ export function RideSessionDetailsDrawer({
                                 <span
                                   className={
                                     step.status === "inconsistent"
-                                      ? "text-amber-600"
+                                      ? "text-warning"
                                       : "text-muted-foreground"
                                   }
                                 >
@@ -404,13 +400,7 @@ export function RideSessionDetailsDrawer({
                                   )}
                                 </span>
                                 <span
-                                  className={`tabular-nums ${
-                                    step.status === "inconsistent"
-                                      ? "text-amber-600 font-medium"
-                                      : step.status === "missing"
-                                        ? "text-muted-foreground/50"
-                                        : ""
-                                  }`}
+                                  className={`tabular-nums ${ step.status === "inconsistent" ? "text-warning font-medium" : step.status === "missing" ? "text-muted-foreground/50" : "" }`}
                                 >
                                   {step.value != null
                                     ? `${step.value} pts`
@@ -442,7 +432,7 @@ export function RideSessionDetailsDrawer({
                                       entry.label ??
                                       entry.type}
                                   </span>
-                                  <span className="font-medium tabular-nums text-amber-600">
+                                  <span className="font-medium tabular-nums text-warning">
                                     {entry.points != null
                                       ? `+${entry.points} pts`
                                       : entry.multiplier != null
@@ -455,7 +445,7 @@ export function RideSessionDetailsDrawer({
                           )}
 
                         {tx.wasCapped && (
-                          <p className="text-xs text-amber-600 flex items-center gap-1 pl-3">
+                          <p className="text-xs text-warning flex items-center gap-1 pl-3">
                             <TriangleAlert className="h-3 w-3 shrink-0" />
                             Daily cap applied
                           </p>
@@ -466,7 +456,7 @@ export function RideSessionDetailsDrawer({
                   {rewardTransactions.length > 1 && (
                     <div className="flex justify-between text-sm font-semibold pt-2 border-t border-border/40">
                       <span>Total</span>
-                      <span className="text-amber-600 tabular-nums">
+                      <span className="text-warning tabular-nums">
                         +
                         {rewardTransactions
                           .reduce((s, tx) => s + tx.points, 0)
@@ -546,7 +536,7 @@ export function RideSessionDetailsDrawer({
             <Card className="border-border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                  <AlertCircle className="h-4 w-4 text-warning" />
                   Verification Details
                   {session.verificationSource && (
                     <span className="ml-auto">
@@ -604,14 +594,7 @@ export function RideSessionDetailsDrawer({
                           Peak Speed Detected
                         </span>
                         <span
-                          className={`font-medium tabular-nums ${
-                            session.machineVerification.maxAllowedSpeedKmh !=
-                              null &&
-                            session.machineVerification.detectedMaxSpeedKmh >
-                              session.machineVerification.maxAllowedSpeedKmh
-                              ? "text-red-600 dark:text-red-400"
-                              : ""
-                          }`}
+                          className={`font-medium tabular-nums ${ session.machineVerification.maxAllowedSpeedKmh != null && session.machineVerification.detectedMaxSpeedKmh > session.machineVerification.maxAllowedSpeedKmh ? "text-destructive" : "" }`}
                         >
                           {session.machineVerification.detectedMaxSpeedKmh.toFixed(
                             1,
@@ -688,14 +671,14 @@ export function RideSessionDetailsDrawer({
                 {session.complianceScore != null && (
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
                     <Gauge
-                      className={`h-5 w-5 ${session.complianceScore >= 80 ? "text-green-600" : session.complianceScore >= 50 ? "text-amber-600" : "text-red-600"}`}
+                      className={`h-5 w-5 ${session.complianceScore >= 80 ? "text-success" : session.complianceScore >= 50 ? "text-warning" : "text-destructive"}`}
                     />
                     <div>
                       <p className="text-xs text-muted-foreground">
                         Compliance Score
                       </p>
                       <p
-                        className={`text-lg font-bold ${session.complianceScore >= 80 ? "text-green-600" : session.complianceScore >= 50 ? "text-amber-600" : "text-red-600"}`}
+                        className={`text-lg font-bold ${session.complianceScore >= 80 ? "text-success" : session.complianceScore >= 50 ? "text-warning" : "text-destructive"}`}
                       >
                         {session.complianceScore}%
                       </p>
@@ -706,7 +689,7 @@ export function RideSessionDetailsDrawer({
                           <p className="text-xs text-muted-foreground">
                             Bonus Applied
                           </p>
-                          <p className="text-sm font-semibold text-amber-600">
+                          <p className="text-sm font-semibold text-warning">
                             +{session.bonusApplied} pts
                           </p>
                         </div>
@@ -731,7 +714,7 @@ export function RideSessionDetailsDrawer({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-green-700 border-green-300 hover:bg-green-50 dark:hover:bg-green-950 dark:text-green-400 dark:border-green-800"
+                    className="text-success border-success/20 hover:bg-success/12 dark:hover:bg-success dark:text-success dark:border-success/20"
                     disabled={!!actionLoading}
                     onClick={() => handleAction("approve")}
                   >
@@ -747,7 +730,7 @@ export function RideSessionDetailsDrawer({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-red-700 border-red-300 hover:bg-red-50 dark:hover:bg-red-950 dark:text-red-400 dark:border-red-800"
+                    className="text-destructive border-destructive/20 hover:bg-destructive/10 dark:hover:bg-destructive dark:text-destructive dark:border-destructive/20"
                     disabled={!!actionLoading}
                     onClick={() => handleAction("reject")}
                   >
@@ -763,7 +746,7 @@ export function RideSessionDetailsDrawer({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-amber-700 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950 dark:text-amber-400 dark:border-amber-800"
+                    className="text-warning border-warning/20 hover:bg-warning/15 dark:hover:bg-warning/15 dark:text-warning dark:border-warning/20"
                     disabled={!!actionLoading}
                     onClick={() => handleAction("escalate")}
                   >
@@ -788,7 +771,7 @@ export function RideSessionDetailsDrawer({
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Enter reason or notes…"
                     rows={2}
-                    className="resize-none text-sm rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                    className="resize-none text-sm rounded-xl border-border/50 bg-background/60"
                   />
                   <div className="flex gap-2">
                     <Button

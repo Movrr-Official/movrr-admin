@@ -192,7 +192,7 @@ export function CampaignCard({
                 Activate
               </DropdownMenuItem>
             ) : null}
-            <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+            <DropdownMenuItem onClick={handleDelete} className="text-destructive">
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
             </DropdownMenuItem>

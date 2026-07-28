@@ -99,7 +99,7 @@ export function SettingsAuditPanel({ entries }: Props) {
                             <span className="shrink-0 text-muted-foreground">
                               →
                             </span>
-                            <span className="truncate rounded bg-green-500/10 px-1.5 py-0.5 font-mono text-green-600 dark:text-green-400">
+                            <span className="truncate rounded bg-success px-1.5 py-0.5 font-mono text-success dark:text-success">
                               {to}
                             </span>
                           </span>

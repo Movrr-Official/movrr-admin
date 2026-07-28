@@ -122,11 +122,7 @@ export function AdminMfaChallengeForm({
                 <button
                   key={factor.id}
                   type="button"
-                  className={`flex items-center justify-between rounded-lg border px-3 py-3 text-left transition-colors ${
-                    isSelected
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:bg-accent/40"
-                  }`}
+                  className={`flex items-center justify-between rounded-lg border px-3 py-3 text-left transition-colors ${ isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-accent/40" }`}
                   onClick={() => setSelectedFactorId(factor.id)}
                   disabled={isPending}
                 >

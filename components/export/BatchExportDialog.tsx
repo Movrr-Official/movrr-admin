@@ -257,11 +257,11 @@ export function BatchExportDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col border-border backdrop-blur-xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col border-border p-0 overflow-hidden">
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-primary/15 to-secondary/10 rounded-3xl backdrop-blur-sm border border-primary/20 shadow-lg">
+              <div className="p-4 bg-gradient-to-br from-primary/15 to-secondary/10 rounded-3xl border border-primary/20 shadow-lg">
                 <Package className="h-8 w-8 text-primary" />
               </div>
               <div>
@@ -274,7 +274,7 @@ export function BatchExportDialog({
               </div>
             </div>
 
-            <div className="flex items-center gap-4 p-4 bg-card/60 backdrop-blur-sm rounded-2xl border border-border/50">
+            <div className="flex items-center gap-4 p-4 bg-card/60 rounded-2xl border border-border/50">
               <div className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-secondary" />
                 <span className="font-semibold text-foreground">
@@ -350,10 +350,10 @@ export function BatchExportDialog({
                                 <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                               )}
                               {progress.status === "completed" && (
-                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                <CheckCircle2 className="h-4 w-4 text-success" />
                               )}
                               {progress.status === "error" && (
-                                <AlertCircle className="h-4 w-4 text-red-600" />
+                                <AlertCircle className="h-4 w-4 text-destructive" />
                               )}
                               <span className="text-sm font-bold text-primary">
                                 {Math.round(progress.progress)}%
@@ -370,7 +370,7 @@ export function BatchExportDialog({
                             </p>
                           )}
                           {progress.error && (
-                            <p className="text-xs text-red-600 font-medium">
+                            <p className="text-xs text-destructive font-medium">
                               Error: {progress.error}
                             </p>
                           )}
@@ -506,7 +506,7 @@ export function BatchExportDialog({
                       id="format"
                       value={selectedFormat}
                       onChange={(e) => setSelectedFormat(e.target.value as any)}
-                      className="w-full rounded-xl border border-border/50 bg-background/60 backdrop-blur-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
+                      className="w-full rounded-xl border border-border/50 bg-background/60 px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
                     >
                       <option value="csv">CSV Format</option>
                       <option value="xlsx">Excel Format</option>
@@ -527,7 +527,7 @@ export function BatchExportDialog({
                       value={filenamePrefix}
                       onChange={(e) => setFilenamePrefix(e.target.value)}
                       placeholder="batch_export"
-                      className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                      className="rounded-xl border-border/50 bg-background/60 font-medium"
                     />
                   </div>
 
@@ -574,7 +574,7 @@ export function BatchExportDialog({
                           start: e.target.value,
                         }))
                       }
-                      className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                      className="rounded-xl border-border/50 bg-background/60 font-medium"
                     />
                   </div>
                   <div className="space-y-2">
@@ -594,7 +594,7 @@ export function BatchExportDialog({
                           end: e.target.value,
                         }))
                       }
-                      className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                      className="rounded-xl border-border/50 bg-background/60 font-medium"
                     />
                   </div>
                 </CardContent>

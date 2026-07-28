@@ -46,9 +46,9 @@ type SessionDetail = {
 
 const SEVERITY_CLASS: Record<string, string> = {
   low: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  medium: "bg-orange-50 text-orange-700 border-orange-200",
-  high: "bg-red-50 text-red-700 border-red-200",
-  critical: "bg-red-100 text-red-900 border-red-400 font-semibold",
+  medium: "bg-warning/15 text-warning border-warning/20",
+  high: "bg-destructive/10 text-destructive border-destructive/20",
+  critical: "bg-destructive/10 text-destructive border-destructive/20 font-semibold",
 };
 
 export function SessionPanel({
@@ -144,12 +144,12 @@ export function SessionPanel({
                   rider.complianceState === "compliant"
                     ? "bg-success/12 text-success border-success/20"
                     : rider.complianceState === "non_compliant"
-                      ? "bg-red-100 text-red-800 border-red-200"
+                      ? "bg-destructive/10 text-destructive border-destructive/20"
                       : rider.complianceState === "paused"
-                        ? "bg-gray-100 text-gray-700 border-gray-200"
+                        ? "bg-muted text-muted-foreground border-border"
                         : rider.complianceState === "under_review"
-                          ? "bg-violet-100 text-violet-800 border-violet-200"
-                          : "bg-green-100 text-green-800 border-green-200"
+                          ? "bg-secondary text-secondary-foreground border-border"
+                          : "bg-warning/15 text-warning-foreground border-warning/25"
                 }
               >
                 {rider.complianceState.replace(/_/g, " ")}
@@ -205,18 +205,14 @@ export function SessionPanel({
                   {zoneVisits.map((v) => (
                     <div
                       key={v.id}
-                      className={`rounded-lg border px-2.5 py-1.5 text-xs ${
-                        v.speed_violation
-                          ? "bg-red-50 border-red-200"
-                          : "bg-muted/40 border-border"
-                      }`}
+                      className={`rounded-lg border px-2.5 py-1.5 text-xs ${ v.speed_violation ? "bg-destructive/10 border-destructive/20" : "bg-muted/40 border-border" }`}
                     >
                       <div className="flex justify-between items-center">
                         <span className="font-mono text-muted-foreground">
                           {v.campaign_zone_id.slice(0, 8)}…
                         </span>
                         {v.speed_violation && (
-                          <span className="text-red-600 text-[10px] font-medium">
+                          <span className="text-destructive text-[10px] font-medium">
                             ⚠ Speed
                           </span>
                         )}

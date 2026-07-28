@@ -129,7 +129,7 @@ export function getRewardCatalogTableColumns({
       header: "Featured",
       cell: ({ row }) =>
         row.original.isFeatured ? (
-          <span className="inline-flex items-center gap-1 text-amber-600 text-sm">
+          <span className="inline-flex items-center gap-1 text-warning text-sm">
             <Star className="h-4 w-4" /> Featured
           </span>
         ) : (

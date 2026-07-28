@@ -88,7 +88,7 @@ export function DataTableSkeleton({
       </CardHeader>
 
       <CardContent>
-        <div className="w-full rounded-xl border border-border/50 overflow-x-auto bg-card/30 backdrop-blur-sm">
+        <div className="w-full rounded-xl border border-border/50 overflow-x-auto bg-card/30">
           <Table className="w-full min-w-full">
             <TableHeader>
               <TableRow>

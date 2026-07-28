@@ -230,7 +230,7 @@ export function SettingsSectionForm({
           ))}
         </div>
 
-        <div className="sticky bottom-4 z-10 rounded-2xl border border-border/70 bg-background/95 p-4 shadow-lg backdrop-blur">
+        <div className="sticky bottom-4 z-10 rounded-2xl border border-border/70 bg-background/95 p-4 shadow-lg">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="text-sm text-muted-foreground">
               {hasUnsavedChanges

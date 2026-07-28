@@ -85,7 +85,7 @@ export default function RewardsOverview() {
       .slice(0, 3) ?? [];
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
         {/* Summary Row - Featured + Compact Stats + Insight Card */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
@@ -211,7 +211,7 @@ export default function RewardsOverview() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Coins className="h-4 w-4 text-amber-600" />
+                        <Coins className="h-4 w-4 text-warning" />
                         <span className="text-sm font-semibold">
                           {campaign.points.toLocaleString()}
                         </span>
@@ -240,7 +240,7 @@ export default function RewardsOverview() {
                 <TabsTrigger value="balances">Balance Management</TabsTrigger>
                 <TabsTrigger value="catalog">Reward Catalog</TabsTrigger>
                 <TabsTrigger value="streak">
-                  <Flame className="h-3.5 w-3.5 mr-1.5 text-orange-500" />
+                  <Flame className="h-3.5 w-3.5 mr-1.5 text-warning" />
                   Streak Leaders
                 </TabsTrigger>
               </TabsList>
@@ -275,7 +275,7 @@ export default function RewardsOverview() {
                 <Card className="border-border">
                   <CardHeader>
                     <CardTitle className="text-base font-semibold flex items-center gap-2">
-                      <Flame className="h-4 w-4 text-orange-500" />
+                      <Flame className="h-4 w-4 text-warning" />
                       Top Streak Earners
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -306,15 +306,7 @@ export default function RewardsOverview() {
                           >
                             <div className="flex items-center gap-3">
                               <div
-                                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-                                  i === 0
-                                    ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                                    : i === 1
-                                      ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                                      : i === 2
-                                        ? "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
-                                        : "bg-muted text-muted-foreground"
-                                }`}
+                                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${ i === 0 ? "bg-warning/15 text-warning dark:bg-warning/15 dark:text-warning" : i === 1 ? "bg-muted text-muted-foreground dark:bg-card dark:text-muted-foreground" : i === 2 ? "bg-warning/15 text-warning dark:bg-warning/15 dark:text-warning" : "bg-muted text-muted-foreground" }`}
                               >
                                 {i + 1}
                               </div>
@@ -331,8 +323,8 @@ export default function RewardsOverview() {
                               </div>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <Flame className="h-3.5 w-3.5 text-orange-500" />
-                              <span className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                              <Flame className="h-3.5 w-3.5 text-warning" />
+                              <span className="text-sm font-semibold text-warning dark:text-warning">
                                 +{leader.totalStreakPoints.toLocaleString()} pts
                               </span>
                             </div>
@@ -377,7 +369,7 @@ export default function RewardsOverview() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Coins className="h-4 w-4 text-amber-600" />
+                          <Coins className="h-4 w-4 text-warning" />
                           <span className="text-sm font-semibold">
                             {rider.points.toLocaleString()}
                           </span>

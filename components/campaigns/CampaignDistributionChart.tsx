@@ -15,7 +15,7 @@ import {
 
 const CampaignDistributionChart = ({ data = [] }) => {
   return (
-    <Card className="bg-gray-900 border-gray-800">
+    <Card className="border-border bg-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5" />
@@ -25,22 +25,23 @@ const CampaignDistributionChart = ({ data = [] }) => {
       <CardContent>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={data} layout="horizontal">
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis type="number" stroke="#9ca3af" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis type="number" stroke="var(--muted-foreground)" />
             <YAxis
               dataKey="duration"
               type="category"
-              stroke="#9ca3af"
+              stroke="var(--muted-foreground)"
               width={80}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#1f2937",
-                border: "1px solid #374151",
+                backgroundColor: "var(--card)",
+                border: "1px solid var(--border)",
                 borderRadius: "8px",
+                color: "var(--card-foreground)",
               }}
             />
-            <Bar dataKey="count" fill="#f59e0b" radius={[0, 4, 4, 0]} />
+            <Bar dataKey="count" fill="var(--chart-4)" radius={[0, 4, 4, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

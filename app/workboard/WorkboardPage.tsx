@@ -84,7 +84,7 @@ import {
 type WorkboardRole = "owner" | "admin" | "editor" | "viewer";
 
 const workboardBadgeBase =
-  "border-0 bg-none shadow-none backdrop-blur-0 hover:bg-inherit";
+  "border-0 bg-none shadow-none  hover:bg-inherit";
 
 const typeTone: Record<WorkboardCard["type"], string> = {
   Engineering: `${workboardBadgeBase} bg-muted text-muted-foreground`,
@@ -109,7 +109,7 @@ const boardToneCount: Record<WorkboardBoard["tone"], string> = {
 };
 
 const workboardMetaBadge =
-  "border border-border/70 bg-background bg-none text-foreground shadow-none backdrop-blur-0";
+  "border border-border/70 bg-background bg-none text-foreground shadow-none ";
 
 const boardTones: WorkboardBoard["tone"][] = [
   "slate",
@@ -923,7 +923,7 @@ export default function WorkboardPage() {
   }, [pendingBoardScrollId, boards]);
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-1">
@@ -1452,7 +1452,7 @@ export default function WorkboardPage() {
                           Archive
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="text-rose-600"
+                          className="text-destructive"
                           onClick={() => setBoardToDelete(board)}
                           disabled={!canManageBoards}
                         >

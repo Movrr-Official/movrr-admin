@@ -108,7 +108,7 @@ export function ScheduleManager({
       return (
         <Badge
           variant="outline"
-          className="bg-red-50 text-red-700 border-red-200 font-semibold dark:bg-red-950 dark:text-red-300 dark:border-red-800"
+          className="bg-destructive/10 text-destructive border-destructive/20 font-semibold dark:bg-destructive dark:text-destructive dark:border-destructive/20"
         >
           <AlertCircle className="h-3 w-3 mr-1" />
           Overdue
@@ -119,7 +119,7 @@ export function ScheduleManager({
     return (
       <Badge
         variant="outline"
-        className="bg-green-50 text-green-700 border-green-200 font-semibold dark:bg-green-950 dark:text-green-300 dark:border-green-800"
+        className="bg-success/12 text-success border-success/20 font-semibold dark:bg-success dark:text-success dark:border-success/20"
       >
         <CheckCircle2 className="h-3 w-3 mr-1" />
         Active
@@ -129,9 +129,9 @@ export function ScheduleManager({
 
   const getFormatBadge = (format: string) => {
     const colors = {
-      csv: "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800",
+      csv: "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success dark:border-success/20",
       xlsx: "bg-primary/12 text-primary border-primary/20",
-      pdf: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800",
+      pdf: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive dark:text-destructive dark:border-destructive/20",
       json: "bg-secondary text-secondary-foreground border-border",
     };
 
@@ -178,7 +178,7 @@ export function ScheduleManager({
             </p>
           </div>
         ) : (
-          <div className="rounded-2xl border border-border/50 overflow-hidden bg-card/40 backdrop-blur-sm">
+          <div className="rounded-2xl border border-border/50 overflow-hidden bg-card/40">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-border/30 bg-muted/20">
@@ -289,7 +289,7 @@ export function ScheduleManager({
                           variant="ghost"
                           size="sm"
                           onClick={() => onDeleteSchedule?.(schedule.id)}
-                          className="hover:bg-red-50 hover:text-red-600 transition-colors rounded-xl p-2"
+                          className="hover:bg-destructive/10 hover:text-destructive transition-colors rounded-xl p-2"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

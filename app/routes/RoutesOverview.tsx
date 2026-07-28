@@ -256,7 +256,7 @@ export default function RoutesOverview() {
   const currentRoute = getRouteWithPriority(routes);
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
         {/* Stats Cards - Optimized for Route Management */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -278,14 +278,14 @@ export default function RoutesOverview() {
               {
                 label: `${completedRoutes} completed`,
                 className:
-                  "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300",
+                  "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success",
               },
               ...(inProgressRoutes > 0
                 ? [
                     {
                       label: `${inProgressRoutes} in progress`,
                       className:
-                        "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300",
+                        "bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning",
                     },
                   ]
                 : []),
@@ -311,7 +311,7 @@ export default function RoutesOverview() {
                     {
                       label: `${inProgressRoutes} in progress`,
                       className:
-                        "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300",
+                        "bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning",
                     },
                   ]
                 : []),
@@ -333,7 +333,7 @@ export default function RoutesOverview() {
                     {
                       label: `${highPerformanceRoutes} high`,
                       className:
-                        "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300",
+                        "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success",
                     },
                   ]
                 : []),
@@ -342,7 +342,7 @@ export default function RoutesOverview() {
                     {
                       label: `${mediumPerformanceRoutes} medium`,
                       className:
-                        "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300",
+                        "bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning",
                     },
                   ]
                 : []),
@@ -364,7 +364,7 @@ export default function RoutesOverview() {
               {
                 label: `${completedRoutes} completed`,
                 className:
-                  "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300",
+                  "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success",
               },
             ]}
             animationDelay="0.3s"

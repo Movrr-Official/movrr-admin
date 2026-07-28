@@ -24,6 +24,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import type { RiderMapEntry, ComplianceState } from "./types";
 import { COMPLIANCE_COLORS, ROUTE_STATUS_COLORS } from "./layers";
+import { MOVRR_MAP } from "@/lib/movrr-map-colors";
 import type { RiderRoute } from "@/schemas";
 
 const SIGNAL_LOSS_MS = 60_000;
@@ -33,7 +34,7 @@ const POLL_INTERVAL_MS = 15_000;
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function deriveComplianceColor(state: ComplianceState): string {
-  return COMPLIANCE_COLORS[state] ?? "#94a3b8";
+  return COMPLIANCE_COLORS[state] ?? MOVRR_MAP.muted;
 }
 
 function routeStatusToCompliance(status: string): ComplianceState {

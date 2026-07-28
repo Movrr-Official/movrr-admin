@@ -119,7 +119,7 @@ export default function RideSessionsOverview() {
   };
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -131,14 +131,14 @@ export default function RideSessionsOverview() {
               {
                 label: `${standardRideSessions} standard ride`,
                 className:
-                  "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800",
+                  "bg-primary/12 text-primary border-primary/20 dark:bg-primary dark:text-primary dark:border-primary/20",
               },
               ...(boostedRideSessions > 0
                 ? [
                     {
                       label: `${boostedRideSessions} boosted ride`,
                       className:
-                        "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800",
+                        "bg-secondary text-secondary-foreground border-border dark:bg-secondary dark:text-secondary-foreground dark:border-border",
                     },
                   ]
                 : []),
@@ -159,7 +159,7 @@ export default function RideSessionsOverview() {
                 ? [
                     {
                       label: `${pending} pending`,
-                      className: "bg-amber-50 text-amber-700 border-amber-200",
+                      className: "bg-warning/15 text-warning border-warning/20",
                     },
                   ]
                 : []),
@@ -168,7 +168,7 @@ export default function RideSessionsOverview() {
                     {
                       label: `${manualReview} review`,
                       className:
-                        "bg-orange-50 text-orange-700 border-orange-200",
+                        "bg-warning/15 text-warning border-warning/20",
                     },
                   ]
                 : []),
@@ -185,13 +185,13 @@ export default function RideSessionsOverview() {
                 label: "Standard Ride Sessions",
                 value: standardRideSessions,
                 icon: Bike,
-                iconColor: "text-sky-600",
+                iconColor: "text-primary",
               },
               {
                 label: "Boosted Ride Sessions",
                 value: boostedRideSessions,
                 icon: Megaphone,
-                iconColor: "text-violet-600",
+                iconColor: "text-secondary-foreground",
               },
             ]}
             animationDelay="0.2s"
@@ -206,7 +206,7 @@ export default function RideSessionsOverview() {
                 label: "Points Awarded",
                 value: totalPoints.toLocaleString(),
                 icon: Coins,
-                iconColor: "text-amber-600",
+                iconColor: "text-warning",
               },
               {
                 label: "Verified Minutes",
@@ -220,7 +220,7 @@ export default function RideSessionsOverview() {
                       label: "Rejected",
                       value: rejected,
                       icon: AlertCircle,
-                      iconColor: "text-red-600",
+                      iconColor: "text-destructive",
                     },
                   ]
                 : []),
@@ -242,7 +242,7 @@ export default function RideSessionsOverview() {
               <ShieldAlert className="h-3.5 w-3.5 mr-1.5" />
               Verification Queue
               {pending + manualReview > 0 && (
-                <Badge className="ml-2 text-xs bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300">
+                <Badge className="ml-2 text-xs bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning">
                   {pending + manualReview}
                 </Badge>
               )}
@@ -269,9 +269,9 @@ export default function RideSessionsOverview() {
             {(sessions ?? []).filter((s) => s.verificationStatus === "manual_review").length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <TriangleAlert className="h-4 w-4 text-orange-500" />
+                  <TriangleAlert className="h-4 w-4 text-warning" />
                   <h3 className="text-sm font-semibold">Manual Review Required</h3>
-                  <Badge className="text-xs bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300">
+                  <Badge className="text-xs bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning">
                     {(sessions ?? []).filter((s) => s.verificationStatus === "manual_review").length}
                   </Badge>
                 </div>
@@ -297,7 +297,7 @@ export default function RideSessionsOverview() {
             {(sessions ?? []).filter((s) => s.verificationStatus === "pending").length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Clock className="h-4 w-4 text-amber-500" />
+                  <Clock className="h-4 w-4 text-warning" />
                   <h3 className="text-sm font-semibold">Pending Verification</h3>
                   <Badge variant="warning" className="text-xs">
                     {(sessions ?? []).filter((s) => s.verificationStatus === "pending").length}
@@ -329,7 +329,7 @@ export default function RideSessionsOverview() {
               ).length === 0 && (
                 <Card className="border-border">
                   <CardContent className="py-12 text-center text-muted-foreground">
-                    <CheckCircle2 className="h-8 w-8 mx-auto mb-3 text-green-500 opacity-70" />
+                    <CheckCircle2 className="h-8 w-8 mx-auto mb-3 text-success opacity-70" />
                     <p className="text-sm font-medium">Queue is clear</p>
                     <p className="text-xs mt-1">No sessions awaiting verification.</p>
                   </CardContent>
@@ -466,7 +466,7 @@ export default function RideSessionsOverview() {
                             ? `${analytics.distanceTrend.reduce((s, d) => s + d.distanceKm, 0).toLocaleString()} km`
                             : "—"}
                         </span>
-                        <span className="flex items-center gap-1 text-green-600">
+                        <span className="flex items-center gap-1 text-success">
                           <Leaf className="h-3.5 w-3.5" />
                           {analytics
                             ? `${analytics.distanceTrend.reduce((s, d) => s + d.co2SavedKg, 0).toLocaleString()} kg CO₂`
@@ -695,7 +695,7 @@ function TriageCard({
 
   return (
     <Card
-      className={`border-border ${priority === "high" ? "ring-1 ring-orange-300 dark:ring-orange-800" : ""}`}
+      className={`border-border ${priority === "high" ? "ring-1 ring-warning/30 dark:ring-warning/30" : ""}`}
     >
       <CardContent className="py-3 px-4">
         <div className="flex items-start justify-between gap-4">
@@ -722,10 +722,10 @@ function TriageCard({
                 <span
                   className={
                     session.rideQualityPercent >= 70
-                      ? "text-green-600"
+                      ? "text-success"
                       : session.rideQualityPercent >= 40
-                        ? "text-amber-600"
-                        : "text-red-600"
+                        ? "text-warning"
+                        : "text-destructive"
                   }
                 >
                   Quality {session.rideQualityPercent}%
@@ -737,7 +737,7 @@ function TriageCard({
                 </span>
               )}
               {session.pointsAwarded > 0 && (
-                <span className="flex items-center gap-1 text-amber-600">
+                <span className="flex items-center gap-1 text-warning">
                   <Coins className="h-3 w-3" /> {session.pointsAwarded} pts
                 </span>
               )}
@@ -753,7 +753,7 @@ function TriageCard({
             <Button
               size="sm"
               variant="outline"
-              className="h-7 px-2 text-xs text-green-700 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950"
+              className="h-7 px-2 text-xs text-success border-success/20 hover:bg-success/12 dark:text-success dark:border-success/20 dark:hover:bg-success"
               disabled={isLoading}
               onClick={onApprove}
             >
@@ -766,7 +766,7 @@ function TriageCard({
             <Button
               size="sm"
               variant="outline"
-              className="h-7 px-2 text-xs text-red-700 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
+              className="h-7 px-2 text-xs text-destructive border-destructive/20 hover:bg-destructive/10 dark:text-destructive dark:border-destructive/20 dark:hover:bg-destructive"
               disabled={isLoading}
               onClick={onReject}
             >
@@ -780,7 +780,7 @@ function TriageCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 px-2 text-xs text-orange-700 border-orange-300 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-950"
+                className="h-7 px-2 text-xs text-warning border-warning/20 hover:bg-warning/15 dark:text-warning dark:border-warning/20 dark:hover:bg-warning/15"
                 disabled={isLoading}
                 onClick={onEscalate}
               >

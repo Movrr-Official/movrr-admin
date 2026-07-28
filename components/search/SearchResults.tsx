@@ -38,13 +38,13 @@ export function SearchResults({
       case "rider":
         return "text-primary bg-primary/10 border-primary/20";
       case "campaign":
-        return "text-green-600 bg-green-50 border-green-200";
+        return "text-success bg-success/12 border-success/20";
       case "city":
         return "text-secondary-foreground bg-secondary border-border";
       case "user":
-        return "text-orange-600 bg-orange-50 border-orange-200";
+        return "text-warning bg-warning/15 border-warning/20";
       default:
-        return "text-gray-600 bg-gray-50 border-gray-200";
+        return "text-muted-foreground bg-muted border-border";
     }
   };
 

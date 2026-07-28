@@ -229,11 +229,11 @@ export function ScheduledExportDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col border-border backdrop-blur-xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col border-border p-0 overflow-hidden">
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-primary/15 to-secondary/10 rounded-3xl backdrop-blur-sm border border-primary/20 shadow-lg">
+              <div className="p-4 bg-gradient-to-br from-primary/15 to-secondary/10 rounded-3xl border border-primary/20 shadow-lg">
                 <Clock className="h-8 w-8 text-primary" />
               </div>
               <div>
@@ -274,7 +274,7 @@ export function ScheduledExportDialog({
                         value={scheduleName}
                         onChange={(e) => setScheduleName(e.target.value)}
                         placeholder="Daily Waitlist Export"
-                        className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                        className="rounded-xl border-border/50 bg-background/60 font-medium"
                       />
                     </div>
 
@@ -289,7 +289,7 @@ export function ScheduledExportDialog({
                         value={selectedDataSource}
                         onValueChange={setSelectedDataSource}
                       >
-                        <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium">
+                        <SelectTrigger className="rounded-xl border-border/50 bg-background/60 font-medium">
                           <SelectValue placeholder="Select data source" />
                         </SelectTrigger>
                         <SelectContent>
@@ -315,7 +315,7 @@ export function ScheduledExportDialog({
                       value={scheduleDescription}
                       onChange={(e) => setScheduleDescription(e.target.value)}
                       placeholder="Optional description for this scheduled export"
-                      className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium min-h-[80px]"
+                      className="rounded-xl border-border/50 bg-background/60 font-medium min-h-[80px]"
                     />
                   </div>
 
@@ -331,7 +331,7 @@ export function ScheduledExportDialog({
                         value={exportFormat}
                         onValueChange={(value: any) => setExportFormat(value)}
                       >
-                        <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium">
+                        <SelectTrigger className="rounded-xl border-border/50 bg-background/60 font-medium">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -355,7 +355,7 @@ export function ScheduledExportDialog({
                         value={filename}
                         onChange={(e) => setFilename(e.target.value)}
                         placeholder="Auto-generated from schedule name"
-                        className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                        className="rounded-xl border-border/50 bg-background/60 font-medium"
                       />
                     </div>
                   </div>
@@ -397,21 +397,13 @@ export function ScheduledExportDialog({
                       {scheduleTypes.map((type) => (
                         <div
                           key={type.value}
-                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                            scheduleType === type.value
-                              ? "border-primary/30 bg-primary/5"
-                              : "border-border/50 hover:border-border hover:bg-muted/30"
-                          }`}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${ scheduleType === type.value ? "border-primary/30 bg-primary/5" : "border-border/50 hover:border-border hover:bg-muted/30" }`}
                           onClick={() => setScheduleType(type.value as any)}
                         >
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
                               <div
-                                className={`w-4 h-4 rounded-full border-2 ${
-                                  scheduleType === type.value
-                                    ? "border-primary bg-primary"
-                                    : "border-muted-foreground"
-                                }`}
+                                className={`w-4 h-4 rounded-full border-2 ${ scheduleType === type.value ? "border-primary bg-primary" : "border-muted-foreground" }`}
                               >
                                 {scheduleType === type.value && (
                                   <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
@@ -443,7 +435,7 @@ export function ScheduledExportDialog({
                         type="time"
                         value={scheduleTime}
                         onChange={(e) => setScheduleTime(e.target.value)}
-                        className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                        className="rounded-xl border-border/50 bg-background/60 font-medium"
                       />
                     </div>
 
@@ -461,7 +453,7 @@ export function ScheduledExportDialog({
                             setScheduleDayOfWeek(Number(value))
                           }
                         >
-                          <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium">
+                          <SelectTrigger className="rounded-xl border-border/50 bg-background/60 font-medium">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -495,7 +487,7 @@ export function ScheduledExportDialog({
                           onChange={(e) =>
                             setScheduleDayOfMonth(Number(e.target.value))
                           }
-                          className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                          className="rounded-xl border-border/50 bg-background/60 font-medium"
                         />
                       </div>
                     )}
@@ -513,7 +505,7 @@ export function ScheduledExportDialog({
                       value={timezone}
                       onChange={(e) => setTimezone(e.target.value)}
                       placeholder="UTC"
-                      className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm font-medium"
+                      className="rounded-xl border-border/50 bg-background/60 font-medium"
                     />
                   </div>
                 </CardContent>

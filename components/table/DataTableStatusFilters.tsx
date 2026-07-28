@@ -61,7 +61,7 @@ export function DataTableStatusFilters<TData extends Record<string, any> = Recor
               "h-8 rounded-lg px-3 text-sm font-medium transition-colors flex items-center gap-2",
               isActive
                 ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 hover:dark:bg-gray-700"
+                : "bg-white text-muted-foreground hover:bg-muted dark:bg-muted dark:text-muted-foreground hover:dark:bg-muted"
             )}
           >
             <span>{option.label}</span>
@@ -70,7 +70,7 @@ export function DataTableStatusFilters<TData extends Record<string, any> = Recor
                 "flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-medium",
                 isActive
                   ? "bg-primary-foreground text-primary"
-                  : "bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-800"
+                  : "bg-muted text-white dark:bg-muted dark:text-muted-foreground"
               )}
             >
               {count.toLocaleString()}

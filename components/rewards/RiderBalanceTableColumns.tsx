@@ -64,7 +64,7 @@ export function getRiderBalanceTableColumns({
         const balance = row.original.currentBalance;
         return (
           <div className="flex items-center gap-2">
-            <Coins className="h-4 w-4 text-amber-600" />
+            <Coins className="h-4 w-4 text-warning" />
             <span className="text-sm font-semibold">{balance.toLocaleString()}</span>
           </div>
         );
@@ -77,8 +77,8 @@ export function getRiderBalanceTableColumns({
         const points = row.original.totalPointsAwarded;
         return (
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-medium text-green-600">
+            <TrendingUp className="h-4 w-4 text-success" />
+            <span className="text-sm font-medium text-success">
               {points.toLocaleString()}
             </span>
           </div>
@@ -133,7 +133,7 @@ export function getRiderBalanceTableColumns({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="border-border backdrop-blur-xl">
+            <DropdownMenuContent align="end" className="border-border">
               {onView && (
                 <DropdownMenuItem onClick={() => onView(balance)}>
                   <Eye className="mr-2 h-4 w-4" />

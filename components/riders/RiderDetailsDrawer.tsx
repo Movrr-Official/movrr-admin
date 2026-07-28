@@ -495,7 +495,7 @@ export function RiderDetailsDrawer({
                                     (field.value as string | undefined) ?? ""
                                   }
                                   type={name === "email" ? "email" : "text"}
-                                  className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                  className="rounded-xl border-border/50 bg-background/60"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -516,7 +516,7 @@ export function RiderDetailsDrawer({
                               value={field.value}
                             >
                               <FormControl>
-                                <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -545,7 +545,7 @@ export function RiderDetailsDrawer({
                               value={field.value}
                             >
                               <FormControl>
-                                <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -577,7 +577,7 @@ export function RiderDetailsDrawer({
                               value={field.value || "en"}
                             >
                               <FormControl>
-                                <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -604,7 +604,7 @@ export function RiderDetailsDrawer({
                               <Input
                                 {...field}
                                 value={field.value ?? ""}
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
                             <FormMessage />
@@ -623,7 +623,7 @@ export function RiderDetailsDrawer({
                               <Input
                                 {...field}
                                 value={field.value ?? ""}
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
                             <FormMessage />
@@ -660,7 +660,7 @@ export function RiderDetailsDrawer({
                             <Textarea
                               {...field}
                               value={field.value ?? ""}
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm min-h-[100px] resize-none"
+                              className="rounded-xl border-border/50 bg-background/60 min-h-[100px] resize-none"
                             />
                           </FormControl>
                           <FormMessage />
@@ -848,7 +848,7 @@ export function RiderDetailsDrawer({
                                         Completion Rate
                                       </p>
                                       <p
-                                        className={`text-2xl font-bold ${performanceMetrics.completionRate >= 70 ? "text-green-600" : performanceMetrics.completionRate >= 40 ? "text-amber-600" : "text-red-600"}`}
+                                        className={`text-2xl font-bold ${performanceMetrics.completionRate >= 70 ? "text-success" : performanceMetrics.completionRate >= 40 ? "text-warning" : "text-destructive"}`}
                                       >
                                         {performanceMetrics.completionRate}%
                                       </p>
@@ -861,7 +861,7 @@ export function RiderDetailsDrawer({
                                         Verification Rate
                                       </p>
                                       <p
-                                        className={`text-2xl font-bold ${performanceMetrics.verificationSuccessRate >= 70 ? "text-green-600" : performanceMetrics.verificationSuccessRate >= 40 ? "text-amber-600" : "text-red-600"}`}
+                                        className={`text-2xl font-bold ${performanceMetrics.verificationSuccessRate >= 70 ? "text-success" : performanceMetrics.verificationSuccessRate >= 40 ? "text-warning" : "text-destructive"}`}
                                       >
                                         {
                                           performanceMetrics.verificationSuccessRate
@@ -880,7 +880,7 @@ export function RiderDetailsDrawer({
                                             Avg Quality Score
                                           </p>
                                           <p
-                                            className={`text-2xl font-bold ${performanceMetrics.avgQualityScore >= 70 ? "text-green-600" : performanceMetrics.avgQualityScore >= 40 ? "text-amber-600" : "text-red-600"}`}
+                                            className={`text-2xl font-bold ${performanceMetrics.avgQualityScore >= 70 ? "text-success" : performanceMetrics.avgQualityScore >= 40 ? "text-warning" : "text-destructive"}`}
                                           >
                                             {performanceMetrics.avgQualityScore}
                                             %
@@ -897,11 +897,11 @@ export function RiderDetailsDrawer({
                                       <div className="flex items-center gap-2 mt-1">
                                         {performanceMetrics.trendDirection ===
                                           "improving" && (
-                                          <TrendingUp className="h-5 w-5 text-green-600" />
+                                          <TrendingUp className="h-5 w-5 text-success" />
                                         )}
                                         {performanceMetrics.trendDirection ===
                                           "declining" && (
-                                          <TrendingDown className="h-5 w-5 text-red-600" />
+                                          <TrendingDown className="h-5 w-5 text-destructive" />
                                         )}
                                         {(performanceMetrics.trendDirection ===
                                           "stable" ||
@@ -912,7 +912,7 @@ export function RiderDetailsDrawer({
                                           <div className="h-1 w-5 rounded bg-muted-foreground/50" />
                                         )}
                                         <span
-                                          className={`text-sm font-semibold capitalize ${performanceMetrics.trendDirection === "improving" ? "text-green-600" : performanceMetrics.trendDirection === "declining" ? "text-red-600" : "text-muted-foreground"}`}
+                                          className={`text-sm font-semibold capitalize ${performanceMetrics.trendDirection === "improving" ? "text-success" : performanceMetrics.trendDirection === "declining" ? "text-destructive" : "text-muted-foreground"}`}
                                         >
                                           {performanceMetrics.trendDirection.replace(
                                             "_",
@@ -944,16 +944,16 @@ export function RiderDetailsDrawer({
                                       )}
                                       {performanceMetrics.co2SavedKg !=
                                         null && (
-                                        <div className="p-4 rounded-xl bg-green-50 border border-green-100 dark:bg-green-950 dark:border-green-900">
-                                          <p className="text-xs text-green-700 dark:text-green-400 mb-1 flex items-center gap-1">
+                                        <div className="p-4 rounded-xl bg-success/12 border border-success/20 dark:bg-success dark:border-success/20">
+                                          <p className="text-xs text-success dark:text-success mb-1 flex items-center gap-1">
                                             <Leaf className="h-3.5 w-3.5" />
                                             CO₂ Saved
                                           </p>
-                                          <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                                          <p className="text-2xl font-bold text-success dark:text-success">
                                             {performanceMetrics.co2SavedKg.toLocaleString()}{" "}
                                             kg
                                           </p>
-                                          <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                                          <p className="text-xs text-success dark:text-success mt-1">
                                             vs driving
                                           </p>
                                         </div>
@@ -1064,14 +1064,12 @@ export function RiderDetailsDrawer({
                                                 variant="outline"
                                                 className={`text-xs capitalize font-medium ${
                                                   badge.category === "hero"
-                                                    ? "bg-green-100 text-green-800 border-green-300"
-                                                    : badge.category ===
-                                                        "trophy"
-                                                      ? "bg-violet-100 text-violet-800 border-violet-300"
-                                                      : badge.category ===
-                                                          "milestone"
-                                                        ? "bg-sky-100 text-sky-800 border-sky-300"
-                                                        : "bg-slate-100 text-slate-600 border-slate-300"
+                                                    ? "bg-success/12 text-success border-success/20"
+                                                    : badge.category === "trophy"
+                                                      ? "bg-secondary text-secondary-foreground border-border"
+                                                      : badge.category === "milestone"
+                                                        ? "bg-primary/12 text-primary border-primary/20"
+                                                        : "bg-muted text-muted-foreground border-border"
                                                 }`}
                                               >
                                                 {badge.category}
@@ -1099,7 +1097,7 @@ export function RiderDetailsDrawer({
                                               · Source: {badge.source}
                                             </p>
                                             {badge.revokedAt && (
-                                              <p className="text-xs text-red-500 mt-0.5">
+                                              <p className="text-xs text-destructive mt-0.5">
                                                 Revoked{" "}
                                                 {format(
                                                   new Date(badge.revokedAt),
@@ -1287,7 +1285,7 @@ export function RiderDetailsDrawer({
                                                   entry.label ??
                                                   entry.type}
                                               </span>
-                                              <span className="font-medium text-amber-600">
+                                              <span className="font-medium text-warning">
                                                 {entry.points != null
                                                   ? `+${entry.points} pts`
                                                   : entry.multiplier != null
@@ -1297,7 +1295,7 @@ export function RiderDetailsDrawer({
                                             </div>
                                           ))}
                                           {transaction.was_capped && (
-                                            <p className="text-xs text-orange-500 mt-1">
+                                            <p className="text-xs text-warning mt-1">
                                               Daily cap applied
                                             </p>
                                           )}
@@ -1352,11 +1350,11 @@ export function RiderDetailsDrawer({
                   </Card>
 
                   {showResetConfirmation && (
-                    <Card className="border-border border-amber-200 dark:border-amber-800">
+                    <Card className="border-border border-warning/20 dark:border-warning/20">
                       <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-amber-50 dark:bg-amber-950 rounded-lg">
-                            <KeyRound className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                          <div className="p-2 bg-warning/15 rounded-lg">
+                            <KeyRound className="h-5 w-5 text-warning" />
                           </div>
                           <CardTitle className="text-lg font-bold">
                             Send Setup Email
@@ -1484,7 +1482,7 @@ export function RiderDetailsDrawer({
                           }
                           placeholder="Optional reason or context for this access"
                           rows={3}
-                          className="resize-none rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                          className="resize-none rounded-xl border-border/50 bg-background/60"
                           disabled={isSavingCommunityRideAccess}
                         />
                       </div>
@@ -1575,7 +1573,7 @@ export function RiderDetailsDrawer({
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50 backdrop-blur-sm">
+            <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50">
               <div className="flex gap-2">
                 {isEditMode ? (
                   <>
@@ -1719,8 +1717,8 @@ export function RiderDetailsDrawer({
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="mb-2 flex items-center gap-3">
-              <div className="rounded-xl bg-red-100 p-2 dark:bg-red-950">
-                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="rounded-xl bg-destructive/10 p-2 dark:bg-destructive">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
               </div>
               <AlertDialogTitle>Delete rider account</AlertDialogTitle>
             </div>

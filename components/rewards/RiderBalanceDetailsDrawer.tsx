@@ -181,7 +181,7 @@ export function RiderBalanceDetailsDrawer({
   return (
     <>
       <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="border-border backdrop-blur-xl h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
+        <DrawerContent className="border-border h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
           <DrawerHeader className="border-b border-border/50">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -248,7 +248,7 @@ export function RiderBalanceDetailsDrawer({
                           Current Balance
                         </span>
                         <div className="flex items-center gap-2">
-                          <Coins className="h-5 w-5 text-amber-600" />
+                          <Coins className="h-5 w-5 text-warning" />
                           <span className="text-2xl font-bold">
                             {balance.currentBalance.toLocaleString()}
                           </span>
@@ -260,8 +260,8 @@ export function RiderBalanceDetailsDrawer({
                           Total Points Awarded
                         </span>
                         <div className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-semibold text-green-600">
+                          <TrendingUp className="h-4 w-4 text-success" />
+                          <span className="text-sm font-semibold text-success">
                             {balance.totalPointsAwarded.toLocaleString()}
                           </span>
                         </div>
@@ -516,11 +516,7 @@ export function RiderBalanceDetailsDrawer({
                               <div className="flex items-center gap-4">
                                 <div className="text-right">
                                   <p
-                                    className={`text-sm font-semibold ${
-                                      isPositive
-                                        ? "text-green-600"
-                                        : "text-red-600"
-                                    }`}
+                                    className={`text-sm font-semibold ${ isPositive ? "text-success" : "text-destructive" }`}
                                   >
                                     {isPositive ? "+" : ""}
                                     {transaction.points.toLocaleString()}

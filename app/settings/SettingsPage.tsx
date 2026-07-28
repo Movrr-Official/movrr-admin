@@ -362,7 +362,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
         <PageHeader
           title="Settings"
@@ -411,11 +411,7 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => setSection(entry.id)}
                       aria-pressed={isActive}
-                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                        isActive
-                          ? "border-primary/50 bg-primary/10"
-                          : "border-border/60 bg-background/30 hover:bg-background/50"
-                      }`}
+                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${ isActive ? "border-primary/50 bg-primary/10" : "border-border/60 bg-background/30 hover:bg-background/50" }`}
                     >
                       <div className="flex items-center gap-3">
                         <div>
@@ -576,7 +572,7 @@ export default function SettingsPage() {
                           {fmt(oldVal)}
                         </span>
                         <span className="text-muted-foreground">?</span>
-                        <span className="rounded bg-green-500/10 px-1.5 py-0.5 font-mono text-green-600 dark:text-green-400">
+                        <span className="rounded bg-success px-1.5 py-0.5 font-mono text-success dark:text-success">
                           {fmt(newVal)}
                         </span>
                       </div>

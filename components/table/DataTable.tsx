@@ -243,7 +243,7 @@ export function DataTable<TData extends Record<string, any> = Record<string, any
       style={{ animationDelay: "0.5s" }}
     >
       {viewOptions && (
-        <div className="flex items-center p-4 pt-6 ">
+        <div className="flex items-center p-4 pt-6">
           <DataTableViewOptions table={table} />
         </div>
       )}
@@ -280,7 +280,7 @@ export function DataTable<TData extends Record<string, any> = Record<string, any
         )}
       </CardHeader>
       <CardContent>
-        <div className="w-full rounded-xl border border-border/50 overflow-x-auto bg-card/30 backdrop-blur-sm">
+        <div className="w-full rounded-xl border border-border/50 overflow-x-auto bg-card/30">
           <Table className="w-full min-w-full">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

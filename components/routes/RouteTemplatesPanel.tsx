@@ -56,9 +56,9 @@ const STATUS_STYLES: Record<TemplateStatus, string> = {
   active:
     "bg-success/12 text-success border-success/20",
   draft:
-    "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950 dark:text-slate-300",
+    "bg-muted text-muted-foreground border-border dark:bg-muted dark:text-muted-foreground",
   paused:
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300",
+    "bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning",
 };
 
 const toDistanceLabel = (distanceKm: number) => `${distanceKm.toFixed(1)} km`;

@@ -128,7 +128,7 @@ export default function CreateAdvertiserPage() {
   };
 
   return (
-    <div className="min-h-screen page-canvas sm:px-6 md:py-12 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="mx-auto max-w-4xl space-y-6">
         <PageHeader
           title="Create New Advertiser"

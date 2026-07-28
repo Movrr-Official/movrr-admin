@@ -964,7 +964,7 @@ export function RouteDetailsDrawer({
   return (
     <>
       <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="border-border backdrop-blur-xl h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
+        <DrawerContent className="border-border h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
           <DrawerHeader className="border-b border-border/50">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -1485,15 +1485,7 @@ export function RouteDetailsDrawer({
                           <div key={index} className="flex gap-4">
                             <div className="flex flex-col items-center">
                               <div
-                                className={`w-3 h-3 rounded-full ${
-                                  event.type === "completed"
-                                    ? "bg-success"
-                                    : event.type === "cancelled"
-                                      ? "bg-destructive"
-                                      : event.type === "started"
-                                        ? "bg-warning"
-                                        : "bg-info"
-                                }`}
+                                className={`w-3 h-3 rounded-full ${ event.type === "completed" ? "bg-success" : event.type === "cancelled" ? "bg-destructive" : event.type === "started" ? "bg-warning" : "bg-info" }`}
                               />
                               {index < timeline.length - 1 && (
                                 <div className="w-0.5 h-full bg-border mt-1" />
@@ -2244,7 +2236,7 @@ export function RouteDetailsDrawer({
 
       {/* Approve Dialog */}
       <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-        <AlertDialogContent className="border-border backdrop-blur-xl">
+        <AlertDialogContent className="border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Approve Route</AlertDialogTitle>
             <AlertDialogDescription>
@@ -2268,7 +2260,7 @@ export function RouteDetailsDrawer({
 
       {/* Reject Dialog */}
       <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <AlertDialogContent className="border-border backdrop-blur-xl">
+        <AlertDialogContent className="border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Reject Route</AlertDialogTitle>
             <AlertDialogDescription>
@@ -2305,7 +2297,7 @@ export function RouteDetailsDrawer({
         open={showRecalculateDialog}
         onOpenChange={setShowRecalculateDialog}
       >
-        <AlertDialogContent className="border-border backdrop-blur-xl">
+        <AlertDialogContent className="border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Recalculate Compliance</AlertDialogTitle>
             <AlertDialogDescription>
@@ -2332,7 +2324,7 @@ export function RouteDetailsDrawer({
         open={showUnassignDialog}
         onOpenChange={setShowUnassignDialog}
       >
-        <AlertDialogContent className="border-border backdrop-blur-xl">
+        <AlertDialogContent className="border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Unassign Route</AlertDialogTitle>
             <AlertDialogDescription>

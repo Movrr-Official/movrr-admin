@@ -31,7 +31,7 @@ const getBikeOwnershipBadge = (ownership: string | null) => {
       return (
         <Badge
           variant="secondary"
-          className="border-slate-500/25 bg-gradient-to-tl from-slate-700 via-slate-600 to-slate-500 text-white shadow-slate-900/20 hover:from-slate-700 hover:to-slate-500 dark:border-slate-400/25 dark:from-slate-500 dark:via-slate-400 dark:to-slate-300 dark:text-slate-950 font-medium"
+          className="border-border bg-gradient-to-tl from-muted via-muted to-muted text-white shadow-slate-900/20 hover:from-muted hover:to-muted dark:border-border dark:from-muted dark:via-muted dark:to-muted dark:text-muted-foreground font-medium"
         >
           Interested
         </Badge>

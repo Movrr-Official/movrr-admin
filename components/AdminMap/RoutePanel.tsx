@@ -30,12 +30,11 @@ export function RoutePanel({
   const statusColor =
     route.status === "in-progress" ? "bg-success/12 text-success border-success/20"
     : route.status === "assigned"    ? "bg-primary/12 text-primary border-primary/20"
-    : route.status === "completed"   ? "bg-slate-100 text-slate-700 border-slate-200"
-    :                                  "bg-red-100 text-red-800 border-red-200";
+    : route.status === "completed"   ? "bg-muted text-muted-foreground border-border"
+    :                                  "bg-destructive/10 text-destructive border-destructive/20";
 
   return (
-    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 w-[min(640px,calc(100%-2rem))]
-                    rounded-xl bg-background border border-border shadow-2xl overflow-hidden">
+    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 w-[min(640px,calc(100%-2rem))] rounded-xl bg-background border border-border shadow-2xl overflow-hidden">
       <div className="flex items-start justify-between px-4 py-3 border-b border-border">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground truncate">{route.name}</p>

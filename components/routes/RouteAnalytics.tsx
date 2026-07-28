@@ -18,18 +18,19 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartTooltipContent } from "@/components/charts/ChartTooltipContent";
 import type { RiderRoute } from "@/schemas";
+import { MOVRR_MAP } from "@/lib/movrr-map-colors";
 
 const STATUS_COLORS: Record<string, string> = {
-  assigned: "#3b82f6",
-  "in-progress": "#f59e0b",
-  completed: "#10b981",
-  cancelled: "#ef4444",
+  assigned: MOVRR_MAP.forest,
+  "in-progress": MOVRR_MAP.warning,
+  completed: MOVRR_MAP.signal,
+  cancelled: MOVRR_MAP.destructive,
 };
 
 const PERFORMANCE_COLORS: Record<string, string> = {
-  high: "#10b981",
-  medium: "#f59e0b",
-  low: "#ef4444",
+  high: MOVRR_MAP.signal,
+  medium: MOVRR_MAP.warning,
+  low: MOVRR_MAP.destructive,
 };
 
 const formatDateKey = (date: Date) =>
@@ -114,7 +115,7 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
                     <ChartTooltipContent seriesLabelMap={{ value: "Routes" }} />
                   }
                 />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="#3b82f6" />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="var(--chart-2)" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -152,7 +153,7 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
                 {statusCounts.map((entry) => (
                   <Cell
                     key={entry.name}
-                    fill={STATUS_COLORS[entry.name] ?? "#3b82f6"}
+                    fill={STATUS_COLORS[entry.name] ?? MOVRR_MAP.forest}
                   />
                 ))}
               </Pie>
@@ -183,7 +184,7 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
                 {performanceCounts.map((entry) => (
                   <Cell
                     key={entry.name}
-                    fill={PERFORMANCE_COLORS[entry.name] ?? "#3b82f6"}
+                    fill={PERFORMANCE_COLORS[entry.name] ?? MOVRR_MAP.forest}
                   />
                 ))}
               </Bar>
@@ -209,8 +210,8 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
             >
               <defs>
                 <linearGradient id="routeTrend" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0.1} />
+                  <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} />
@@ -224,7 +225,7 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
               <Area
                 type="monotone"
                 dataKey="value"
-                stroke="#6366f1"
+                stroke="var(--chart-1)"
                 fill="url(#routeTrend)"
                 strokeWidth={2}
               />

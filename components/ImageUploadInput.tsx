@@ -217,12 +217,12 @@ const ImageUploadInput = ({
 
   return (
     <div
-      className="w-full p-4 mt-2 bg-opacity-80 bg-white border border-gray-400 rounded-xl appearance-none"
+      className="w-full p-4 mt-2 bg-opacity-80 bg-white border border-border rounded-xl appearance-none"
       onDrop={handleDrop}
       onDragOver={handleDragOver}
     >
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+        <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-lg">
           {error}
         </div>
       )}
@@ -240,10 +240,10 @@ const ImageUploadInput = ({
             />
             {!initialImageUrl && !disabled && (
               <div
-                className="absolute inset-0 hover:backdrop-blur-sm flex justify-center items-center rounded-2xl cursor-pointer"
+                className="absolute inset-0 hover: flex justify-center items-center rounded-2xl cursor-pointer"
                 onClick={removeImage}
               >
-                <AiOutlineCloseCircle className="w-20 h-20 text-gray-200/80" />
+                <AiOutlineCloseCircle className="w-20 h-20 text-muted-foreground" />
               </div>
             )}
           </div>
@@ -251,16 +251,16 @@ const ImageUploadInput = ({
       </div>
 
       {!publicId && (
-        <div className="flex flex-col justify-center items-center text-gray-400 hover:text-gray-600 border-dashed border-2 border-gray-300 h-40 cursor-pointer transition duration-300">
+        <div className="flex flex-col justify-center items-center text-muted-foreground hover:text-muted-foreground border-dashed border-2 border-border h-40 cursor-pointer transition duration-300">
           <MdOutlineCloudUpload className="w-14 h-14 text-4xl mb-2" />
 
           {uploadProgress !== null && (
-            <div className="bg-gray-200 rounded-full w-80 h-3.5 mb-4">
+            <div className="bg-muted rounded-full w-80 h-3.5 mb-4">
               <div
-                className="bg-gray-400/40 h-3.5 rounded-full"
+                className="bg-muted h-3.5 rounded-full"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
-              <p className="text-gray-700 text-center font-semibold mt-2">
+              <p className="text-muted-foreground text-center font-semibold mt-2">
                 {Math.round(uploadProgress)}%
               </p>
             </div>
@@ -283,14 +283,14 @@ const ImageUploadInput = ({
                 className="hidden"
                 disabled={disabled || !UPLOAD_PRESET || !CLOUD_NAME}
               />
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Supported formats: JPEG, PNG, GIF, WEBP (max 10MB)
               </p>
             </>
           )}
 
           {isUploading && uploadProgress === null && (
-            <p className="text-gray-700 text-center">Preparing upload...</p>
+            <p className="text-muted-foreground text-center">Preparing upload...</p>
           )}
         </div>
       )}

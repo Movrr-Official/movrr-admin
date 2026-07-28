@@ -400,7 +400,7 @@ export function UserDetailsDrawer({
 
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="w-full sm:w-[320px] lg:max-w-[55rem]!  p-0 h-full">
+      <DrawerContent className="w-full sm:w-[320px] lg:max-w-[55rem]! p-0 h-full">
         <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
           <DrawerHeader className="px-6 py-4 border-b border-border">
             <div className="flex items-center justify-between">
@@ -447,7 +447,7 @@ export function UserDetailsDrawer({
                               <FormControl>
                                 <Input
                                   placeholder="John Doe"
-                                  className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                  className="rounded-xl border-border/50 bg-background/60"
                                   {...field}
                                 />
                               </FormControl>
@@ -467,7 +467,7 @@ export function UserDetailsDrawer({
                                 <Input
                                   type="email"
                                   placeholder="user@example.com"
-                                  className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                  className="rounded-xl border-border/50 bg-background/60"
                                   {...field}
                                 />
                               </FormControl>
@@ -487,7 +487,7 @@ export function UserDetailsDrawer({
                                 <Input
                                   type="tel"
                                   placeholder="+1 (555) 123-4567"
-                                  className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                  className="rounded-xl border-border/50 bg-background/60"
                                   {...field}
                                 />
                               </FormControl>
@@ -506,7 +506,7 @@ export function UserDetailsDrawer({
                               <FormControl>
                                 <Input
                                   placeholder="Company Name"
-                                  className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                  className="rounded-xl border-border/50 bg-background/60"
                                   {...field}
                                 />
                               </FormControl>
@@ -527,7 +527,7 @@ export function UserDetailsDrawer({
                                 value={field.value}
                               >
                                 <FormControl>
-                                  <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                  <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                     <SelectValue placeholder="Select role" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -565,7 +565,7 @@ export function UserDetailsDrawer({
                                 value={field.value}
                               >
                                 <FormControl>
-                                  <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                  <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                     <SelectValue placeholder="Select status" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -596,7 +596,7 @@ export function UserDetailsDrawer({
                                 value={field.value}
                               >
                                 <FormControl>
-                                  <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                  <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                     <SelectValue placeholder="Select language" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -616,7 +616,7 @@ export function UserDetailsDrawer({
                           control={form.control}
                           name="isVerified"
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-xl border border-border/50 bg-background/60 backdrop-blur-sm p-4">
+                            <FormItem className="flex flex-row items-center justify-between rounded-xl border border-border/50 bg-background/60 p-4">
                               <div className="space-y-0.5">
                                 <FormLabel className="text-sm font-semibold">
                                   Verified Account
@@ -646,7 +646,7 @@ export function UserDetailsDrawer({
                             <FormControl>
                               <Textarea
                                 placeholder="Add internal notes about this user..."
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm min-h-[100px] resize-none"
+                                className="rounded-xl border-border/50 bg-background/60 min-h-[100px] resize-none"
                                 {...field}
                               />
                             </FormControl>
@@ -1068,11 +1068,11 @@ export function UserDetailsDrawer({
 
             {/* Reset Password Confirmation */}
             {showResetPasswordConfirmation && !isEditMode && (
-              <Card className="border-border border-amber-200 dark:border-amber-800">
+              <Card className="border-border border-warning/20 dark:border-warning/20">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-amber-50 dark:bg-amber-950 rounded-lg">
-                      <KeyRound className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    <div className="p-2 bg-warning/15 rounded-lg">
+                      <KeyRound className="h-5 w-5 text-warning" />
                     </div>
                     <CardTitle className="text-lg font-bold">
                       Reset Password
@@ -1139,7 +1139,7 @@ export function UserDetailsDrawer({
           </div>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50 backdrop-blur-sm">
+          <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50">
             <div className="flex gap-2">
               {isEditMode ? (
                 <>

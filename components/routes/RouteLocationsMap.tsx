@@ -10,7 +10,6 @@ import MapGL, {
   Layer,
   Marker,
 } from "react-map-gl/maplibre";
-import type { LayerProps } from "react-map-gl/maplibre";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,6 +32,7 @@ import {
   NEXT_PUBLIC_MAP_STYLE_URL,
   NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS,
 } from "@/lib/env";
+import { routeZoneFillLayer, routeZoneOutlineLayer } from "@/components/AdminMap/layers";
 
 const THE_HAGUE_CENTER = { lat: 52.0705, lng: 4.3007 };
 const THE_HAGUE_JITTER = 0.03;
@@ -283,56 +283,8 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
     return mergeBounds(boundsList);
   }, [routes]);
 
-  const zoneFillLayer: LayerProps = useMemo(
-    () => ({
-      id: "route-zones-fill",
-      type: "fill",
-      source: "route-zones",
-      paint: {
-        "fill-color": [
-          "match",
-          ["get", "status"],
-          "in-progress",
-          "#10C259",
-          "assigned",
-          "#245C3D",
-          "completed",
-          "#8C8C8C",
-          "cancelled",
-          "#C43C3C",
-          "#245C3D",
-        ],
-        "fill-opacity": 0.18,
-      },
-    }),
-    [],
-  );
-
-  const zoneOutlineLayer: LayerProps = useMemo(
-    () => ({
-      id: "route-zones-outline",
-      type: "line",
-      source: "route-zones",
-      paint: {
-        "line-color": [
-          "match",
-          ["get", "status"],
-          "in-progress",
-          "#10C259",
-          "assigned",
-          "#245C3D",
-          "completed",
-          "#8C8C8C",
-          "cancelled",
-          "#C43C3C",
-          "#245C3D",
-        ],
-        "line-width": 2,
-        "line-opacity": 0.7,
-      },
-    }),
-    [],
-  );
+  const zoneFillLayer = routeZoneFillLayer;
+  const zoneOutlineLayer = routeZoneOutlineLayer;
 
   const selectedRoute = useMemo(() => {
     if (!selectedRouteId) {
@@ -521,7 +473,7 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
                           ? "bg-success ring-success/30"
                           : marker.status === "assigned"
                             ? "bg-primary ring-primary/30"
-                            : "bg-slate-500 ring-slate-200")
+                            : "bg-muted0 ring-border")
                       }
                     />
                     <span className="mt-2 rounded-full bg-background/90 px-2 py-0.5 text-[10px] font-semibold text-foreground shadow">
@@ -591,7 +543,7 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
                           ? "bg-success ring-success/30"
                           : marker.status === "assigned"
                             ? "bg-primary ring-primary/30"
-                            : "bg-slate-500 ring-slate-200")
+                            : "bg-muted0 ring-border")
                       }
                     />
                     <span className="mt-2 rounded-full bg-background/90 px-2 py-0.5 text-[10px] font-semibold text-foreground shadow">

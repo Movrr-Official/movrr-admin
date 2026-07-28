@@ -524,7 +524,7 @@ export function CampaignDetailsDrawer({
                                 <FormControl>
                                   <Input
                                     placeholder="Campaign Name"
-                                    className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                    className="rounded-xl border-border/50 bg-background/60"
                                     {...field}
                                   />
                                 </FormControl>
@@ -546,7 +546,7 @@ export function CampaignDetailsDrawer({
                                     step="0.01"
                                     min="0.01"
                                     placeholder="0.00"
-                                    className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                    className="rounded-xl border-border/50 bg-background/60"
                                     {...field}
                                     onChange={(e) =>
                                       field.onChange(e.target.value)
@@ -570,7 +570,7 @@ export function CampaignDetailsDrawer({
                                     type="number"
                                     min="1"
                                     placeholder="0"
-                                    className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                    className="rounded-xl border-border/50 bg-background/60"
                                     {...field}
                                     onChange={(e) =>
                                       field.onChange(e.target.value)
@@ -592,7 +592,7 @@ export function CampaignDetailsDrawer({
                                 <FormControl>
                                   <Input
                                     type="datetime-local"
-                                    className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                    className="rounded-xl border-border/50 bg-background/60"
                                     {...field}
                                   />
                                 </FormControl>
@@ -611,7 +611,7 @@ export function CampaignDetailsDrawer({
                                 <FormControl>
                                   <Input
                                     type="datetime-local"
-                                    className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                    className="rounded-xl border-border/50 bg-background/60"
                                     {...field}
                                   />
                                 </FormControl>
@@ -645,7 +645,7 @@ export function CampaignDetailsDrawer({
                                   disabled={advertisersLoading}
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                    <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                       <SelectValue
                                         placeholder={
                                           advertisersLoading
@@ -701,7 +701,7 @@ export function CampaignDetailsDrawer({
                                   value={field.value}
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                    <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                       <SelectValue placeholder="Select type" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -729,7 +729,7 @@ export function CampaignDetailsDrawer({
                                   value={field.value}
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                    <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                       <SelectValue placeholder="Select vehicle" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -760,7 +760,7 @@ export function CampaignDetailsDrawer({
                                   value={field.value}
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                    <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                       <SelectValue placeholder="Select mode" />
                                     </SelectTrigger>
                                   </FormControl>
@@ -789,7 +789,7 @@ export function CampaignDetailsDrawer({
                               <FormControl>
                                 <Textarea
                                   placeholder="Campaign description..."
-                                  className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm min-h-[100px] resize-none"
+                                  className="rounded-xl border-border/50 bg-background/60 min-h-[100px] resize-none"
                                   {...field}
                                 />
                               </FormControl>
@@ -911,7 +911,7 @@ export function CampaignDetailsDrawer({
                           Amount Spent
                         </p>
                         <div className="flex items-center gap-2">
-                          <Euro className="h-4 w-4 text-amber-600" />
+                          <Euro className="h-4 w-4 text-warning" />
                           <p className="text-lg font-bold text-foreground">
                             {formatCurrencyEUR(campaign.spent)}
                           </p>
@@ -1174,7 +1174,7 @@ export function CampaignDetailsDrawer({
             </div>
 
             {/* Footer Actions */}
-            <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50 backdrop-blur-sm">
+            <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50">
               <div className="flex gap-2 flex-wrap">
                 {isEditMode ? (
                   <>
@@ -1310,7 +1310,7 @@ export function CampaignDetailsDrawer({
         open={showRunSelectionDialog}
         onOpenChange={setShowRunSelectionDialog}
       >
-        <AlertDialogContent className="border-border backdrop-blur-xl">
+        <AlertDialogContent className="border-border">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-3 bg-primary/10 rounded-xl">
@@ -1331,7 +1331,7 @@ export function CampaignDetailsDrawer({
           </AlertDialogHeader>
           <div className="py-4">
             <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-xl border border-border/50">
-              <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="h-5 w-5 text-warning mt-0.5 flex-shrink-0" />
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">
                   What happens next?
@@ -1367,11 +1367,11 @@ export function CampaignDetailsDrawer({
 
       {/* Delete Campaign Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="border-border backdrop-blur-xl">
+        <AlertDialogContent className="border-border">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-red-100 dark:bg-red-950 rounded-xl">
-                <Trash2 className="h-6 w-6 text-red-600 dark:text-red-400" />
+              <div className="p-3 bg-destructive/10 dark:bg-destructive rounded-xl">
+                <Trash2 className="h-6 w-6 text-destructive" />
               </div>
               <AlertDialogTitle className="text-xl font-bold text-destructive">
                 Delete Campaign
@@ -1387,13 +1387,13 @@ export function CampaignDetailsDrawer({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
-            <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-200 dark:border-red-800">
-              <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-4 bg-destructive/10/30 rounded-xl border border-destructive/20 dark:border-destructive/20">
+              <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-red-900 dark:text-red-100">
+                <p className="text-sm font-semibold text-destructive dark:text-destructive">
                   Warning: This action is irreversible
                 </p>
-                <ul className="text-sm text-red-700 dark:text-red-300 space-y-1 list-disc list-inside">
+                <ul className="text-sm text-destructive dark:text-destructive space-y-1 list-disc list-inside">
                   <li>Campaign will be permanently deleted</li>
                   <li>All associated routes and assignments will be removed</li>
                   <li>Performance data will be lost</li>
@@ -1420,7 +1420,7 @@ export function CampaignDetailsDrawer({
         open={showDuplicateDialog}
         onOpenChange={setShowDuplicateDialog}
       >
-        <AlertDialogContent className="border-border backdrop-blur-xl">
+        <AlertDialogContent className="border-border">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-3 bg-primary/10 rounded-xl">

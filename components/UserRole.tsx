@@ -31,7 +31,7 @@ export const getRoleBadge = (role: AdminRole) => {
       displayName: "ADMIN",
     },
     moderator: {
-      className: "bg-accent-alt/10 text-accent-alt border-accent-alt/30",
+      className: "bg-secondary text-secondary-foreground border-border",
       displayName: "MODERATOR",
     },
     support: {

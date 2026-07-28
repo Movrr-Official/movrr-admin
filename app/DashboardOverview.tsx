@@ -653,7 +653,7 @@ export default function DashboardOverview() {
   );
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
         <PageHeader
           actions={[
@@ -905,7 +905,7 @@ export default function DashboardOverview() {
                     {
                       key: "completed",
                       label: "Ended",
-                      dotClass: "bg-red-500",
+                      dotClass: "bg-destructive",
                     },
                   ].map((status) => (
                     <div
@@ -974,7 +974,7 @@ export default function DashboardOverview() {
                     >
                       <CartesianGrid
                         vertical={false}
-                        stroke="hsl(var(--border))"
+                        stroke="var(--border)"
                       />
                       <XAxis
                         dataKey="name"
@@ -1063,13 +1063,13 @@ export default function DashboardOverview() {
                     >
                       <CartesianGrid
                         vertical={false}
-                        stroke="hsl(var(--border))"
+                        stroke="var(--border)"
                         strokeOpacity={0.65}
                       />
                       <XAxis
                         dataKey="name"
                         tickLine={false}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        axisLine={{ stroke: "var(--border)" }}
                         tickMargin={CHART_X_TICK_MARGIN}
                         interval="preserveStartEnd"
                         fontSize={CHART_AXIS_FONT_SIZE}
@@ -1248,7 +1248,7 @@ export default function DashboardOverview() {
                     <CartesianGrid
                       vertical={false}
                       strokeDasharray="3 3"
-                      stroke="hsl(var(--border))"
+                      stroke="var(--border)"
                       strokeOpacity={0.65}
                     />
                     <XAxis
@@ -1340,7 +1340,7 @@ export default function DashboardOverview() {
                       km
                     </span>
                     {" · "}
-                    <span className="font-semibold text-green-600 dark:text-green-400">
+                    <span className="font-semibold text-success dark:text-success">
                       {sessionAnalytics.distanceTrend
                         .reduce((s, d) => s + d.co2SavedKg, 0)
                         .toFixed(1)}{" "}
@@ -1431,7 +1431,7 @@ export default function DashboardOverview() {
                     >
                       <CartesianGrid
                         vertical={false}
-                        stroke="hsl(var(--border))"
+                        stroke="var(--border)"
                         strokeOpacity={0.65}
                       />
                       <XAxis

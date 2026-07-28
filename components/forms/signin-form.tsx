@@ -211,7 +211,7 @@ export function SignInForm({ enforceAdminMfa }: { enforceAdminMfa: boolean }) {
               >
                 <Badge
                   variant="outline"
-                  className="hover:bg-gray-200/80 dark:hover:bg-gray-800"
+                  className="hover:bg-muted dark:hover:bg-muted"
                 >
                   Change
                 </Badge>

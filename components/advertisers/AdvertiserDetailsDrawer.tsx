@@ -282,7 +282,7 @@ export function AdvertiserDetailsDrawer({
                             <FormControl>
                               <Input
                                 {...field}
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
                             <FormMessage />
@@ -300,7 +300,7 @@ export function AdvertiserDetailsDrawer({
                             <FormControl>
                               <Input
                                 {...field}
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
                             <FormMessage />
@@ -319,7 +319,7 @@ export function AdvertiserDetailsDrawer({
                               <Input
                                 type="email"
                                 {...field}
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
                             <FormMessage />
@@ -337,7 +337,7 @@ export function AdvertiserDetailsDrawer({
                             <FormControl>
                               <Input
                                 {...field}
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
                             <FormMessage />
@@ -356,7 +356,7 @@ export function AdvertiserDetailsDrawer({
                               <Input
                                 {...field}
                                 placeholder="https://example.com"
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
                             <FormMessage />
@@ -376,7 +376,7 @@ export function AdvertiserDetailsDrawer({
                               value={field.value}
                             >
                               <FormControl>
-                                <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -409,7 +409,7 @@ export function AdvertiserDetailsDrawer({
                                 onChange={(event) =>
                                   field.onChange(event.target.value)
                                 }
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
                             <FormMessage />
@@ -429,7 +429,7 @@ export function AdvertiserDetailsDrawer({
                               value={field.value || "en"}
                             >
                               <FormControl>
-                                <SelectTrigger className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
                                   <SelectValue placeholder="Select language" />
                                 </SelectTrigger>
                               </FormControl>
@@ -456,7 +456,7 @@ export function AdvertiserDetailsDrawer({
                               <Input
                                 {...field}
                                 placeholder="UTC"
-                                className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                                className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
                             <FormDescription>
@@ -478,7 +478,7 @@ export function AdvertiserDetailsDrawer({
                           <FormControl>
                             <Textarea
                               {...field}
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm min-h-[90px] resize-none"
+                              className="rounded-xl border-border/50 bg-background/60 min-h-[90px] resize-none"
                             />
                           </FormControl>
                           <FormMessage />
@@ -702,7 +702,7 @@ export function AdvertiserDetailsDrawer({
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50 backdrop-blur-sm">
+            <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50">
               <div className="flex gap-2">
                 {isEditMode ? (
                   <>
@@ -772,8 +772,8 @@ export function AdvertiserDetailsDrawer({
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="mb-2 flex items-center gap-3">
-              <div className="rounded-xl bg-red-100 p-2 dark:bg-red-950">
-                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="rounded-xl bg-destructive/10 p-2 dark:bg-destructive">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
               </div>
               <AlertDialogTitle>Delete advertiser profile</AlertDialogTitle>
             </div>

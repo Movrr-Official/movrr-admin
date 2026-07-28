@@ -84,7 +84,7 @@ export function RiderTransactionsDetailsDrawer({
 
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="border-border backdrop-blur-xl h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
+      <DrawerContent className="border-border h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
         <DrawerHeader className="border-b border-border/50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -131,14 +131,12 @@ export function RiderTransactionsDetailsDrawer({
                   <span className="text-sm text-muted-foreground">Points</span>
                   <div className="flex items-center gap-2">
                     {isPositive ? (
-                      <TrendingUp className="h-4 w-4 text-green-600" />
+                      <TrendingUp className="h-4 w-4 text-success" />
                     ) : (
-                      <TrendingDown className="h-4 w-4 text-red-600" />
+                      <TrendingDown className="h-4 w-4 text-destructive" />
                     )}
                     <span
-                      className={`text-sm font-semibold ${
-                        isPositive ? "text-green-600" : "text-red-600"
-                      }`}
+                      className={`text-sm font-semibold ${ isPositive ? "text-success" : "text-destructive" }`}
                     >
                       {isPositive ? "+" : ""}
                       {transaction.points.toLocaleString()}
@@ -150,7 +148,7 @@ export function RiderTransactionsDetailsDrawer({
                     Balance After
                   </span>
                   <div className="flex items-center gap-2">
-                    <Coins className="h-4 w-4 text-amber-600" />
+                    <Coins className="h-4 w-4 text-warning" />
                     <span className="text-sm font-semibold">
                       {transaction.balanceAfter.toLocaleString()}
                     </span>
@@ -243,10 +241,10 @@ export function RiderTransactionsDetailsDrawer({
             <Card className="border-border">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-amber-500" />
+                  <Zap className="h-4 w-4 text-warning" />
                   Earning Breakdown
                   {transaction.wasCapped && (
-                    <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-950 dark:text-orange-300">
+                    <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-xs font-medium text-warning dark:bg-warning/15 dark:text-warning">
                       <AlertTriangle className="h-3 w-3" />
                       Daily cap hit
                     </span>
@@ -290,7 +288,7 @@ export function RiderTransactionsDetailsDrawer({
                       <span className="text-muted-foreground">
                         Campaign boost
                       </span>
-                      <span className="font-medium text-violet-600">
+                      <span className="font-medium text-secondary-foreground">
                         {transaction.campaignBoostMultiplier}×
                       </span>
                     </div>
@@ -310,7 +308,7 @@ export function RiderTransactionsDetailsDrawer({
                           <span className="text-muted-foreground">
                             {bonus.label ?? bonus.type}
                           </span>
-                          <span className="font-medium text-green-600">
+                          <span className="font-medium text-success">
                             {bonus.points != null
                               ? `+${bonus.points}`
                               : bonus.multiplier != null
@@ -322,7 +320,7 @@ export function RiderTransactionsDetailsDrawer({
                     </>
                   )}
                 {transaction.wasCapped && (
-                  <div className="mt-2 rounded-lg bg-orange-50 dark:bg-orange-950 px-3 py-2 text-xs text-orange-700 dark:text-orange-300">
+                  <div className="mt-2 rounded-lg bg-warning/15 dark:bg-warning/15 px-3 py-2 text-xs text-warning dark:text-warning">
                     This transaction was reduced because the rider reached their
                     daily earning cap. Some points were not awarded.
                   </div>

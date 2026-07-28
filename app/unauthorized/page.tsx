@@ -14,10 +14,10 @@ export default function UnauthorizedPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">
         <CardHeader>
-          <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <AlertTriangle className="h-6 w-6 text-red-600" />
+          <div className="mx-auto w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+            <AlertTriangle className="h-6 w-6 text-destructive" />
           </div>
-          <CardTitle className="text-2xl font-black text-red-600">
+          <CardTitle className="text-2xl font-black text-destructive">
             ACCESS DENIED
           </CardTitle>
           <CardDescription>

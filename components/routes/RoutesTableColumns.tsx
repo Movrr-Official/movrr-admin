@@ -176,13 +176,7 @@ export function getRoutesTableColumns({
             <span className="text-sm font-medium">{coverage}%</span>
             <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className={`h-full ${
-                  coverage >= 90
-                    ? "bg-green-500"
-                    : coverage >= 70
-                      ? "bg-amber-500"
-                      : "bg-red-500"
-                }`}
+                className={`h-full ${ coverage >= 90 ? "bg-success" : coverage >= 70 ? "bg-warning" : "bg-destructive" }`}
                 style={{ width: `${coverage}%` }}
               />
             </div>
@@ -245,7 +239,7 @@ export function getRoutesTableColumns({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="border-border backdrop-blur-xl"
+              className="border-border"
             >
               {onView && (
                 <DropdownMenuItem onClick={() => onView(route)}>

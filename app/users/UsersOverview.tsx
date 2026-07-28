@@ -112,7 +112,7 @@ export default function UsersOverview() {
         : 0;
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
         {/* Stats Cards Grid - 2 columns layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
@@ -149,7 +149,7 @@ export default function UsersOverview() {
                       {
                         label: `${inactiveUsers} inactive`,
                         className:
-                          "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300",
+                          "bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning",
                       },
                     ]
                   : []),
@@ -187,7 +187,7 @@ export default function UsersOverview() {
                   label: "Admins",
                   value: adminsCount + moderatorsCount + supportCount,
                   icon: Shield,
-                  iconColor: "text-amber-600",
+                  iconColor: "text-warning",
                 },
               ]}
               animationDelay="0.2s"
@@ -205,7 +205,7 @@ export default function UsersOverview() {
                 {
                   label: `${recentlyActiveUsers} recently active`,
                   className:
-                    "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300",
+                    "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success",
                 },
               ]}
               animationDelay="0.3s"
@@ -219,8 +219,8 @@ export default function UsersOverview() {
           >
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 dark:bg-green-950 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <div className="p-2 bg-success/12 dark:bg-success rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-success dark:text-success" />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-bold">
@@ -244,8 +244,8 @@ export default function UsersOverview() {
                     className={cn(
                       "font-semibold",
                       growthRate >= 0
-                        ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300"
-                        : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300",
+                        ? "bg-success/12 text-success border-success/20 dark:bg-success dark:text-success"
+                        : "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive dark:text-destructive",
                     )}
                   >
                     {growthRate >= 0 ? "+" : ""}
@@ -300,7 +300,7 @@ export default function UsersOverview() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                      <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                       <span className="text-xs text-foreground">This Week</span>
                     </div>
                     <span className="text-sm font-semibold text-foreground">
@@ -309,7 +309,7 @@ export default function UsersOverview() {
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
                     <div className="flex items-center gap-2">
-                      <Clock className="h-3.5 w-3.5 text-amber-600" />
+                      <Clock className="h-3.5 w-3.5 text-warning" />
                       <span className="text-xs text-foreground">Pending</span>
                     </div>
                     <span className="text-sm font-semibold text-foreground">

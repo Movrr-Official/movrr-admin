@@ -238,7 +238,7 @@ export default function CreateCampaignPage() {
   );
 
   return (
-    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <PageHeader
@@ -271,29 +271,19 @@ export default function CreateCampaignPage() {
                 <div key={step.key} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
                     <div
-                      className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
-                        isActive
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : isCompleted
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-muted bg-muted text-muted-foreground"
-                      }`}
+                      className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${ isActive ? "border-primary bg-primary text-primary-foreground" : isCompleted ? "border-primary bg-primary/10 text-primary" : "border-muted bg-muted text-muted-foreground" }`}
                     >
                       <StepIcon className="h-5 w-5" />
                     </div>
                     <span
-                      className={`mt-2 text-xs font-medium ${
-                        isActive ? "text-primary" : "text-muted-foreground"
-                      }`}
+                      className={`mt-2 text-xs font-medium ${ isActive ? "text-primary" : "text-muted-foreground" }`}
                     >
                       {step.label}
                     </span>
                   </div>
                   {index < 2 && (
                     <div
-                      className={`flex-1 h-0.5 mx-4 transition-all ${
-                        isCompleted ? "bg-primary" : "bg-muted"
-                      }`}
+                      className={`flex-1 h-0.5 mx-4 transition-all ${ isCompleted ? "bg-primary" : "bg-muted" }`}
                     />
                   )}
                 </div>
@@ -334,7 +324,7 @@ export default function CreateCampaignPage() {
                           <FormControl>
                             <Input
                               placeholder="Enter campaign name"
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                              className="rounded-xl border-border/50 bg-background/60"
                               {...field}
                             />
                           </FormControl>
@@ -363,7 +353,7 @@ export default function CreateCampaignPage() {
                         <FormControl>
                           <Textarea
                             placeholder="Describe your campaign goals and objectives..."
-                            className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm min-h-[100px] resize-none"
+                            className="rounded-xl border-border/50 bg-background/60 min-h-[100px] resize-none"
                             {...field}
                           />
                         </FormControl>
@@ -390,7 +380,7 @@ export default function CreateCampaignPage() {
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                              <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
                                 <SelectValue placeholder="Select type" />
                               </SelectTrigger>
                             </FormControl>
@@ -447,7 +437,7 @@ export default function CreateCampaignPage() {
                             disabled={advertisersLoading}
                           >
                             <FormControl>
-                              <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                              <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
                                 <SelectValue
                                   placeholder={
                                     advertisersLoading
@@ -531,7 +521,7 @@ export default function CreateCampaignPage() {
                               step="0.01"
                               min="0.01"
                               placeholder="0.00"
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                              className="rounded-xl border-border/50 bg-background/60"
                               {...field}
                               onChange={(e) => field.onChange(e.target.value)}
                             />
@@ -557,7 +547,7 @@ export default function CreateCampaignPage() {
                               type="number"
                               min="1"
                               placeholder="0"
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                              className="rounded-xl border-border/50 bg-background/60"
                               {...field}
                               onChange={(e) => field.onChange(e.target.value)}
                             />
@@ -602,7 +592,7 @@ export default function CreateCampaignPage() {
                           <FormControl>
                             <Input
                               type="datetime-local"
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                              className="rounded-xl border-border/50 bg-background/60"
                               {...field}
                             />
                           </FormControl>
@@ -621,7 +611,7 @@ export default function CreateCampaignPage() {
                           <FormControl>
                             <Input
                               type="datetime-local"
-                              className="rounded-xl border-border/50 bg-background/60 backdrop-blur-sm"
+                              className="rounded-xl border-border/50 bg-background/60"
                               min={watchedValues.startDate || undefined}
                               {...field}
                             />
@@ -698,7 +688,7 @@ export default function CreateCampaignPage() {
                               defaultValue={field.value}
                             >
                               <FormControl>
-                                <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
                                   <SelectValue placeholder="Select vehicle" />
                                 </SelectTrigger>
                               </FormControl>
@@ -759,7 +749,7 @@ export default function CreateCampaignPage() {
                               defaultValue={field.value}
                             >
                               <FormControl>
-                                <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60 backdrop-blur-sm">
+                                <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
                                   <SelectValue placeholder="Select mode" />
                                 </SelectTrigger>
                               </FormControl>

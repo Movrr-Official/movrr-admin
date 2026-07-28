@@ -234,7 +234,7 @@ export default function RidersTableContent({
                 variant="outline"
                 onClick={() => handleBulkStatusChange("active")}
                 disabled={isBulkPending}
-                className="text-green-700 border-green-300 hover:bg-green-50"
+                className="text-success border-success/20 hover:bg-success/12"
               >
                 {isBulkPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <UserCheck className="mr-1.5 h-3.5 w-3.5" />}
                 Activate
@@ -244,7 +244,7 @@ export default function RidersTableContent({
                 variant="outline"
                 onClick={() => handleBulkStatusChange("inactive")}
                 disabled={isBulkPending}
-                className="text-amber-700 border-amber-300 hover:bg-amber-50"
+                className="text-warning border-warning/20 hover:bg-warning/15"
               >
                 {isBulkPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <ShieldOff className="mr-1.5 h-3.5 w-3.5" />}
                 Suspend
