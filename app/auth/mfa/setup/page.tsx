@@ -59,12 +59,12 @@ export default async function AdminMfaSetupPage({
   }
 
   return (
-    <Card className="border-0">
-      <CardHeader className="text-center pb-6">
-        <CardTitle className="text-3xl font-bold tracking-tight">
+    <Card className="border-0 bg-transparent shadow-none">
+      <CardHeader className="pb-6 text-center">
+        <CardTitle className="text-2xl font-semibold tracking-tight text-movrr-text-heading md:text-3xl">
           Set Up Admin MFA
         </CardTitle>
-        <CardDescription className="text-lg">
+        <CardDescription className="text-base text-movrr-text-secondary">
           Enroll an authenticator app to finish securing your MOVRR Admin access.
         </CardDescription>
       </CardHeader>
