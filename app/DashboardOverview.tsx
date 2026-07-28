@@ -1504,7 +1504,7 @@ export default function DashboardOverview() {
                     {recentActivity.map((log) => (
                       <div
                         key={log.id}
-                        className="flex flex-wrap items-center justify-between gap-2 bg-background"
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-background px-3 py-2.5"
                       >
                         <div>
                           <div className="flex flex-wrap items-center gap-2">

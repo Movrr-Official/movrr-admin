@@ -70,6 +70,7 @@ export default async function RootLayout({
         <html
           lang="en"
           className={`${manrope.variable} ${jetbrainsMono.variable} antialiased scroll-smooth`}
+          data-scroll-behavior="smooth"
           suppressHydrationWarning
         >
           <body className="min-h-screen bg-background text-foreground">
