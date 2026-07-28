@@ -133,7 +133,7 @@ export function getRiderBalanceTableColumns({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass-card border-0 backdrop-blur-xl">
+            <DropdownMenuContent align="end" className="border-border backdrop-blur-xl">
               {onView && (
                 <DropdownMenuItem onClick={() => onView(balance)}>
                   <Eye className="mr-2 h-4 w-4" />

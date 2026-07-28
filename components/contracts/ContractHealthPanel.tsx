@@ -68,7 +68,7 @@ export function ContractHealthPanel() {
   const hasSampleViolations = (report?.sampleViolations.length ?? 0) > 0;
 
   return (
-    <Card className="glass-card border-0 animate-slide-up">
+    <Card className="border-border animate-slide-up">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

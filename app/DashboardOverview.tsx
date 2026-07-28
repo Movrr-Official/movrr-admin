@@ -653,7 +653,7 @@ export default function DashboardOverview() {
   );
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="space-y-6 md:space-y-8">
         <PageHeader
           actions={[
@@ -742,7 +742,7 @@ export default function DashboardOverview() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 md:gap-8">
-          <Card className="glass-card border-0 lg:col-span-8">
+          <Card className="border-border lg:col-span-8">
             <CardHeader className="pb-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <CardTitle className="text-xl font-bold">User Growth</CardTitle>
@@ -864,7 +864,7 @@ export default function DashboardOverview() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-0 lg:col-span-4">
+          <Card className="border-border lg:col-span-4">
             <CardHeader className="pb-3">
               <CardTitle className="text-xl font-bold">
                 Campaign Status
@@ -942,7 +942,7 @@ export default function DashboardOverview() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 md:gap-8">
-          <Card className="glass-card border-0">
+          <Card className="border-border">
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-bold">
                 Campaign Impact
@@ -1034,7 +1034,7 @@ export default function DashboardOverview() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-0">
+          <Card className="border-border">
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-bold">
                 Points Awarded vs Redeemed
@@ -1141,7 +1141,7 @@ export default function DashboardOverview() {
           </Card>
         </div>
 
-        <Card className="glass-card border-0">
+        <Card className="border-border">
           <CardHeader className="pb-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
@@ -1353,7 +1353,7 @@ export default function DashboardOverview() {
         </Card>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 md:gap-8">
-          <Card className="glass-card border-0 lg:col-span-8">
+          <Card className="border-border lg:col-span-8">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between gap-3">
                 <CardTitle className="text-xl font-bold">
@@ -1478,7 +1478,7 @@ export default function DashboardOverview() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-0 lg:col-span-4">
+          <Card className="border-border lg:col-span-4">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between gap-3">
                 <CardTitle className="text-xl font-bold flex items-center gap-2">
@@ -1554,7 +1554,7 @@ export default function DashboardOverview() {
           </Card>
         </div>
 
-        <Card className="glass-card border-0">
+        <Card className="border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl font-bold">Quick actions</CardTitle>
           </CardHeader>

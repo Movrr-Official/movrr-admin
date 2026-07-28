@@ -301,7 +301,7 @@ export const getCampaignsTableColumns = ({
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass-card border-0">
+          <DropdownMenuContent align="end" className="border-border">
             <DropdownMenuItem onClick={() => onView?.(campaign)}>
               <Eye className="mr-2 h-4 w-4" />
               View Details

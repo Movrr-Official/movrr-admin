@@ -261,7 +261,7 @@ export function getRewardsTableColumns({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="glass-card border-0 backdrop-blur-xl"
+              className="border-border backdrop-blur-xl"
             >
               {onView && (
                 <DropdownMenuItem onClick={() => onView(transaction)}>

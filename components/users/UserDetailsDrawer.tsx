@@ -402,7 +402,7 @@ export function UserDetailsDrawer({
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="w-full sm:w-[320px] lg:max-w-[55rem]!  p-0 h-full">
         <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
-          <DrawerHeader className="px-6 py-4 border-b glass-card border-0">
+          <DrawerHeader className="px-6 py-4 border-b border-border">
             <div className="flex items-center justify-between">
               <DrawerTitle className="text-2xl font-bold">
                 User Details
@@ -696,7 +696,7 @@ export function UserDetailsDrawer({
 
             {/* Basic Information */}
             {!isEditMode && (
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg font-bold">
                     Basic Information
@@ -745,7 +745,7 @@ export function UserDetailsDrawer({
             )}
 
             {/* Account Activity */}
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-bold">
                   Account Activity
@@ -795,7 +795,7 @@ export function UserDetailsDrawer({
 
             {/* Additional Information Tabs */}
             {!isEditMode && (
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg font-bold">
                     Additional Information
@@ -1054,7 +1054,7 @@ export function UserDetailsDrawer({
 
             {/* Account Notes */}
             {!isEditMode && user.accountNotes && (
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg font-bold">
                     Account Notes
@@ -1068,7 +1068,7 @@ export function UserDetailsDrawer({
 
             {/* Reset Password Confirmation */}
             {showResetPasswordConfirmation && !isEditMode && (
-              <Card className="glass-card border-0 border-amber-200 dark:border-amber-800">
+              <Card className="border-border border-amber-200 dark:border-amber-800">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-amber-50 dark:bg-amber-950 rounded-lg">
@@ -1139,7 +1139,7 @@ export function UserDetailsDrawer({
           </div>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 border-t glass-card border-0 flex justify-between items-center bg-background/50 backdrop-blur-sm">
+          <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50 backdrop-blur-sm">
             <div className="flex gap-2">
               {isEditMode ? (
                 <>

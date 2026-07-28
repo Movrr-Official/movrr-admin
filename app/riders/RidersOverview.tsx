@@ -33,7 +33,7 @@ export default function RidersOverview() {
     0;
 
   return (
-    <div className="min-h-screen gradient-bg px-4 py-8 sm:px-6 md:py-12 lg:pt-6">
+    <div className="min-h-screen page-canvas sm:px-6 md:py-12 lg:pt-6">
       <div className="space-y-6 md:space-y-8">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
           <StatsCard

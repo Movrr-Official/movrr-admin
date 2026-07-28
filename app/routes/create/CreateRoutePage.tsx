@@ -391,7 +391,7 @@ export default function CreateRoutePage() {
   };
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="max-w-5xl mx-auto space-y-6">
         <PageHeader
           title="Create Route"
@@ -406,7 +406,7 @@ export default function CreateRoutePage() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle>Core Route Details</CardTitle>
               </CardHeader>
@@ -632,7 +632,7 @@ export default function CreateRoutePage() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle>Route Coordinates</CardTitle>
               </CardHeader>
@@ -720,7 +720,7 @@ export default function CreateRoutePage() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle>Strategic Stops</CardTitle>
                 <Button
@@ -833,7 +833,7 @@ export default function CreateRoutePage() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle>Campaign Zones</CardTitle>
                 <Button
@@ -909,7 +909,7 @@ export default function CreateRoutePage() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle>Hot Zones</CardTitle>
                 <Button

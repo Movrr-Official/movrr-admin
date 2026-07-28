@@ -89,7 +89,7 @@ export function StatusUpdateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] glass-card border-border/30">
+      <DialogContent className="sm:max-w-[425px] border-border border-border/30">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Update Status</DialogTitle>
           <DialogDescription className="text-muted-foreground">

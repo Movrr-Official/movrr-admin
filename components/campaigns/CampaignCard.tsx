@@ -131,7 +131,7 @@ export function CampaignCard({
   const endDate = formatDate(campaign.endDate);
 
   return (
-    <Card className="h-full glass-card border-0 overflow-hidden relative">
+    <Card className="h-full border-border overflow-hidden relative">
       {/* Header */}
       <CardHeader className="flex items-center justify-between pb-3">
         <div className="flex-1 space-y-2 min-w-0">

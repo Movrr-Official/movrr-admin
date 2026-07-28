@@ -483,7 +483,7 @@ export function CampaignDetailsDrawer({
       <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="w-full sm:w-[320px] lg:max-w-[55rem]! p-0 h-full">
           <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
-            <DrawerHeader className="px-6 py-4 border-b glass-card border-0">
+            <DrawerHeader className="px-6 py-4 border-b border-border">
               <div className="flex items-center justify-between">
                 <DrawerTitle className="text-2xl font-bold">
                   Campaign Details
@@ -827,7 +827,7 @@ export function CampaignDetailsDrawer({
 
               {/* Performance Metrics */}
               {!isEditMode && (
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-lg font-bold">
                       Performance Metrics
@@ -887,7 +887,7 @@ export function CampaignDetailsDrawer({
 
               {/* Budget Information */}
               {!isEditMode && (
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-lg font-bold">
                       Budget Information
@@ -945,7 +945,7 @@ export function CampaignDetailsDrawer({
               )}
 
               {/* Campaign Details */}
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg font-bold">
                     Campaign Details
@@ -1045,7 +1045,7 @@ export function CampaignDetailsDrawer({
               {!isEditMode &&
                 campaign.targetZones &&
                 campaign.targetZones.length > 0 && (
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader className="pb-4">
                       <CardTitle className="text-lg font-bold">
                         Target Zones
@@ -1066,7 +1066,7 @@ export function CampaignDetailsDrawer({
 
               {/* Riders & Routes */}
               {!isEditMode && (
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-lg font-bold">
                       Riders & Routes
@@ -1131,7 +1131,7 @@ export function CampaignDetailsDrawer({
 
               {/* Activity Timeline */}
               {!isEditMode && (
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-lg font-bold">
                       Activity Timeline
@@ -1174,7 +1174,7 @@ export function CampaignDetailsDrawer({
             </div>
 
             {/* Footer Actions */}
-            <div className="px-6 py-4 border-t glass-card border-0 flex justify-between items-center bg-background/50 backdrop-blur-sm">
+            <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50 backdrop-blur-sm">
               <div className="flex gap-2 flex-wrap">
                 {isEditMode ? (
                   <>
@@ -1310,7 +1310,7 @@ export function CampaignDetailsDrawer({
         open={showRunSelectionDialog}
         onOpenChange={setShowRunSelectionDialog}
       >
-        <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
+        <AlertDialogContent className="border-border backdrop-blur-xl">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-3 bg-primary/10 rounded-xl">
@@ -1367,7 +1367,7 @@ export function CampaignDetailsDrawer({
 
       {/* Delete Campaign Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
+        <AlertDialogContent className="border-border backdrop-blur-xl">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-3 bg-red-100 dark:bg-red-950 rounded-xl">
@@ -1420,7 +1420,7 @@ export function CampaignDetailsDrawer({
         open={showDuplicateDialog}
         onOpenChange={setShowDuplicateDialog}
       >
-        <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
+        <AlertDialogContent className="border-border backdrop-blur-xl">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-3 bg-primary/10 rounded-xl">

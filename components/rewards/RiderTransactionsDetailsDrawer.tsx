@@ -84,7 +84,7 @@ export function RiderTransactionsDetailsDrawer({
 
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="glass-card border-0 backdrop-blur-xl h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
+      <DrawerContent className="border-border backdrop-blur-xl h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
         <DrawerHeader className="border-b border-border/50">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -109,7 +109,7 @@ export function RiderTransactionsDetailsDrawer({
 
         <div className="overflow-y-auto flex-1 p-6 space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Coins className="h-5 w-5" />
@@ -172,7 +172,7 @@ export function RiderTransactionsDetailsDrawer({
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Route className="h-5 w-5" />
@@ -240,7 +240,7 @@ export function RiderTransactionsDetailsDrawer({
             transaction.wasCapped != null ||
             (transaction.bonusBreakdown &&
               transaction.bonusBreakdown.length > 0)) && (
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Zap className="h-4 w-4 text-amber-500" />

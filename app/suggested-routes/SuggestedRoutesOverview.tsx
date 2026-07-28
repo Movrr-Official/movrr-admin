@@ -333,13 +333,13 @@ export default function SuggestedRoutesOverview() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : isError ? (
-        <Card className="glass-card border-0">
+        <Card className="border-border">
           <CardContent className="py-12 text-center text-muted-foreground">
             Failed to load routes. Check your connection and try again.
           </CardContent>
         </Card>
       ) : routes.length === 0 ? (
-        <Card className="glass-card border-0">
+        <Card className="border-border">
           <CardContent className="py-12 text-center">
             <Route className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-50" />
             <p className="text-sm font-medium text-muted-foreground">
@@ -410,7 +410,7 @@ function RouteCard({
   const distanceKm = (route.estimated_distance_meters / 1000).toFixed(1);
 
   return (
-    <Card className="glass-card border-0 flex flex-col">
+    <Card className="border-border flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">

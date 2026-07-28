@@ -660,7 +660,7 @@ export function RouteOptimizer({
   };
 
   return (
-    <Card className="glass-card border-0 w-full max-w-[500px]">
+    <Card className="border-border w-full max-w-[500px]">
       <CardHeader className="pb-4">
         <CardTitle className="text-lg font-bold">Route Optimizer</CardTitle>
         <CardDescription>

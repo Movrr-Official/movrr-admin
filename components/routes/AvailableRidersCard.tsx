@@ -79,7 +79,7 @@ export function AvailableRidersCard() {
   }, [uniqueAllRiders, rotationIndex]);
 
   return (
-    <Card className="glass-card border-0 w-full max-w-[500px]">
+    <Card className="border-border w-full max-w-[500px]">
       <CardHeader>
         <CardTitle className="text-lg font-bold flex items-center gap-2">
           <Users className="h-5 w-5" />

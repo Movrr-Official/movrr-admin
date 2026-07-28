@@ -279,7 +279,7 @@ export default function CampaignsTableContent({
                 {[...Array(6)].map((_, i) => (
                   <div
                     key={i}
-                    className="h-64 glass-card border-0 rounded-lg animate-pulse bg-muted/30"
+                    className="h-64 border-border rounded-lg animate-pulse bg-muted/30"
                   />
                 ))}
               </div>

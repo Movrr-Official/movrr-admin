@@ -126,7 +126,7 @@ export function BulkActions({
       {/* Confirmation Dialogs */}
       {currentAction && currentAction.confirmation && (
         <AlertDialog open={showDialog !== null} onOpenChange={(open) => !open && setShowDialog(null)}>
-          <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
+          <AlertDialogContent className="border-border backdrop-blur-xl">
             <AlertDialogHeader>
               <AlertDialogTitle>{currentAction.confirmation.title}</AlertDialogTitle>
               <AlertDialogDescription>

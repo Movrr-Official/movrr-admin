@@ -1061,7 +1061,7 @@ export function AdminMap({
   if (cardShell) {
     return (
       <div
-        className="relative w-full rounded-lg overflow-hidden border-0 bg-card shadow animate-slide-up glass-card"
+        className="relative w-full rounded-lg overflow-hidden border-0 bg-card shadow animate-slide-up border-border"
         style={{ animationDelay: "0.6s" }}
       >
         {/* CardHeader equivalent */}

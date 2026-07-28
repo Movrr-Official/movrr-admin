@@ -251,7 +251,7 @@ export function AdvertiserDetailsDrawer({
       <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="w-full sm:w-[320px] lg:max-w-[55rem]! p-0 h-full">
           <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
-            <DrawerHeader className="px-6 py-4 border-b glass-card border-0">
+            <DrawerHeader className="px-6 py-4 border-b border-border">
               <div className="flex items-center justify-between">
                 <DrawerTitle className="text-2xl font-bold">
                   Advertiser Details
@@ -594,7 +594,7 @@ export function AdvertiserDetailsDrawer({
                     </div>
                   </div>
 
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader className="pb-4">
                       <CardTitle className="text-lg font-bold">
                         Contact Information
@@ -628,7 +628,7 @@ export function AdvertiserDetailsDrawer({
                     </CardContent>
                   </Card>
 
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader className="pb-4">
                       <CardTitle className="text-lg font-bold">
                         Performance Snapshot
@@ -666,7 +666,7 @@ export function AdvertiserDetailsDrawer({
                     </CardContent>
                   </Card>
 
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader className="pb-4">
                       <CardTitle className="text-lg font-bold">
                         Additional Information
@@ -702,7 +702,7 @@ export function AdvertiserDetailsDrawer({
               )}
             </div>
 
-            <div className="px-6 py-4 border-t glass-card border-0 flex justify-between items-center bg-background/50 backdrop-blur-sm">
+            <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50 backdrop-blur-sm">
               <div className="flex gap-2">
                 {isEditMode ? (
                   <>

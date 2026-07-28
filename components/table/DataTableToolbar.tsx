@@ -174,7 +174,7 @@ export function DataTableToolbar({
   return (
     <div
       className={`
-      flex flex-col gap-3 p-4 glass-card border-0 rounded-xl animate-slide-up
+      flex flex-col gap-3 p-4 border-border rounded-xl animate-slide-up
       ${variant === "compact" ? "sm:flex-row sm:items-center sm:gap-4" : "sm:flex-row sm:items-start sm:gap-6"}
       ${className}
     `}

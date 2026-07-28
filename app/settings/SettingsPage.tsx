@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -332,7 +332,7 @@ export default function SettingsPage() {
           title="Settings"
           description="Global platform configuration for MOVRR Admin."
         />
-        <Card className="glass-card border-0">
+        <Card className="border-border">
           <CardContent className="p-6 text-sm text-muted-foreground">
             Loading settings...
           </CardContent>
@@ -362,7 +362,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="space-y-6 md:space-y-8">
         <PageHeader
           title="Settings"
@@ -392,14 +392,14 @@ export default function SettingsPage() {
                 disabled={isSyncing}
                 onClick={handleSync}
               >
-                {isSyncing ? "Syncing…" : "Seed missing sections"}
+                {isSyncing ? "Syncing�" : "Seed missing sections"}
               </Button>
             </AlertDescription>
           </Alert>
         )}
 
         <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
-          <Card className="glass-card border-0">
+          <Card className="border-border">
             <CardContent className="p-4">
               <div className="space-y-2">
                 {SETTINGS_SECTIONS.map((entry) => {
@@ -439,7 +439,7 @@ export default function SettingsPage() {
           </Card>
 
           <div className="space-y-6">
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardContent className="p-6">
                 <div className="space-y-1">
                   <div className="text-lg font-semibold text-foreground">
@@ -467,7 +467,7 @@ export default function SettingsPage() {
                 <AlertDescription>
                   {validationSummary
                     .map((item) => `${item.key}: ${item.message}`)
-                    .join(" • ")}
+                    .join(" � ")}
                 </AlertDescription>
               </Alert>
             ) : null}
@@ -510,7 +510,7 @@ export default function SettingsPage() {
             {section === "billing" ? (
               <BillingSection settings={settings} />
             ) : (
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardContent className="space-y-6 p-6">
                   <SettingsSectionForm
                     form={form}
@@ -556,7 +556,7 @@ export default function SettingsPage() {
                   const newVal = pendingConfirmation.values[fieldName];
 
                   const fmt = (v: unknown): string => {
-                    if (v === null || v === undefined) return "—";
+                    if (v === null || v === undefined) return "�";
                     if (typeof v === "boolean") return v ? "on" : "off";
                     if (Array.isArray(v))
                       return v.length === 0 ? "(empty)" : v.join(", ");
@@ -575,7 +575,7 @@ export default function SettingsPage() {
                         <span className="rounded bg-destructive/10 px-1.5 py-0.5 font-mono text-destructive/80 line-through">
                           {fmt(oldVal)}
                         </span>
-                        <span className="text-muted-foreground">→</span>
+                        <span className="text-muted-foreground">?</span>
                         <span className="rounded bg-green-500/10 px-1.5 py-0.5 font-mono text-green-600 dark:text-green-400">
                           {fmt(newVal)}
                         </span>

@@ -31,7 +31,7 @@ export function CampaignEngagementByCityChart({
 }: CampaignEngagementByCityChartProps) {
   if (data.length === 0) {
     return (
-      <Card className="glass-card border-0 animate-slide-up">
+      <Card className="border-border animate-slide-up">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <MapPin className="h-5 w-5" />
@@ -51,7 +51,7 @@ export function CampaignEngagementByCityChart({
   const sortedData = [...data].sort((a, b) => b.engagement - a.engagement);
 
   return (
-    <Card className="glass-card border-0 animate-slide-up">
+    <Card className="border-border animate-slide-up">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <MapPin className="h-4 w-4" />

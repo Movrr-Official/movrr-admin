@@ -119,7 +119,7 @@ export default function RideSessionsOverview() {
   };
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="space-y-6 md:space-y-8">
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -327,7 +327,7 @@ export default function RideSessionsOverview() {
               (sessions ?? []).filter(
                 (s) => s.verificationStatus === "pending" || s.verificationStatus === "manual_review",
               ).length === 0 && (
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardContent className="py-12 text-center text-muted-foreground">
                     <CheckCircle2 className="h-8 w-8 mx-auto mb-3 text-green-500 opacity-70" />
                     <p className="text-sm font-medium">Queue is clear</p>
@@ -362,7 +362,7 @@ export default function RideSessionsOverview() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
                 {/* Verification trend */}
-                <Card className="glass-card border-0 lg:col-span-2">
+                <Card className="border-border lg:col-span-2">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base font-semibold">
                       Verification Trend — last {analyticsDays} days
@@ -455,7 +455,7 @@ export default function RideSessionsOverview() {
                 </Card>
 
                 {/* Distance + CO₂ trend */}
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base font-semibold">Distance & CO₂ Saved</CardTitle>
@@ -532,7 +532,7 @@ export default function RideSessionsOverview() {
                 </Card>
 
                 {/* Bike-type distribution */}
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base font-semibold">Bike-Type Distribution</CardTitle>
                   </CardHeader>
@@ -610,7 +610,7 @@ export default function RideSessionsOverview() {
 
                 {/* Bonus type breakdown */}
                 {analytics?.bonusBreakdown.length ? (
-                  <Card className="glass-card border-0 lg:col-span-2">
+                  <Card className="border-border lg:col-span-2">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base font-semibold">
                         Bonus Type Breakdown — last {analyticsDays} days
@@ -695,7 +695,7 @@ function TriageCard({
 
   return (
     <Card
-      className={`glass-card border-0 ${priority === "high" ? "ring-1 ring-orange-300 dark:ring-orange-800" : ""}`}
+      className={`border-border ${priority === "high" ? "ring-1 ring-orange-300 dark:ring-orange-800" : ""}`}
     >
       <CardContent className="py-3 px-4">
         <div className="flex items-start justify-between gap-4">

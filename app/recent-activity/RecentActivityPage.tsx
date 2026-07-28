@@ -53,14 +53,14 @@ export default function RecentActivityPage() {
   const actionOptions = auditActionSchema.options;
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="space-y-6 md:space-y-8">
         <PageHeader
           title="Recent activity"
           description="A complete timeline of admin actions, system events, and dashboard access sessions."
         />
 
-        <Card className="glass-card border-0">
+        <Card className="border-border">
           <CardHeader className="pb-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>

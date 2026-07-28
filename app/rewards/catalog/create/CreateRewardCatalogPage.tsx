@@ -166,7 +166,7 @@ export default function CreateRewardCatalogPage() {
   };
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <PageHeader
           title="Create Reward Product"
@@ -181,7 +181,7 @@ export default function CreateRewardCatalogPage() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle>Core Details</CardTitle>
               </CardHeader>
@@ -295,7 +295,7 @@ export default function CreateRewardCatalogPage() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle>Partner & Media</CardTitle>
               </CardHeader>
@@ -366,7 +366,7 @@ export default function CreateRewardCatalogPage() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader>
                 <CardTitle>Inventory & Visibility</CardTitle>
               </CardHeader>

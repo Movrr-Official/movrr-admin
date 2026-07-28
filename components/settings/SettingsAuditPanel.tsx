@@ -45,7 +45,7 @@ function humanize(key: string): string {
 
 export function SettingsAuditPanel({ entries }: Props) {
   return (
-    <Card className="glass-card border-0">
+    <Card className="border-border">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <History className="h-4 w-4" />

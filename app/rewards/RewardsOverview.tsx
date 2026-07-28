@@ -85,7 +85,7 @@ export default function RewardsOverview() {
       .slice(0, 3) ?? [];
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="space-y-6 md:space-y-8">
         {/* Summary Row - Featured + Compact Stats + Insight Card */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
@@ -179,7 +179,7 @@ export default function RewardsOverview() {
             />
           </div>
 
-          <Card className="glass-card border-0 animate-slide-up xl:col-span-3 xl:row-span-2 h-full">
+          <Card className="border-border animate-slide-up xl:col-span-3 xl:row-span-2 h-full">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
@@ -272,7 +272,7 @@ export default function RewardsOverview() {
               </TabsContent>
 
               <TabsContent value="streak" className="space-y-4 mt-4">
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader>
                     <CardTitle className="text-base font-semibold flex items-center gap-2">
                       <Flame className="h-4 w-4 text-orange-500" />
@@ -348,7 +348,7 @@ export default function RewardsOverview() {
 
           <div className="xl:col-span-3 space-y-4 md:space-y-6">
             {/* Top Riders by Points */}
-            <Card className="glass-card border-0 animate-slide-up">
+            <Card className="border-border animate-slide-up">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Users className="h-5 w-5" />
@@ -394,7 +394,7 @@ export default function RewardsOverview() {
             </Card>
 
             {/* Recent Payouts */}
-            <Card className="glass-card border-0 animate-slide-up">
+            <Card className="border-border animate-slide-up">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Coins className="h-5 w-5" />

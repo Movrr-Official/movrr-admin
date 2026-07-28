@@ -174,7 +174,7 @@ export default function NotificationsOverview() {
   };
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="space-y-6 md:space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <StatsCard
@@ -204,7 +204,7 @@ export default function NotificationsOverview() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <Card className="glass-card border-0 xl:col-span-1">
+          <Card className="border-border xl:col-span-1">
             <CardHeader>
               <CardTitle>Create Notification</CardTitle>
             </CardHeader>
@@ -339,7 +339,7 @@ export default function NotificationsOverview() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-0 xl:col-span-2">
+          <Card className="border-border xl:col-span-2">
             <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <CardTitle>Notification History</CardTitle>

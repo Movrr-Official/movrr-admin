@@ -112,7 +112,7 @@ export default function UsersOverview() {
         : 0;
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="space-y-6 md:space-y-8">
         {/* Stats Cards Grid - 2 columns layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
@@ -214,7 +214,7 @@ export default function UsersOverview() {
 
           {/* Right Side - User Growth & Verification Card */}
           <Card
-            className="glass-card border-0 animate-slide-up"
+            className="border-border animate-slide-up"
             style={{ animationDelay: "0.4s" }}
           >
             <CardHeader className="pb-4">

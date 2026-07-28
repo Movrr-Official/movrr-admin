@@ -73,7 +73,7 @@ export function RouteDetailsCard({ route }: RouteDetailsCardProps) {
   const difficultyLabel = route?.difficulty ?? "—";
 
   return (
-    <Card className="glass-card border-0 w-full max-w-[500px]">
+    <Card className="border-border w-full max-w-[500px]">
       <CardHeader>
         <CardTitle className="text-lg font-bold">
           Current Route Details

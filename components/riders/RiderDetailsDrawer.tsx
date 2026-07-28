@@ -452,7 +452,7 @@ export function RiderDetailsDrawer({
       <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="w-full sm:w-[320px] lg:max-w-[59rem]! p-0 h-full">
           <div className="h-full flex flex-col bg-gradient-to-b from-background/50 to-background">
-            <DrawerHeader className="px-6 py-4 border-b glass-card border-0">
+            <DrawerHeader className="px-6 py-4 border-b border-border">
               <div className="flex items-center justify-between">
                 <DrawerTitle className="text-2xl font-bold">
                   Rider Details
@@ -709,7 +709,7 @@ export function RiderDetailsDrawer({
                     </div>
                   </div>
 
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader className="pb-4">
                       <CardTitle className="text-lg font-bold">
                         Contact & Location
@@ -746,7 +746,7 @@ export function RiderDetailsDrawer({
                   </Card>
 
                   {rider.accountNotes && (
-                    <Card className="glass-card border-0">
+                    <Card className="border-border">
                       <CardHeader className="pb-4">
                         <CardTitle className="text-lg font-bold">
                           Account Notes
@@ -760,7 +760,7 @@ export function RiderDetailsDrawer({
                     </Card>
                   )}
 
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader className="pb-4">
                       <CardTitle className="text-lg font-bold">
                         Operations Snapshot
@@ -788,7 +788,7 @@ export function RiderDetailsDrawer({
                     </CardContent>
                   </Card>
 
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader className="pb-4">
                       <CardTitle className="text-lg font-bold">
                         Additional Information
@@ -1352,7 +1352,7 @@ export function RiderDetailsDrawer({
                   </Card>
 
                   {showResetConfirmation && (
-                    <Card className="glass-card border-0 border-amber-200 dark:border-amber-800">
+                    <Card className="border-border border-amber-200 dark:border-amber-800">
                       <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-amber-50 dark:bg-amber-950 rounded-lg">
@@ -1422,7 +1422,7 @@ export function RiderDetailsDrawer({
                     </Card>
                   )}
 
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader className="pb-4">
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
@@ -1537,7 +1537,7 @@ export function RiderDetailsDrawer({
                     </CardContent>
                   </Card>
 
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader className="pb-4">
                       <CardTitle className="text-lg font-bold">
                         Identity & Audit
@@ -1575,7 +1575,7 @@ export function RiderDetailsDrawer({
               )}
             </div>
 
-            <div className="px-6 py-4 border-t glass-card border-0 flex justify-between items-center bg-background/50 backdrop-blur-sm">
+            <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50 backdrop-blur-sm">
               <div className="flex gap-2">
                 {isEditMode ? (
                   <>

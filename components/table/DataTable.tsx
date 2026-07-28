@@ -239,7 +239,7 @@ export function DataTable<TData extends Record<string, any> = Record<string, any
 
   return (
     <Card
-      className={`glass-card border-0 animate-slide-up ${className}`}
+      className={`border-border animate-slide-up ${className}`}
       style={{ animationDelay: "0.5s" }}
     >
       {viewOptions && (

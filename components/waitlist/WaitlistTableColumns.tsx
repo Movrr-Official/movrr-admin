@@ -218,7 +218,7 @@ export const getWaitlistTableColumns = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="glass-card border-border/30"
+            className="border-border border-border/30"
           >
             <DropdownMenuItem onClick={() => onStatusUpdate?.(entry)}>
               Update Status

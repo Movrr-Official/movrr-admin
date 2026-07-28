@@ -379,7 +379,7 @@ export function RouteTemplatesPanel() {
   };
 
   return (
-    <Card className="glass-card border-0">
+    <Card className="border-border">
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle className="text-lg font-bold">Route Templates</CardTitle>

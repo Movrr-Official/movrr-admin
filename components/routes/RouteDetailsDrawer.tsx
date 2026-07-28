@@ -964,7 +964,7 @@ export function RouteDetailsDrawer({
   return (
     <>
       <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="glass-card border-0 backdrop-blur-xl h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
+        <DrawerContent className="border-border backdrop-blur-xl h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
           <DrawerHeader className="border-b border-border/50">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -1018,7 +1018,7 @@ export function RouteDetailsDrawer({
               <TabsContent value="overview" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Route Information */}
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Route className="h-5 w-5" />
@@ -1105,7 +1105,7 @@ export function RouteDetailsDrawer({
                   </Card>
 
                   {/* Assigned Rider */}
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <User className="h-5 w-5" />
@@ -1213,7 +1213,7 @@ export function RouteDetailsDrawer({
 
                 {/* Waypoints */}
                 {route.waypoints && route.waypoints.length > 0 && (
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <MapPin className="h-5 w-5" />
@@ -1251,7 +1251,7 @@ export function RouteDetailsDrawer({
 
               {/* GPS Tracking Tab */}
               <TabsContent value="gps" className="space-y-4 mt-4">
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Navigation className="h-5 w-5" />
@@ -1304,7 +1304,7 @@ export function RouteDetailsDrawer({
 
               {/* Compliance Tab */}
               <TabsContent value="compliance" className="space-y-4 mt-4">
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -1389,7 +1389,7 @@ export function RouteDetailsDrawer({
 
               {/* Points Tab */}
               <TabsContent value="points" className="space-y-4 mt-4">
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Coins className="h-5 w-5" />
@@ -1467,7 +1467,7 @@ export function RouteDetailsDrawer({
 
               {/* Timeline Tab */}
               <TabsContent value="timeline" className="space-y-4 mt-4">
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <History className="h-5 w-5" />
@@ -1527,7 +1527,7 @@ export function RouteDetailsDrawer({
 
               {/* Manage Tab */}
               <TabsContent value="manage" className="space-y-4 mt-4">
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <FileText className="h-5 w-5" />
@@ -1837,7 +1837,7 @@ export function RouteDetailsDrawer({
                   </CardContent>
                 </Card>
 
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <MapPin className="h-5 w-5" />
@@ -1958,7 +1958,7 @@ export function RouteDetailsDrawer({
                   </CardContent>
                 </Card>
 
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Target className="h-5 w-5" />
@@ -2030,7 +2030,7 @@ export function RouteDetailsDrawer({
                   </CardContent>
                 </Card>
 
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Coins className="h-5 w-5" />
@@ -2163,7 +2163,7 @@ export function RouteDetailsDrawer({
                   </CardContent>
                 </Card>
 
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <User className="h-5 w-5" />
@@ -2244,7 +2244,7 @@ export function RouteDetailsDrawer({
 
       {/* Approve Dialog */}
       <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-        <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
+        <AlertDialogContent className="border-border backdrop-blur-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Approve Route</AlertDialogTitle>
             <AlertDialogDescription>
@@ -2268,7 +2268,7 @@ export function RouteDetailsDrawer({
 
       {/* Reject Dialog */}
       <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
+        <AlertDialogContent className="border-border backdrop-blur-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Reject Route</AlertDialogTitle>
             <AlertDialogDescription>
@@ -2305,7 +2305,7 @@ export function RouteDetailsDrawer({
         open={showRecalculateDialog}
         onOpenChange={setShowRecalculateDialog}
       >
-        <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
+        <AlertDialogContent className="border-border backdrop-blur-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Recalculate Compliance</AlertDialogTitle>
             <AlertDialogDescription>
@@ -2332,7 +2332,7 @@ export function RouteDetailsDrawer({
         open={showUnassignDialog}
         onOpenChange={setShowUnassignDialog}
       >
-        <AlertDialogContent className="glass-card border-0 backdrop-blur-xl">
+        <AlertDialogContent className="border-border backdrop-blur-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Unassign Route</AlertDialogTitle>
             <AlertDialogDescription>

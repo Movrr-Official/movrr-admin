@@ -92,7 +92,7 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
       <Card
-        className="glass-card border-0 animate-slide-up"
+        className="border-border animate-slide-up"
         style={{ animationDelay: "0.4s" }}
       >
         <CardHeader className="pb-4">
@@ -124,7 +124,7 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
       </Card>
 
       <Card
-        className="glass-card border-0 animate-slide-up"
+        className="border-border animate-slide-up"
         style={{ animationDelay: "0.5s" }}
       >
         <CardHeader className="pb-4">
@@ -162,7 +162,7 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
       </Card>
 
       <Card
-        className="glass-card border-0 animate-slide-up"
+        className="border-border animate-slide-up"
         style={{ animationDelay: "0.6s" }}
       >
         <CardHeader className="pb-4">
@@ -193,7 +193,7 @@ export function RouteAnalytics({ routes }: { routes: RiderRoute[] }) {
       </Card>
 
       <Card
-        className="glass-card border-0 animate-slide-up"
+        className="border-border animate-slide-up"
         style={{ animationDelay: "0.7s" }}
       >
         <CardHeader className="pb-4">

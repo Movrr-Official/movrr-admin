@@ -322,7 +322,7 @@ export function RideSessionDetailsDrawer({
           </div>
 
           {/* Reward Provenance */}
-          <Card className="glass-card border-0">
+          <Card className="border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Receipt className="h-4 w-4 text-amber-600" />
@@ -481,7 +481,7 @@ export function RideSessionDetailsDrawer({
           </Card>
 
           {/* Rider Info */}
-          <Card className="glass-card border-0">
+          <Card className="border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <User className="h-4 w-4" />
@@ -499,7 +499,7 @@ export function RideSessionDetailsDrawer({
           </Card>
 
           {/* Session Timing */}
-          <Card className="glass-card border-0">
+          <Card className="border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Clock className="h-4 w-4" />
@@ -526,7 +526,7 @@ export function RideSessionDetailsDrawer({
 
           {/* Location */}
           {(session.city || session.country) && (
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
@@ -543,7 +543,7 @@ export function RideSessionDetailsDrawer({
 
           {/* Verification Details — reason codes + machine verdict context */}
           {(session.reasonCodes.length > 0 || session.machineVerification) && (
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-orange-500" />
@@ -643,7 +643,7 @@ export function RideSessionDetailsDrawer({
 
           {/* Campaign */}
           {session.campaignId && (
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <Megaphone className="h-4 w-4" />
@@ -663,7 +663,7 @@ export function RideSessionDetailsDrawer({
 
           {/* Suggested Route */}
           {session.suggestedRouteId && (
-            <Card className="glass-card border-0">
+            <Card className="border-border">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <Route className="h-4 w-4" />
@@ -718,7 +718,7 @@ export function RideSessionDetailsDrawer({
           )}
 
           {/* Verification Actions */}
-          <Card className="glass-card border-0">
+          <Card className="border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4" />

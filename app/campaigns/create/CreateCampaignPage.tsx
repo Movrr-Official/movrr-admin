@@ -238,7 +238,7 @@ export default function CreateCampaignPage() {
   );
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <PageHeader
@@ -253,7 +253,7 @@ export default function CreateCampaignPage() {
         />
 
         {/* Progress Indicator */}
-        <Card className="glass-card border-0">
+        <Card className="border-border">
           <CardContent className="flex items-center justify-between pt-6">
             {[
               { key: "basic", label: "Basic Info", icon: Info },
@@ -309,7 +309,7 @@ export default function CreateCampaignPage() {
             {(formStep === "basic" ||
               formStep === "targeting" ||
               formStep === "review") && (
-              <Card className="glass-card border-0 animate-slide-up">
+              <Card className="border-border animate-slide-up">
                 <CardHeader>
                   <div>
                     <CardTitle className="text-xl font-bold">
@@ -501,7 +501,7 @@ export default function CreateCampaignPage() {
               formStep === "targeting" ||
               formStep === "review") && (
               <Card
-                className="glass-card border-0 animate-slide-up"
+                className="border-border animate-slide-up"
                 style={{ animationDelay: "0.1s" }}
               >
                 <CardHeader>
@@ -645,7 +645,7 @@ export default function CreateCampaignPage() {
             {(formStep === "targeting" || formStep === "review") && (
               <>
                 <Card
-                  className="glass-card border-0 animate-slide-up"
+                  className="border-border animate-slide-up"
                   style={{ animationDelay: "0.2s" }}
                 >
                   <CardHeader>
@@ -799,7 +799,7 @@ export default function CreateCampaignPage() {
             {/* Review Section */}
             {formStep === "review" && (
               <Card
-                className="glass-card border-0 animate-slide-up"
+                className="border-border animate-slide-up"
                 style={{ animationDelay: "0.3s" }}
               >
                 <CardHeader>

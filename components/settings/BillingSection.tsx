@@ -17,7 +17,7 @@ export function BillingSection({ settings }: Props) {
         <AlertTitle>Billing Not Yet Connected</AlertTitle>
         <AlertDescription>{settings.runtime.billing.message}</AlertDescription>
       </Alert>
-      <Card className="glass-card border-0">
+      <Card className="border-border">
         <CardContent className="grid gap-4 p-6 md:grid-cols-2">
           <div className="rounded-xl border border-border/60 bg-background/40 p-4 text-sm text-muted-foreground">
             <div className="font-medium text-foreground">Connection Status</div>

@@ -229,7 +229,7 @@ export function ScheduledExportDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col glass-card border-0 backdrop-blur-xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col border-border backdrop-blur-xl p-0 overflow-hidden">
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
@@ -250,7 +250,7 @@ export function ScheduledExportDialog({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Basic Information */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Settings className="h-6 w-6 text-primary" />
@@ -378,7 +378,7 @@ export function ScheduledExportDialog({
               </Card>
 
               {/* Schedule Configuration */}
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Repeat className="h-6 w-6 text-primary" />
@@ -523,7 +523,7 @@ export function ScheduledExportDialog({
             {/* Preview & Settings */}
             <div className="lg:col-span-1 space-y-6">
               {/* Schedule Preview */}
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Timer className="h-6 w-6 text-primary" />
@@ -614,7 +614,7 @@ export function ScheduledExportDialog({
               </Card>
 
               {/* Schedule Status */}
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Zap className="h-6 w-6 text-primary" />

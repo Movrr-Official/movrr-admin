@@ -30,7 +30,7 @@ export function CampaignDailyImpressionsChart({
 }: CampaignDailyImpressionsChartProps) {
   if (data.length === 0) {
     return (
-      <Card className="glass-card border-0 animate-slide-up">
+      <Card className="border-border animate-slide-up">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -53,7 +53,7 @@ export function CampaignDailyImpressionsChart({
   );
 
   return (
-    <Card className="glass-card border-0 animate-slide-up">
+    <Card className="border-border animate-slide-up">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">

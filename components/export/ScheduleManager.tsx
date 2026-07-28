@@ -146,7 +146,7 @@ export function ScheduleManager({
   };
 
   return (
-    <Card className="glass-card border-0">
+    <Card className="border-border">
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <div>

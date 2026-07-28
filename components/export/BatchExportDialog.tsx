@@ -257,7 +257,7 @@ export function BatchExportDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col glass-card border-0 backdrop-blur-xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col border-border backdrop-blur-xl p-0 overflow-hidden">
         <div className="flex-1 p-6 overflow-y-auto">
           <DialogHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-4">
@@ -293,7 +293,7 @@ export function BatchExportDialog({
 
           {/* Export Progress */}
           {isExporting && (
-            <Card className="glass-card border-0 mb-6">
+            <Card className="border-border mb-6">
               <CardHeader className="pb-4">
                 <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                   <Zap className="h-6 w-6 text-primary animate-pulse" />
@@ -386,7 +386,7 @@ export function BatchExportDialog({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Data Source Selection */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -487,7 +487,7 @@ export function BatchExportDialog({
 
             {/* Export Settings */}
             <div className="lg:col-span-1 space-y-6">
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Settings className="h-6 w-6 text-primary" />
@@ -549,7 +549,7 @@ export function BatchExportDialog({
               </Card>
 
               {/* Date Range Filter */}
-              <Card className="glass-card border-0">
+              <Card className="border-border">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                     <Calendar className="h-6 w-6 text-primary" />

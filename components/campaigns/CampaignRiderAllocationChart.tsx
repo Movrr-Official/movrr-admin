@@ -24,7 +24,7 @@ export function BoostedRiderAllocationChart({
 }: BoostedRiderAllocationChartProps) {
   if (data.length === 0) {
     return (
-      <Card className="glass-card border-0 animate-slide-up">
+      <Card className="border-border animate-slide-up">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -66,7 +66,7 @@ export function BoostedRiderAllocationChart({
   );
 
   return (
-    <Card className="glass-card border-0 animate-slide-up">
+    <Card className="border-border animate-slide-up">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Users className="h-4 w-4" />

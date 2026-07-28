@@ -128,7 +128,7 @@ export default function CreateAdvertiserPage() {
   };
 
   return (
-    <div className="min-h-screen gradient-bg px-4 py-8 sm:px-6 md:py-12 lg:pt-6">
+    <div className="min-h-screen page-canvas sm:px-6 md:py-12 lg:pt-6">
       <div className="mx-auto max-w-4xl space-y-6">
         <PageHeader
           title="Create New Advertiser"
@@ -141,7 +141,7 @@ export default function CreateAdvertiserPage() {
           }}
         />
 
-        <Card className="glass-card border-0">
+        <Card className="border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
               <Building2 className="h-5 w-5 text-primary" />

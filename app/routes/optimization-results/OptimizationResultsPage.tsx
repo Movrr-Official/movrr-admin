@@ -54,8 +54,8 @@ export default function OptimizationResultsPage() {
 
   if (!results) {
     return (
-      <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
-        <Card className="glass-card border-0 max-w-3xl mx-auto">
+      <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
+        <Card className="border-border max-w-3xl mx-auto">
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
               Route Optimization Results
@@ -87,9 +87,9 @@ export default function OptimizationResultsPage() {
     : [];
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="max-w-5xl mx-auto space-y-6">
-        <Card className="glass-card border-0">
+        <Card className="border-border">
           <CardHeader className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <CardTitle className="text-2xl font-bold">
@@ -139,7 +139,7 @@ export default function OptimizationResultsPage() {
         </Card>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="glass-card border-0">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="text-xl font-semibold">
                 Optimization Insights
@@ -189,7 +189,7 @@ export default function OptimizationResultsPage() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-0">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="text-xl font-semibold">
                 Route Changes
@@ -244,7 +244,7 @@ export default function OptimizationResultsPage() {
           </Card>
         </div>
 
-        <Card className="glass-card border-0">
+        <Card className="border-border">
           <CardHeader>
             <CardTitle className="text-xl font-semibold">
               Proposed Route Stops

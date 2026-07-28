@@ -39,7 +39,7 @@ export function IntegrationStatusCards({
         {integrations.map((integration) => {
           const Icon = STATUS_ICON[integration.status];
           return (
-            <Card key={integration.id} className="glass-card border-0">
+            <Card key={integration.id} className="border-border">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-3">
                   <div>

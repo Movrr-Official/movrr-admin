@@ -88,7 +88,7 @@ export default function WaitlistManagement() {
     .slice(0, 5);
 
   return (
-    <div className="min-h-screen gradient-bg px-4 sm:px-6 py-8 md:py-12 lg:py-16 lg:pt-6">
+    <div className="min-h-screen page-canvas md:py-12 lg:py-16 lg:pt-6">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl animate-float"></div>
         <div
@@ -218,7 +218,7 @@ export default function WaitlistManagement() {
 
           {/* Right column (1/4): Top Cities sidebar */}
           <Card
-            className="glass-card border-0 animate-slide-up"
+            className="border-border animate-slide-up"
             style={{ animationDelay: "0.7s" }}
           >
             <CardHeader className="pb-4">

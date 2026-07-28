@@ -181,7 +181,7 @@ export function RiderBalanceDetailsDrawer({
   return (
     <>
       <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="glass-card border-0 backdrop-blur-xl h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
+        <DrawerContent className="border-border backdrop-blur-xl h-full w-full sm:w-[360px] lg:max-w-[60rem]! p-0">
           <DrawerHeader className="border-b border-border/50">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -214,7 +214,7 @@ export function RiderBalanceDetailsDrawer({
               <TabsContent value="overview" className="space-y-4 mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Balance Information */}
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Coins className="h-5 w-5" />
@@ -297,7 +297,7 @@ export function RiderBalanceDetailsDrawer({
                   </Card>
 
                   {/* Adjust Points Form */}
-                  <Card className="glass-card border-0">
+                  <Card className="border-border">
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg flex items-center gap-2">
@@ -458,7 +458,7 @@ export function RiderBalanceDetailsDrawer({
 
               {/* Balance History Tab */}
               <TabsContent value="history" className="space-y-4 mt-4">
-                <Card className="glass-card border-0">
+                <Card className="border-border">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <History className="h-5 w-5" />
