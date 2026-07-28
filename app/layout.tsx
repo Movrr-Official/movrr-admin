@@ -1,12 +1,13 @@
 import type React from "react";
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ReduxProvider } from "@/providers/ReduxProvider";
 import QueryClientProvider from "@/providers/QueryClientProvider";
 import { CountProvider } from "@/providers/CountProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { ReducedMotionProvider } from "@/components/motion/ReducedMotionProvider";
 import { Suspense } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -15,10 +16,10 @@ import Sidebar from "@/components/layout/Sidebar";
 import MaintenanceBanner from "@/components/layout/MaintenanceBanner";
 import { getAdminRoleForLayout } from "@/lib/admin";
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-manrope",
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -61,28 +62,30 @@ export default async function RootLayout({
       <QueryClientProvider>
         <html
           lang="en"
-          className={`${inter.variable} ${jetbrainsMono.variable} antialiased scroll-smooth`}
+          className={`${manrope.variable} ${jetbrainsMono.variable} antialiased scroll-smooth`}
           suppressHydrationWarning
         >
           <body className="min-h-screen bg-background text-foreground">
             <ThemeProvider>
-              <CountProvider>
-                <div className="flex h-screen">
-                  <Sidebar currentRole={adminRole ?? null} />
-                  <div className="flex-1 flex flex-col overflow-y-auto">
-                    <div className="flex-1 flex flex-col">
-                      <Navbar />
-                      <MaintenanceBanner />
-                      {/* Main content area with suspense for lazy loading */}
-                      <Suspense>
-                        <main className="flex-1">{children}</main>
-                      </Suspense>
-                      <Footer />
+              <ReducedMotionProvider>
+                <CountProvider>
+                  <div className="flex h-screen">
+                    <Sidebar currentRole={adminRole ?? null} />
+                    <div className="flex-1 flex flex-col overflow-y-auto">
+                      <div className="flex-1 flex flex-col">
+                        <Navbar />
+                        <MaintenanceBanner />
+                        {/* Main content area with suspense for lazy loading */}
+                        <Suspense>
+                          <main className="flex-1">{children}</main>
+                        </Suspense>
+                        <Footer />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CountProvider>
-              <Toaster />
+                </CountProvider>
+                <Toaster />
+              </ReducedMotionProvider>
             </ThemeProvider>
             <Analytics />
           </body>
