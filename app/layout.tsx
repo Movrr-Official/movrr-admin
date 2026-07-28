@@ -35,6 +35,13 @@ export const metadata: Metadata = {
   keywords:
     "bike advertising, cycling jobs, gig economy, urban mobility, brand advertising",
   authors: [{ name: "MOVRR" }],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-icon", type: "image/png", sizes: "180x180" }],
+  },
   openGraph: {
     title: "MOVRR - Transform Your Ride, Transform Your City",
     description:
