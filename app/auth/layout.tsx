@@ -10,16 +10,16 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen flex">
+    <div className="auth-shell flex min-h-screen bg-movrr-bg-canvas">
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6 }}
-        className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 p-12 text-white flex-col justify-between"
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className="hidden flex-col justify-between bg-movrr-bg-primary p-12 text-movrr-text-inverse lg:flex lg:w-1/2"
       >
         <div>
-          <div className="flex items-center space-x-1 mb-8">
-            <div className="p-1.5 flex items-center justify-center">
+          <div className="mb-8 flex items-center space-x-1">
+            <div className="flex items-center justify-center p-1.5">
               <Image
                 src="/movrr-icon.png"
                 alt="MOVRR Icon"
@@ -31,20 +31,20 @@ export default function AuthLayout({
                 aria-hidden="true"
               />
             </div>
-            <span className="text-2xl uppercase font-bold">MOVRR</span>
+            <span className="text-2xl font-bold uppercase">MOVRR</span>
           </div>
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="mb-4 text-3xl font-semibold tracking-tight md:text-4xl">
             MOVRR Admin Operations Portal
           </h1>
-          <p className="text-xl opacity-90">
+          <p className="text-base opacity-90 md:text-lg">
             Internal access for campaign operations, rider oversight, route
             coordination, and platform administration.
           </p>
         </div>
 
-        <div className="space-y-8 mb-16">
+        <div className="mb-16 space-y-8">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-movrr-text-inverse/10">
               <span className="text-lg font-semibold">A</span>
             </div>
             <div>
@@ -56,7 +56,7 @@ export default function AuthLayout({
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-movrr-text-inverse/10">
               <span className="text-lg font-semibold">O</span>
             </div>
             <div>
@@ -68,7 +68,7 @@ export default function AuthLayout({
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-movrr-text-inverse/10">
               <span className="text-lg font-semibold">S</span>
             </div>
             <div>
@@ -85,10 +85,12 @@ export default function AuthLayout({
       <motion.div
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="bg-muted/50 flex-1 flex items-center justify-center p-8"
+        transition={{ duration: 0.45, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        className="flex flex-1 items-center justify-center bg-movrr-bg-soft p-8"
       >
-        <div className="w-full max-w-md">{children}</div>
+        <div className="w-full max-w-md rounded-xl border border-movrr-border-soft bg-movrr-bg-surface text-movrr-text-heading shadow-none">
+          {children}
+        </div>
       </motion.div>
     </div>
   );
