@@ -1,14 +1,14 @@
 # Reward Fulfilment Engine — Platform Design Specification
 
 **Date:** 2026-07-28  
-**Status:** Approved for architecture review (Sections 1–4 locked)  
+**Status:** Canonical architectural blueprint (approved)  
 **Repos:** `movrr-admin` (platform backend + ops client), `movrr-mobile`, `movrr-app`  
 **Type:** Enterprise platform capability — Fulfilment Engine + Platform API + Organisation/RBAC foundation  
 **Not in scope:** Redesign of Rewards earning; rebuilding catalog/ledger that already works correctly
 
 ---
 
-## 0. Executive summary
+## 0. Vision & architectural overview
 
 MOVRR today supports Browse → Redeem → **dead end** (`reward_redemptions.status = requested`). Points are deducted, but there is no orchestration for voucher issue, QR validation, partner collection, inventory reservation, refunds, or multi-client ops.
 
@@ -66,23 +66,26 @@ Redemption becomes a generic financial commitment. Fulfilment becomes specialise
 Every future feature must follow these rules:
 
 1. **Feature-first, bounded-context architecture** — the platform emerges from composed features, not a parallel `platform/` business layer.
-2. **Thin Platform API route handlers** — authN, principal resolution, capability guard, delegate to application service, map result to HTTP.
-3. **Application layer owns business behaviour** — orchestration, rules, workflows, permissions evaluation consumption, fulfilment handlers.
-4. **Domain layer owns business concepts and invariants** — aggregates, value objects, state enums, transition rules as domain concepts.
-5. **Infrastructure owns persistence and external integrations** — repositories, SQL/RPC adapters, provider implementations.
-6. **Database owns consistency and atomicity** — transactions, locking, constraints; never public business contracts.
-7. **Platform API is the single public business contract** — `/api/v1/{domain}/...` for all first-party clients.
-8. **Authentication and authorisation are separate concerns** — Identity = who; Organisations/Admin RBAC = what.
-9. **Features communicate only through public application contracts or domain events** — never another feature’s infrastructure, repositories, persistence, or domain internals.
-10. **Shared `lib/` contains infrastructure only** — auth helpers, DB clients, transactions, errors, logging, telemetry, config — never business workflows.
-11. **Default-deny security** — capabilities explicitly granted; unresolved capability ⇒ deny.
-12. **Domain events are first-class** — past-tense facts; published only after successful commit; sync today, async-ready.
-13. **Application services own transaction orchestration; infrastructure owns transaction implementation.**
-14. **Where async is introduced later, use domain events and compensating actions — not distributed transactions.**
-15. **Application services are the exclusive entry point into business behaviour** — Rider, Partner, Admin, jobs, and future integrations invoke the same services/APIs; no client-specific business rules.
-16. **The Fulfilment aggregate is the authoritative operational record for every redeemed reward** — no other context may directly manipulate Fulfilment state or owned entities.
-17. **Background jobs are simply another client of the Platform** — same services, guards, and state machine; never direct persistence updates.
-18. **Every new capability integrates into this architecture without structural refactor.**
+2. **Dependencies always point inward** — Route Handlers → Application → Domain ← Infrastructure adapters. Feature modules may depend only on another feature’s public application contracts or published domain events. They must never import another feature’s infrastructure, repositories, persistence, or internal domain objects.
+3. **Thin Platform API route handlers** — authN, principal resolution, capability guard, delegate to application service, map result to HTTP.
+4. **Application layer owns business behaviour** — orchestration, rules, workflows, permissions evaluation consumption, fulfilment handlers.
+5. **Domain layer owns business concepts and invariants** — aggregates, value objects, state enums, transition rules as domain concepts.
+6. **Infrastructure owns persistence and external integrations** — repositories, SQL/RPC adapters, provider implementations.
+7. **Database owns consistency and atomicity** — transactions, locking, constraints; never public business contracts.
+8. **Platform API is the single public business contract** — `/api/v1/{domain}/...` for all first-party clients.
+9. **API versions are immutable contracts** — breaking API changes require a new version (`/api/v2`, …); do not change the behaviour of an existing version in a breaking way.
+10. **Authentication and authorisation are separate concerns** — Identity = who; Organisations/Admin RBAC = what.
+11. **Features communicate only through public application contracts or domain events** — never another feature’s infrastructure, repositories, persistence, or domain internals.
+12. **Shared `lib/` contains infrastructure only** — auth helpers, DB clients, transactions, errors, logging, telemetry, config — never business workflows.
+13. **Default-deny security** — capabilities explicitly granted; unresolved capability ⇒ deny.
+14. **Domain events are first-class immutable business facts** — past-tense statements of what has already occurred; published only after successful commit; remain meaningful even if implementation details evolve; sync today, async-ready.
+15. **Application services own transaction orchestration; infrastructure owns transaction implementation.**
+16. **Where async is introduced later, use domain events and compensating actions — not distributed transactions.**
+17. **Application services are the exclusive entry point into business behaviour** — Rider, Partner, Admin, jobs, and future integrations invoke the same services/APIs; no client-specific business rules.
+18. **The Fulfilment aggregate is the authoritative operational record for every redeemed reward** — no other context may directly manipulate Fulfilment state or owned entities.
+19. **Background jobs are simply another client of the Platform** — same services, guards, and state machine; never direct persistence updates.
+20. **Evolution without structural change** — new fulfilment types integrate through the existing handler registry, application contracts, and provider interfaces; extending the platform must not require structural changes to the Fulfilment Engine.
+21. **Every new capability integrates into this architecture without structural refactor.**
 
 ---
 
@@ -131,6 +134,7 @@ app/api/v1/
 - Versioned from day one (`/api/v1`).
 - Production-ready endpoints only for domains required by the engine.
 - Future domains (`campaigns`, `notifications`, …): folder/convention documentation only — **no empty placeholder routes**.
+- **Versioning strategy:** `/api/v1` is an immutable public contract. Breaking changes require a new API version (e.g. `/api/v2`). Non-breaking additions to an existing version are allowed; behavioural breaking changes are not.
 
 ### 3.4 `lib/` (cross-cutting only)
 
@@ -166,12 +170,48 @@ Client (Bearer Supabase JWT)
 
 Correlation ID: generate or propagate on every request; flow through services, events, audit, logs, notifications, and jobs.
 
-### 3.7 Cross-feature dependency rule
+### 3.7 Dependency rule (inward only)
 
-Allowed: `fulfilment` → `wallet.application.contracts.SettlementService`.  
-Forbidden: `fulfilment` → `wallet.infrastructure` or direct `reward_transactions` writes.
+Dependencies always point inward:
 
-### 3.8 Notifications & analytics
+```
+Route Handlers → Application → Domain
+                      ↓
+              Infrastructure (adapters)
+```
+
+Cross-feature:
+
+| Allowed | Forbidden |
+|---------|-----------|
+| Another feature’s `application/contracts` | Another feature’s `infrastructure/` |
+| Published domain events (consume) | Another feature’s repositories / persistence |
+| Shared `lib/` infrastructure | Another feature’s internal domain objects |
+
+Example: Allowed — `fulfilment` → `wallet.application.contracts.SettlementService`.  
+Forbidden — `fulfilment` → `wallet.infrastructure` or direct `reward_transactions` writes.
+
+### 3.8 Aggregate ownership
+
+| Aggregate / entity | Owning bounded context |
+|--------------------|------------------------|
+| `RewardRedemption` | Rewards |
+| Catalog item (`reward_catalog`) | Rewards |
+| `WalletTransaction` / ledger entry (`reward_transactions`) | Wallet |
+| `RiderRewardBalance` | Wallet |
+| `Fulfilment` | Fulfilment |
+| `FulfilmentEvent` | Fulfilment |
+| `FulfilmentToken` | Fulfilment |
+| `FulfilmentResource` (+ items, allocations) | Fulfilment |
+| `PartnerValidation` | Fulfilment |
+| `Organisation` | Organisations |
+| `OrganisationMembership` | Organisations |
+| Permission bundle / capability grants | Organisations (external) / Identity+Admin RBAC (internal mapping) |
+| Reward Partner business profile | Partners (profile) on Organisations (tenancy) |
+| Audit record | Audit |
+| Notification | Notifications |
+
+### 3.9 Notifications & analytics
 
 - **Notifications** consume events; never orchestrate workflows or mutate fulfilment.
 - **Analytics** consume events as a metrics sink; business services do not embed analytics calls.
@@ -294,11 +334,13 @@ Providers are **infrastructure** behind application contracts (`ResourceAllocati
 
 Partner interaction log covering validation attempts, collection confirmations, manual partner actions, decisions, failures, and device/context metadata — not QR-only.
 
-### 4.10 Domain events (past-tense)
+### 4.10 Domain events (past-tense immutable facts)
+
+Domain events represent **immutable business facts that have already occurred**. They remain meaningful even if implementation details, storage, or dispatch mechanisms evolve.
 
 Examples: `RewardRedemptionCreated`, `FulfilmentCreated`, `FulfilmentStateChanged`, `FulfilmentResourceAllocated`, `FulfilmentTokenIssued`, `FulfilmentTokenConsumed`, `FulfilmentCompleted`, `FulfilmentCancelled`, `FulfilmentExpired`, `FulfilmentFailed`, `FulfilmentRefunded`, `WalletDebited`, `WalletRefunded`.
 
-Published **only after successful transaction commit**.
+Published **only after successful transaction commit**. Avoid command-style event names.
 
 ### 4.11 Fulfilment authority principle
 
@@ -314,6 +356,7 @@ The Fulfilment aggregate is the authoritative operational record for every redee
 - Query services return typed read models (`FulfilmentSummary`, `FulfilmentDetails`, `PartnerDashboardSummary`, `RiderWalletView`, …).
 - Query services **never** trigger business behaviour.
 - Do not expose aggregates directly over HTTP.
+- **Read models** may aggregate information across bounded contexts for presentation purposes, but they must **never** become the source of business behaviour. Commands and domain aggregates remain authoritative.
 
 ### 5.2 Standard application results
 
@@ -595,7 +638,23 @@ These remain **designed-in** via types, contracts, and registry entries.
 
 ---
 
-## 16. Decisions log (locked)
+## 16. Non-goals (intentional architectural exclusions)
+
+This architecture intentionally does **not**:
+
+- Expose database tables directly to clients as a business interface
+- Expose Supabase RPCs as the public business contract
+- Duplicate business logic in client applications (`movrr-mobile`, `movrr-app`, admin UI)
+- Couple fulfilment orchestration to a single reward type
+- Couple partner tenancy to advertiser identity
+- Embed fulfilment rules inside Rewards or Wallet aggregates
+- Allow background jobs or UI layers to bypass application services
+- Modify `/api/v1` behaviour in breaking ways instead of versioning
+- Require structural Fulfilment Engine rewrites to add new fulfilment types
+
+---
+
+## 17. Architecture Decision Record (ADR) summary
 
 | Topic | Decision |
 |-------|----------|
@@ -605,21 +664,72 @@ These remain **designed-in** via types, contracts, and registry entries.
 | Inventory | Generalised fulfilment resources |
 | Settlement | Immediate debit + compensating refund; settlement strategy interface |
 | Public contract | Platform API `/api/v1`; RPCs internal-only if needed for atomicity |
+| API versioning | Breaking changes require a new version; existing versions stay stable |
 | API domains | Full rewards/fulfilment/wallet/partners; no empty stubs for others |
 | Instant Digital | One handler; pool + generated providers; external interface defined |
 | Tenancy | Generic Organisation + membership + permission bundles |
 | Identity | Dual: admin_users vs Organisation; Supabase JWT; principal abstraction |
 | Data model | Redemption ≠ Fulfilment; strict 1:1; fulfilment created immediately |
 | Code organisation | Feature modules; no `lib/platform` business layer |
+| Dependencies | Inward only; cross-feature via contracts/events only |
 | Auth pipeline | AuthN → Principal → AuthZ → Capability Guard → Service |
-| Events | First-class, past-tense, post-commit |
+| Events | First-class immutable past-tense facts; post-commit |
 | SM | Sole mutator of fulfilment state; handlers request transitions |
+| Evolution | New types via registry/contracts/providers — no engine structural change |
 | Jobs | Platform clients; idempotent; same services |
+
+---
+
+## Appendix A — Repository structure (movrr-admin)
+
+Intended layout (persistence remains Supabase SQL under `scripts/`, not Prisma):
+
+```
+movrr-admin/
+  app/
+    api/
+      v1/
+        rewards/
+        fulfilment/
+        wallet/
+        partners/
+        internal/          # secured job triggers, health (ops)
+    # existing Admin UI routes continue to consume Platform APIs / feature services
+  features/
+    identity/
+      domain/
+      application/
+        contracts/
+        commands/
+        queries/
+      infrastructure/
+    organisations/
+    rewards/
+    wallet/
+    fulfilment/
+    partners/
+    notifications/
+    analytics/
+    fraud/
+    audit/
+  lib/                     # cross-cutting infrastructure only
+  schemas/                 # Zod contracts shared at edges (migrate toward features over time)
+  scripts/                 # SQL migrations, internal RPCs (atomicity helpers)
+  __tests__/               # unit, application, API, contract, fraud, SM tests
+  docs/
+    superpowers/
+      specs/
+      plans/
+```
+
+Each feature follows the same inward dependency rule: `application` → `domain`; `infrastructure` implements ports defined in `application/contracts`.
 
 ---
 
 ## Document control
 
 **Authors:** Collaborative design (Product Architecture + Engineering)  
-**Review gate:** Final architecture review of this file required before implementation planning (`docs/superpowers/plans/…`)  
+**Status:** Canonical architectural blueprint — single reference for implementation plans, migration plans, and feature work  
+**Review:** Architecture review complete; documentation refinements incorporated  
+**Next:** Implementation planning (`docs/superpowers/plans/…`)  
 **Supersedes:** Ad-hoc redeem-to-requested lifecycle as the end state of redemption
