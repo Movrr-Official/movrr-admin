@@ -7,6 +7,7 @@
  */
 
 import type { LayerProps } from "react-map-gl/maplibre";
+import { MOVRR_MAP } from "@/lib/movrr-map-colors";
 
 // ─── Route zone layers (bounding-box polygons around route waypoints) ─────────
 
@@ -18,11 +19,15 @@ export const routeZoneFillLayer: LayerProps = {
     "fill-color": [
       "match",
       ["get", "status"],
-      "in-progress", "#10b981",
-      "assigned",    "#3b82f6",
-      "completed",   "#94a3b8",
-      "cancelled",   "#f43f5e",
-      /* default */ "#3b82f6",
+      "in-progress",
+      MOVRR_MAP.signal,
+      "assigned",
+      MOVRR_MAP.forest,
+      "completed",
+      MOVRR_MAP.muted,
+      "cancelled",
+      MOVRR_MAP.destructive,
+      /* default */ MOVRR_MAP.forest,
     ],
     "fill-opacity": 0.14,
   },
@@ -36,11 +41,15 @@ export const routeZoneOutlineLayer: LayerProps = {
     "line-color": [
       "match",
       ["get", "status"],
-      "in-progress", "#10b981",
-      "assigned",    "#3b82f6",
-      "completed",   "#94a3b8",
-      "cancelled",   "#f43f5e",
-      /* default */ "#3b82f6",
+      "in-progress",
+      MOVRR_MAP.signal,
+      "assigned",
+      MOVRR_MAP.forest,
+      "completed",
+      MOVRR_MAP.muted,
+      "cancelled",
+      MOVRR_MAP.destructive,
+      /* default */ MOVRR_MAP.forest,
     ],
     "line-width": 1.5,
     "line-opacity": 0.7,
@@ -54,7 +63,7 @@ export const campaignZoneFillLayer: LayerProps = {
   type: "fill",
   source: "campaign-zones",
   paint: {
-    "fill-color": "#f59e0b",
+    "fill-color": MOVRR_MAP.warning,
     "fill-opacity": 0.12,
   },
 };
@@ -64,7 +73,7 @@ export const campaignZoneOutlineLayer: LayerProps = {
   type: "line",
   source: "campaign-zones",
   paint: {
-    "line-color": "#f59e0b",
+    "line-color": MOVRR_MAP.warning,
     "line-width": 2,
     "line-opacity": 0.8,
     "line-dasharray": [3, 1.5],
@@ -81,16 +90,20 @@ export const routeLineLayer: LayerProps = {
     "line-color": [
       "match",
       ["get", "mode"],
-      "standard_ride",  "#22c55e",
-      "campaign",   "#f59e0b",
-      "assigned",   "#3b82f6",
-      /* default */ "#94a3b8",
+      "standard_ride",
+      MOVRR_MAP.signal,
+      "campaign",
+      MOVRR_MAP.warning,
+      "assigned",
+      MOVRR_MAP.forest,
+      /* default */ MOVRR_MAP.muted,
     ],
     "line-width": 2.5,
     "line-opacity": 0.75,
     "line-dasharray": [
       "case",
-      ["==", ["get", "mode"], "campaign"], ["literal", [4, 2]],
+      ["==", ["get", "mode"], "campaign"],
+      ["literal", [4, 2]],
       ["literal", [1]],
     ],
   },
@@ -119,7 +132,7 @@ export const replayPathLayer: LayerProps = {
   type: "line",
   source: "replay-path",
   paint: {
-    "line-color": "#6366f1",
+    "line-color": MOVRR_MAP.signal,
     "line-width": 3,
     "line-opacity": 0.8,
   },
@@ -131,8 +144,8 @@ export const replayHeadLayer: LayerProps = {
   source: "replay-head",
   paint: {
     "circle-radius": 7,
-    "circle-color": "#6366f1",
-    "circle-stroke-color": "#ffffff",
+    "circle-color": MOVRR_MAP.signal,
+    "circle-stroke-color": MOVRR_MAP.inverse,
     "circle-stroke-width": 2,
   },
 };
@@ -140,17 +153,17 @@ export const replayHeadLayer: LayerProps = {
 // ─── Compliance colour map (used for both markers and trails) ─────────────────
 
 export const COMPLIANCE_COLORS: Record<string, string> = {
-  compliant:     "#22c55e",  // green-500
-  marginal:      "#f59e0b",  // amber-500
-  non_compliant: "#ef4444",  // red-500
-  paused:        "#6b7280",  // gray-500
-  signal_lost:   "#374151",  // gray-700
-  under_review:  "#8b5cf6",  // violet-500
+  compliant: MOVRR_MAP.signal,
+  marginal: MOVRR_MAP.warning,
+  non_compliant: MOVRR_MAP.destructive,
+  paused: MOVRR_MAP.muted,
+  signal_lost: MOVRR_MAP.mutedStrong,
+  under_review: MOVRR_MAP.forest,
 } as const;
 
 export const ROUTE_STATUS_COLORS: Record<string, string> = {
-  "in-progress": "#10b981",
-  assigned:      "#3b82f6",
-  completed:     "#94a3b8",
-  cancelled:     "#f43f5e",
+  "in-progress": MOVRR_MAP.signal,
+  assigned: MOVRR_MAP.forest,
+  completed: MOVRR_MAP.muted,
+  cancelled: MOVRR_MAP.destructive,
 } as const;

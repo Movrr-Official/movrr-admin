@@ -87,25 +87,25 @@ const workboardBadgeBase =
   "border-0 bg-none shadow-none backdrop-blur-0 hover:bg-inherit";
 
 const typeTone: Record<WorkboardCard["type"], string> = {
-  Engineering: `${workboardBadgeBase} bg-slate-100 text-slate-700`,
-  Operations: `${workboardBadgeBase} bg-emerald-100 text-emerald-700`,
-  Campaign: `${workboardBadgeBase} bg-indigo-100 text-indigo-700`,
-  Product: `${workboardBadgeBase} bg-amber-100 text-amber-700`,
-  Growth: `${workboardBadgeBase} bg-purple-100 text-purple-700`,
+  Engineering: `${workboardBadgeBase} bg-muted text-muted-foreground`,
+  Operations: `${workboardBadgeBase} bg-success/12 text-success`,
+  Campaign: `${workboardBadgeBase} bg-primary/12 text-primary`,
+  Product: `${workboardBadgeBase} bg-warning/15 text-warning-foreground`,
+  Growth: `${workboardBadgeBase} bg-secondary text-secondary-foreground`,
 };
 
 const priorityTone: Record<WorkboardCard["priority"], string> = {
-  Low: `${workboardBadgeBase} bg-slate-50 text-slate-600`,
-  Medium: `${workboardBadgeBase} bg-blue-50 text-blue-600`,
-  High: `${workboardBadgeBase} bg-orange-50 text-orange-600`,
-  Critical: `${workboardBadgeBase} bg-rose-50 text-rose-600`,
+  Low: `${workboardBadgeBase} bg-muted text-muted-foreground`,
+  Medium: `${workboardBadgeBase} bg-primary/10 text-primary`,
+  High: `${workboardBadgeBase} bg-warning/15 text-warning-foreground`,
+  Critical: `${workboardBadgeBase} bg-destructive/10 text-destructive`,
 };
 
 const boardToneCount: Record<WorkboardBoard["tone"], string> = {
-  slate: `${workboardBadgeBase} bg-slate-100 text-slate-600`,
-  indigo: `${workboardBadgeBase} bg-indigo-100 text-indigo-700`,
-  emerald: `${workboardBadgeBase} bg-emerald-100 text-emerald-700`,
-  amber: `${workboardBadgeBase} bg-amber-100 text-amber-700`,
+  slate: `${workboardBadgeBase} bg-muted text-muted-foreground`,
+  indigo: `${workboardBadgeBase} bg-primary/12 text-primary`,
+  emerald: `${workboardBadgeBase} bg-success/12 text-success`,
+  amber: `${workboardBadgeBase} bg-warning/15 text-warning-foreground`,
 };
 
 const workboardMetaBadge =
@@ -1385,7 +1385,7 @@ export default function WorkboardPage() {
                 onDragLeave={() => setActiveBoardId(null)}
                 className={cn(
                   "h-fit w-80 rounded-2xl border bg-muted/30 p-4 transition-colors",
-                  activeBoardId === board.id && "bg-emerald-50/60",
+                  activeBoardId === board.id && "bg-success/10",
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -1486,7 +1486,7 @@ export default function WorkboardPage() {
                         draggedCardId === card.id && "opacity-60",
                         activeCardId === card.id &&
                           draggedCardId !== card.id &&
-                          "ring-2 ring-emerald-200",
+                          "ring-2 ring-success/30",
                       )}
                     >
                       <CardContent className="space-y-3 p-4">
@@ -1556,7 +1556,7 @@ export default function WorkboardPage() {
                   ))}
 
                   {activeCreateBoardId === board.id && (
-                    <Card className="border border-emerald-200 bg-emerald-50/40">
+                    <Card className="border border-success/25 bg-success/10">
                       <CardContent className="space-y-3 p-4">
                         <Input
                           value={newCardTitle}

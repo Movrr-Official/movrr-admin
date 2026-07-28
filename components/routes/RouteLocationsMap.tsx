@@ -293,14 +293,14 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
           "match",
           ["get", "status"],
           "in-progress",
-          "#10b981",
+          "#10C259",
           "assigned",
-          "#3b82f6",
+          "#245C3D",
           "completed",
-          "#94a3b8",
+          "#8C8C8C",
           "cancelled",
-          "#f43f5e",
-          "#3b82f6",
+          "#C43C3C",
+          "#245C3D",
         ],
         "fill-opacity": 0.18,
       },
@@ -318,14 +318,14 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
           "match",
           ["get", "status"],
           "in-progress",
-          "#10b981",
+          "#10C259",
           "assigned",
-          "#3b82f6",
+          "#245C3D",
           "completed",
-          "#94a3b8",
+          "#8C8C8C",
           "cancelled",
-          "#f43f5e",
-          "#3b82f6",
+          "#C43C3C",
+          "#245C3D",
         ],
         "line-width": 2,
         "line-opacity": 0.7,
@@ -518,9 +518,9 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
                       className={
                         "h-3.5 w-3.5 rounded-full ring-4 ring-opacity-30 shadow " +
                         (marker.status === "in-progress"
-                          ? "bg-emerald-500 ring-emerald-200"
+                          ? "bg-success ring-success/30"
                           : marker.status === "assigned"
-                            ? "bg-blue-500 ring-blue-200"
+                            ? "bg-primary ring-primary/30"
                             : "bg-slate-500 ring-slate-200")
                       }
                     />
@@ -588,9 +588,9 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
                       className={
                         "h-3.5 w-3.5 rounded-full ring-4 ring-opacity-30 shadow " +
                         (marker.status === "in-progress"
-                          ? "bg-emerald-500 ring-emerald-200"
+                          ? "bg-success ring-success/30"
                           : marker.status === "assigned"
-                            ? "bg-blue-500 ring-blue-200"
+                            ? "bg-primary ring-primary/30"
                             : "bg-slate-500 ring-slate-200")
                       }
                     />
@@ -659,12 +659,12 @@ export function RouteLocationsMap({ routes }: { routes: RiderRoute[] }) {
                   className={
                     "rounded-xl px-3 py-2 flex items-start justify-between gap-3 cursor-pointer transition " +
                     (route.id === selectedRouteId
-                      ? "ring-2 ring-emerald-300/70"
+                      ? "ring-2 ring-success/40"
                       : "") +
                     (route.status === "in-progress"
-                      ? " bg-emerald-500 text-white"
+                      ? " bg-success text-success-foreground"
                       : route.status === "assigned"
-                        ? " bg-blue-500 text-white"
+                        ? " bg-primary text-primary-foreground"
                         : " bg-muted/40 text-foreground")
                   }
                   role="button"

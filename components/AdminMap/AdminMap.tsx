@@ -67,6 +67,7 @@ import {
   routeZoneOutlineLayer,
   ROUTE_STATUS_COLORS,
 } from "./layers";
+import { MOVRR_MAP } from "@/lib/movrr-map-colors";
 import type {
   AdminMapViewMode,
   ComplianceState,
@@ -386,7 +387,7 @@ export function AdminMap({
       .filter((r) => r.trail.length > 1)
       .map((r) => ({
         id: r.sessionId,
-        color: COMPLIANCE_COLORS[r.complianceState] ?? "#94a3b8",
+        color: COMPLIANCE_COLORS[r.complianceState] ?? MOVRR_MAP.muted,
         data: {
           type: "Feature" as const,
           geometry: { type: "LineString" as const, coordinates: r.trail },
@@ -627,9 +628,9 @@ export function AdminMap({
   // ── Marker colour helper ───────────────────────────────────────────────────
   function markerColor(rider: RiderMapEntry): string {
     if (viewMode === "route-management") {
-      return ROUTE_STATUS_COLORS[rider.routeStatus ?? ""] ?? "#94a3b8";
+      return ROUTE_STATUS_COLORS[rider.routeStatus ?? ""] ?? MOVRR_MAP.muted;
     }
-    return COMPLIANCE_COLORS[rider.complianceState] ?? "#94a3b8";
+    return COMPLIANCE_COLORS[rider.complianceState] ?? MOVRR_MAP.muted;
   }
 
   // ── Empty / error states ───────────────────────────────────────────────────
@@ -666,7 +667,7 @@ export function AdminMap({
         {/* Stats */}
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
             {visibleRiders.length} active
           </span>
           {viewMode === "operations" && (
@@ -918,12 +919,12 @@ export function AdminMap({
                   className={[
                     "w-full rounded-lg px-3 py-2 text-left transition flex items-start justify-between gap-2",
                     route.id === selectedRouteId
-                      ? "ring-2 ring-emerald-400/60"
+                      ? "ring-2 ring-success/60"
                       : "",
                     route.status === "in-progress"
-                      ? "bg-emerald-500 text-white"
+                      ? "bg-success text-success-foreground"
                       : route.status === "assigned"
-                        ? "bg-blue-500 text-white"
+                        ? "bg-primary text-primary-foreground"
                         : "bg-muted/50 text-foreground",
                   ].join(" ")}
                   onClick={() => handleSelectRoute(route.id)}

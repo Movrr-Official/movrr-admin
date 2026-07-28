@@ -885,22 +885,22 @@ export default function DashboardOverview() {
                     {
                       key: "active",
                       label: "Running",
-                      dotClass: "bg-emerald-500",
+                      dotClass: "bg-success",
                     },
                     {
                       key: "scheduled",
                       label: "Scheduled",
-                      dotClass: "bg-blue-500",
+                      dotClass: "bg-primary",
                     },
                     {
                       key: "draft",
                       label: "Draft",
-                      dotClass: "bg-amber-500",
+                      dotClass: "bg-warning",
                     },
                     {
                       key: "paused",
                       label: "Paused",
-                      dotClass: "bg-slate-400",
+                      dotClass: "bg-muted-foreground",
                     },
                     {
                       key: "completed",
@@ -1003,7 +1003,7 @@ export default function DashboardOverview() {
                           />
                         }
                       />
-                      <Bar dataKey="impressions" fill="#6D5BD0" radius={0} />
+                      <Bar dataKey="impressions" fill="var(--chart-3)" radius={0} />
                       <Bar dataKey="revenue" fill="var(--chart-1)" radius={0} />
                     </RechartsBarChart>
                   </ResponsiveContainer>
@@ -1016,7 +1016,7 @@ export default function DashboardOverview() {
                     <div className="flex items-center gap-2">
                       <span
                         className="h-3 w-3"
-                        style={{ backgroundColor: "#6D5BD0" }}
+                        style={{ backgroundColor: "var(--chart-3)" }}
                         aria-hidden="true"
                       />
                       <span>Ad Impressions</span>
@@ -1223,24 +1223,24 @@ export default function DashboardOverview() {
                       >
                         <stop
                           offset="5%"
-                          stopColor="#4F7CFF"
+                          stopColor="var(--chart-2)"
                           stopOpacity={0.2}
                         />
                         <stop
                           offset="95%"
-                          stopColor="#4F7CFF"
+                          stopColor="var(--chart-2)"
                           stopOpacity={0}
                         />
                       </linearGradient>
                       <linearGradient id="co2Fill" x1="0" y1="0" x2="0" y2="1">
                         <stop
                           offset="5%"
-                          stopColor="#22c55e"
+                          stopColor="var(--chart-1)"
                           stopOpacity={0.2}
                         />
                         <stop
                           offset="95%"
-                          stopColor="#22c55e"
+                          stopColor="var(--chart-1)"
                           stopOpacity={0}
                         />
                       </linearGradient>
@@ -1292,7 +1292,7 @@ export default function DashboardOverview() {
                       yAxisId="left"
                       dataKey="km"
                       type="monotone"
-                      stroke="#4F7CFF"
+                      stroke="var(--chart-2)"
                       strokeWidth={2}
                       fill="url(#distanceFill)"
                       dot={false}
@@ -1301,7 +1301,7 @@ export default function DashboardOverview() {
                       yAxisId="right"
                       dataKey="co2"
                       type="monotone"
-                      stroke="#22c55e"
+                      stroke="var(--chart-1)"
                       strokeWidth={2}
                       fill="url(#co2Fill)"
                       dot={false}
@@ -1318,7 +1318,7 @@ export default function DashboardOverview() {
                   <div className="flex items-center gap-2">
                     <span
                       className="h-0.5 w-8 rounded"
-                      style={{ backgroundColor: "#4F7CFF" }}
+                      style={{ backgroundColor: "var(--chart-2)" }}
                       aria-hidden="true"
                     />
                     <span>Distance (km)</span>
@@ -1326,7 +1326,7 @@ export default function DashboardOverview() {
                   <div className="flex items-center gap-2">
                     <span
                       className="h-0.5 w-8 rounded"
-                      style={{ backgroundColor: "#22c55e" }}
+                      style={{ backgroundColor: "var(--chart-1)" }}
                       aria-hidden="true"
                     />
                     <span>CO₂ Saved (kg)</span>
@@ -1466,7 +1466,7 @@ export default function DashboardOverview() {
                               routeCompletionView === "weekly" &&
                               entry.name === "Sat"
                                 ? "var(--chart-1)"
-                                : "#4F7CFF"
+                                : "var(--chart-2)"
                             }
                           />
                         ))}
