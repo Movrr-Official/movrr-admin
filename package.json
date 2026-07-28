@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev --turbopack",
+    "dev": "node --max-http-header-size=65536 ./node_modules/next/dist/bin/next dev --turbopack",
     "typecheck": "tsc --noEmit",
     "lint": "npm run typecheck",
-    "start": "next start",
+    "start": "node --max-http-header-size=65536 ./node_modules/next/dist/bin/next start",
     "preview-email": "email dev -p 3030",
     "test": "vitest run",
     "test:watch": "vitest"

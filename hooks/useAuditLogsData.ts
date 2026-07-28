@@ -5,21 +5,64 @@ import { subDays } from "date-fns";
 import { AuditFilters, AuditLog } from "@/schemas";
 import { mockAuditLogs } from "@/data/mockAuditLogs";
 import { shouldUseMockData } from "@/lib/dataSource";
-import { getAuditLogs } from "@/app/actions/audit-logs";
+
+const buildAuditLogsUrl = (filters?: AuditFilters) => {
+  const params = new URLSearchParams();
+
+  if (filters?.actionType && filters.actionType !== "all") {
+    params.set("actionType", filters.actionType);
+  }
+  if (filters?.searchQuery?.trim()) {
+    params.set("searchQuery", filters.searchQuery.trim());
+  }
+  if (filters?.performedBy?.trim()) {
+    params.set("performedBy", filters.performedBy.trim());
+  }
+  if (filters?.dateRange?.from) {
+    params.set("from", filters.dateRange.from.toISOString());
+  }
+  if (filters?.dateRange?.to) {
+    params.set("to", filters.dateRange.to.toISOString());
+  }
+
+  const query = params.toString();
+  return query ? `/api/audit-logs?${query}` : "/api/audit-logs";
+};
 
 export const useAuditLogsData = (filters?: AuditFilters) => {
   return useQuery<AuditLog[]>({
     queryKey: ["audit-logs", filters],
     queryFn: async () => {
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       if (!shouldUseMockData()) {
-        const result = await getAuditLogs(filters);
-        if (!result.success || !result.data) {
-          throw new Error(result.error || "Failed to fetch audit logs");
+        const response = await fetch(buildAuditLogsUrl(filters), {
+          method: "GET",
+          credentials: "same-origin",
+          headers: { Accept: "application/json" },
+        });
+
+        if (!response.ok) {
+          let message = "Failed to fetch audit logs";
+          try {
+            const payload = (await response.json()) as { error?: string };
+            if (payload.error) message = payload.error;
+          } catch {
+            // ignore JSON parse failures
+          }
+          if (response.status === 431) {
+            message =
+              "Request headers too large (auth cookies). Restart the dev server and clear site cookies for localhost:3001.";
+          }
+          throw new Error(message);
         }
-        return result.data;
+
+        const payload = (await response.json()) as {
+          data?: AuditLog[];
+          error?: string;
+        };
+        if (!payload.data) {
+          throw new Error(payload.error || "Failed to fetch audit logs");
+        }
+        return payload.data;
       }
 
       // Apply filters to mock data
