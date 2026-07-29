@@ -43,7 +43,7 @@ async function defaultGetAccessToken(): Promise<string | null> {
 }
 
 async function platformRequest<T>(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PATCH",
   path: string,
   options: PlatformRequestOptions = {},
 ): Promise<PlatformApiResult<T>> {
@@ -53,7 +53,10 @@ async function platformRequest<T>(
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
   headers.set("X-Correlation-Id", correlationId);
-  if (method === "POST" && options.body !== undefined) {
+  if (
+    (method === "POST" || method === "PATCH") &&
+    options.body !== undefined
+  ) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -70,7 +73,7 @@ async function platformRequest<T>(
     credentials: "same-origin",
     headers,
     body:
-      method === "POST" && options.body !== undefined
+      (method === "POST" || method === "PATCH") && options.body !== undefined
         ? JSON.stringify(options.body)
         : undefined,
   });
@@ -136,4 +139,12 @@ export function platformPost<T>(
   options?: PlatformRequestOptions,
 ): Promise<PlatformApiResult<T>> {
   return platformRequest<T>("POST", path, options);
+}
+
+/** Authenticated same-origin PATCH against `/api/v1` (Bearer from Supabase session). */
+export function platformPatch<T>(
+  path: string,
+  options?: PlatformRequestOptions,
+): Promise<PlatformApiResult<T>> {
+  return platformRequest<T>("PATCH", path, options);
 }

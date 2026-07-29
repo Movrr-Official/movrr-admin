@@ -33,6 +33,13 @@ import {
 } from "@/features/partners/application/partnerServices";
 import type { FulfilmentModule } from "@/features/fulfilment/infrastructure/composeFulfilmentModule";
 import { composeFulfilmentModule } from "@/features/fulfilment/infrastructure/composeFulfilmentModule";
+import {
+  createOrganisationOpsCommands,
+  createOrganisationOpsQueries,
+  getSharedOrganisationOpsStore,
+} from "@/features/organisations/application/organisationOps";
+import type { Organisation } from "@/features/organisations/domain/Organisation";
+import { isMembershipRole } from "@/features/organisations/domain/CapabilityCatalog";
 
 export type RouteParams = { id: string };
 
@@ -71,6 +78,14 @@ export type PlatformApiHandlers = {
     staff: (request: Request) => Promise<Response>;
     analytics: (request: Request) => Promise<Response>;
     settings: (request: Request) => Promise<Response>;
+  };
+  organisations: {
+    list: (request: Request) => Promise<Response>;
+    create: (request: Request) => Promise<Response>;
+    get: (request: Request, params: RouteParams) => Promise<Response>;
+    listStaff: (request: Request, params: RouteParams) => Promise<Response>;
+    addStaff: (request: Request, params: RouteParams) => Promise<Response>;
+    updateStaff: (request: Request, params: RouteParams) => Promise<Response>;
   };
 };
 
@@ -165,6 +180,15 @@ export async function createPlatformApiForTests(
   });
   const partnerQueries = createPartnerQueries({ authorisation });
   const partnerCommands = createPartnerCommands({ authorisation });
+  const organisationStore = getSharedOrganisationOpsStore();
+  const organisationQueries = createOrganisationOpsQueries({
+    authorisation,
+    store: organisationStore,
+  });
+  const organisationCommands = createOrganisationOpsCommands({
+    authorisation,
+    store: organisationStore,
+  });
 
   let redeemService: ReturnType<typeof createRedeemRewardService> | null = null;
   let fulfilmentEngine: FulfilmentEngine | null =
@@ -453,6 +477,77 @@ export async function createPlatformApiForTests(
         route(request, "fulfilment.read", (ctx) =>
           partnerQueries.settings(ctx),
         ),
+    },
+    organisations: {
+      list: (request) =>
+        route(request, "rewards.manage", (ctx) => {
+          const url = new URL(request.url);
+          const type = url.searchParams.get("type");
+          return organisationQueries.list(ctx, {
+            type:
+              type === "reward_partner" ||
+              type === "advertiser" ||
+              type === "government" ||
+              type === "movrr"
+                ? type
+                : undefined,
+          });
+        }),
+      create: (request) =>
+        route(request, "rewards.manage", async (ctx, req) => {
+          const body = await readJsonBody(req);
+          const name = typeof body.name === "string" ? body.name : "";
+          const type = body.type;
+          if (
+            type !== "reward_partner" &&
+            type !== "advertiser" &&
+            type !== "government" &&
+            type !== "movrr"
+          ) {
+            return fail("validation", "Valid organisation type is required");
+          }
+          return organisationCommands.create(ctx, {
+            name,
+            type: type as Organisation["type"],
+          });
+        }),
+      get: (request, params) =>
+        route(request, "rewards.manage", (ctx) =>
+          organisationQueries.getById(ctx, params.id),
+        ),
+      listStaff: (request, params) =>
+        route(request, "staff.manage", (ctx) =>
+          organisationQueries.listStaff(ctx, params.id),
+        ),
+      addStaff: (request, params) =>
+        route(request, "staff.manage", async (ctx, req) => {
+          const body = await readJsonBody(req);
+          const userId = typeof body.userId === "string" ? body.userId : "";
+          const role = typeof body.role === "string" ? body.role : "";
+          if (!isMembershipRole(role)) {
+            return fail("validation", "Valid membership role is required");
+          }
+          return organisationCommands.addStaff(ctx, {
+            organisationId: params.id,
+            userId,
+            role,
+          });
+        }),
+      updateStaff: (request, params) =>
+        route(request, "staff.manage", async (ctx, req) => {
+          const body = await readJsonBody(req);
+          const membershipId =
+            typeof body.membershipId === "string" ? body.membershipId : "";
+          const role = typeof body.role === "string" ? body.role : "";
+          if (!isMembershipRole(role)) {
+            return fail("validation", "Valid membership role is required");
+          }
+          return organisationCommands.updateStaffRole(ctx, {
+            organisationId: params.id,
+            membershipId,
+            role,
+          });
+        }),
     },
   };
 }
