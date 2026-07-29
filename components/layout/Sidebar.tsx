@@ -24,6 +24,7 @@ import {
   CalendarClock,
   Lightbulb,
   Route,
+  Package,
 } from "lucide-react";
 import { FaRoute } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -180,6 +181,13 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         name: "Rewards",
         href: "/rewards",
         icon: Coins,
+        roles: ["admin", "super_admin"],
+        badge: null,
+      },
+      {
+        name: "Fulfilment",
+        href: "/fulfilment",
+        icon: Package,
         roles: ["admin", "super_admin"],
         badge: null,
       },
@@ -396,7 +404,11 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         <ScrollArea className="flex-1 px-3 py-4">
           <nav className="space-y-2">
             {visibleNavigation.map((item, idx) => {
-              const isActive = pathname === item.href;
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
 
               return (

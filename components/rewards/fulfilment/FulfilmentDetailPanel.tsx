@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { FulfilmentReadModel } from "@/features/fulfilment/application/queries/fulfilmentQueries";
 import type { FulfilmentEvent } from "@/features/fulfilment/domain/Fulfilment";
+import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
 import { FulfilmentTimeline } from "./FulfilmentTimeline";
 import {
   FulfilmentActionsDialog,
@@ -61,7 +62,7 @@ export function FulfilmentDetailPanel({
     return (
       <div className="space-y-4">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/rewards/fulfilment">
+          <Link href={FULFILMENT_ROUTES.queue}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to queue
           </Link>
@@ -77,7 +78,7 @@ export function FulfilmentDetailPanel({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/rewards/fulfilment">
+          <Link href={FULFILMENT_ROUTES.queue}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to queue
           </Link>

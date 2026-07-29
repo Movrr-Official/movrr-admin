@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import {
@@ -26,8 +27,32 @@ import { useStreakLeaderboard } from "@/hooks/useSessionAnalytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard } from "@/components/stats/StatsCard";
 import { RewardCatalogPanel } from "@/components/rewards/RewardCatalogPanel";
+import { ActiveFulfilmentsCrossLink } from "@/components/fulfilment/FulfilmentCrossLink";
+import { parseRewardsSection } from "@/lib/adminIaRoutes";
+
+function sectionToTab(
+  section: ReturnType<typeof parseRewardsSection>,
+): string {
+  switch (section) {
+    case "catalog":
+      return "catalog";
+    case "wallet":
+      return "balances";
+    case "analytics":
+      return "streak";
+    case "transactions":
+      return "transactions";
+    default:
+      return "transactions";
+  }
+}
 
 export default function RewardsOverview() {
+  const searchParams = useSearchParams();
+  const section = parseRewardsSection(searchParams.get("section"));
+  const activeTab = sectionToTab(section);
+  const showHero = section === "overview" || section === "analytics";
+
   const {
     data: transactions,
     isLoading: isLoadingTransactions,
@@ -86,44 +111,10 @@ export default function RewardsOverview() {
       .slice(0, 3) ?? [];
 
   return (
-    <div className="min-h-screen page-canvas">
-      <div className="space-y-6 md:space-y-8">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-          <div>
-            <p className="text-sm font-medium">Fulfilment operations</p>
-            <p className="text-xs text-muted-foreground">
-              Queue, resource pools, and reward partner ops via Platform API
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/rewards/fulfilment"
-              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Fulfilment →
-            </Link>
-            <Link
-              href="/rewards/resource-pools"
-              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Resource pools →
-            </Link>
-            <Link
-              href="/rewards/partners"
-              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Partners →
-            </Link>
-            <Link
-              href="/rewards/organisations"
-              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Organisations →
-            </Link>
-          </div>
-        </div>
+    <div className="space-y-6 md:space-y-8">
+      <ActiveFulfilmentsCrossLink />
 
-        {/* Summary Row - Featured + Compact Stats + Insight Card */}
+      {showHero && (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
           <motion.div
             className="xl:col-span-3 xl:row-span-2 min-h-[100px] mb-11"
@@ -263,21 +254,30 @@ export default function RewardsOverview() {
             </CardContent>
           </Card>
         </div>
+      )}
 
         {/* Main Content Row - Tables + Insights */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
           <div className="xl:col-span-9">
             {/* Tabs for Transaction History and Balance Management */}
-            <Tabs defaultValue="transactions" className="w-full">
+            <Tabs value={activeTab} className="w-full">
               <TabsList className="grid w-full max-w-[740px] grid-cols-4">
-                <TabsTrigger value="transactions">
-                  Transaction History
+                <TabsTrigger value="transactions" asChild>
+                  <Link href="/rewards?section=transactions">
+                    Transaction History
+                  </Link>
                 </TabsTrigger>
-                <TabsTrigger value="balances">Balance Management</TabsTrigger>
-                <TabsTrigger value="catalog">Reward Catalog</TabsTrigger>
-                <TabsTrigger value="streak">
-                  <Flame className="h-3.5 w-3.5 mr-1.5 text-warning" />
-                  Streak Leaders
+                <TabsTrigger value="balances" asChild>
+                  <Link href="/rewards?section=wallet">Balance Management</Link>
+                </TabsTrigger>
+                <TabsTrigger value="catalog" asChild>
+                  <Link href="/rewards?section=catalog">Reward Catalog</Link>
+                </TabsTrigger>
+                <TabsTrigger value="streak" asChild>
+                  <Link href="/rewards?section=analytics">
+                    <Flame className="h-3.5 w-3.5 mr-1.5 text-warning" />
+                    Streak Leaders
+                  </Link>
                 </TabsTrigger>
               </TabsList>
 
@@ -458,7 +458,6 @@ export default function RewardsOverview() {
             </Card>
           </div>
         </div>
-      </div>
     </div>
   );
 }

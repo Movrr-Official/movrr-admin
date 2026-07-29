@@ -22,19 +22,17 @@ export default function FulfilmentOpsDetailPage({
   };
 
   return (
-    <div className="min-h-screen page-canvas">
-      <FulfilmentDetailPanel
-        fulfilment={detail.data}
-        events={timeline.data}
-        isLoadingDetail={detail.isLoading}
-        isLoadingTimeline={timeline.isLoading}
-        errorMessage={
-          detail.isError
-            ? ((detail.error as Error)?.message ?? "Failed to load fulfilment")
-            : null
-        }
-        onRefetch={refetchAll}
-      />
-    </div>
+    <FulfilmentDetailPanel
+      fulfilment={detail.data}
+      events={timeline.data}
+      isLoadingDetail={detail.isLoading}
+      isLoadingTimeline={timeline.isLoading}
+      errorMessage={
+        detail.isError
+          ? ((detail.error as Error)?.message ?? "Failed to load fulfilment")
+          : null
+      }
+      onRefetch={refetchAll}
+    />
   );
 }

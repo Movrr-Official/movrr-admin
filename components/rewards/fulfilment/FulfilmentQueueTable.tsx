@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { FulfilmentReadModel } from "@/features/fulfilment/application/queries/fulfilmentQueries";
+import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
 
 type FulfilmentQueueTableProps = {
   rows: FulfilmentReadModel[];
@@ -57,7 +58,7 @@ export function FulfilmentQueueTable({
           <TableRow key={row.id}>
             <TableCell className="font-mono text-xs">
               <Link
-                href={`/rewards/fulfilment/${row.id}`}
+                href={FULFILMENT_ROUTES.detail(row.id)}
                 className="text-primary underline-offset-4 hover:underline"
               >
                 {row.id}

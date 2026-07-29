@@ -207,7 +207,7 @@ export default function CreateRewardCatalogPage() {
   };
 
   return (
-    <div className="min-h-screen page-canvas">
+    <div className="space-y-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <PageHeader
           title="Create Reward Product"
