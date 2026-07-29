@@ -41,5 +41,5 @@ Task 10: minor (deferred): prod principal stubs; no seed catalog; partner valida
 Task 11: complete (commits c679bad..f7a47d7, DONE_WITH_CONCERNS)
 Task 11: Important deferred to Task 13 — engine must enqueue FulfilmentStateChanged/Completed for consumers
 
-Task 12: complete (commits f7a47d7..1a655c2, DONE_WITH_CONCERNS)
+Task 12: complete (commits f7a47d7..44c9a8b, DONE_WITH_CONCERNS)
 Task 12: minor (deferred): job engine singleton separate from API store; retry stub; expire no auto-refund

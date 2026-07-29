@@ -2,7 +2,7 @@
 
 **Status:** DONE_WITH_CONCERNS  
 **Branch:** `feat/fulfilment-engine-plan-1`  
-**Commit:** `1a655c2`
+**Commit:** `44c9a8b`
 
 ---
 
@@ -69,7 +69,7 @@ Also green: `engine.test.ts`, `handlers.test.ts`
 ## Commit
 
 ```
-1a655c2 feat(fulfilment): add idempotent scheduled expiry and reservation release jobs
+44c9a8b feat(fulfilment): add idempotent scheduled expiry and reservation release jobs
 ```
 
 ---
