@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { KeyRound, LayoutDashboard, ShieldCheck } from "lucide-react";
 
 export default function AuthLayout({
   children,
@@ -44,8 +45,12 @@ export default function AuthLayout({
 
         <div className="mb-16 space-y-8">
           <div className="flex items-center space-x-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-movrr-text-inverse/10">
-              <span className="text-lg font-semibold">A</span>
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-movrr-text-inverse/10">
+              <ShieldCheck
+                className="size-5"
+                aria-hidden="true"
+                strokeWidth={1.75}
+              />
             </div>
             <div>
               <h3 className="font-semibold">Admin-Gated Access</h3>
@@ -56,8 +61,12 @@ export default function AuthLayout({
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-movrr-text-inverse/10">
-              <span className="text-lg font-semibold">O</span>
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-movrr-text-inverse/10">
+              <LayoutDashboard
+                className="size-5"
+                aria-hidden="true"
+                strokeWidth={1.75}
+              />
             </div>
             <div>
               <h3 className="font-semibold">Operations Control</h3>
@@ -68,8 +77,12 @@ export default function AuthLayout({
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-movrr-text-inverse/10">
-              <span className="text-lg font-semibold">S</span>
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-movrr-text-inverse/10">
+              <KeyRound
+                className="size-5"
+                aria-hidden="true"
+                strokeWidth={1.75}
+              />
             </div>
             <div>
               <h3 className="font-semibold">Security-Scoped Sessions</h3>
