@@ -27,6 +27,7 @@ import {
   createInMemoryFulfilmentQueryPort,
 } from "@/features/fulfilment/application/queries/fulfilmentQueries";
 import { createFulfilment } from "@/features/fulfilment/domain/Fulfilment";
+import { createAggregateBackedFulfilmentQueryPort } from "@/features/fulfilment/infrastructure/aggregateBackedFulfilmentQueryPort";
 import {
   createPartnerCommands,
   createPartnerQueries,
@@ -41,6 +42,9 @@ import {
 } from "@/features/organisations/application/organisationOps";
 import type { Organisation } from "@/features/organisations/domain/Organisation";
 import { isMembershipRole } from "@/features/organisations/domain/CapabilityCatalog";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type RouteParams = { id: string };
 
@@ -152,21 +156,53 @@ export async function createPlatformApiForTests(
   const bus = fulfilmentModule?.bus ?? new DomainEventBus();
   const ledger =
     fulfilmentModule?.ledger ?? createInMemoryLedgerRepository();
-  const catalogPort = createInMemoryCatalogListPort(options.seed?.catalog ?? []);
-  const redemptionPort = createInMemoryRedemptionListPort();
-  const fulfilmentPort = createInMemoryFulfilmentQueryPort([
-    createFulfilment({
-      id: "f-1",
-      redemptionId: "red-1",
-      riderId: "rider-1",
-      catalogItemId: "cat-1",
-      fulfilmentType: "instant_digital",
-      state: "ready",
-      version: 1,
-      partnerOrgId: "org-1",
-      idempotencyKey: "seed-f-1",
-    }),
-  ]);
+
+  const isProductionComposition = Boolean(fulfilmentModule && !options.seed);
+
+  let catalogPort = createInMemoryCatalogListPort(
+    options.seed?.catalog ?? [],
+  ) as import("@/features/rewards/application/queries/catalogAndRedemptions").CatalogListPort;
+  let redemptionPort = createInMemoryRedemptionListPort() as import("@/features/rewards/application/queries/catalogAndRedemptions").RedemptionListPort;
+
+  if (isProductionComposition) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createSupabaseCatalogRepository } =
+      require("@/features/rewards/infrastructure/supabaseCatalogRepository") as typeof import("@/features/rewards/infrastructure/supabaseCatalogRepository");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createSupabaseRedemptionRepository } =
+      require("@/features/rewards/infrastructure/supabaseRedemptionRepository") as typeof import("@/features/rewards/infrastructure/supabaseRedemptionRepository");
+    catalogPort = createSupabaseCatalogRepository();
+    redemptionPort = createSupabaseRedemptionRepository();
+  }
+
+  // Production (module, no seed): same aggregate store as the engine.
+  // AuthZ-only tests (no module): keep seed f-1 for read-matrix coverage.
+  let fulfilmentPort =
+    fulfilmentModule && !options.seed
+      ? createAggregateBackedFulfilmentQueryPort({
+          store: fulfilmentModule.store,
+          tokens: fulfilmentModule.tokenStore,
+        })
+      : createInMemoryFulfilmentQueryPort([
+          createFulfilment({
+            id: "f-1",
+            redemptionId: "red-1",
+            riderId: "rider-1",
+            catalogItemId: "cat-1",
+            fulfilmentType: "instant_digital",
+            state: "ready",
+            version: 1,
+            partnerOrgId: "org-1",
+            idempotencyKey: "seed-f-1",
+          }),
+        ]);
+
+  if (fulfilmentModule && options.seed) {
+    fulfilmentPort = createAggregateBackedFulfilmentQueryPort({
+      store: fulfilmentModule.store,
+      tokens: fulfilmentModule.tokenStore,
+    });
+  }
 
   const walletQueries = createWalletQueries({ authorisation, ledger });
   const catalogQueries = createCatalogQueries({
@@ -181,10 +217,58 @@ export async function createPlatformApiForTests(
     authorisation,
     port: fulfilmentPort,
   });
-  const partnerQueries = createPartnerQueries({ authorisation });
-  const partnerCommands = createPartnerCommands({ authorisation });
+
+  let listResourcesFn:
+    | ((filter: {
+        partnerOrgId?: string | null;
+      }) => Promise<
+        Array<{
+          id: string;
+          name: string;
+          resourceKind: string;
+          status: string;
+          partnerOrgId: string | null;
+          availableCount: number;
+        }>
+      >)
+    | undefined;
+  let importResourcesFn:
+    | ((input: {
+        resourceId: string;
+        codes: string[];
+        partnerOrgId?: string | null;
+      }) => Promise<{ resourceId: string; imported: number }>)
+    | undefined;
+
+  if (isProductionComposition) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const voucherPool =
+      require("@/features/fulfilment/infrastructure/supabaseVoucherPoolResourceProvider") as typeof import("@/features/fulfilment/infrastructure/supabaseVoucherPoolResourceProvider");
+    listResourcesFn = (filter) => voucherPool.listFulfilmentResources(filter);
+    importResourcesFn = (input) => voucherPool.importVoucherPoolCodes(input);
+  }
+
   const organisationStore =
     options.organisationStore ?? getSharedOrganisationOpsStore();
+
+  const partnerQueries = createPartnerQueries({
+    authorisation,
+    listFulfilments: fulfilmentModule
+      ? () => fulfilmentModule.engine.list()
+      : undefined,
+    listResources: listResourcesFn,
+    listCatalog: () => catalogPort.list(),
+    listStaffByOrg: (organisationId) =>
+      organisationStore.listMembersByOrganisation(organisationId),
+    getOrganisation: (organisationId) =>
+      organisationStore.findOrganisationById(organisationId),
+  });
+  const partnerCommands = createPartnerCommands({
+    authorisation,
+    tokens: fulfilmentModule?.tokens,
+    engine: fulfilmentModule?.engine,
+    requireEngine: isProductionComposition,
+  });
   const organisationQueries = createOrganisationOpsQueries({
     authorisation,
     store: organisationStore,
@@ -225,29 +309,29 @@ export async function createPlatformApiForTests(
       fulfilmentEngine: fulfilmentModule.engine,
       eventBus: bus,
     });
-  } else if (fulfilmentModule && !options.seed) {
-    // Production path: durable catalog / redemption / idempotency.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { createSupabaseCatalogRepository } =
-      require("@/features/rewards/infrastructure/supabaseCatalogRepository") as typeof import("@/features/rewards/infrastructure/supabaseCatalogRepository");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { createSupabaseRedemptionRepository } =
-      require("@/features/rewards/infrastructure/supabaseRedemptionRepository") as typeof import("@/features/rewards/infrastructure/supabaseRedemptionRepository");
+  } else if (isProductionComposition && fulfilmentModule) {
+    // Production path: durable catalog / redemption / fraud (same ports as queries).
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { createSupabaseIdempotencyStore } =
       require("@/features/fraud/infrastructure/supabaseIdempotencyStore") as typeof import("@/features/fraud/infrastructure/supabaseIdempotencyStore");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createSupabaseReplayStore } =
+      require("@/features/fraud/infrastructure/supabaseReplayStore") as typeof import("@/features/fraud/infrastructure/supabaseReplayStore");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createSupabaseRateLimitStore } =
+      require("@/features/fraud/infrastructure/supabaseRateLimitStore") as typeof import("@/features/fraud/infrastructure/supabaseRateLimitStore");
 
     const fraud = createFraudPolicyEngine({
       idempotency: createSupabaseIdempotencyStore(),
-      replay: createInMemoryReplayStore(),
-      rateLimit: createInMemoryRateLimitStore({ max: 100, windowMs: 60_000 }),
+      replay: createSupabaseReplayStore(),
+      rateLimit: createSupabaseRateLimitStore({ max: 100, windowMs: 60_000 }),
     });
     redeemService = createRedeemRewardService({
       authorisation,
       fraud,
-      catalog: createSupabaseCatalogRepository(),
+      catalog: catalogPort,
       settlement: fulfilmentModule.settlement,
-      redemptions: createSupabaseRedemptionRepository(),
+      redemptions: redemptionPort,
       fulfilmentEngine: fulfilmentModule.engine,
       eventBus: bus,
     });
@@ -368,8 +452,29 @@ export async function createPlatformApiForTests(
           }
           if (fulfilmentEngine) {
             const result = await fulfilmentEngine.cancel(params.id, reason);
-            if (result.ok) await bus.flushAfterCommit();
+            if (result.ok) {
+              await bus.flushAfterCommit();
+              if (isProductionComposition) {
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                const { appendPlatformAuditRecordSafe } =
+                  require("@/features/platform/infrastructure/supabasePlatformAudit") as typeof import("@/features/platform/infrastructure/supabasePlatformAudit");
+                await appendPlatformAuditRecordSafe({
+                  ctx,
+                  capability: "fulfilment.cancel",
+                  targetEntityType: "fulfilment",
+                  targetEntityId: params.id,
+                  reason,
+                  resultingState: { cancelled: true },
+                });
+              }
+            }
             return result;
+          }
+          if (isProductionComposition) {
+            return fail(
+              "unavailable",
+              "Fulfilment cancel requires fulfilment engine",
+            );
           }
           return ok({ fulfilmentId: params.id, cancelled: true });
         }),
@@ -386,8 +491,29 @@ export async function createPlatformApiForTests(
           }
           if (fulfilmentEngine) {
             const result = await fulfilmentEngine.refund(params.id, reason);
-            if (result.ok) await bus.flushAfterCommit();
+            if (result.ok) {
+              await bus.flushAfterCommit();
+              if (isProductionComposition) {
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                const { appendPlatformAuditRecordSafe } =
+                  require("@/features/platform/infrastructure/supabasePlatformAudit") as typeof import("@/features/platform/infrastructure/supabasePlatformAudit");
+                await appendPlatformAuditRecordSafe({
+                  ctx,
+                  capability: "fulfilment.refund",
+                  targetEntityType: "fulfilment",
+                  targetEntityId: params.id,
+                  reason,
+                  resultingState: { refunded: true },
+                });
+              }
+            }
             return result;
+          }
+          if (isProductionComposition) {
+            return fail(
+              "unavailable",
+              "Fulfilment refund requires fulfilment engine",
+            );
           }
           return ok({ fulfilmentId: params.id, refunded: true });
         }),
@@ -400,6 +526,12 @@ export async function createPlatformApiForTests(
             const result = await fulfilmentEngine.confirmCollection(params.id);
             if (result.ok) await bus.flushAfterCommit();
             return result;
+          }
+          if (isProductionComposition) {
+            return fail(
+              "unavailable",
+              "Fulfilment confirm requires fulfilment engine",
+            );
           }
           return ok({ fulfilmentId: params.id, confirmed: true });
         }),
@@ -444,6 +576,12 @@ export async function createPlatformApiForTests(
             }
             return result;
           }
+          if (isProductionComposition) {
+            return fail(
+              "unavailable",
+              "Token consume requires fulfilment engine",
+            );
+          }
           return ok({ consumed: true });
         }),
     },
@@ -458,7 +596,9 @@ export async function createPlatformApiForTests(
         route(request, "fulfilment.validate", async (ctx, req) => {
           const body = await readJsonBody(req);
           const token = typeof body.token === "string" ? body.token : "";
-          return partnerCommands.validate(ctx, { token });
+          const result = await partnerCommands.validate(ctx, { token });
+          if (result.ok) await bus.flushAfterCommit();
+          return result;
         }),
       confirmCollection: (request) =>
         route(request, "fulfilment.confirm", async (ctx, req) => {
@@ -467,7 +607,11 @@ export async function createPlatformApiForTests(
             typeof body.fulfilmentId === "string"
               ? body.fulfilmentId
               : "";
-          return partnerCommands.confirmCollection(ctx, { fulfilmentId });
+          const result = await partnerCommands.confirmCollection(ctx, {
+            fulfilmentId,
+          });
+          if (result.ok) await bus.flushAfterCommit();
+          return result;
         }),
       resources: (request) =>
         route(
@@ -493,12 +637,45 @@ export async function createPlatformApiForTests(
               if (!resourceId) {
                 return fail("validation", "resourceId is required");
               }
-              // Empty-provider stub: authz + shape validation only (no pool mutation yet).
-              return ok({
-                resourceId,
-                imported: codes.length,
-                accepted: true,
-              });
+              if (!UUID_RE.test(resourceId)) {
+                return fail("validation", "resourceId must be a UUID");
+              }
+              if (!importResourcesFn) {
+                if (isProductionComposition) {
+                  return fail(
+                    "unavailable",
+                    "Resource import is not configured for this environment",
+                  );
+                }
+                if (fulfilmentModule?.pool) {
+                  await fulfilmentModule.pool.seedPool(
+                    resourceId,
+                    codes.map((code, index) => ({
+                      id: `${resourceId}-item-${index + 1}`,
+                      code,
+                    })),
+                  );
+                  return ok({
+                    resourceId,
+                    imported: codes.length,
+                  });
+                }
+                return fail(
+                  "unavailable",
+                  "Resource import is not configured for this environment",
+                );
+              }
+              const partnerOrgId =
+                ctx.principal.type === "organisation"
+                  ? ctx.principal.organisationId
+                  : null;
+              return ok(
+                await importResourcesFn({
+                  resourceId,
+                  codes,
+                  partnerOrgId,
+                }),
+              );
             }
             return partnerQueries.listResources(ctx);
           },

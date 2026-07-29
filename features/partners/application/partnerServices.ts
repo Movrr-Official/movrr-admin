@@ -4,11 +4,25 @@ import type { AuthorisationService } from "@/features/organisations/application/
 import type { FulfilmentEngine } from "@/features/fulfilment/application/FulfilmentEngine";
 import type { TokenService } from "@/features/fulfilment/application/commands/tokenService";
 import type { FulfilmentHandlerResult } from "@/features/fulfilment/application/contracts/FulfilmentHandler";
+import type { Fulfilment } from "@/features/fulfilment/domain/Fulfilment";
+import type { FulfilmentState } from "@/features/fulfilment/domain/states";
+import type { CatalogItem } from "@/features/rewards/application/contracts/RedeemRewardCommand";
+import type { OrganisationMembership } from "@/features/organisations/domain/Membership";
+import type { Organisation } from "@/features/organisations/domain/Organisation";
 
 export type PartnerProfileReadModel = {
   organisationId: string;
   role: string | null;
   type: "reward_partner";
+};
+
+export type PartnerResourceReadModel = {
+  id: string;
+  name: string;
+  resourceKind: string;
+  status: string;
+  partnerOrgId: string | null;
+  availableCount: number;
 };
 
 export type PartnerQueries = {
@@ -46,6 +60,14 @@ export type PartnerCommands = {
   ) => Promise<ApplicationResult<FulfilmentHandlerResult | { confirmed: true }>>;
 };
 
+/** Partner-actionable fulfilment states for pending queue. */
+const PENDING_PARTNER_STATES = new Set<FulfilmentState>([
+  "ready",
+  "awaiting_collection",
+  "validated",
+  "reserved",
+]);
+
 function requireOrg(ctx: RequestContext): ApplicationResult<{
   organisationId: string;
   role: string | null;
@@ -76,6 +98,16 @@ function allowPartnerOrAdminList(
 
 export function createPartnerQueries(deps: {
   authorisation: AuthorisationService;
+  /** When set, pending list filters durable fulfilments for the partner org. */
+  listFulfilments?: () => Promise<Fulfilment[]>;
+  listResources?: (filter: {
+    partnerOrgId?: string | null;
+  }) => Promise<PartnerResourceReadModel[]>;
+  listCatalog?: () => Promise<CatalogItem[]>;
+  listStaffByOrg?: (
+    organisationId: string,
+  ) => Promise<OrganisationMembership[]>;
+  getOrganisation?: (organisationId: string) => Promise<Organisation | null>;
 }): PartnerQueries {
   return {
     async me(ctx) {
@@ -94,14 +126,27 @@ export function createPartnerQueries(deps: {
       if (!authz.ok) return authz;
       const org = requireOrg(ctx);
       if (!org.ok) return org;
-      return ok([]);
+      if (!deps.listFulfilments) return ok([]);
+      const rows = await deps.listFulfilments();
+      return ok(
+        rows.filter(
+          (f) =>
+            f.partnerOrgId === org.value.organisationId &&
+            PENDING_PARTNER_STATES.has(f.state),
+        ),
+      );
     },
     async listResources(ctx) {
       const authz = deps.authorisation.assertCapability(ctx, "resources.manage");
       if (!authz.ok) return authz;
       const scope = allowPartnerOrAdminList(ctx);
       if (!scope.ok) return scope;
-      return ok([]);
+      if (!deps.listResources) return ok([]);
+      return ok(
+        await deps.listResources({
+          partnerOrgId: scope.value.organisationId,
+        }),
+      );
     },
     async listRewards(ctx) {
       const authz = deps.authorisation.assertCapability(
@@ -111,28 +156,60 @@ export function createPartnerQueries(deps: {
       if (!authz.ok) return authz;
       const scope = allowPartnerOrAdminList(ctx);
       if (!scope.ok) return scope;
-      return ok([]);
+      if (!deps.listCatalog) return ok([]);
+      const items = await deps.listCatalog();
+      if (!scope.value.organisationId) return ok(items);
+      return ok(
+        items.filter(
+          (item) => item.partnerOrgId === scope.value.organisationId,
+        ),
+      );
     },
     async listStaff(ctx) {
       const authz = deps.authorisation.assertCapability(ctx, "staff.manage");
       if (!authz.ok) return authz;
       const scope = allowPartnerOrAdminList(ctx);
       if (!scope.ok) return scope;
-      return ok([]);
+      if (!scope.value.organisationId || !deps.listStaffByOrg) return ok([]);
+      return ok(await deps.listStaffByOrg(scope.value.organisationId));
     },
     async analytics(ctx) {
       const authz = deps.authorisation.assertCapability(ctx, "analytics.view");
       if (!authz.ok) return authz;
       const scope = allowPartnerOrAdminList(ctx);
       if (!scope.ok) return scope;
-      return ok({ series: [] });
+      if (!deps.listFulfilments) return ok({ series: [] });
+      const rows = await deps.listFulfilments();
+      const scoped = scope.value.organisationId
+        ? rows.filter((f) => f.partnerOrgId === scope.value.organisationId)
+        : rows;
+      const byState = new Map<string, number>();
+      for (const row of scoped) {
+        byState.set(row.state, (byState.get(row.state) ?? 0) + 1);
+      }
+      return ok({
+        series: [...byState.entries()].map(([state, count]) => ({
+          state,
+          count,
+        })),
+      });
     },
     async settings(ctx) {
       const authz = deps.authorisation.assertCapability(ctx, "fulfilment.read");
       if (!authz.ok) return authz;
       const scope = allowPartnerOrAdminList(ctx);
       if (!scope.ok) return scope;
-      return ok({});
+      if (!scope.value.organisationId || !deps.getOrganisation) {
+        return ok({});
+      }
+      const org = await deps.getOrganisation(scope.value.organisationId);
+      if (!org) return ok({});
+      return ok({
+        organisationId: org.id,
+        name: org.name,
+        type: org.type,
+        status: org.status,
+      });
     },
   };
 }
@@ -141,6 +218,8 @@ export function createPartnerCommands(deps: {
   authorisation: AuthorisationService;
   tokens?: TokenService;
   engine?: FulfilmentEngine;
+  /** When true, missing tokens/engine fails instead of stub success (production). */
+  requireEngine?: boolean;
 }): PartnerCommands {
   return {
     async validate(ctx, input) {
@@ -153,6 +232,12 @@ export function createPartnerCommands(deps: {
       if (!org.ok) return org;
 
       if (!deps.tokens || !deps.engine) {
+        if (deps.requireEngine) {
+          return fail(
+            "unavailable",
+            "Partner validate requires fulfilment engine",
+          );
+        }
         return ok({ validated: true });
       }
       if (!input.token) {
@@ -180,6 +265,12 @@ export function createPartnerCommands(deps: {
       if (!org.ok) return org;
 
       if (!deps.engine) {
+        if (deps.requireEngine) {
+          return fail(
+            "unavailable",
+            "Partner confirm requires fulfilment engine",
+          );
+        }
         return ok({ confirmed: true });
       }
       if (!input.fulfilmentId) {

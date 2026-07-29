@@ -1,7 +1,7 @@
 # Phase 4.5 — Platform Durability & Persistence Remediation
 
 **Date:** 2026-07-29  
-**Status:** Approved direction (implementation plan follows)  
+**Status:** Implemented — exit gate **0 Critical** (2026-07-29 re-audit)  
 **Repos:** `movrr-admin` (Platform API + Fulfilment module + internal jobs)  
 **Type:** Integration / durability remediation — **not** an architectural redesign  
 **Prerequisite:** Migrations `040`–`045` applied in the target database  
@@ -29,17 +29,17 @@ After this phase, serverless / multi-instance deployment must operate on **share
 
 ## 3. Current state (from durability audit)
 
-| Layer | Production wiring today |
-|-------|-------------------------|
+| Layer | Production wiring (post Phase 4.5) |
+|-------|-------------------------------------|
 | AuthN + organisations | Supabase (`040`/`045` + membership lookup) |
-| Fulfilment engine / tokens / resources | Process-local `Map`s |
-| Wallet settlement | In-memory ledger (ignores `042` RPCs) |
-| Redeem | Stub success when `seed` absent |
-| Partner validate / confirm / pools | Stubs / empty arrays |
-| Fraud / idempotency / replay | In-memory or unused (`041` unwired) |
-| Jobs (expire / release) | Real auth, empty engine |
+| Fulfilment engine / tokens / resources | Supabase `043` adapters |
+| Wallet settlement | `042` `wallet_settle_*` RPCs |
+| Redeem | Durable catalog + redemption + fraud stores |
+| Partner validate / confirm / pools | Engine + tokens + DB resource import/list |
+| Fraud / idempotency / replay | Supabase `041` |
+| Jobs (expire / release) | Shared durable `getSharedFulfilmentModule()` |
 
-Architectural work (handlers, SM, authz, routes) largely exists. Gap is **adapter wiring**.
+In-memory remains **tests only**.
 
 ---
 
@@ -113,7 +113,44 @@ Supabase adapters for `platform_idempotency_key`, `platform_consumed_jti`, `plat
 
 ## 7. Verification gate
 
-Only after a **second durability audit** returns clean Criticals:
+### Exit gate — re-audit (2026-07-29, post Phase 4.5)
+
+| Finding (original Critical) | Status |
+|-----------------------------|--------|
+| Organisations / Partner create in-memory | **Fully Resolved** — `createSupabaseOrganisationOpsStore` + 045 dual-write |
+| Fulfilment engine Map | **Fully Resolved** — `createSupabaseFulfilmentAggregateStore` |
+| Tokens Map | **Fully Resolved** — `createSupabaseTokenStore` + `getByFulfilmentId` |
+| Voucher pool / resource allocation Map | **Fully Resolved** — Supabase pool + generated-digital providers |
+| Wallet ledger in-memory | **Fully Resolved** — `wallet_settle_*` via `createSupabaseLedgerRepository` |
+| Redeem stub success | **Fully Resolved** — durable catalog/redemption/idempotency; stub removed |
+| Partner validate/confirm stubs | **Fully Resolved** — engine + tokens wired; production `requireEngine` |
+| Resource import `{ accepted: true }` | **Fully Resolved** — `importVoucherPoolCodes` |
+| Phantom seed `f-1` query port in production | **Fully Resolved** — aggregate-backed query port + token store |
+| Fraud 041 unwired | **Fully Resolved** — idempotency + replay + rate-limit Supabase stores |
+| Jobs empty engine | **Fully Resolved** — jobs use `getSharedFulfilmentModule()` durable singleton |
+| Catalog↔org reverse sync | **Fully Resolved** — `upsertPartner` creates/links `organisation` |
+| Notifications side-effect Map | **Fully Resolved** — `createSupabaseNotificationInsertPort` |
+
+### Post-implementation verification audit (strict, code-evidence)
+
+| ID | Finding | First pass | After remediation |
+|----|---------|------------|-------------------|
+| V1 | Catalog GET/LIST empty in-memory while redeem uses Supabase | Partially Resolved | **Fully Resolved** — production wires `createSupabaseCatalogRepository` for queries + redeem |
+| V2 | Redemption GET/LIST empty in-memory | Partially Resolved | **Fully Resolved** — `listByRider` + shared durable port |
+| V3 | Token display missing token store | Partially Resolved | **Fully Resolved** — `tokenStore.getByFulfilmentId` wired into query port |
+| V4 | Fake ok stubs on cancel/refund/confirm/consume | Partially Resolved | **Fully Resolved** — production fail-closed `unavailable` |
+| V5 | Partner rewards/staff/settings/analytics empty | Partially Resolved | **Fully Resolved** — catalog/memberships/org/fulfilment-derived series |
+| V6 | `platform_audit_record` unwired on cancel/refund | Deferred (optional) | **Fully Resolved** — best-effort append on success |
+| V7 | Rate-limit TOCTOU | Partially Resolved | **Fully Resolved** — atomic RPC `046` + fallback |
+| V8 | `SECURITY.md` missing durability notes | Partially Resolved | **Fully Resolved** |
+| V9 | Process-local metrics counters | Deferred | **Deferred** — observability-only (plan out-of-scope) |
+| V10 | AuthZ not live from `bundle_capability` | Deferred | **Deferred** — plan out-of-scope (M2) |
+
+**Critical remaining: 0**  
+**Partially Resolved remaining (runtime): 0**  
+**Deferred (accepted): V9, V10**
+
+Only after this gate:
 
 → Functional verification → UAT → production readiness testing.
 

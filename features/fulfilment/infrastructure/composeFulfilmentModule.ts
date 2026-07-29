@@ -13,7 +13,10 @@ import { createInstantDigitalHandler } from "@/features/fulfilment/application/h
 import { createQrBarcodeHandler } from "@/features/fulfilment/application/handlers/QrBarcodeHandler";
 import { createUnsupportedFulfilmentHandler } from "@/features/fulfilment/application/handlers/UnsupportedFulfilmentHandler";
 import { createGeneratedDigitalResourceProvider } from "@/features/fulfilment/infrastructure/providers/GeneratedDigitalResourceProvider";
-import { createVoucherPoolResourceProvider } from "@/features/fulfilment/infrastructure/providers/VoucherPoolResourceProvider";
+import {
+  createVoucherPoolResourceProvider,
+  type VoucherPoolResourceProvider,
+} from "@/features/fulfilment/infrastructure/providers/VoucherPoolResourceProvider";
 import {
   createTokenService,
   type TokenService,
@@ -55,23 +58,29 @@ export type FulfilmentModule = {
   engine: FulfilmentEngine;
   registry: HandlerRegistry;
   tokens: TokenService;
+  tokenStore: TokenStore;
   settlement: SettlementService;
   ledger: LedgerRepository;
-  pool: ReturnType<typeof createVoucherPoolResourceProvider>;
+  pool: VoucherPoolResourceProvider;
+  store: FulfilmentAggregateStore;
   metrics: FulfilmentMetrics;
-  notifications: InMemoryNotificationInsertPort;
+  notifications: NotificationInsertPort;
   analytics: FulfilmentMetricsSink;
 };
 
 export type ComposeFulfilmentModuleOptions = {
   bus?: DomainEventBus;
   ledger?: LedgerRepository;
-  notifications?: InMemoryNotificationInsertPort;
+  notifications?: NotificationInsertPort;
   analytics?: FulfilmentMetricsSink;
   metrics?: FulfilmentMetrics;
   /** Defaults to in-memory; production injects Supabase store. */
   fulfilmentStore?: FulfilmentAggregateStore;
   tokenStore?: TokenStore;
+  /** Defaults to in-memory voucher pool; production injects Supabase pool. */
+  pool?: VoucherPoolResourceProvider;
+  /** Defaults to in-memory generated digital; production injects Supabase. */
+  generated?: FulfilmentResourceProvider;
   /** When false, skip subscribeFulfilmentSideEffects (tests that wire consumers manually). Default true. */
   subscribeSideEffects?: boolean;
 };
@@ -96,12 +105,16 @@ export function composeFulfilmentModule(
     ledger,
     eventBus: bus,
   });
+  const tokenStore = options.tokenStore ?? createInMemoryTokenStore();
   const tokens = createTokenService({
     eventBus: bus,
-    store: options.tokenStore ?? createInMemoryTokenStore(),
+    store: tokenStore,
   });
-  const generated = createGeneratedDigitalResourceProvider();
-  const pool = createVoucherPoolResourceProvider();
+  const generated =
+    options.generated ?? createGeneratedDigitalResourceProvider();
+  const pool = options.pool ?? createVoucherPoolResourceProvider();
+  const fulfilmentStore =
+    options.fulfilmentStore ?? createInMemoryFulfilmentAggregateStore();
   const sm = createFulfilmentStateMachine();
   const registry = createHandlerRegistry();
   const unsupported = createUnsupportedFulfilmentHandler();
@@ -126,7 +139,7 @@ export function composeFulfilmentModule(
     settlement,
     tokens,
     eventBus: bus,
-    store: options.fulfilmentStore ?? createInMemoryFulfilmentAggregateStore(),
+    store: fulfilmentStore,
   });
 
   if (options.subscribeSideEffects !== false) {
@@ -141,9 +154,11 @@ export function composeFulfilmentModule(
     engine,
     registry,
     tokens,
+    tokenStore,
     settlement,
     ledger,
     pool,
+    store: fulfilmentStore,
     metrics,
     notifications,
     analytics,
@@ -176,10 +191,22 @@ export function getSharedFulfilmentModule(): FulfilmentModule {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { createSupabaseLedgerRepository } =
         require("@/features/wallet/infrastructure/supabaseLedgerRepository") as typeof import("@/features/wallet/infrastructure/supabaseLedgerRepository");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createSupabaseVoucherPoolResourceProvider } =
+        require("@/features/fulfilment/infrastructure/supabaseVoucherPoolResourceProvider") as typeof import("@/features/fulfilment/infrastructure/supabaseVoucherPoolResourceProvider");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createSupabaseGeneratedDigitalResourceProvider } =
+        require("@/features/fulfilment/infrastructure/supabaseGeneratedDigitalResourceProvider") as typeof import("@/features/fulfilment/infrastructure/supabaseGeneratedDigitalResourceProvider");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createSupabaseNotificationInsertPort } =
+        require("@/features/notifications/infrastructure/supabaseNotificationInsertPort") as typeof import("@/features/notifications/infrastructure/supabaseNotificationInsertPort");
       sharedModule = composeFulfilmentModule({
         fulfilmentStore: createSupabaseFulfilmentAggregateStore(),
         tokenStore: createSupabaseTokenStore(),
         ledger: createSupabaseLedgerRepository(),
+        pool: createSupabaseVoucherPoolResourceProvider(),
+        generated: createSupabaseGeneratedDigitalResourceProvider(),
+        notifications: createSupabaseNotificationInsertPort(),
       });
     }
   }

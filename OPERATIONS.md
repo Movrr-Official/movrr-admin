@@ -132,6 +132,21 @@ Notable scripts:
 - `workboard_card_identifiers.sql`
 - `workboard_defaults_and_policies.sql`
 
+### Platform API / Fulfilment durability (Phase 4.5)
+
+Production Platform API (`getProductionPlatformApi` + `getSharedFulfilmentModule`) persists to Supabase — not process-local Maps. Required migrations before UAT:
+
+| Script | Purpose |
+|--------|---------|
+| `040` / `045` | `organisation` tenancy + `reward_partner.organisation_id` link |
+| `041` | `platform_idempotency_key`, `platform_consumed_jti`, `platform_rate_limit_counter` |
+| `042` | `wallet_settle_debit` / `wallet_settle_refund` RPCs |
+| `043` | Fulfilment aggregates, tokens, resources, allocations |
+| `044` | Catalog fulfilment type / resource link |
+| `046` | Atomic `platform_rate_limit_hit` RPC |
+
+In-memory adapters remain **tests only** (`createPlatformApiForTests({ seed })` / Vitest).
+
 Apply scripts in controlled environments via your migration process (do not run ad-hoc in production without review).
 
 Identity bootstrap scripts and constraints:

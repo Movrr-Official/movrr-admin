@@ -81,5 +81,20 @@ export function createSupabaseTokenStore(): TokenStore {
       throwOnError(error, "token.getByHash");
       return data ? mapRow(data as TokenRow) : null;
     },
+
+    async getByFulfilmentId(fulfilmentId) {
+      const supabase = createSupabaseAdminClient();
+      const { data, error } = await supabase
+        .from("fulfilment_token")
+        .select(
+          "id, fulfilment_id, token_type, token_hash, status, expires_at, consumed_at, revoked_at",
+        )
+        .eq("fulfilment_id", fulfilmentId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      throwOnError(error, "token.getByFulfilmentId");
+      return data ? mapRow(data as TokenRow) : null;
+    },
   };
 }

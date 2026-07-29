@@ -74,9 +74,21 @@ Positive controls implemented:
 
 1. Service-role key centrality — server compromise grants broad DB access. Mitigate with secret rotation, audit logging, and scoped operations.
 
-2. In-memory rate limiting — resets on serverless cold starts. Consider Redis/Vercel KV for production scale.
+2. Legacy admin route rate limiting may still use process-local counters on some non-Platform paths. **Platform API redeem / fraud policy** uses durable `platform_rate_limit_counter` via atomic RPC `platform_rate_limit_hit` (migrations `041` + `046`).
 
 3. Cloudinary unsigned uploads — security depends on upload preset restrictions in Cloudinary dashboard.
+
+## Platform API durability (Phase 4.5)
+
+Production Platform API composition (`getProductionPlatformApi` + `getSharedFulfilmentModule`) must not use process-local Maps for:
+
+- Organisations / memberships (`040`/`045`)
+- Fulfilment aggregates, tokens, resource pools (`043`)
+- Wallet settlement (`042` `wallet_settle_*`)
+- Fraud idempotency / replay / rate-limit (`041`/`046`)
+- Sensitive cancel/refund audit rows (`platform_audit_record`)
+
+In-memory adapters are allowed **only** in Vitest / `createPlatformApiForTests({ seed })`. See `OPERATIONS.md` for migration prerequisites.
 
 ## Secure development checklist
 

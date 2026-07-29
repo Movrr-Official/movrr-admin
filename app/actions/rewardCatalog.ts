@@ -53,16 +53,84 @@ const mapCatalogRow = (row: any): RewardCatalogItem => {
   };
 };
 
+/**
+ * Catalog partner upsert + reverse sync to Platform `organisation`.
+ * Ensures reward_partner.organisation_id is linked (045 dual-write reverse).
+ */
 const upsertPartner = async (name?: string, website?: string) => {
   if (!name) return undefined;
   const supabaseAdmin = createSupabaseAdminClient();
+  const now = new Date().toISOString();
+
+  const ensureOrganisationLink = async (
+    partnerId: string,
+    organisationId: string | null,
+  ): Promise<string> => {
+    if (organisationId) return partnerId;
+
+    const { data: existingOrg } = await supabaseAdmin
+      .from("organisation")
+      .select("id")
+      .eq("type", "reward_partner")
+      .ilike("name", name)
+      .maybeSingle();
+
+    let orgId = existingOrg?.id as string | undefined;
+    if (!orgId) {
+      const { data: createdOrg, error: orgError } = await supabaseAdmin
+        .from("organisation")
+        .insert({
+          name,
+          type: "reward_partner",
+          status: "active",
+          created_at: now,
+          updated_at: now,
+        })
+        .select("id")
+        .single();
+      if (orgError) throw orgError;
+      orgId = createdOrg.id as string;
+    }
+
+    const { error: linkError } = await supabaseAdmin
+      .from("reward_partner")
+      .update({ organisation_id: orgId, updated_at: now })
+      .eq("id", partnerId);
+    if (linkError) throw linkError;
+    return partnerId;
+  };
+
   const { data: existing } = await supabaseAdmin
     .from("reward_partner")
-    .select("id")
+    .select("id, organisation_id")
     .ilike("name", name)
     .maybeSingle();
 
-  if (existing?.id) return existing.id;
+  if (existing?.id) {
+    if (website) {
+      await supabaseAdmin
+        .from("reward_partner")
+        .update({ website, updated_at: now })
+        .eq("id", existing.id);
+    }
+    return ensureOrganisationLink(
+      existing.id as string,
+      (existing.organisation_id as string | null) ?? null,
+    );
+  }
+
+  const { data: createdOrg, error: orgError } = await supabaseAdmin
+    .from("organisation")
+    .insert({
+      name,
+      type: "reward_partner",
+      status: "active",
+      created_at: now,
+      updated_at: now,
+    })
+    .select("id")
+    .single();
+  if (orgError) throw orgError;
 
   const { data: created, error } = await supabaseAdmin
     .from("reward_partner")
@@ -70,8 +138,9 @@ const upsertPartner = async (name?: string, website?: string) => {
       name,
       website: website ?? null,
       status: "active",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      organisation_id: createdOrg.id,
+      created_at: now,
+      updated_at: now,
     })
     .select("id")
     .single();

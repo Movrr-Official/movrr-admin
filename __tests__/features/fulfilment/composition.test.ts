@@ -5,6 +5,7 @@ import {
   getSharedFulfilmentModule,
   resetSharedFulfilmentModuleForTests,
 } from "@/features/fulfilment/infrastructure/composeFulfilmentModule";
+import { createInMemoryNotificationInsertPort } from "@/features/notifications/infrastructure/inMemoryNotificationInsertPort";
 import {
   createFulfilmentMetrics,
   fulfilmentLogFields,
@@ -44,7 +45,8 @@ describe("composeFulfilmentModule", () => {
   });
 
   it("subscribes side effects so FulfilmentCompleted notifies after flush", async () => {
-    const module = composeFulfilmentModule();
+    const notifications = createInMemoryNotificationInsertPort();
+    const module = composeFulfilmentModule({ notifications });
 
     module.bus.enqueue({
       name: "FulfilmentCompleted",
@@ -59,7 +61,7 @@ describe("composeFulfilmentModule", () => {
 
     await module.bus.flushAfterCommit();
 
-    const rows = module.notifications.list();
+    const rows = notifications.list();
     expect(rows).toHaveLength(1);
     expect(rows[0]?.type).toBe("reward");
     expect(module.analytics.getCount("redemption_completed")).toBe(1);
