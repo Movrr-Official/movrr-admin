@@ -20,7 +20,7 @@ import {
 } from "@/features/fulfilment/application/commands/tokenService";
 import { createInMemoryLedgerRepository } from "@/features/wallet/infrastructure/ledgerRepository";
 import { createImmediateDebitCompensatingRefundStrategy } from "@/features/wallet/application/strategies/ImmediateDebitCompensatingRefundStrategy";
-import type { SettlementService } from "@/features/wallet/application/contracts/SettlementService";
+import type { SettlementService, LedgerRepository } from "@/features/wallet/application/contracts/SettlementService";
 import type { ResourceAllocationService } from "@/features/fulfilment/application/contracts/ResourceAllocationService";
 import type { FulfilmentResourceProvider } from "@/features/fulfilment/application/contracts/FulfilmentResourceProvider";
 import { subscribeFulfilmentSideEffects } from "@/features/platform/infrastructure/subscribeFulfilmentSideEffects";
@@ -36,7 +36,9 @@ import {
   type FulfilmentMetrics,
 } from "@/lib/observability/fulfilmentMetrics";
 import type { FulfilmentAggregateStore } from "@/features/fulfilment/application/contracts/FulfilmentAggregateStore";
+import type { TokenStore } from "@/features/fulfilment/application/contracts/TokenStore";
 import { createInMemoryFulfilmentAggregateStore } from "@/features/fulfilment/infrastructure/inMemoryFulfilmentAggregateStore";
+import { createInMemoryTokenStore } from "@/features/fulfilment/infrastructure/inMemoryTokenStore";
 
 function asResourceService(
   provider: FulfilmentResourceProvider,
@@ -54,7 +56,7 @@ export type FulfilmentModule = {
   registry: HandlerRegistry;
   tokens: TokenService;
   settlement: SettlementService;
-  ledger: ReturnType<typeof createInMemoryLedgerRepository>;
+  ledger: LedgerRepository;
   pool: ReturnType<typeof createVoucherPoolResourceProvider>;
   metrics: FulfilmentMetrics;
   notifications: InMemoryNotificationInsertPort;
@@ -63,12 +65,13 @@ export type FulfilmentModule = {
 
 export type ComposeFulfilmentModuleOptions = {
   bus?: DomainEventBus;
-  ledger?: ReturnType<typeof createInMemoryLedgerRepository>;
+  ledger?: LedgerRepository;
   notifications?: InMemoryNotificationInsertPort;
   analytics?: FulfilmentMetricsSink;
   metrics?: FulfilmentMetrics;
   /** Defaults to in-memory; production injects Supabase store. */
   fulfilmentStore?: FulfilmentAggregateStore;
+  tokenStore?: TokenStore;
   /** When false, skip subscribeFulfilmentSideEffects (tests that wire consumers manually). Default true. */
   subscribeSideEffects?: boolean;
 };
@@ -93,7 +96,10 @@ export function composeFulfilmentModule(
     ledger,
     eventBus: bus,
   });
-  const tokens = createTokenService({ eventBus: bus });
+  const tokens = createTokenService({
+    eventBus: bus,
+    store: options.tokenStore ?? createInMemoryTokenStore(),
+  });
   const generated = createGeneratedDigitalResourceProvider();
   const pool = createVoucherPoolResourceProvider();
   const sm = createFulfilmentStateMachine();
@@ -157,15 +163,25 @@ function isTestRuntime(): boolean {
 /** Process-wide singleton shared by `/api/v1` and internal job routes. */
 export function getSharedFulfilmentModule(): FulfilmentModule {
   if (!sharedModule) {
-    let fulfilmentStore = createInMemoryFulfilmentAggregateStore();
-    if (!isTestRuntime()) {
-      // Lazy require keeps Vitest from loading server-only Supabase adapter.
+    if (isTestRuntime()) {
+      sharedModule = composeFulfilmentModule();
+    } else {
+      // Lazy require keeps Vitest from loading server-only Supabase adapters.
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { createSupabaseFulfilmentAggregateStore } =
         require("@/features/fulfilment/infrastructure/supabaseFulfilmentAggregateStore") as typeof import("@/features/fulfilment/infrastructure/supabaseFulfilmentAggregateStore");
-      fulfilmentStore = createSupabaseFulfilmentAggregateStore();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createSupabaseTokenStore } =
+        require("@/features/fulfilment/infrastructure/supabaseTokenStore") as typeof import("@/features/fulfilment/infrastructure/supabaseTokenStore");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createSupabaseLedgerRepository } =
+        require("@/features/wallet/infrastructure/supabaseLedgerRepository") as typeof import("@/features/wallet/infrastructure/supabaseLedgerRepository");
+      sharedModule = composeFulfilmentModule({
+        fulfilmentStore: createSupabaseFulfilmentAggregateStore(),
+        tokenStore: createSupabaseTokenStore(),
+        ledger: createSupabaseLedgerRepository(),
+      });
     }
-    sharedModule = composeFulfilmentModule({ fulfilmentStore });
   }
   return sharedModule;
 }

@@ -201,7 +201,12 @@ export async function createPlatformApiForTests(
     fulfilmentModule?.tokens ?? null;
 
   if (options.seed && fulfilmentModule) {
-    await ledger.seedBalance("rider-1", options.seed.balance ?? 100);
+    const seedable = ledger as typeof ledger & {
+      seedBalance?: (riderId: string, points: number) => Promise<void>;
+    };
+    if (seedable.seedBalance) {
+      await seedable.seedBalance("rider-1", options.seed.balance ?? 100);
+    }
     await fulfilmentModule.pool.seedPool("res-pool-1", [
       { id: "item-1", code: "VOUCHER-1" },
     ]);

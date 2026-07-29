@@ -1,6 +1,8 @@
 import { createHash, randomBytes, randomUUID } from "crypto";
 import type { DomainEventBus } from "@/lib/events/DomainEventBus";
 import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import type { TokenStore } from "@/features/fulfilment/application/contracts/TokenStore";
+import { createInMemoryTokenStore } from "@/features/fulfilment/infrastructure/inMemoryTokenStore";
 
 export const TOKEN_TYPES = [
   "qr",
@@ -68,6 +70,7 @@ export type TokenService = {
 
 export type TokenServiceDeps = {
   eventBus: DomainEventBus;
+  store?: TokenStore;
 };
 
 function hashToken(plaintext: string): string {
@@ -79,8 +82,7 @@ function generatePlaintext(): string {
 }
 
 export function createTokenService(deps: TokenServiceDeps): TokenService {
-  const byId = new Map<string, TokenRecord>();
-  const byHash = new Map<string, string>();
+  const store = deps.store ?? createInMemoryTokenStore();
 
   return {
     async issue(input: IssueTokenInput): Promise<ApplicationResult<IssuedToken>> {
@@ -108,8 +110,7 @@ export function createTokenService(deps: TokenServiceDeps): TokenService {
         revokedAt: null,
       };
 
-      byId.set(tokenId, record);
-      byHash.set(tokenHash, tokenId);
+      await store.save(record);
 
       deps.eventBus.enqueue({
         name: "FulfilmentTokenIssued",
@@ -146,12 +147,7 @@ export function createTokenService(deps: TokenServiceDeps): TokenService {
       }
 
       const tokenHash = hashToken(input.plaintext);
-      const tokenId = byHash.get(tokenHash);
-      if (!tokenId) {
-        return fail("not_found", "Token not found");
-      }
-
-      const record = byId.get(tokenId);
+      const record = await store.getByHash(tokenHash);
       if (!record) {
         return fail("not_found", "Token not found");
       }
@@ -170,7 +166,7 @@ export function createTokenService(deps: TokenServiceDeps): TokenService {
           ...record,
           status: "expired",
         };
-        byId.set(tokenId, expired);
+        await store.save(expired);
         return fail("already_expired", "Token already expired");
       }
 
@@ -179,14 +175,14 @@ export function createTokenService(deps: TokenServiceDeps): TokenService {
         status: "consumed",
         consumedAt: new Date().toISOString(),
       };
-      byId.set(tokenId, updated);
+      await store.save(updated);
 
       deps.eventBus.enqueue({
         name: "FulfilmentTokenConsumed",
         occurredAt: new Date().toISOString(),
         correlationId: input.correlationId,
         payload: {
-          tokenId,
+          tokenId: record.tokenId,
           fulfilmentId: record.fulfilmentId,
           tokenHash: record.tokenHash,
         },
@@ -205,7 +201,7 @@ export function createTokenService(deps: TokenServiceDeps): TokenService {
         return fail("validation", "correlationId is required");
       }
 
-      const record = byId.get(input.tokenId);
+      const record = await store.getById(input.tokenId);
       if (!record) {
         return fail("not_found", "Token not found");
       }
@@ -221,7 +217,7 @@ export function createTokenService(deps: TokenServiceDeps): TokenService {
         status: "revoked",
         revokedAt: new Date().toISOString(),
       };
-      byId.set(input.tokenId, updated);
+      await store.save(updated);
 
       deps.eventBus.enqueue({
         name: "FulfilmentTokenRevoked",
