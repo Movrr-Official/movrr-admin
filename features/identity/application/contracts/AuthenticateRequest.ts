@@ -40,7 +40,7 @@ export type FindRiderProfile = (
 
 /**
  * Organisation membership lookup port.
- * Task 2 ships a stub adapter that returns null until Task 3 wires real tables.
+ * Task 3 wires this to `organisation_membership` via organisations infrastructure.
  */
 export type FindOrganisationMembership = (
   userId: string,

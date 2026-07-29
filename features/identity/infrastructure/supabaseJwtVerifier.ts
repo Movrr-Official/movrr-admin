@@ -6,7 +6,6 @@ import {
   NEXT_PUBLIC_SUPABASE_URL,
 } from "@/lib/env";
 import type {
-  FindOrganisationMembership,
   VerifiedAccessToken,
   VerifyAccessToken,
 } from "@/features/identity/application/contracts/AuthenticateRequest";
@@ -42,8 +41,7 @@ export const verifySupabaseAccessToken: VerifyAccessToken = async (
 };
 
 /**
- * Stub until Task 3 wires organisation membership tables.
- * Always returns null so resolution falls through to rider / unrecognised.
+ * Organisation membership lookup — real adapter from Task 3.
+ * Re-exported here so Identity wiring stays discoverable next to JWT verify.
  */
-export const findOrganisationMembershipStub: FindOrganisationMembership =
-  async () => null;
+export { findOrganisationMembership } from "@/features/organisations/infrastructure/supabaseOrganisationMembershipLookup";
