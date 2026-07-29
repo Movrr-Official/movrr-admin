@@ -16,6 +16,11 @@ export default function FulfilmentOpsDetailPage({
   const detail = useFulfilmentDetail(id);
   const timeline = useFulfilmentTimeline(id);
 
+  const refetchAll = () => {
+    void detail.refetch();
+    void timeline.refetch();
+  };
+
   return (
     <div className="min-h-screen page-canvas">
       <FulfilmentDetailPanel
@@ -28,6 +33,7 @@ export default function FulfilmentOpsDetailPage({
             ? ((detail.error as Error)?.message ?? "Failed to load fulfilment")
             : null
         }
+        onRefetch={refetchAll}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/button";
 import type { FulfilmentReadModel } from "@/features/fulfilment/application/queries/fulfilmentQueries";
 import type { FulfilmentEvent } from "@/features/fulfilment/domain/Fulfilment";
 import { FulfilmentTimeline } from "./FulfilmentTimeline";
+import {
+  FulfilmentActionsDialog,
+  type FulfilmentActionKind,
+} from "./FulfilmentActionsDialog";
 
 type FulfilmentDetailPanelProps = {
   fulfilment: FulfilmentReadModel | undefined;
@@ -16,6 +20,7 @@ type FulfilmentDetailPanelProps = {
   isLoadingDetail: boolean;
   isLoadingTimeline: boolean;
   errorMessage?: string | null;
+  onRefetch?: () => void;
 };
 
 function Field({
@@ -39,7 +44,10 @@ export function FulfilmentDetailPanel({
   isLoadingDetail,
   isLoadingTimeline,
   errorMessage,
+  onRefetch,
 }: FulfilmentDetailPanelProps) {
+  const [action, setAction] = useState<FulfilmentActionKind | null>(null);
+
   if (isLoadingDetail) {
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
@@ -74,9 +82,25 @@ export function FulfilmentDetailPanel({
             Back to queue
           </Link>
         </Button>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{fulfilment.state}</Badge>
           <Badge variant="outline">v{fulfilment.version}</Badge>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setAction("cancel")}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setAction("refund")}
+          >
+            Refund
+          </Button>
         </div>
       </div>
 
@@ -84,8 +108,8 @@ export function FulfilmentDetailPanel({
         <CardHeader>
           <CardTitle className="text-lg font-mono">{fulfilment.id}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Read-only ops view — values from Platform API (no client state
-            machine).
+            Ops view — values from Platform API (no client state machine).
+            Cancel/refund go through `/api/v1` only.
           </p>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -128,6 +152,18 @@ export function FulfilmentDetailPanel({
           />
         </CardContent>
       </Card>
+
+      <FulfilmentActionsDialog
+        open={Boolean(action)}
+        onOpenChange={(open) => {
+          if (!open) setAction(null);
+        }}
+        action={action}
+        fulfilmentId={fulfilment.id}
+        expectedVersion={fulfilment.version}
+        onConcurrencyConflict={onRefetch}
+        onSuccess={onRefetch}
+      />
     </div>
   );
 }
