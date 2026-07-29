@@ -88,6 +88,8 @@ const serverEnvSchema = publicEnvSchema
   INTERNAL_JOB_SECRET: z.string().optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+  QSTASH_CURRENT_SIGNING_KEY: z.string().optional(),
+  QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
   TURNSTILE_SECRET_KEY: z.string().optional(),
 
   // Feature flags
@@ -201,6 +203,13 @@ function getEnv(): PublicEnv | ServerEnv {
       SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
       ERROR_WEBHOOK_URL: process.env.ERROR_WEBHOOK_URL,
       MAINTENANCE_JOB_TOKEN: process.env.MAINTENANCE_JOB_TOKEN,
+      CRON_SECRET: process.env.CRON_SECRET,
+      INTERNAL_JOB_SECRET: process.env.INTERNAL_JOB_SECRET,
+      UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+      UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+      QSTASH_CURRENT_SIGNING_KEY: process.env.QSTASH_CURRENT_SIGNING_KEY,
+      QSTASH_NEXT_SIGNING_KEY: process.env.QSTASH_NEXT_SIGNING_KEY,
+      TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
       USE_MOCK_DATA: process.env.USE_MOCK_DATA,
       ROUTE_OPTIMIZER_TOKEN: process.env.ROUTE_OPTIMIZER_TOKEN,
       ROUTE_OPTIMIZER_KEY: process.env.ROUTE_OPTIMIZER_KEY,
@@ -250,8 +259,13 @@ export const ERROR_WEBHOOK_URL = serverEnv?.ERROR_WEBHOOK_URL ?? "";
 export const MAINTENANCE_JOB_TOKEN =
   serverEnv?.MAINTENANCE_JOB_TOKEN ?? "";
 export const CRON_SECRET = serverEnv?.CRON_SECRET ?? "";
+export const INTERNAL_JOB_SECRET = serverEnv?.INTERNAL_JOB_SECRET ?? "";
 export const UPSTASH_REDIS_REST_URL = serverEnv?.UPSTASH_REDIS_REST_URL ?? "";
 export const UPSTASH_REDIS_REST_TOKEN = serverEnv?.UPSTASH_REDIS_REST_TOKEN ?? "";
+export const QSTASH_CURRENT_SIGNING_KEY =
+  serverEnv?.QSTASH_CURRENT_SIGNING_KEY ?? "";
+export const QSTASH_NEXT_SIGNING_KEY =
+  serverEnv?.QSTASH_NEXT_SIGNING_KEY ?? "";
 export const TURNSTILE_SECRET_KEY = serverEnv?.TURNSTILE_SECRET_KEY ?? "";
 export const NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS =
   env.NEXT_PUBLIC_USE_MOCK_RIDER_LOCATIONS;

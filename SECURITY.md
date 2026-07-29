@@ -23,7 +23,8 @@ Never expose these values to the browser/client bundles:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
 - `ROUTE_OPTIMIZER_TOKEN` / `ROUTE_OPTIMIZER_KEY`
-- `MAINTENANCE_JOB_TOKEN` / `CRON_SECRET`
+- `MAINTENANCE_JOB_TOKEN` / `CRON_SECRET` / `INTERNAL_JOB_SECRET`
+- `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` (Fulfilment job delivery verification)
 
 Requirements:
 
@@ -31,6 +32,7 @@ Requirements:
 - Do not commit secrets to repository.
 - Rotate route optimizer tokens on a recurring schedule and after any suspected leak.
 - Set `CRON_SECRET` in Vercel for scheduled privacy retention cron (or use `MAINTENANCE_JOB_TOKEN` with the same value).
+- Set QStash signing keys in Vercel so Fulfilment job routes can verify `Upstash-Signature`.
 
 ## Data access and least privilege
 
@@ -58,7 +60,8 @@ Positive controls implemented:
 - Dashboard access monitoring via `admin_dashboard_sessions`.
 - Audit logs in `audit_log`; data exports recorded via `recordDataExport`.
 - Optimizer request/decision events persisted (`route_optimizer_runs`, `route_optimizer_decisions`).
-- Privacy retention cron: `vercel.json` → `POST /api/internal/privacy-retention` daily.
+- Privacy retention cron: `vercel.json` → `POST /api/internal/privacy-retention` daily (Hobby-compatible).
+- Fulfilment jobs (expire / release / retry): **Upstash QStash** schedules → Platform internal job routes. Auth accepts valid QStash signatures or the internal job bearer/header secret.
 
 ## Security-relevant operational checks
 

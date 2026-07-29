@@ -85,6 +85,38 @@ Optimizer CI exists in `.github/workflows/ci-route-optimizer.yml` and performs:
 - `/health` wait loop.
 - smoke test script execution.
 
+## Scheduled jobs
+
+### Privacy retention (Vercel Cron)
+
+- Path: `POST /api/internal/privacy-retention`
+- Schedule: daily `0 3 * * *` via `vercel.json`
+- Auth: `CRON_SECRET` / `MAINTENANCE_JOB_TOKEN` bearer
+
+### Fulfilment jobs (Upstash QStash)
+
+Sub-daily fulfilment work is **not** on Vercel Cron (Hobby blocks intervals under one day).
+
+| Job | Path | Cron (UTC) |
+|-----|------|------------|
+| Expire | `/api/v1/internal/jobs/fulfilment-expire` | `*/15 * * * *` |
+| Release | `/api/v1/internal/jobs/fulfilment-release` | `*/15 * * * *` |
+| Retry | `/api/v1/internal/jobs/fulfilment-retry` | `*/30 * * * *` |
+
+**Vercel runtime env:** `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` (verify `Upstash-Signature`). Internal job secret headers still work for manual runs.
+
+**Provision / refresh schedules** (once per environment):
+
+```bash
+set QSTASH_TOKEN=<qstash-token>
+set ADMIN_APP_URL=https://your-admin-host
+node scripts/qstash-upsert-fulfilment-schedules.mjs
+```
+
+Stable schedule IDs: `fulfilment-expire`, `fulfilment-release`, `fulfilment-retry` (re-runs upsert).
+
+**Triage:** failed deliveries appear in the Upstash QStash console; job handler failures also surface in app logs / metrics.
+
 ## Database provisioning and migrations
 
 SQL scripts in `scripts/` are the operational reference for required objects and policies.

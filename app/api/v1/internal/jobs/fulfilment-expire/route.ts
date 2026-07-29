@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function POST(request: Request) {
-  if (!isAuthorizedInternalJobRequest(request)) {
+  if (!(await isAuthorizedInternalJobRequest(request))) {
     return NextResponse.json(
       { success: false, error: "unauthorized" },
       { status: 401, headers: { "cache-control": "no-store" } },
