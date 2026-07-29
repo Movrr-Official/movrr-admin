@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { ActiveFiltersDisplay } from "../filters/ActiveFiltersDisplay";
 import { getRewardsTableColumns } from "./RewardsTableColumns";
@@ -10,6 +10,7 @@ import { DataTableToolbar } from "@/components/table/DataTableToolbar";
 import { FilterSummary } from "../filters/FilterSummary";
 import { RewardTransaction } from "@/schemas";
 import { useDataTable } from "@/context/DataTableContext";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import { Coins as CoinsIcon } from "lucide-react";
 import { RiderTransactionsDetailsDrawer } from "@/components/rewards/RiderTransactionsDetailsDrawer";
 
@@ -30,6 +31,7 @@ export default function RewardsTableContent({
   refetchData,
   isRefetching = false,
 }: RewardsTableContentProps) {
+  const { selectedId, setSelectedId } = useDrawerQueryId();
   const [selectedTransaction, setSelectedTransaction] =
     useState<RewardTransaction | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -45,14 +47,58 @@ export default function RewardsTableContent({
     filterConfig,
   } = useDataTable();
 
-  const handleView = (transaction: RewardTransaction) => {
+  useEffect(() => {
+    if (!selectedId) {
+      if (isDrawerOpen) {
+        setIsDrawerOpen(false);
+        setSelectedTransaction(null);
+      }
+      return;
+    }
+    const found =
+      transactions.find((tx) => tx.id === selectedId) ?? null;
+    setSelectedTransaction(found);
+    setIsDrawerOpen(true);
+  }, [selectedId, transactions]);
+
+  useEffect(() => {
+    if (!selectedTransaction || !isDrawerOpen) return;
+
+    const latestTransaction = transactions.find(
+      (tx) => tx.id === selectedTransaction.id,
+    );
+    if (!latestTransaction) {
+      setIsDrawerOpen(false);
+      setSelectedTransaction(null);
+      setSelectedId(null);
+      return;
+    }
+
+    const hasChanged =
+      latestTransaction.points !== selectedTransaction.points ||
+      latestTransaction.type !== selectedTransaction.type ||
+      latestTransaction.balanceAfter !== selectedTransaction.balanceAfter ||
+      latestTransaction.description !== selectedTransaction.description ||
+      latestTransaction.verificationStatus !==
+        selectedTransaction.verificationStatus;
+
+    if (hasChanged) {
+      setSelectedTransaction(latestTransaction);
+    }
+  }, [transactions, selectedTransaction, isDrawerOpen, setSelectedId]);
+
+  const openTransactionDrawer = (transaction: RewardTransaction) => {
     setSelectedTransaction(transaction);
     setIsDrawerOpen(true);
+    setSelectedId(transaction.id);
+  };
+
+  const handleView = (transaction: RewardTransaction) => {
+    openTransactionDrawer(transaction);
   };
 
   const handleRowClick = (transaction: RewardTransaction) => {
-    setSelectedTransaction(transaction);
-    setIsDrawerOpen(true);
+    openTransactionDrawer(transaction);
   };
 
   const columns = React.useMemo(
@@ -140,7 +186,13 @@ export default function RewardsTableContent({
       <RiderTransactionsDetailsDrawer
         transaction={selectedTransaction}
         open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
+        onOpenChange={(open) => {
+          setIsDrawerOpen(open);
+          if (!open) {
+            setSelectedTransaction(null);
+            setSelectedId(null);
+          }
+        }}
       />
     </>
   );

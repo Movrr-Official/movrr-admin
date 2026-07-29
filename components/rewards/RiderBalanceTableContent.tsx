@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { ActiveFiltersDisplay } from "../filters/ActiveFiltersDisplay";
 import { getRiderBalanceTableColumns } from "./RiderBalanceTableColumns";
@@ -11,6 +11,7 @@ import { FilterSummary } from "../filters/FilterSummary";
 import { RiderBalance } from "@/schemas";
 import { useDataTable } from "@/context/DataTableContext";
 import { useToast } from "@/hooks/useToast";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import { Users as UsersIcon } from "lucide-react";
 import { RiderBalanceDetailsDrawer } from "./RiderBalanceDetailsDrawer";
 
@@ -32,6 +33,7 @@ export default function RiderBalanceTableContent({
   isRefetching = false,
 }: RiderBalanceTableContentProps) {
   const { toast } = useToast();
+  const { selectedId, setSelectedId } = useDrawerQueryId();
   const [selectedBalance, setSelectedBalance] = useState<RiderBalance | null>(
     null,
   );
@@ -48,19 +50,64 @@ export default function RiderBalanceTableContent({
     filterConfig,
   } = useDataTable();
 
-  const handleView = (balance: RiderBalance) => {
+  useEffect(() => {
+    if (!selectedId) {
+      if (isDrawerOpen) {
+        setIsDrawerOpen(false);
+        setSelectedBalance(null);
+      }
+      return;
+    }
+    const found =
+      balances.find((balance) => balance.riderId === selectedId) ?? null;
+    setSelectedBalance(found);
+    setIsDrawerOpen(true);
+  }, [selectedId, balances]);
+
+  useEffect(() => {
+    if (!selectedBalance || !isDrawerOpen) return;
+
+    const latestBalance = balances.find(
+      (balance) => balance.riderId === selectedBalance.riderId,
+    );
+    if (!latestBalance) {
+      setIsDrawerOpen(false);
+      setSelectedBalance(null);
+      setSelectedId(null);
+      return;
+    }
+
+    const hasChanged =
+      latestBalance.currentBalance !== selectedBalance.currentBalance ||
+      latestBalance.totalPointsAwarded !== selectedBalance.totalPointsAwarded ||
+      latestBalance.totalPointsRedeemed !==
+        selectedBalance.totalPointsRedeemed ||
+      latestBalance.riderName !== selectedBalance.riderName ||
+      latestBalance.riderEmail !== selectedBalance.riderEmail ||
+      latestBalance.lastTransactionDate !==
+        selectedBalance.lastTransactionDate;
+
+    if (hasChanged) {
+      setSelectedBalance(latestBalance);
+    }
+  }, [balances, selectedBalance, isDrawerOpen, setSelectedId]);
+
+  const openBalanceDrawer = (balance: RiderBalance) => {
     setSelectedBalance(balance);
     setIsDrawerOpen(true);
+    setSelectedId(balance.riderId);
+  };
+
+  const handleView = (balance: RiderBalance) => {
+    openBalanceDrawer(balance);
   };
 
   const handleAdjust = (balance: RiderBalance) => {
-    setSelectedBalance(balance);
-    setIsDrawerOpen(true);
+    openBalanceDrawer(balance);
   };
 
   const handleRowClick = (balance: RiderBalance) => {
-    setSelectedBalance(balance);
-    setIsDrawerOpen(true);
+    openBalanceDrawer(balance);
   };
 
   const columns = React.useMemo(
@@ -140,7 +187,13 @@ export default function RiderBalanceTableContent({
       <RiderBalanceDetailsDrawer
         balance={selectedBalance}
         open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
+        onOpenChange={(open) => {
+          setIsDrawerOpen(open);
+          if (!open) {
+            setSelectedBalance(null);
+            setSelectedId(null);
+          }
+        }}
         onBalanceUpdate={refetchData}
       />
     </>

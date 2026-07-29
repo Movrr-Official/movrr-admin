@@ -16,6 +16,7 @@ import { RiderDetailsDrawer } from "./RiderDetailsDrawer";
 import { getRidersTableColumns } from "./RidersTableColumns";
 import { bulkUpdateRiderStatus } from "@/app/actions/riders";
 import { useToast } from "@/hooks/useToast";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import { exportToCSV } from "@/lib/export";
 
 interface RidersTableContentProps {
@@ -38,6 +39,7 @@ export default function RidersTableContent({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { selectedId, setSelectedId } = useDrawerQueryId();
   const [selectedRider, setSelectedRider] = useState<Rider | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedRows, setSelectedRows] = useState<Rider[]>([]);
@@ -54,6 +56,33 @@ export default function RidersTableContent({
     filterConfig,
   } = useDataTable();
 
+  // Migrate legacy ?selected= deep-links to ?id=
+  useEffect(() => {
+    const legacy = searchParams.get("selected");
+    if (!legacy || searchParams.get("id")) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("id", legacy);
+    params.delete("selected");
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      if (isDrawerOpen) {
+        setIsDrawerOpen(false);
+        setSelectedRider(null);
+      }
+      return;
+    }
+    const rider =
+      riders.find(
+        (entry) => entry.id === selectedId || entry.userId === selectedId,
+      ) ?? null;
+    setSelectedRider(rider);
+    setIsDrawerOpen(true);
+  }, [riders, selectedId]);
+
   useEffect(() => {
     if (!selectedRider || !isDrawerOpen) return;
 
@@ -61,6 +90,7 @@ export default function RidersTableContent({
     if (!latestRider) {
       setIsDrawerOpen(false);
       setSelectedRider(null);
+      setSelectedId(null);
       return;
     }
 
@@ -76,46 +106,21 @@ export default function RidersTableContent({
     if (hasChanged) {
       setSelectedRider(latestRider);
     }
-  }, [isDrawerOpen, riders, selectedRider]);
-
-  useEffect(() => {
-    const selectedId = searchParams.get("selected");
-    if (!selectedId) return;
-
-    const rider =
-      riders.find((entry) => entry.id === selectedId || entry.userId === selectedId) ??
-      null;
-    if (rider) {
-      setSelectedRider(rider);
-      setIsDrawerOpen(true);
-    }
-  }, [riders, searchParams]);
-
-  const updateSelectedParam = (riderId?: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (riderId) {
-      params.set("selected", riderId);
-    } else {
-      params.delete("selected");
-    }
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+  }, [isDrawerOpen, riders, selectedRider, setSelectedId]);
 
   const handleRowClick = (rider: Rider) => {
     setSelectedRider(rider);
     setIsDrawerOpen(true);
-    updateSelectedParam(rider.id);
+    setSelectedId(rider.id);
   };
 
   const handleDrawerChange = (open: boolean) => {
     setIsDrawerOpen(open);
     if (!open) {
       setSelectedRider(null);
-      updateSelectedParam(undefined);
+      setSelectedId(null);
     }
   };
-
   const handleBulkStatusChange = async (status: "active" | "inactive") => {
     if (!selectedRows.length) return;
     setIsBulkPending(true);

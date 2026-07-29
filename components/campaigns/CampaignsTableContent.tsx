@@ -12,6 +12,7 @@ import { FilterSummary } from "../filters/FilterSummary";
 import { Campaign } from "@/schemas";
 import { useDataTable } from "@/context/DataTableContext";
 import { useToast } from "@/hooks/useToast";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import { CampaignDetailsDrawer } from "./CampaignDetailsDrawer";
 import { CampaignCard } from "./CampaignCard";
 import { Megaphone, Plus } from "lucide-react";
@@ -38,6 +39,7 @@ export default function CampaignsTableContent({
   enableGridView = false,
 }: CampaignsTableContentProps) {
   const searchParams = useSearchParams();
+  const { selectedId, setSelectedId } = useDrawerQueryId();
   const { toast } = useToast();
   const router = useRouter();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
@@ -73,6 +75,20 @@ export default function CampaignsTableContent({
   } = useDataTable();
 
   useEffect(() => {
+    if (!selectedId) {
+      if (isDrawerOpen) {
+        setIsDrawerOpen(false);
+        setSelectedCampaign(null);
+      }
+      return;
+    }
+    const found =
+      campaigns.find((campaign) => campaign.id === selectedId) ?? null;
+    setSelectedCampaign(found);
+    setIsDrawerOpen(true);
+  }, [selectedId, campaigns]);
+
+  useEffect(() => {
     if (!selectedCampaign || !isDrawerOpen) return;
 
     const latestCampaign = campaigns.find(
@@ -81,6 +97,7 @@ export default function CampaignsTableContent({
     if (!latestCampaign) {
       setIsDrawerOpen(false);
       setSelectedCampaign(null);
+      setSelectedId(null);
       return;
     }
 
@@ -94,19 +111,32 @@ export default function CampaignsTableContent({
     if (hasChanged) {
       setSelectedCampaign(latestCampaign);
     }
-  }, [campaigns, selectedCampaign, isDrawerOpen]);
+  }, [campaigns, selectedCampaign, isDrawerOpen, setSelectedId]);
+
+  const openCampaignDrawer = useCallback(
+    (campaign: Campaign) => {
+      setSelectedCampaign(campaign);
+      setIsDrawerOpen(true);
+      setSelectedId(campaign.id);
+    },
+    [setSelectedId],
+  );
 
   // Handle campaign row click - open detail drawer
-  const handleRowClick = useCallback((campaign: Campaign) => {
-    setSelectedCampaign(campaign);
-    setIsDrawerOpen(true);
-  }, []);
+  const handleRowClick = useCallback(
+    (campaign: Campaign) => {
+      openCampaignDrawer(campaign);
+    },
+    [openCampaignDrawer],
+  );
 
   // Handle campaign actions with useCallback for memoization
-  const handleEdit = useCallback((campaign: Campaign) => {
-    setSelectedCampaign(campaign);
-    setIsDrawerOpen(true);
-  }, []);
+  const handleEdit = useCallback(
+    (campaign: Campaign) => {
+      openCampaignDrawer(campaign);
+    },
+    [openCampaignDrawer],
+  );
 
   const handleStatusChange = useCallback(
     async (campaign: Campaign) => {
@@ -140,16 +170,20 @@ export default function CampaignsTableContent({
     [toast, refetchData],
   );
 
-  const handleView = useCallback((campaign: Campaign) => {
-    setSelectedCampaign(campaign);
-    setIsDrawerOpen(true);
-  }, []);
+  const handleView = useCallback(
+    (campaign: Campaign) => {
+      openCampaignDrawer(campaign);
+    },
+    [openCampaignDrawer],
+  );
 
-  const handleDelete = useCallback((campaign: Campaign) => {
-    // Delete is handled in the CampaignDetailsDrawer
-    setSelectedCampaign(campaign);
-    setIsDrawerOpen(true);
-  }, []);
+  const handleDelete = useCallback(
+    (campaign: Campaign) => {
+      // Delete is handled in the CampaignDetailsDrawer
+      openCampaignDrawer(campaign);
+    },
+    [openCampaignDrawer],
+  );
 
   const handleDuplicate = useCallback(
     async (campaign: Campaign) => {
@@ -321,7 +355,13 @@ export default function CampaignsTableContent({
       <CampaignDetailsDrawer
         campaign={selectedCampaign}
         open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
+        onOpenChange={(open) => {
+          setIsDrawerOpen(open);
+          if (!open) {
+            setSelectedCampaign(null);
+            setSelectedId(null);
+          }
+        }}
         onCampaignUpdate={refetchData}
       />
     </>

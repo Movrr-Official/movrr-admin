@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
@@ -11,6 +11,7 @@ import { CommunityRideDetailsDrawer } from "./CommunityRideDetailsDrawer";
 import { CommunityRideFormDrawer } from "./CommunityRideFormDrawer";
 import { useDataTable } from "@/context/DataTableContext";
 import { useToast } from "@/hooks/useToast";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import {
   useUpdateCommunityRide,
   useDeleteCommunityRide,
@@ -32,6 +33,7 @@ export default function CommunityRidesTableContent({
   isRefetching = false,
 }: CommunityRidesTableContentProps) {
   const { toast } = useToast();
+  const { selectedId, setSelectedId } = useDrawerQueryId();
   const [selectedRide, setSelectedRide] = useState<CommunityRide | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [formRide, setFormRide] = useState<CommunityRide | null>(null);
@@ -41,6 +43,7 @@ export default function CommunityRidesTableContent({
   const deleteMutation = useDeleteCommunityRide();
 
   const {
+    data: rides,
     filteredData,
     filters: activeFilters,
     clearFilter,
@@ -49,9 +52,50 @@ export default function CommunityRidesTableContent({
     filterConfig,
   } = useDataTable();
 
+  useEffect(() => {
+    if (!selectedId) {
+      if (isDetailsOpen) {
+        setIsDetailsOpen(false);
+        setSelectedRide(null);
+      }
+      return;
+    }
+    const found =
+      (rides as CommunityRide[]).find((ride) => ride.id === selectedId) ?? null;
+    setSelectedRide(found);
+    setIsDetailsOpen(true);
+  }, [selectedId, rides]);
+
+  useEffect(() => {
+    if (!selectedRide || !isDetailsOpen) return;
+
+    const latestRide = (rides as CommunityRide[]).find(
+      (ride) => ride.id === selectedRide.id,
+    );
+    if (!latestRide) {
+      setIsDetailsOpen(false);
+      setSelectedRide(null);
+      setSelectedId(null);
+      return;
+    }
+
+    const hasChanged =
+      latestRide.status !== selectedRide.status ||
+      latestRide.title !== selectedRide.title ||
+      latestRide.scheduledAt !== selectedRide.scheduledAt ||
+      latestRide.organizerName !== selectedRide.organizerName ||
+      latestRide.description !== selectedRide.description ||
+      latestRide.meetingPointName !== selectedRide.meetingPointName;
+
+    if (hasChanged) {
+      setSelectedRide(latestRide);
+    }
+  }, [rides, selectedRide, isDetailsOpen, setSelectedId]);
+
   const handleView = (ride: CommunityRide) => {
     setSelectedRide(ride);
     setIsDetailsOpen(true);
+    setSelectedId(ride.id);
   };
 
   const handleEdit = (ride: CommunityRide) => {
@@ -154,6 +198,7 @@ export default function CommunityRidesTableContent({
         onClose={() => {
           setIsDetailsOpen(false);
           setSelectedRide(null);
+          setSelectedId(null);
         }}
       />
 

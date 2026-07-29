@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Timer } from "lucide-react";
 
 import { RideSession } from "@/schemas";
@@ -12,6 +12,7 @@ import { DataTableToolbar } from "@/components/table/DataTableToolbar";
 import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
 import { FilterSummary } from "@/components/filters/FilterSummary";
 import { useDataTable } from "@/context/DataTableContext";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import { getRideSessionsTableColumns } from "./RideSessionsTableColumns";
 import { RideSessionDetailsDrawer } from "./RideSessionDetailsDrawer";
 
@@ -33,6 +34,7 @@ function RideSessionsTableContent({
   refetchData,
   isRefetching,
 }: Omit<RideSessionsTableProps, "sessions">) {
+  const { selectedId, setSelectedId } = useDrawerQueryId();
   const [selectedSession, setSelectedSession] = useState<RideSession | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -46,9 +48,51 @@ function RideSessionsTableContent({
     filterConfig,
   } = useDataTable();
 
+  useEffect(() => {
+    if (!selectedId) {
+      if (isDrawerOpen) {
+        setIsDrawerOpen(false);
+        setSelectedSession(null);
+      }
+      return;
+    }
+    const found =
+      sessions.find((session) => session.id === selectedId) ?? null;
+    setSelectedSession(found);
+    setIsDrawerOpen(true);
+  }, [selectedId, sessions]);
+
+  useEffect(() => {
+    if (!selectedSession || !isDrawerOpen) return;
+
+    const latestSession = sessions.find(
+      (session) => session.id === selectedSession.id,
+    );
+    if (!latestSession) {
+      setIsDrawerOpen(false);
+      setSelectedSession(null);
+      setSelectedId(null);
+      return;
+    }
+
+    const hasChanged =
+      latestSession.status !== selectedSession.status ||
+      latestSession.verificationStatus !== selectedSession.verificationStatus ||
+      latestSession.endedAt !== selectedSession.endedAt ||
+      latestSession.pointsAwarded !== selectedSession.pointsAwarded ||
+      latestSession.verifiedMinutes !== selectedSession.verifiedMinutes ||
+      latestSession.riderName !== selectedSession.riderName ||
+      latestSession.campaignName !== selectedSession.campaignName;
+
+    if (hasChanged) {
+      setSelectedSession(latestSession);
+    }
+  }, [sessions, selectedSession, isDrawerOpen, setSelectedId]);
+
   const handleView = (session: RideSession) => {
     setSelectedSession(session);
     setIsDrawerOpen(true);
+    setSelectedId(session.id);
   };
 
   const columns = React.useMemo(
@@ -129,7 +173,13 @@ function RideSessionsTableContent({
       <RideSessionDetailsDrawer
         session={selectedSession}
         open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
+        onOpenChange={(open) => {
+          setIsDrawerOpen(open);
+          if (!open) {
+            setSelectedSession(null);
+            setSelectedId(null);
+          }
+        }}
         onVerified={refetchData}
       />
     </>

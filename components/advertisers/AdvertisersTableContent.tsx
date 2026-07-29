@@ -10,6 +10,7 @@ import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
 import { FilterSummary } from "@/components/filters/FilterSummary";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import { AdvertiserDetailsDrawer } from "./AdvertiserDetailsDrawer";
 import { getAdvertisersTableColumns } from "./AdvertisersTableColumns";
 
@@ -30,6 +31,7 @@ export default function AdvertisersTableContent({
   refetchData,
   isRefetching = false,
 }: AdvertisersTableContentProps) {
+  const { selectedId, setSelectedId } = useDrawerQueryId();
   const [selectedAdvertiser, setSelectedAdvertiser] = useState<Advertiser | null>(
     null,
   );
@@ -46,6 +48,20 @@ export default function AdvertisersTableContent({
   } = useDataTable();
 
   useEffect(() => {
+    if (!selectedId) {
+      if (isDrawerOpen) {
+        setIsDrawerOpen(false);
+        setSelectedAdvertiser(null);
+      }
+      return;
+    }
+    const found =
+      advertisers.find((item) => item.id === selectedId) ?? null;
+    setSelectedAdvertiser(found);
+    setIsDrawerOpen(true);
+  }, [selectedId, advertisers]);
+
+  useEffect(() => {
     if (!selectedAdvertiser || !isDrawerOpen) return;
 
     const latestAdvertiser = advertisers.find(
@@ -54,6 +70,7 @@ export default function AdvertisersTableContent({
     if (!latestAdvertiser) {
       setIsDrawerOpen(false);
       setSelectedAdvertiser(null);
+      setSelectedId(null);
       return;
     }
 
@@ -68,28 +85,24 @@ export default function AdvertisersTableContent({
     if (hasChanged) {
       setSelectedAdvertiser(latestAdvertiser);
     }
-  }, [advertisers, selectedAdvertiser, isDrawerOpen]);
+  }, [advertisers, selectedAdvertiser, isDrawerOpen, setSelectedId]);
 
-  const handleRowClick = (advertiser: Advertiser) => {
+  const openAdvertiserDrawer = (advertiser: Advertiser) => {
     setSelectedAdvertiser(advertiser);
     setIsDrawerOpen(true);
+    setSelectedId(advertiser.id);
+  };
+
+  const handleRowClick = (advertiser: Advertiser) => {
+    openAdvertiserDrawer(advertiser);
   };
 
   const columns = useMemo(
     () =>
       getAdvertisersTableColumns({
-        onView: (advertiser) => {
-          setSelectedAdvertiser(advertiser);
-          setIsDrawerOpen(true);
-        },
-        onEdit: (advertiser) => {
-          setSelectedAdvertiser(advertiser);
-          setIsDrawerOpen(true);
-        },
-        onDelete: (advertiser) => {
-          setSelectedAdvertiser(advertiser);
-          setIsDrawerOpen(true);
-        },
+        onView: openAdvertiserDrawer,
+        onEdit: openAdvertiserDrawer,
+        onDelete: openAdvertiserDrawer,
       }),
     [],
   );
@@ -164,7 +177,13 @@ export default function AdvertisersTableContent({
       <AdvertiserDetailsDrawer
         advertiser={selectedAdvertiser}
         open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
+        onOpenChange={(open) => {
+          setIsDrawerOpen(open);
+          if (!open) {
+            setSelectedAdvertiser(null);
+            setSelectedId(null);
+          }
+        }}
         onAdvertiserUpdate={refetchData}
       />
     </>

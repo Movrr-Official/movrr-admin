@@ -12,6 +12,7 @@ import { FilterSummary } from "../filters/FilterSummary";
 import { User } from "@/schemas";
 import { useDataTable } from "@/context/DataTableContext";
 import { useToast } from "@/hooks/useToast";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +46,7 @@ export default function UsersTableContent({
   isRefetching = false,
 }: UsersTableContentProps) {
   const searchParams = useSearchParams();
+  const { selectedId, setSelectedId } = useDrawerQueryId();
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -64,12 +66,26 @@ export default function UsersTableContent({
   } = useDataTable();
 
   useEffect(() => {
+    if (!selectedId) {
+      if (isDrawerOpen) {
+        setIsDrawerOpen(false);
+        setSelectedUser(null);
+      }
+      return;
+    }
+    const found = users.find((user) => user.id === selectedId) ?? null;
+    setSelectedUser(found);
+    setIsDrawerOpen(true);
+  }, [selectedId, users]);
+
+  useEffect(() => {
     if (!selectedUser || !isDrawerOpen) return;
 
     const latestUser = users.find((user) => user.id === selectedUser.id);
     if (!latestUser) {
       setIsDrawerOpen(false);
       setSelectedUser(null);
+      setSelectedId(null);
       return;
     }
 
@@ -83,18 +99,22 @@ export default function UsersTableContent({
     if (hasChanged) {
       setSelectedUser(latestUser);
     }
-  }, [users, selectedUser, isDrawerOpen]);
+  }, [users, selectedUser, isDrawerOpen, setSelectedId]);
+
+  const openUserDrawer = (user: User) => {
+    setSelectedUser(user);
+    setIsDrawerOpen(true);
+    setSelectedId(user.id);
+  };
 
   // Handle user row click - open detail drawer
   const handleRowClick = (user: User) => {
-    setSelectedUser(user);
-    setIsDrawerOpen(true);
+    openUserDrawer(user);
   };
 
   // Handle user actions
   const handleEdit = (user: User) => {
-    setSelectedUser(user);
-    setIsDrawerOpen(true);
+    openUserDrawer(user);
   };
 
   const handleStatusChange = async (user: User) => {
@@ -129,14 +149,12 @@ export default function UsersTableContent({
 
   const handleRoleChange = (user: User) => {
     // Role change is handled in the UserDetailsDrawer
-    setSelectedUser(user);
-    setIsDrawerOpen(true);
+    openUserDrawer(user);
   };
 
   const handleResetPassword = (user: User) => {
     // Reset password is handled in the UserDetailsDrawer
-    setSelectedUser(user);
-    setIsDrawerOpen(true);
+    openUserDrawer(user);
   };
 
   const handleExportData = async (user: User) => {
@@ -393,7 +411,13 @@ export default function UsersTableContent({
       <UserDetailsDrawer
         user={selectedUser}
         open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
+        onOpenChange={(open) => {
+          setIsDrawerOpen(open);
+          if (!open) {
+            setSelectedUser(null);
+            setSelectedId(null);
+          }
+        }}
         onUserUpdate={refetchData}
       />
 

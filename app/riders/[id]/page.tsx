@@ -6,5 +6,5 @@ export default async function RiderDetailRedirectPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  redirect(`/riders?selected=${id}`);
+  redirect(`/riders?id=${encodeURIComponent(id)}`);
 }

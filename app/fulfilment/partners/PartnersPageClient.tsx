@@ -8,28 +8,13 @@ import { PageHeader } from "@/components/PageHeader";
 import { OrganisationListTable } from "@/components/rewards/organisations/OrganisationListTable";
 import { OrganisationDetailsDrawer } from "@/components/rewards/organisations/OrganisationDetailsDrawer";
 import { useOrganisations } from "@/hooks/useOrganisationsData";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
 
 export default function PartnersPageClient() {
   const { data, isLoading, isError, error, refetch, isFetching } =
     useOrganisations("reward_partner");
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const selectedId = searchParams.get("id");
-
-  const setSelectedId = useCallback(
-    (id: string | null) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (id) params.set("id", id);
-      else params.delete("id");
-      const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, {
-        scroll: false,
-      });
-    },
-    [pathname, router, searchParams],
-  );
+  const { selectedId, setSelectedId } = useDrawerQueryId();
 
   return (
     <div className="space-y-6">

@@ -12,6 +12,7 @@ import { FilterSummary } from "../filters/FilterSummary";
 import { RiderRoute } from "@/schemas";
 import { useDataTable } from "@/context/DataTableContext";
 import { useToast } from "@/hooks/useToast";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import { Plus, Route as RouteIcon } from "lucide-react";
 import { RouteDetailsDrawer } from "@/components/routes/RouteDetailsDrawer";
 import { approveRoute, deleteRoute, rejectRoute } from "@/app/actions/routes";
@@ -44,6 +45,7 @@ export default function RoutesTableContent({
   isRefetching = false,
 }: RoutesTableContentProps) {
   const searchParams = useSearchParams();
+  const { selectedId, setSelectedId } = useDrawerQueryId();
   const { toast } = useToast();
   const [selectedRoute, setSelectedRoute] = useState<RiderRoute | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -62,12 +64,26 @@ export default function RoutesTableContent({
   } = useDataTable();
 
   useEffect(() => {
+    if (!selectedId) {
+      if (isDrawerOpen) {
+        setIsDrawerOpen(false);
+        setSelectedRoute(null);
+      }
+      return;
+    }
+    const found = routes.find((route) => route.id === selectedId) ?? null;
+    setSelectedRoute(found);
+    setIsDrawerOpen(true);
+  }, [selectedId, routes]);
+
+  useEffect(() => {
     if (!selectedRoute || !isDrawerOpen) return;
 
     const latestRoute = routes.find((route) => route.id === selectedRoute.id);
     if (!latestRoute) {
       setIsDrawerOpen(false);
       setSelectedRoute(null);
+      setSelectedId(null);
       return;
     }
 
@@ -93,24 +109,27 @@ export default function RoutesTableContent({
     if (hasChanged) {
       setSelectedRoute(latestRoute);
     }
-  }, [routes, selectedRoute, isDrawerOpen]);
+  }, [routes, selectedRoute, isDrawerOpen, setSelectedId]);
+
+  const openRouteDrawer = (route: RiderRoute) => {
+    setSelectedRoute(route);
+    setIsDrawerOpen(true);
+    setSelectedId(route.id);
+  };
 
   // Handle route row click - open detail view
   const handleRowClick = (route: RiderRoute) => {
-    setSelectedRoute(route);
-    setIsDrawerOpen(true);
+    openRouteDrawer(route);
   };
 
   // Handle route actions
   const handleEdit = (route: RiderRoute) => {
-    setSelectedRoute(route);
-    setIsDrawerOpen(true);
+    openRouteDrawer(route);
     // Edit mode can be handled in the drawer
   };
 
   const handleView = (route: RiderRoute) => {
-    setSelectedRoute(route);
-    setIsDrawerOpen(true);
+    openRouteDrawer(route);
   };
 
   const handleApprove = async (route: RiderRoute) => {
@@ -141,8 +160,7 @@ export default function RoutesTableContent({
 
   const handleReject = async (route: RiderRoute) => {
     // Rejection with reason is handled in the drawer
-    setSelectedRoute(route);
-    setIsDrawerOpen(true);
+    openRouteDrawer(route);
   };
 
   const handleDelete = (route: RiderRoute) => {
@@ -270,7 +288,13 @@ export default function RoutesTableContent({
       <RouteDetailsDrawer
         route={selectedRoute}
         open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
+        onOpenChange={(open) => {
+          setIsDrawerOpen(open);
+          if (!open) {
+            setSelectedRoute(null);
+            setSelectedId(null);
+          }
+        }}
         onRouteUpdate={refetchData}
       />
 
