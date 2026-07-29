@@ -140,6 +140,7 @@ async function buildHarness(opts?: {
     registry,
     settlement,
     tokens,
+    eventBus: bus,
   });
 
   const fraud = createFraudPolicyEngine({

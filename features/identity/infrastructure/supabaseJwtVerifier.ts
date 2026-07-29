@@ -41,7 +41,9 @@ export const verifySupabaseAccessToken: VerifyAccessToken = async (
 };
 
 /**
- * Organisation membership lookup — real adapter from Task 3.
- * Re-exported here so Identity wiring stays discoverable next to JWT verify.
+ * Principal lookup adapters — re-exported so Identity wiring stays
+ * discoverable next to JWT verify.
  */
 export { findOrganisationMembership } from "@/features/organisations/infrastructure/supabaseOrganisationMembershipLookup";
+export { findAdminUser } from "@/features/identity/infrastructure/supabaseAdminUserLookup";
+export { findRiderProfile } from "@/features/identity/infrastructure/supabaseRiderProfileLookup";

@@ -9,7 +9,6 @@ import { createInMemoryIdempotencyStore } from "@/features/fraud/infrastructure/
 import { createInMemoryReplayStore } from "@/features/fraud/infrastructure/policies/replay";
 import { createInMemoryRateLimitStore } from "@/features/fraud/infrastructure/policies/rateLimit";
 import { createInMemoryLedgerRepository } from "@/features/wallet/infrastructure/ledgerRepository";
-import { createImmediateDebitCompensatingRefundStrategy } from "@/features/wallet/application/strategies/ImmediateDebitCompensatingRefundStrategy";
 import { createWalletQueries } from "@/features/wallet/application/queries/walletQueries";
 import {
   createRedeemRewardService,
@@ -21,17 +20,8 @@ import {
   createInMemoryRedemptionListPort,
   createRedemptionQueries,
 } from "@/features/rewards/application/queries/catalogAndRedemptions";
-import { createFulfilmentStateMachine } from "@/features/fulfilment/application/FulfilmentStateMachine";
-import { createHandlerRegistry } from "@/features/fulfilment/application/HandlerRegistry";
-import { createFulfilmentEngine } from "@/features/fulfilment/application/FulfilmentEngine";
-import { createInstantDigitalHandler } from "@/features/fulfilment/application/handlers/InstantDigitalHandler";
-import { createQrBarcodeHandler } from "@/features/fulfilment/application/handlers/QrBarcodeHandler";
-import { createUnsupportedFulfilmentHandler } from "@/features/fulfilment/application/handlers/UnsupportedFulfilmentHandler";
-import { createGeneratedDigitalResourceProvider } from "@/features/fulfilment/infrastructure/providers/GeneratedDigitalResourceProvider";
-import { createVoucherPoolResourceProvider } from "@/features/fulfilment/infrastructure/providers/VoucherPoolResourceProvider";
-import { createTokenService } from "@/features/fulfilment/application/commands/tokenService";
-import type { ResourceAllocationService } from "@/features/fulfilment/application/contracts/ResourceAllocationService";
-import type { FulfilmentResourceProvider } from "@/features/fulfilment/application/contracts/FulfilmentResourceProvider";
+import type { FulfilmentEngine } from "@/features/fulfilment/application/FulfilmentEngine";
+import type { TokenService } from "@/features/fulfilment/application/commands/tokenService";
 import {
   createFulfilmentQueries,
   createInMemoryFulfilmentQueryPort,
@@ -41,7 +31,8 @@ import {
   createPartnerCommands,
   createPartnerQueries,
 } from "@/features/partners/application/partnerServices";
-import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
+import type { FulfilmentModule } from "@/features/fulfilment/infrastructure/composeFulfilmentModule";
+import { composeFulfilmentModule } from "@/features/fulfilment/infrastructure/composeFulfilmentModule";
 
 export type RouteParams = { id: string };
 
@@ -109,17 +100,9 @@ export type CreatePlatformApiOptions = {
     catalog?: CatalogItem[];
   };
   hooks?: PlatformApiHooks;
+  /** Shared fulfilment composition (API + jobs). When omitted and seed is set, a module is composed inline. */
+  fulfilmentModule?: FulfilmentModule;
 };
-
-function asResourceService(
-  provider: FulfilmentResourceProvider,
-): ResourceAllocationService {
-  return {
-    allocate: (input) => provider.allocate(input),
-    release: (input) => provider.release(input),
-    fulfil: (input) => provider.fulfil(input),
-  };
-}
 
 async function readJsonBody(request: Request): Promise<Record<string, unknown>> {
   try {
@@ -142,8 +125,15 @@ export async function createPlatformApiForTests(
 ): Promise<PlatformApiHandlers> {
   const authDeps = options.authDeps;
   const authorisation = authorisationService;
-  const bus = new DomainEventBus();
-  const ledger = createInMemoryLedgerRepository();
+
+  let fulfilmentModule = options.fulfilmentModule ?? null;
+  if (!fulfilmentModule && options.seed) {
+    fulfilmentModule = composeFulfilmentModule();
+  }
+
+  const bus = fulfilmentModule?.bus ?? new DomainEventBus();
+  const ledger =
+    fulfilmentModule?.ledger ?? createInMemoryLedgerRepository();
   const catalogPort = createInMemoryCatalogListPort(options.seed?.catalog ?? []);
   const redemptionPort = createInMemoryRedemptionListPort();
   const fulfilmentPort = createInMemoryFulfilmentQueryPort([
@@ -177,42 +167,17 @@ export async function createPlatformApiForTests(
   const partnerCommands = createPartnerCommands({ authorisation });
 
   let redeemService: ReturnType<typeof createRedeemRewardService> | null = null;
-  let fulfilmentEngine: ReturnType<typeof createFulfilmentEngine> | null = null;
-  let tokenService: ReturnType<typeof createTokenService> | null = null;
+  let fulfilmentEngine: FulfilmentEngine | null =
+    fulfilmentModule?.engine ?? null;
+  let tokenService: TokenService | null =
+    fulfilmentModule?.tokens ?? null;
 
-  if (options.seed) {
+  if (options.seed && fulfilmentModule) {
     await ledger.seedBalance("rider-1", options.seed.balance ?? 100);
+    await fulfilmentModule.pool.seedPool("res-pool-1", [
+      { id: "item-1", code: "VOUCHER-1" },
+    ]);
 
-    const generated = createGeneratedDigitalResourceProvider();
-    const pool = createVoucherPoolResourceProvider();
-    await pool.seedPool("res-pool-1", [{ id: "item-1", code: "VOUCHER-1" }]);
-    tokenService = createTokenService({ eventBus: bus });
-    const sm = createFulfilmentStateMachine();
-    const resources = asResourceService(generated);
-    const poolResources = asResourceService(pool);
-    const registry = createHandlerRegistry();
-    const unsupported = createUnsupportedFulfilmentHandler();
-    const instant = createInstantDigitalHandler({ resources });
-    const qr = createQrBarcodeHandler({
-      resources: poolResources,
-      tokens: tokenService,
-    });
-    for (const type of FULFILMENT_TYPES) {
-      if (type === "instant_digital") registry.register(type, instant);
-      else if (type === "qr_barcode") registry.register(type, qr);
-      else registry.register(type, unsupported);
-    }
-    registry.freeze();
-    const settlement = createImmediateDebitCompensatingRefundStrategy({
-      ledger,
-      eventBus: bus,
-    });
-    fulfilmentEngine = createFulfilmentEngine({
-      stateMachine: sm,
-      registry,
-      settlement,
-      tokens: tokenService,
-    });
     const fraud = createFraudPolicyEngine({
       idempotency: createInMemoryIdempotencyStore(),
       replay: createInMemoryReplayStore(),
@@ -222,9 +187,9 @@ export async function createPlatformApiForTests(
       authorisation,
       fraud,
       catalog: catalogPort,
-      settlement,
+      settlement: fulfilmentModule.settlement,
       redemptions: redemptionPort,
-      fulfilmentEngine,
+      fulfilmentEngine: fulfilmentModule.engine,
       eventBus: bus,
     });
   }
@@ -265,18 +230,31 @@ export async function createPlatformApiForTests(
           const catalogItemId =
             typeof body.catalogItemId === "string" ? body.catalogItemId : "";
           if (!redeemService) {
-            // Authz-only stub
+            // Authz-only stub when catalog/ledger not seeded
             return ok({
               redemption: { id: "stub-redemption", catalogItemId },
               fulfilment: { id: "stub-fulfilment" },
             });
           }
+          fulfilmentModule?.metrics.recordRedeemAttempt({
+            correlationId: ctx.correlationId,
+            catalogItemId,
+          });
           const result = await redeemService.execute(ctx, {
             catalogItemId,
             idempotencyKey: key,
           });
           if (result.ok) {
+            fulfilmentModule?.metrics.recordRedeemSuccess({
+              correlationId: ctx.correlationId,
+              fulfilmentId: result.value.fulfilment.id,
+            });
             await bus.flushAfterCommit();
+          } else {
+            fulfilmentModule?.metrics.recordRedeemFailure({
+              correlationId: ctx.correlationId,
+              reason: result.kind,
+            });
           }
           return result;
         }),
@@ -330,7 +308,9 @@ export async function createPlatformApiForTests(
             });
           }
           if (fulfilmentEngine) {
-            return fulfilmentEngine.cancel(params.id, reason);
+            const result = await fulfilmentEngine.cancel(params.id, reason);
+            if (result.ok) await bus.flushAfterCommit();
+            return result;
           }
           return ok({ fulfilmentId: params.id, cancelled: true });
         }),
@@ -346,7 +326,9 @@ export async function createPlatformApiForTests(
             });
           }
           if (fulfilmentEngine) {
-            return fulfilmentEngine.refund(params.id, reason);
+            const result = await fulfilmentEngine.refund(params.id, reason);
+            if (result.ok) await bus.flushAfterCommit();
+            return result;
           }
           return ok({ fulfilmentId: params.id, refunded: true });
         }),
@@ -356,7 +338,9 @@ export async function createPlatformApiForTests(
             return options.hooks.onFulfilmentConfirm(ctx, { id: params.id });
           }
           if (fulfilmentEngine) {
-            return fulfilmentEngine.confirmCollection(params.id);
+            const result = await fulfilmentEngine.confirmCollection(params.id);
+            if (result.ok) await bus.flushAfterCommit();
+            return result;
           }
           return ok({ fulfilmentId: params.id, confirmed: true });
         }),
@@ -368,16 +352,38 @@ export async function createPlatformApiForTests(
             return options.hooks.onConsumeToken(ctx, { token });
           }
           if (tokenService && fulfilmentEngine) {
+            fulfilmentModule?.metrics.recordValidateAttempt({
+              correlationId: ctx.correlationId,
+            });
             const consumed = await tokenService.consume({
               plaintext: token,
               correlationId: ctx.correlationId,
             });
-            if (!consumed.ok) return consumed;
-            return fulfilmentEngine.onTokenConsumed({
+            if (!consumed.ok) {
+              fulfilmentModule?.metrics.recordValidateFailure({
+                correlationId: ctx.correlationId,
+                reason: consumed.kind,
+              });
+              return consumed;
+            }
+            const result = await fulfilmentEngine.onTokenConsumed({
               fulfilmentId: consumed.value.fulfilmentId,
               token: consumed.value,
               correlationId: ctx.correlationId,
             });
+            if (result.ok) {
+              fulfilmentModule?.metrics.recordValidateSuccess({
+                correlationId: ctx.correlationId,
+                fulfilmentId: consumed.value.fulfilmentId,
+              });
+              await bus.flushAfterCommit();
+            } else {
+              fulfilmentModule?.metrics.recordValidateFailure({
+                correlationId: ctx.correlationId,
+                reason: result.kind,
+              });
+            }
+            return result;
           }
           return ok({ consumed: true });
         }),

@@ -76,6 +76,7 @@ async function buildEngine(opts?: {
     registry,
     settlement,
     tokens,
+    eventBus: bus,
   });
 
   return { engine, ledger, tokens, pool, bus };

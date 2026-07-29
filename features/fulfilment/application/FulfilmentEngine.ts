@@ -1,4 +1,5 @@
 import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import type { DomainEventBus } from "@/lib/events/DomainEventBus";
 import {
   createFulfilment,
   type Fulfilment,
@@ -16,6 +17,7 @@ import type {
   TokenType,
 } from "@/features/fulfilment/application/commands/tokenService";
 import type { SettlementService } from "@/features/wallet/application/contracts/SettlementService";
+import { enqueueFulfilmentTransitionEvents } from "@/features/fulfilment/application/publishFulfilmentEvents";
 
 export type CreateFromRedemptionInput = {
   id: string;
@@ -73,6 +75,8 @@ export type FulfilmentEngineDeps = {
   registry: HandlerRegistry;
   settlement: SettlementService;
   tokens: TokenService;
+  /** Publishes FulfilmentStateChanged + terminal events after successful SM transitions. */
+  eventBus: DomainEventBus;
 };
 
 type StoredFulfilment = {
@@ -106,21 +110,51 @@ export function createFulfilmentEngine(
     store.set(stored.fulfilment.id, stored);
   }
 
+  function publishTransition(
+    stored: StoredFulfilment,
+    fromState: Fulfilment["state"],
+    next: Fulfilment,
+    reason: string,
+  ): void {
+    enqueueFulfilmentTransitionEvents(deps.eventBus, {
+      fulfilment: next,
+      fromState,
+      toState: next.state,
+      reason,
+      correlationId: stored.correlationId,
+    });
+  }
+
+  function applySmTransition(
+    stored: StoredFulfilment,
+    fulfilment: Fulfilment,
+    to: Fulfilment["state"],
+    reason: string,
+  ): ApplicationResult<Fulfilment> {
+    const fromState = fulfilment.state;
+    const result = deps.stateMachine.requestTransition(
+      fulfilment,
+      to,
+      reason,
+      fulfilment.version,
+    );
+    if (result.ok) {
+      publishTransition(stored, fromState, result.value, reason);
+    }
+    return result;
+  }
+
   function requestTransitionFor(
     fulfilmentId: string,
   ): RequestTransition {
     return (fulfilment, to, reason) => {
-      const result = deps.stateMachine.requestTransition(
-        fulfilment,
-        to,
-        reason,
-        fulfilment.version,
-      );
+      const existing = store.get(fulfilmentId);
+      if (!existing) {
+        return fail("not_found", `Fulfilment ${fulfilmentId} not found`);
+      }
+      const result = applySmTransition(existing, fulfilment, to, reason);
       if (result.ok) {
-        const existing = store.get(fulfilmentId);
-        if (existing) {
-          persist({ ...existing, fulfilment: result.value });
-        }
+        persist({ ...existing, fulfilment: result.value });
       }
       return result;
     };
@@ -138,11 +172,11 @@ export function createFulfilmentEngine(
       reason: "fulfilment_failed",
       correlationId: stored.correlationId,
     });
-    const refunded = deps.stateMachine.requestTransition(
+    const refunded = applySmTransition(
+      stored,
       fulfilment,
       "refunded",
       "compensating_refund",
-      fulfilment.version,
     );
     if (refunded.ok) {
       persist({ ...stored, fulfilment: refunded.value });
@@ -347,11 +381,11 @@ export function createFulfilmentEngine(
       });
       if (!settled.ok) return settled;
 
-      const refunded = deps.stateMachine.requestTransition(
+      const refunded = applySmTransition(
+        stored,
         stored.fulfilment,
         "refunded",
         reason,
-        stored.fulfilment.version,
       );
       if (!refunded.ok) return refunded;
 
