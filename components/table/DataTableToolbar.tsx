@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { ExportDialog } from "@/components/export/ExportDialog";
 import { FilterDropdown } from "../filters/FilterDropdown";
 import { DataTableSearch } from "@/components/table/DataTableSearch";
-import { Download, RefreshCw, Package, Clock, LayoutGrid, Table, LucideIcon, Plus } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Download, RefreshCw, Package, Clock, LayoutGrid, Table, Plus } from "lucide-react";
 import { ScheduledExportDialog } from "../export/ScheduledExportDialog";
 import { useDataTable } from "@/context/DataTableContext";
 
@@ -74,6 +81,13 @@ export interface TableToolbarProps {
     onViewChange?: (view: "table" | "grid") => void;
   };
 
+  /**
+   * How configured filters appear in the toolbar.
+   * - dropdown: single Filter menu (default, Users/Riders pattern)
+   * - inline: dedicated Select per filter field on the bar
+   */
+  filterPresentation?: "dropdown" | "inline";
+
   // Layout
   variant?: "default" | "compact";
   className?: string;
@@ -135,6 +149,7 @@ export function DataTableToolbar({
     enabled: false,
     view: "table",
   },
+  filterPresentation = "dropdown",
   variant = "default",
   className = "",
 }: TableToolbarProps) {
@@ -150,6 +165,10 @@ export function DataTableToolbar({
 
   const hasActiveFilters = activeFilterCount > 0;
   const hasFilterOptions = filterConfig && filterConfig.length > 0;
+  const useInlineFilters =
+    filterPresentation === "inline" && hasFilterOptions;
+  const useDropdownFilters =
+    filterPresentation === "dropdown" && hasFilterOptions;
   const hasExportData = (exportConfig.data || filteredData).length > 0;
   const batchExportData = batchExport.dataSources || [];
   const scheduledExportData = scheduledExport.dataSources || [];
@@ -187,6 +206,49 @@ export function DataTableToolbar({
             debounceTime={search.debounceTime}
             searchOnType={search.searchOnType}
           />
+        </div>
+      )}
+
+      {useInlineFilters && (
+        <div className="flex flex-wrap items-center gap-2">
+          {filterConfig.map((filter) => {
+            if (!filter.options?.length) return null;
+            const raw = activeFilters[filter.key];
+            const current = Array.isArray(raw)
+              ? (raw[0] as string | undefined)
+              : typeof raw === "string"
+                ? raw
+                : undefined;
+            const value = current || "__all__";
+
+            return (
+              <Select
+                key={filter.id}
+                value={value}
+                onValueChange={(next) => {
+                  updateFilter(
+                    filter.key,
+                    next === "__all__" ? null : next,
+                  );
+                }}
+              >
+                <SelectTrigger
+                  className="h-9 w-[150px] bg-background"
+                  aria-label={filter.label}
+                >
+                  <SelectValue placeholder={filter.label} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All {filter.label}</SelectItem>
+                  {filter.options.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            );
+          })}
         </div>
       )}
 
@@ -245,14 +307,14 @@ export function DataTableToolbar({
         )}
 
         {/* Filter Dropdown */}
-        {hasFilterOptions && (
+        {useDropdownFilters && (
           <FilterDropdown
             filterConfig={filterConfig}
             activeFilters={activeFilters}
             activeFilterCount={activeFilterCount}
             updateFilter={updateFilter}
             clearAllFilters={clearAllFilters}
-            hasActiveFilters={activeFilterCount > 0}
+            hasActiveFilters={hasActiveFilters}
           />
         )}
 
