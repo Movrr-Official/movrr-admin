@@ -55,12 +55,23 @@ const QR_BARCODE_TRANSITIONS: ReadonlyArray<
   ["completed", "reversed"],
 ];
 
+/** Phase-1 edges only for instant_digital + qr_barcode; others empty until handlers land. */
+const EMPTY_TRANSITIONS: ReadonlyArray<
+  readonly [FulfilmentState, FulfilmentState]
+> = [];
+
 const BY_TYPE: Record<
   FulfilmentType,
   ReadonlyArray<readonly [FulfilmentState, FulfilmentState]>
 > = {
   instant_digital: INSTANT_DIGITAL_TRANSITIONS,
   qr_barcode: QR_BARCODE_TRANSITIONS,
+  physical_collection: EMPTY_TRANSITIONS,
+  physical_shipping: EMPTY_TRANSITIONS,
+  event_ticket: EMPTY_TRANSITIONS,
+  sweepstakes: EMPTY_TRANSITIONS,
+  donation: EMPTY_TRANSITIONS,
+  premium_feature: EMPTY_TRANSITIONS,
 };
 
 function edgeKey(from: FulfilmentState, to: FulfilmentState): string {
@@ -74,6 +85,12 @@ const LEGAL_SETS: Record<FulfilmentType, ReadonlySet<string>> = {
   qr_barcode: new Set(
     QR_BARCODE_TRANSITIONS.map(([from, to]) => edgeKey(from, to)),
   ),
+  physical_collection: new Set(),
+  physical_shipping: new Set(),
+  event_ticket: new Set(),
+  sweepstakes: new Set(),
+  donation: new Set(),
+  premium_feature: new Set(),
 };
 
 export function isLegalTransition(

@@ -1,7 +1,16 @@
 import type { FulfilmentOutcome } from "./outcome";
 import type { FulfilmentState } from "./states";
 
-export const FULFILMENT_TYPES = ["instant_digital", "qr_barcode"] as const;
+export const FULFILMENT_TYPES = [
+  "instant_digital",
+  "qr_barcode",
+  "physical_collection",
+  "physical_shipping",
+  "event_ticket",
+  "sweepstakes",
+  "donation",
+  "premium_feature",
+] as const;
 
 export type FulfilmentType = (typeof FULFILMENT_TYPES)[number];
 
