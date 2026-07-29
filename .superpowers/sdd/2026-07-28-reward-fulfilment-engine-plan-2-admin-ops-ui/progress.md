@@ -19,4 +19,4 @@ Task 1: Important — Task 2 must accept cookie session OR inject Bearer from ad
 - API: list already existed; added `partnerOrgId` query passthrough
 - Tests: platformApi client 6 passed; typecheck clean
 
-Task 2: complete (commit pending in report, DONE_WITH_CONCERNS)
+Task 2: complete (9ce0d98, DONE_WITH_CONCERNS)
