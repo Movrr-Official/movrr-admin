@@ -21,10 +21,12 @@ import { FulfilmentQueueTable } from "@/components/rewards/fulfilment/Fulfilment
 import { ResourcePoolTable } from "@/components/rewards/resources/ResourcePoolTable";
 import { OrganisationListTable } from "@/components/rewards/organisations/OrganisationListTable";
 import { TodaysRedemptionsCrossLink } from "@/components/rewards/RewardsCrossLink";
+import { FulfilmentStateBadge } from "@/components/fulfilment/FulfilmentStateBadge";
 import { useFulfilmentQueue } from "@/hooks/useFulfilmentOpsData";
 import { useResourcePools } from "@/hooks/useResourcePoolsData";
 import { useOrganisations } from "@/hooks/useOrganisationsData";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
+import { formatFulfilmentType } from "@/features/fulfilment/presentation";
 import {
   countByQueueHealth,
   deriveOpsHealth,
@@ -296,13 +298,13 @@ export default function FulfilmentDashboard() {
                       {row.id.slice(0, 8)}…
                     </Link>
                     <p className="text-xs text-muted-foreground">
-                      {row.fulfilmentType}
+                      {formatFulfilmentType(row.fulfilmentType)}
                       {row.partnerOrgId
                         ? ` · partner ${row.partnerOrgId.slice(0, 8)}…`
                         : ""}
                     </p>
                   </div>
-                  <Badge variant="secondary">{row.state}</Badge>
+                  <FulfilmentStateBadge state={row.state} />
                 </li>
               ))}
             </ul>

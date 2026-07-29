@@ -33,6 +33,7 @@ import { shouldUseMockData } from "@/lib/dataSource";
 import { upsertRewardCatalog } from "@/app/actions/rewardCatalog";
 import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
 import { SUPPORTED_REDEEM_FULFILMENT_TYPES } from "@/features/rewards/application/contracts/RedeemRewardCommand";
+import { formatFulfilmentType } from "@/features/fulfilment/presentation";
 
 const requiredNumber = (schema: z.ZodNumber) =>
   z.preprocess((value) => Number(value), schema);
@@ -95,7 +96,7 @@ const rewardCatalogFormSchema = z
         code: z.ZodIssueCode.custom,
         path: ["fulfilmentType"],
         message:
-          "This fulfilment type is not supported for redeem yet. Choose instant_digital or qr_barcode, or keep the item as draft.",
+          "This fulfilment type is not supported for redeem yet. Choose Instant Digital or QR / Barcode, or keep the item as draft.",
       });
     }
     if (value.status === "active" && !value.resourceId) {
@@ -371,7 +372,7 @@ export default function CreateRewardCatalogPage() {
                               );
                             return (
                               <SelectItem key={type} value={type}>
-                                {type}
+                                {formatFulfilmentType(type)}
                                 {supported ? "" : " (unsupported for redeem)"}
                               </SelectItem>
                             );

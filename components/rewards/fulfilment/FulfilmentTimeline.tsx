@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import type { FulfilmentEvent } from "@/features/fulfilment/domain/Fulfilment";
+import { formatFulfilmentState } from "@/features/fulfilment/presentation";
 
 type FulfilmentTimelineProps = {
   events: FulfilmentEvent[];
@@ -41,7 +42,8 @@ export function FulfilmentTimeline({
           <span className="absolute -left-[1.3rem] top-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
           <div className="space-y-0.5">
             <p className="text-sm font-medium">
-              {event.fromState} → {event.toState}
+              {formatFulfilmentState(event.fromState)} →{" "}
+              {formatFulfilmentState(event.toState)}
             </p>
             <p className="text-xs text-muted-foreground">{event.reason}</p>
             <p className="text-xs font-mono text-muted-foreground">

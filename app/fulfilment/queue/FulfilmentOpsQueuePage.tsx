@@ -17,6 +17,10 @@ import { FulfilmentQueueTable } from "@/components/rewards/fulfilment/Fulfilment
 import { useFulfilmentQueue } from "@/hooks/useFulfilmentOpsData";
 import { FULFILMENT_STATES } from "@/features/fulfilment/domain/states";
 import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
+import {
+  formatFulfilmentState,
+  formatFulfilmentType,
+} from "@/features/fulfilment/presentation";
 
 const ALL = "__all__";
 
@@ -73,30 +77,30 @@ export default function FulfilmentOpsQueuePage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL}>All states</SelectItem>
-                {FULFILMENT_STATES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="fulfilment-type">Type</Label>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger id="fulfilment-type">
-                <SelectValue placeholder="All types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>All types</SelectItem>
-                {FULFILMENT_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+                  {FULFILMENT_STATES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {formatFulfilmentState(s)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fulfilment-type">Type</Label>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger id="fulfilment-type">
+                  <SelectValue placeholder="All types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>All types</SelectItem>
+                  {FULFILMENT_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {formatFulfilmentType(t)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           <div className="space-y-2">
             <Label htmlFor="fulfilment-partner">Partner org ID</Label>
             <Input

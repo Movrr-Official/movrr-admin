@@ -93,7 +93,7 @@ export const upsertRewardCatalogSchema = z
         code: z.ZodIssueCode.custom,
         path: ["fulfilmentType"],
         message:
-          "This fulfilment type is not supported for redeem yet. Choose instant_digital or qr_barcode, or keep the item as draft.",
+          "This fulfilment type is not supported for redeem yet. Choose Instant Digital or QR / Barcode, or keep the item as draft.",
       });
     }
     if (status === "active" && !value.resourceId) {

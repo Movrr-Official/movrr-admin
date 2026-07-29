@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { History } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FulfilmentStateBadge } from "@/components/fulfilment/FulfilmentStateBadge";
+import { FulfilmentTypeBadge } from "@/components/fulfilment/FulfilmentTypeBadge";
 import { useFulfilmentQueue } from "@/hooks/useFulfilmentOpsData";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
 
@@ -67,7 +68,7 @@ export default function FulfilmentTimelinePage() {
                       >
                         {row.id}
                       </Link>
-                      <Badge variant="outline">{row.fulfilmentType}</Badge>
+                      <FulfilmentTypeBadge type={row.fulfilmentType} />
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Redemption {row.redemptionId}
@@ -79,7 +80,7 @@ export default function FulfilmentTimelinePage() {
                         : ""}
                     </p>
                   </div>
-                  <Badge variant="secondary">{row.state}</Badge>
+                  <FulfilmentStateBadge state={row.state} />
                 </li>
               ))}
             </ul>

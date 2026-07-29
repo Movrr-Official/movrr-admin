@@ -9,6 +9,12 @@ import { Button } from "@/components/ui/button";
 import type { FulfilmentReadModel } from "@/features/fulfilment/application/queries/fulfilmentQueries";
 import type { FulfilmentEvent } from "@/features/fulfilment/domain/Fulfilment";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
+import { FulfilmentStateBadge } from "@/components/fulfilment/FulfilmentStateBadge";
+import {
+  formatFulfilmentState,
+  formatFulfilmentType,
+  formatRiderProgress,
+} from "@/features/fulfilment/presentation";
 import { FulfilmentTimeline } from "./FulfilmentTimeline";
 import {
   FulfilmentActionsDialog,
@@ -84,7 +90,7 @@ export function FulfilmentDetailPanel({
           </Link>
         </Button>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{fulfilment.state}</Badge>
+          <FulfilmentStateBadge state={fulfilment.state} />
           <Badge variant="outline">v{fulfilment.version}</Badge>
           <Button
             type="button"
@@ -114,10 +120,16 @@ export function FulfilmentDetailPanel({
           </p>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Field label="State" value={fulfilment.state} />
+          <Field label="State" value={formatFulfilmentState(fulfilment.state)} />
           <Field label="Outcome" value={fulfilment.outcome ?? "—"} />
-          <Field label="Progress" value={fulfilment.progress} />
-          <Field label="Type" value={fulfilment.fulfilmentType} />
+          <Field
+            label="Progress"
+            value={formatRiderProgress(fulfilment.progress)}
+          />
+          <Field
+            label="Type"
+            value={formatFulfilmentType(fulfilment.fulfilmentType)}
+          />
           <Field label="Version" value={fulfilment.version} />
           <Field label="Partner org" value={fulfilment.partnerOrgId ?? "—"} />
           <Field label="Rider" value={fulfilment.riderId} />

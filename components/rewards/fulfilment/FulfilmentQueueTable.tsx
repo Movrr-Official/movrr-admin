@@ -10,8 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import type { FulfilmentReadModel } from "@/features/fulfilment/application/queries/fulfilmentQueries";
+import { FulfilmentStateBadge } from "@/components/fulfilment/FulfilmentStateBadge";
+import { FulfilmentTypeBadge } from "@/components/fulfilment/FulfilmentTypeBadge";
+import {
+  formatRiderProgress,
+} from "@/features/fulfilment/presentation";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
 
 type FulfilmentQueueTableProps = {
@@ -65,10 +69,14 @@ export function FulfilmentQueueTable({
               </Link>
             </TableCell>
             <TableCell>
-              <Badge variant="secondary">{row.state}</Badge>
+              <FulfilmentStateBadge state={row.state} />
             </TableCell>
-            <TableCell className="text-sm">{row.fulfilmentType}</TableCell>
-            <TableCell className="text-sm">{row.progress}</TableCell>
+            <TableCell>
+              <FulfilmentTypeBadge type={row.fulfilmentType} />
+            </TableCell>
+            <TableCell className="text-sm">
+              {formatRiderProgress(row.progress)}
+            </TableCell>
             <TableCell className="text-sm">{row.outcome ?? "—"}</TableCell>
             <TableCell className="font-mono text-xs">
               {row.partnerOrgId ?? "—"}
