@@ -12,16 +12,25 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { Organisation } from "@/features/organisations/domain/Organisation";
+import {
+  formatOrganisationStatus,
+  formatOrganisationType,
+  getOrganisationStatusPresentation,
+  getOrganisationTypePresentation,
+} from "@/features/organisations/presentation";
 
 type OrganisationListTableProps = {
   rows: Organisation[];
   isLoading: boolean;
+  /** Prefer onSelectOrg for drawer UX; detailHref kept for external nav (e.g. dashboard). */
+  onSelectOrg?: (org: Organisation) => void;
   detailHref?: (org: Organisation) => string;
 };
 
 export function OrganisationListTable({
   rows,
   isLoading,
+  onSelectOrg,
   detailHref,
 }: OrganisationListTableProps) {
   if (isLoading) {
@@ -53,29 +62,60 @@ export function OrganisationListTable({
       </TableHeader>
       <TableBody>
         {rows.map((row) => {
-          const href = detailHref?.(row);
+          const href = !onSelectOrg ? detailHref?.(row) : undefined;
+          const selectable = Boolean(onSelectOrg);
+
           return (
-            <TableRow key={row.id}>
+            <TableRow
+              key={row.id}
+              className={selectable ? "cursor-pointer" : undefined}
+              onClick={
+                selectable
+                  ? () => {
+                      onSelectOrg?.(row);
+                    }
+                  : undefined
+              }
+            >
               <TableCell>
                 {href ? (
                   <Link
                     href={href}
                     className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                    onClick={(event) => event.stopPropagation()}
                   >
                     {row.name}
                   </Link>
                 ) : (
-                  <span className="text-sm font-medium">{row.name}</span>
+                  <span
+                    className={
+                      selectable
+                        ? "text-sm font-medium text-primary underline-offset-4 hover:underline"
+                        : "text-sm font-medium"
+                    }
+                  >
+                    {row.name}
+                  </span>
                 )}
                 <p className="text-xs font-mono text-muted-foreground">
                   {row.id}
                 </p>
               </TableCell>
               <TableCell>
-                <Badge variant="outline">{row.type}</Badge>
+                <Badge
+                  variant={getOrganisationTypePresentation(row.type).badgeVariant}
+                >
+                  {formatOrganisationType(row.type)}
+                </Badge>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary">{row.status}</Badge>
+                <Badge
+                  variant={
+                    getOrganisationStatusPresentation(row.status).badgeVariant
+                  }
+                >
+                  {formatOrganisationStatus(row.status)}
+                </Badge>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {new Date(row.createdAt).toLocaleString()}

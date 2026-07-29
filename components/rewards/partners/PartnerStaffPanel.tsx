@@ -27,6 +27,13 @@ import {
   useAddOrganisationStaff,
   useUpdateOrganisationStaffRole,
 } from "@/hooks/useOrganisationsData";
+import {
+  formatBundleKey,
+  formatMembershipRole,
+  formatMembershipStatus,
+  getMembershipStatusPresentation,
+} from "@/features/organisations/presentation";
+import { Badge } from "@/components/ui/badge";
 
 const ROLES: MembershipRole[] = ["owner", "manager", "staff", "viewer"];
 
@@ -126,7 +133,7 @@ export function PartnerStaffPanel({
             <SelectContent>
               {ROLES.map((item) => (
                 <SelectItem key={item} value={item}>
-                  {item}
+                  {formatMembershipRole(item)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -180,20 +187,31 @@ export function PartnerStaffPanel({
                     disabled={updateRole.isPending}
                   >
                     <SelectTrigger className="w-[140px]">
-                      <SelectValue />
+                      <SelectValue>
+                        {formatMembershipRole(member.role)}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {ROLES.map((item) => (
                         <SelectItem key={item} value={item}>
-                          {item}
+                          {formatMembershipRole(item)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </TableCell>
-                <TableCell className="text-sm">{member.status}</TableCell>
-                <TableCell className="font-mono text-xs">
-                  {member.bundleKey}
+                <TableCell>
+                  <Badge
+                    variant={
+                      getMembershipStatusPresentation(member.status)
+                        .badgeVariant
+                    }
+                  >
+                    {formatMembershipStatus(member.status)}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-sm">
+                  {formatBundleKey(member.bundleKey)}
                 </TableCell>
               </TableRow>
             ))}

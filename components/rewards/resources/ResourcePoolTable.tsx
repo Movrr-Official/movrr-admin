@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { ResourcePoolReadModel } from "@/hooks/useResourcePoolsData";
+import { humanizeEnumToken } from "@/features/fulfilment/presentation";
 
 type ResourcePoolTableProps = {
   rows: ResourcePoolReadModel[];
@@ -78,9 +79,11 @@ export function ResourcePoolTable({ rows, isLoading }: ResourcePoolTableProps) {
               </TableCell>
               <TableCell>
                 {exhausted ? (
-                  <Badge variant="destructive">exhausted</Badge>
+                  <Badge variant="destructive">Exhausted</Badge>
                 ) : (
-                  <Badge variant="secondary">{row.health ?? "ok"}</Badge>
+                  <Badge variant="secondary">
+                    {humanizeEnumToken(row.health ?? "ok")}
+                  </Badge>
                 )}
               </TableCell>
             </TableRow>

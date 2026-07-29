@@ -33,7 +33,7 @@ import {
 } from "@/app/actions/rewardCatalog";
 import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
 import { SUPPORTED_REDEEM_FULFILMENT_TYPES } from "@/features/rewards/application/contracts/RedeemRewardCommand";
-import { formatFulfilmentType } from "@/features/fulfilment/presentation";
+import { formatFulfilmentType, humanizeEnumToken } from "@/features/fulfilment/presentation";
 
 const inventoryOptions = ["unlimited", "limited"] as const;
 const statusOptions = ["draft", "active", "paused", "archived"] as const;
@@ -413,7 +413,7 @@ export function RewardCatalogPanel() {
                   <SelectContent>
                     {statusOptions.map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status}
+                        {humanizeEnumToken(status)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -559,7 +559,7 @@ export function RewardCatalogPanel() {
                   <SelectContent>
                     {inventoryOptions.map((option) => (
                       <SelectItem key={option} value={option}>
-                        {option}
+                        {humanizeEnumToken(option)}
                       </SelectItem>
                     ))}
                   </SelectContent>
