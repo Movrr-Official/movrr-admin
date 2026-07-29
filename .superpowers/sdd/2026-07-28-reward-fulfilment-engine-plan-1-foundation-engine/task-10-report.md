@@ -2,7 +2,7 @@
 
 **Status:** DONE_WITH_CONCERNS  
 **Branch:** `feat/fulfilment-engine-plan-1`  
-**Commit:** _(filled after commit)_
+**Commit:** `359dbe2`
 
 ---
 
@@ -64,7 +64,7 @@ Priority surface delivered: redeem, fulfilment get/cancel/refund/token/consume/c
 ## Commit
 
 ```
-_(hash)_ feat(api): expose /api/v1 rewards wallet fulfilment partners
+359dbe2 feat(api): expose /api/v1 rewards wallet fulfilment partners
 ```
 
 ---

@@ -32,5 +32,5 @@ Task 8: minor (deferred): compensateIfFailed ignore refund result; start-only au
 Task 9: complete (commits 71b8012..9100f3f, review clean)
 Task 9: minor (deferred): compensate refund result; event flush on failure; redemption row after compensate; durable idempotency
 
-Task 10: complete (DONE_WITH_CONCERNS) — commit pending
+Task 10: complete (DONE_WITH_CONCERNS, commit 359dbe2)
 Task 10: minor (deferred): production principal lookups stubbed; in-memory empty stores in prod singleton; partner empty-list stubs; admin wallet placeholder
