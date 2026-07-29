@@ -5,7 +5,7 @@ import { Package } from "lucide-react";
 import { useFulfilmentQueue } from "@/hooks/useFulfilmentOpsData";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
 
-/** Contextual Rewards → Fulfilment workflow shortcut. */
+/** Compact Rewards → Fulfilment workflow shortcut. */
 export function ActiveFulfilmentsCrossLink() {
   const { data, isLoading } = useFulfilmentQueue();
   const activeCount =
@@ -19,30 +19,22 @@ export function ActiveFulfilmentsCrossLink() {
     ).length ?? 0;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 rounded-md bg-muted p-2 text-muted-foreground">
-          <Package className="h-4 w-4" aria-hidden="true" />
-        </div>
-        <div>
-          <p className="text-sm font-medium">Active fulfilments</p>
-          <p className="text-xs text-muted-foreground">
-            Operational execution after redemption — open Fulfilment for queue
-            health and partner ops.
-          </p>
-        </div>
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/80 bg-muted/30 px-3 py-2">
+      <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+        <Package className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <span>
+          Active fulfilments{" "}
+          <span className="font-semibold tabular-nums text-foreground">
+            {isLoading ? "—" : activeCount.toLocaleString()}
+          </span>
+        </span>
       </div>
-      <div className="flex items-center gap-4">
-        <p className="text-2xl font-semibold tabular-nums">
-          {isLoading ? "—" : activeCount.toLocaleString()}
-        </p>
-        <Link
-          href={FULFILMENT_ROUTES.root}
-          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-        >
-          View Fulfilment →
-        </Link>
-      </div>
+      <Link
+        href={FULFILMENT_ROUTES.root}
+        className="shrink-0 text-sm font-medium text-primary underline-offset-4 hover:underline"
+      >
+        View Fulfilment →
+      </Link>
     </div>
   );
 }

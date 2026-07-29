@@ -1,35 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export type ModuleSubNavItem = {
   label: string;
   href: string;
-  /** Optional query-section match for Rewards-style section nav. */
-  section?: string;
 };
 
 type ModuleSubNavProps = {
   items: readonly ModuleSubNavItem[];
   ariaLabel: string;
-  /** When set, active state prefers `?section=` over path prefix. */
-  sectionParam?: string;
 };
 
-export function ModuleSubNav({
-  items,
-  ariaLabel,
-  sectionParam,
-}: ModuleSubNavProps) {
+export function ModuleSubNav({ items, ariaLabel }: ModuleSubNavProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const activeSection = sectionParam
-    ? pathname.startsWith("/rewards/catalog")
-      ? "catalog"
-      : (searchParams.get(sectionParam) ?? "overview")
-    : null;
 
   return (
     <nav
@@ -38,14 +24,10 @@ export function ModuleSubNav({
     >
       <ul className="flex min-w-max items-center gap-1 px-1 pb-px">
         {items.map((item) => {
-          const isActive = sectionParam
-            ? (item.section ?? "overview") ===
-              (activeSection === null || activeSection === ""
-                ? "overview"
-                : activeSection)
-            : item.href === pathname ||
-              (item.href !== items[0]?.href &&
-                pathname.startsWith(`${item.href}/`));
+          const isActive =
+            item.href === pathname ||
+            (item.href !== items[0]?.href &&
+              pathname.startsWith(`${item.href}/`));
 
           return (
             <li key={item.href}>

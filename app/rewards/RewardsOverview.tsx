@@ -38,7 +38,7 @@ function sectionToTab(
       return "catalog";
     case "wallet":
       return "balances";
-    case "analytics":
+    case "streak":
       return "streak";
     case "transactions":
       return "transactions";
@@ -51,7 +51,6 @@ export default function RewardsOverview() {
   const searchParams = useSearchParams();
   const section = parseRewardsSection(searchParams.get("section"));
   const activeTab = sectionToTab(section);
-  const showHero = section === "overview" || section === "analytics";
 
   const {
     data: transactions,
@@ -112,10 +111,7 @@ export default function RewardsOverview() {
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <ActiveFulfilmentsCrossLink />
-
-      {showHero && (
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
           <motion.div
             className="xl:col-span-3 xl:row-span-2 min-h-[100px] mb-11"
             style={{ perspective: 1000 }}
@@ -254,7 +250,8 @@ export default function RewardsOverview() {
             </CardContent>
           </Card>
         </div>
-      )}
+
+      <ActiveFulfilmentsCrossLink />
 
         {/* Main Content Row - Tables + Insights */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
@@ -274,7 +271,7 @@ export default function RewardsOverview() {
                   <Link href="/rewards?section=catalog">Reward Catalog</Link>
                 </TabsTrigger>
                 <TabsTrigger value="streak" asChild>
-                  <Link href="/rewards?section=analytics">
+                  <Link href="/rewards?section=streak">
                     <Flame className="h-3.5 w-3.5 mr-1.5 text-warning" />
                     Streak Leaders
                   </Link>

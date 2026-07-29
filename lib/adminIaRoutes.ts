@@ -12,7 +12,7 @@ export const REWARDS_SECTIONS = [
   "catalog",
   "wallet",
   "transactions",
-  "analytics",
+  "streak",
 ] as const;
 
 export type RewardsSection = (typeof REWARDS_SECTIONS)[number];
@@ -43,22 +43,6 @@ export const FULFILMENT_NAV = [
   { label: "Analytics", href: FULFILMENT_ROUTES.analytics },
 ] as const;
 
-export const REWARDS_NAV = [
-  { label: "Overview", href: REWARDS_ROUTES.section("overview"), section: "overview" },
-  { label: "Catalog", href: REWARDS_ROUTES.section("catalog"), section: "catalog" },
-  { label: "Wallet", href: REWARDS_ROUTES.section("wallet"), section: "wallet" },
-  {
-    label: "Transactions",
-    href: REWARDS_ROUTES.section("transactions"),
-    section: "transactions",
-  },
-  {
-    label: "Analytics",
-    href: REWARDS_ROUTES.section("analytics"),
-    section: "analytics",
-  },
-] as const;
-
 export function parseRewardsSection(
   value: string | null | undefined,
 ): RewardsSection {
@@ -66,9 +50,11 @@ export function parseRewardsSection(
     value === "catalog" ||
     value === "wallet" ||
     value === "transactions" ||
-    value === "analytics"
+    value === "streak"
   ) {
     return value;
   }
+  // Legacy deep-link alias from the previous "analytics" section name.
+  if (value === "analytics") return "streak";
   return "overview";
 }
