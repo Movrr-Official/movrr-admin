@@ -35,7 +35,7 @@ export function createInstantDigitalHandler(
       });
 
       if (!allocated.ok) {
-        const failed = ctx.requestTransition(
+        const failed = await ctx.requestTransition(
           ctx.fulfilment,
           "failed",
           "resource_allocate_failed",
@@ -49,7 +49,7 @@ export function createInstantDigitalHandler(
         allocationId: allocated.value.allocationId,
       });
 
-      const processing = ctx.requestTransition(
+      const processing = await ctx.requestTransition(
         ctx.fulfilment,
         "processing",
         "resource_allocated",
@@ -62,7 +62,7 @@ export function createInstantDigitalHandler(
         allocationId: allocated.value.allocationId,
       });
       if (!fulfilled.ok) {
-        const failed = ctx.requestTransition(
+        const failed = await ctx.requestTransition(
           processing.value,
           "failed",
           "resource_fulfil_failed",
@@ -71,14 +71,14 @@ export function createInstantDigitalHandler(
         return ok({ fulfilment: failed.value });
       }
 
-      const ready = ctx.requestTransition(
+      const ready = await ctx.requestTransition(
         processing.value,
         "ready",
         "digital_asset_delivered",
       );
       if (!ready.ok) return ready;
 
-      const completed = ctx.requestTransition(
+      const completed = await ctx.requestTransition(
         ready.value,
         "completed",
         "instant_digital_complete",
@@ -101,7 +101,7 @@ export function createInstantDigitalHandler(
         allocations.delete(ctx.fulfilment.id);
       }
 
-      const cancelled = ctx.requestTransition(
+      const cancelled = await ctx.requestTransition(
         ctx.fulfilment,
         "cancelled",
         ctx.reason,
@@ -123,7 +123,7 @@ export function createInstantDigitalHandler(
         allocations.delete(ctx.fulfilment.id);
       }
 
-      const expired = ctx.requestTransition(
+      const expired = await ctx.requestTransition(
         ctx.fulfilment,
         "expired",
         ctx.reason,

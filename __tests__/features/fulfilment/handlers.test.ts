@@ -36,7 +36,7 @@ function withTransition(
     get current() {
       return current;
     },
-    requestTransition(from: Fulfilment, to: FulfilmentState, reason: string) {
+    async requestTransition(from: Fulfilment, to: FulfilmentState, reason: string) {
       const result = sm.requestTransition(from, to, reason, from.version);
       if (result.ok) current = result.value;
       return result;
@@ -131,7 +131,7 @@ describe("InstantDigitalHandler", () => {
       fulfilment,
       resourceId: "res-gen-2",
       correlationId: "corr-id-2",
-      requestTransition(from, to, reason) {
+      async requestTransition(from, to, reason) {
         calls.push(to);
         return sm.requestTransition(from, to, reason, from.version);
       },
@@ -201,7 +201,7 @@ describe("QrBarcodeHandler", () => {
       fulfilmentType: "qr_barcode",
       idempotencyKey: "idem-qr-2",
     });
-    const requestTransition = (
+    const requestTransition = async (
       from: Fulfilment,
       to: FulfilmentState,
       reason: string,
@@ -271,7 +271,7 @@ describe("UnsupportedFulfilmentHandler", () => {
       fulfilment,
       resourceId: "res-none",
       correlationId: "corr-un-1",
-      requestTransition(from, to, reason) {
+      async requestTransition(from, to, reason) {
         transitionCalled = true;
         return createFulfilmentStateMachine().requestTransition(
           from,

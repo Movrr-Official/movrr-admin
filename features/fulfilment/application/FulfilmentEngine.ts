@@ -12,6 +12,11 @@ import type {
   RequestTransition,
 } from "@/features/fulfilment/application/contracts/FulfilmentHandler";
 import type {
+  FulfilmentAggregateStore,
+  StoredFulfilmentAggregate,
+} from "@/features/fulfilment/application/contracts/FulfilmentAggregateStore";
+import { createInMemoryFulfilmentAggregateStore } from "@/features/fulfilment/infrastructure/inMemoryFulfilmentAggregateStore";
+import type {
   TokenRecord,
   TokenService,
   TokenType,
@@ -77,14 +82,8 @@ export type FulfilmentEngineDeps = {
   tokens: TokenService;
   /** Publishes FulfilmentStateChanged + terminal events after successful SM transitions. */
   eventBus: DomainEventBus;
-};
-
-type StoredFulfilment = {
-  fulfilment: Fulfilment;
-  resourceId: string;
-  pointsCost: number;
-  correlationId: string;
-  tokenType: TokenType;
+  /** Defaults to in-memory; production injects Supabase-backed store. */
+  store?: FulfilmentAggregateStore;
 };
 
 /**
@@ -94,24 +93,24 @@ type StoredFulfilment = {
 export function createFulfilmentEngine(
   deps: FulfilmentEngineDeps,
 ): FulfilmentEngine {
-  const store = new Map<string, StoredFulfilment>();
+  const store = deps.store ?? createInMemoryFulfilmentAggregateStore();
 
-  function getStored(
+  async function getStored(
     fulfilmentId: string,
-  ): ApplicationResult<StoredFulfilment> {
-    const stored = store.get(fulfilmentId);
+  ): Promise<ApplicationResult<StoredFulfilmentAggregate>> {
+    const stored = await store.get(fulfilmentId);
     if (!stored) {
       return fail("not_found", `Fulfilment ${fulfilmentId} not found`);
     }
     return ok(stored);
   }
 
-  function persist(stored: StoredFulfilment): void {
-    store.set(stored.fulfilment.id, stored);
+  async function persist(stored: StoredFulfilmentAggregate): Promise<void> {
+    await store.save(stored);
   }
 
   function publishTransition(
-    stored: StoredFulfilment,
+    stored: StoredFulfilmentAggregate,
     fromState: Fulfilment["state"],
     next: Fulfilment,
     reason: string,
@@ -126,7 +125,7 @@ export function createFulfilmentEngine(
   }
 
   function applySmTransition(
-    stored: StoredFulfilment,
+    stored: StoredFulfilmentAggregate,
     fulfilment: Fulfilment,
     to: Fulfilment["state"],
     reason: string,
@@ -144,24 +143,22 @@ export function createFulfilmentEngine(
     return result;
   }
 
-  function requestTransitionFor(
-    fulfilmentId: string,
-  ): RequestTransition {
-    return (fulfilment, to, reason) => {
-      const existing = store.get(fulfilmentId);
+  function requestTransitionFor(fulfilmentId: string): RequestTransition {
+    return async (fulfilment, to, reason) => {
+      const existing = await store.get(fulfilmentId);
       if (!existing) {
         return fail("not_found", `Fulfilment ${fulfilmentId} not found`);
       }
       const result = applySmTransition(existing, fulfilment, to, reason);
       if (result.ok) {
-        persist({ ...existing, fulfilment: result.value });
+        await persist({ ...existing, fulfilment: result.value });
       }
       return result;
     };
   }
 
   async function compensateIfFailed(
-    stored: StoredFulfilment,
+    stored: StoredFulfilmentAggregate,
     fulfilment: Fulfilment,
   ): Promise<void> {
     if (fulfilment.state !== "failed") return;
@@ -179,13 +176,13 @@ export function createFulfilmentEngine(
       "compensating_refund",
     );
     if (refunded.ok) {
-      persist({ ...stored, fulfilment: refunded.value });
+      await persist({ ...stored, fulfilment: refunded.value });
     }
   }
 
   return {
     async createFromRedemption(input) {
-      if (store.has(input.id)) {
+      if (await store.exists(input.id)) {
         return fail("BusinessFailure", "Fulfilment already exists");
       }
 
@@ -203,7 +200,7 @@ export function createFulfilmentEngine(
         metadata: input.metadata ?? {},
       });
 
-      persist({
+      await persist({
         fulfilment,
         resourceId: input.resourceId,
         pointsCost: input.pointsCost,
@@ -215,17 +212,18 @@ export function createFulfilmentEngine(
     },
 
     async get(fulfilmentId) {
-      const loaded = getStored(fulfilmentId);
+      const loaded = await getStored(fulfilmentId);
       if (!loaded.ok) return loaded;
       return ok(loaded.value.fulfilment);
     },
 
     async list() {
-      return [...store.values()].map((entry) => entry.fulfilment);
+      const rows = await store.list();
+      return rows.map((entry) => entry.fulfilment);
     },
 
     async start(fulfilmentId) {
-      const loaded = getStored(fulfilmentId);
+      const loaded = await getStored(fulfilmentId);
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
       const handler = deps.registry.resolve(
@@ -242,14 +240,14 @@ export function createFulfilmentEngine(
 
       if (!result.ok) return result;
 
-      persist({ ...stored, fulfilment: result.value.fulfilment });
+      await persist({ ...stored, fulfilment: result.value.fulfilment });
 
       if (result.value.fulfilment.state === "failed") {
         await compensateIfFailed(
           { ...stored, fulfilment: result.value.fulfilment },
           result.value.fulfilment,
         );
-        const after = store.get(fulfilmentId);
+        const after = await store.get(fulfilmentId);
         if (after) {
           return ok({ fulfilment: after.fulfilment });
         }
@@ -259,7 +257,7 @@ export function createFulfilmentEngine(
     },
 
     async onTokenConsumed(input) {
-      const loaded = getStored(input.fulfilmentId);
+      const loaded = await getStored(input.fulfilmentId);
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
       const handler = deps.registry.resolve(
@@ -281,13 +279,13 @@ export function createFulfilmentEngine(
       });
 
       if (result.ok) {
-        persist({ ...stored, fulfilment: result.value.fulfilment });
+        await persist({ ...stored, fulfilment: result.value.fulfilment });
       }
       return result;
     },
 
     async cancel(fulfilmentId, reason) {
-      const loaded = getStored(fulfilmentId);
+      const loaded = await getStored(fulfilmentId);
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
       const handler = deps.registry.resolve(
@@ -304,28 +302,27 @@ export function createFulfilmentEngine(
           requestTransition,
         });
         if (result.ok) {
-          persist({ ...stored, fulfilment: result.value.fulfilment });
+          await persist({ ...stored, fulfilment: result.value.fulfilment });
         }
         return result;
       }
 
-      const cancelled = requestTransition(
+      const cancelled = await requestTransition(
         stored.fulfilment,
         "cancelled",
         reason,
       );
       if (!cancelled.ok) return cancelled;
       const value = { fulfilment: cancelled.value };
-      persist({ ...stored, fulfilment: cancelled.value });
+      await persist({ ...stored, fulfilment: cancelled.value });
       return ok(value);
     },
 
     async expire(fulfilmentId, reason) {
-      const loaded = getStored(fulfilmentId);
+      const loaded = await getStored(fulfilmentId);
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
 
-      // Idempotent: already expired is a successful no-op.
       if (stored.fulfilment.state === "expired") {
         return ok({ fulfilment: stored.fulfilment });
       }
@@ -344,19 +341,23 @@ export function createFulfilmentEngine(
           requestTransition,
         });
         if (result.ok) {
-          persist({ ...stored, fulfilment: result.value.fulfilment });
+          await persist({ ...stored, fulfilment: result.value.fulfilment });
         }
         return result;
       }
 
-      const expired = requestTransition(stored.fulfilment, "expired", reason);
+      const expired = await requestTransition(
+        stored.fulfilment,
+        "expired",
+        reason,
+      );
       if (!expired.ok) return expired;
-      persist({ ...stored, fulfilment: expired.value });
+      await persist({ ...stored, fulfilment: expired.value });
       return ok({ fulfilment: expired.value });
     },
 
     async refund(fulfilmentId, reason) {
-      const loaded = getStored(fulfilmentId);
+      const loaded = await getStored(fulfilmentId);
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
 
@@ -389,12 +390,12 @@ export function createFulfilmentEngine(
       );
       if (!refunded.ok) return refunded;
 
-      persist({ ...stored, fulfilment: refunded.value });
+      await persist({ ...stored, fulfilment: refunded.value });
       return ok({ fulfilment: refunded.value });
     },
 
     async confirmCollection(fulfilmentId) {
-      const loaded = getStored(fulfilmentId);
+      const loaded = await getStored(fulfilmentId);
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
       const handler = deps.registry.resolve(
@@ -416,7 +417,7 @@ export function createFulfilmentEngine(
       });
 
       if (result.ok) {
-        persist({ ...stored, fulfilment: result.value.fulfilment });
+        await persist({ ...stored, fulfilment: result.value.fulfilment });
       }
       return result;
     },

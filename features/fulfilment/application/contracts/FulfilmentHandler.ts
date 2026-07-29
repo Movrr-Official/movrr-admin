@@ -11,7 +11,7 @@ export type RequestTransition = (
   fulfilment: Fulfilment,
   to: FulfilmentState,
   reason: string,
-) => ApplicationResult<Fulfilment>;
+) => Promise<ApplicationResult<Fulfilment>>;
 
 export type FulfilmentHandlerResult = {
   fulfilment: Fulfilment;

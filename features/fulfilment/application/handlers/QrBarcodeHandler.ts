@@ -44,7 +44,7 @@ export function createQrBarcodeHandler(
       });
 
       if (!allocated.ok) {
-        const failed = ctx.requestTransition(
+        const failed = await ctx.requestTransition(
           ctx.fulfilment,
           "failed",
           "resource_allocate_failed",
@@ -58,7 +58,7 @@ export function createQrBarcodeHandler(
         allocationId: allocated.value.allocationId,
       });
 
-      const reserved = ctx.requestTransition(
+      const reserved = await ctx.requestTransition(
         ctx.fulfilment,
         "reserved",
         "resource_reserved",
@@ -78,7 +78,7 @@ export function createQrBarcodeHandler(
           allocationId: allocated.value.allocationId,
         });
         allocations.delete(ctx.fulfilment.id);
-        const failed = ctx.requestTransition(
+        const failed = await ctx.requestTransition(
           reserved.value,
           "failed",
           "token_issue_failed",
@@ -87,14 +87,14 @@ export function createQrBarcodeHandler(
         return ok({ fulfilment: failed.value });
       }
 
-      const ready = ctx.requestTransition(
+      const ready = await ctx.requestTransition(
         reserved.value,
         "ready",
         "token_issued",
       );
       if (!ready.ok) return ready;
 
-      const awaiting = ctx.requestTransition(
+      const awaiting = await ctx.requestTransition(
         ready.value,
         "awaiting_collection",
         "awaiting_partner_validation",
@@ -123,7 +123,7 @@ export function createQrBarcodeHandler(
         );
       }
 
-      const validated = ctx.requestTransition(
+      const validated = await ctx.requestTransition(
         ctx.fulfilment,
         "validated",
         "token_consumed",
@@ -142,7 +142,7 @@ export function createQrBarcodeHandler(
         );
       }
 
-      const collected = ctx.requestTransition(
+      const collected = await ctx.requestTransition(
         ctx.fulfilment,
         "collected",
         "collection_confirmed",
@@ -157,7 +157,7 @@ export function createQrBarcodeHandler(
           allocationId: ref.allocationId,
         });
         if (!fulfilled.ok) {
-          const failed = ctx.requestTransition(
+          const failed = await ctx.requestTransition(
             collected.value,
             "failed",
             "resource_fulfil_failed",
@@ -168,7 +168,7 @@ export function createQrBarcodeHandler(
         allocations.delete(ctx.fulfilment.id);
       }
 
-      const completed = ctx.requestTransition(
+      const completed = await ctx.requestTransition(
         collected.value,
         "completed",
         "qr_barcode_complete",
@@ -190,7 +190,7 @@ export function createQrBarcodeHandler(
         allocations.delete(ctx.fulfilment.id);
       }
 
-      const cancelled = ctx.requestTransition(
+      const cancelled = await ctx.requestTransition(
         ctx.fulfilment,
         "cancelled",
         ctx.reason,
@@ -212,7 +212,7 @@ export function createQrBarcodeHandler(
         allocations.delete(ctx.fulfilment.id);
       }
 
-      const expired = ctx.requestTransition(
+      const expired = await ctx.requestTransition(
         ctx.fulfilment,
         "expired",
         ctx.reason,
