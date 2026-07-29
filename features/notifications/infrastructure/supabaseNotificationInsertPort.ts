@@ -32,6 +32,9 @@ export function createSupabaseNotificationInsertPort(): NotificationInsertPort {
         .select("id, user_id, title, message, type, metadata, created_at")
         .single();
       throwOnError(error, "notifications.insert");
+      if (!data) {
+        throw new Error("notifications.insert: no row returned");
+      }
 
       return {
         id: String(data.id),

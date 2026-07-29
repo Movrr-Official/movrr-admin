@@ -102,9 +102,9 @@ export function createSupabaseGeneratedDigitalResourceProvider(): GeneratedDigit
         allocationId: input.allocationId,
         fulfilmentId: String(allocation.fulfilment_id),
         resourceId: input.resourceId,
-        resourceItemId: meta?.resourceItemId,
+        resourceItemId: meta?.resourceItemId ?? null,
         status: "released",
-        code: typeof meta?.code === "string" ? meta.code : undefined,
+        code: typeof meta?.code === "string" ? meta.code : null,
       });
     },
 
@@ -141,9 +141,9 @@ export function createSupabaseGeneratedDigitalResourceProvider(): GeneratedDigit
         allocationId: input.allocationId,
         fulfilmentId: String(allocation.fulfilment_id),
         resourceId: input.resourceId,
-        resourceItemId: meta?.resourceItemId,
+        resourceItemId: meta?.resourceItemId ?? null,
         status: "fulfilled",
-        code: typeof meta?.code === "string" ? meta.code : undefined,
+        code: typeof meta?.code === "string" ? meta.code : null,
       });
     },
   };

@@ -95,7 +95,7 @@ export function createSupabaseVoucherPoolResourceProvider(): VoucherPoolResource
         typeof (reserved.display_payload as { code?: string } | null)?.code ===
         "string"
           ? (reserved.display_payload as { code: string }).code
-          : undefined;
+          : null;
 
       const { error: allocError } = await supabase
         .from("fulfilment_resource_allocation")
@@ -159,13 +159,13 @@ export function createSupabaseVoucherPoolResourceProvider(): VoucherPoolResource
         resourceId: input.resourceId,
         resourceItemId: allocation.resource_item_id
           ? String(allocation.resource_item_id)
-          : undefined,
+          : null,
         status: "released",
         code:
           typeof (allocation.metadata as { code?: string } | null)?.code ===
           "string"
             ? (allocation.metadata as { code: string }).code
-            : undefined,
+            : null,
       });
     },
 
@@ -209,13 +209,13 @@ export function createSupabaseVoucherPoolResourceProvider(): VoucherPoolResource
         resourceId: input.resourceId,
         resourceItemId: allocation.resource_item_id
           ? String(allocation.resource_item_id)
-          : undefined,
+          : null,
         status: "fulfilled",
         code:
           typeof (allocation.metadata as { code?: string } | null)?.code ===
           "string"
             ? (allocation.metadata as { code: string }).code
-            : undefined,
+            : null,
       });
     },
   };
