@@ -3,13 +3,16 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Building2, Plus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
+import { DataTable } from "@/components/table/DataTable";
+import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
 import { FilterSummary } from "@/components/filters/FilterSummary";
 import { OpsErrorState } from "@/components/ops/OpsEmptyState";
-import { OrganisationsDirectoryTable } from "@/components/rewards/organisations/OrganisationsDirectoryTable";
+import {
+  getOrganisationsDirectoryTableColumns,
+  type OrganisationDirectoryRow,
+} from "@/components/rewards/organisations/OrganisationsDirectoryTableColumns";
 import {
   DataTableContainer,
   useDataTable,
@@ -19,9 +22,7 @@ import type { Organisation } from "@/features/organisations/domain/Organisation"
 import { formatOrganisationType } from "@/features/organisations/presentation";
 import { trackOpsEvent } from "@/lib/opsTelemetry";
 
-export type OrganisationDirectoryRow = Organisation & {
-  membershipState: "has_members" | "no_members";
-};
+export type { OrganisationDirectoryRow };
 
 function toDirectoryRows(orgs: Organisation[]): OrganisationDirectoryRow[] {
   return orgs.map((org) => ({
@@ -145,6 +146,14 @@ function OrganisationsDirectoryContent({
     return [...list].sort((a, b) => a.name.localeCompare(b.name));
   }, [filteredData, search]);
 
+  const columns = useMemo(
+    () =>
+      getOrganisationsDirectoryTableColumns({
+        onView: onSelectOrg,
+      }),
+    [onSelectOrg],
+  );
+
   return (
     <div className="space-y-4 animate-slide-up">
       <DataTableToolbar
@@ -189,50 +198,36 @@ function OrganisationsDirectoryContent({
         </div>
       )}
 
-      <Card className="border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            All Organisations
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Find institutions, administer membership, and hand off specialised
-            work ({totalCount} total).
-          </p>
-        </CardHeader>
-        <CardContent>
-          {isError ? (
-            <OpsErrorState
-              message={errorMessage ?? "Failed to load organisations"}
-              onRetry={onRefresh}
-            />
-          ) : (
-            <OrganisationsDirectoryTable
-              rows={rows}
-              isLoading={isLoading}
-              onSelectOrg={onSelectOrg}
-              emptyTitle={
-                totalCount === 0
-                  ? "No organisations yet"
-                  : "No organisations match these filters"
-              }
-              emptyDescription={
-                totalCount === 0
-                  ? "Provision the first platform institution to establish tenancy."
-                  : "No tenants in this type or status cohort — adjust filters."
-              }
-              emptyAction={
-                totalCount === 0 ? (
-                  <Button type="button" onClick={onCreateOrganisation}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Organisation
-                  </Button>
-                ) : undefined
-              }
-            />
-          )}
-        </CardContent>
-      </Card>
+      {isError ? (
+        <OpsErrorState
+          message={errorMessage ?? "Failed to load organisations"}
+          onRetry={onRefresh}
+        />
+      ) : isLoading ? (
+        <DataTableSkeleton searchBar={false} />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={rows}
+          searchBar={false}
+          searchParamKey="search"
+          searchFields={["name", "id", "type"]}
+          title="All Organisations"
+          description={`Find institutions, administer membership, and hand off specialised work (${totalCount} total)`}
+          emptyStateTitle={
+            totalCount === 0
+              ? "No organisations yet"
+              : "No organisations match these filters"
+          }
+          emptyStateDescription={
+            totalCount === 0
+              ? "Provision the first platform institution to establish tenancy."
+              : "No tenants in this type or status cohort — adjust filters."
+          }
+          emptyStateIcon={Building2}
+          onRowClick={onSelectOrg}
+        />
+      )}
     </div>
   );
 }

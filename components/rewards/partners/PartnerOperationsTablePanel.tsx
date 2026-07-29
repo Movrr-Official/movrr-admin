@@ -2,21 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  Download,
-  Handshake,
-  Plus,
-  ShieldOff,
-  UserCheck,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Download, Handshake, Plus, ShieldOff, UserCheck } from "lucide-react";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
+import { DataTable } from "@/components/table/DataTable";
+import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
 import { FilterSummary } from "@/components/filters/FilterSummary";
 import { BulkActions, type BulkAction } from "@/components/filters/BulkActions";
 import { OpsErrorState } from "@/components/ops/OpsEmptyState";
-import { PartnerOperationsTable } from "@/components/rewards/partners/PartnerOperationsTable";
+import {
+  getPartnerOperationsTableColumns,
+  type PartnerOpsRow,
+} from "@/components/rewards/partners/PartnerOperationsTableColumns";
 import {
   DataTableContainer,
   useDataTable,
@@ -26,7 +23,6 @@ import type { Organisation } from "@/features/organisations/domain/Organisation"
 import {
   assessPartnerReadiness,
   readinessSortRank,
-  type PartnerReadiness,
 } from "@/features/organisations/presentation";
 import { useUpdateOrganisation } from "@/hooks/useOrganisationsData";
 import { useToast } from "@/hooks/useToast";
@@ -34,13 +30,7 @@ import { trackOpsEvent } from "@/lib/opsTelemetry";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
 import { exportToCSV } from "@/lib/export";
 
-export type PartnerOpsRow = Organisation & {
-  readiness: PartnerReadiness;
-  staffing: "missing" | "staffed";
-  profileCompleteness: "incomplete" | "complete";
-  displayName: string;
-  contactEmail: string;
-};
+export type { PartnerOpsRow };
 
 function toPartnerOpsRows(orgs: Organisation[]): PartnerOpsRow[] {
   return orgs.map((org) => {
@@ -192,9 +182,12 @@ function PartnerOperationsTableContent({
     });
   }, [filteredData, search]);
 
-  const selectedIds = useMemo(
-    () => new Set(selectedRows.map((row) => row.id)),
-    [selectedRows],
+  const columns = useMemo(
+    () =>
+      getPartnerOperationsTableColumns({
+        onView: onSelectPartner,
+      }),
+    [onSelectPartner],
   );
 
   const applyBulkStatus = async (
@@ -342,67 +335,38 @@ function PartnerOperationsTableContent({
         entityName="partner"
       />
 
-      <Card className="border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Handshake className="h-5 w-5" />
-            Partners
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Operational roster of Reward Partners — readiness first (
-            {totalCount} total).
-          </p>
-        </CardHeader>
-        <CardContent>
-          {isError ? (
-            <OpsErrorState
-              message={errorMessage ?? "Failed to load partners"}
-              onRetry={onRefresh}
-            />
-          ) : (
-            <PartnerOperationsTable
-              rows={rows}
-              isLoading={isLoading}
-              selectedIds={selectedIds}
-              onToggleSelect={(id, selected) => {
-                setSelectedRows((prev) => {
-                  if (selected) {
-                    const row = rows.find((entry) => entry.id === id);
-                    if (!row || prev.some((entry) => entry.id === id))
-                      return prev;
-                    return [...prev, row];
-                  }
-                  return prev.filter((entry) => entry.id !== id);
-                });
-              }}
-              onToggleSelectAll={(selected) => {
-                setSelectedRows(selected ? [...rows] : []);
-              }}
-              onSelectPartner={onSelectPartner}
-              emptyTitle={
-                totalCount === 0
-                  ? "No reward partners yet"
-                  : "No partners match these filters"
-              }
-              emptyDescription={
-                totalCount === 0
-                  ? "Fulfilment needs Reward Partners — create the first partner to enable collection and validation capacity."
-                  : "No partners in this readiness cohort — adjust filters or review active partners."
-              }
-              emptyAction={
-                totalCount === 0 ? (
-                  <Button asChild>
-                    <a href={FULFILMENT_ROUTES.partnerCreate}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Partner
-                    </a>
-                  </Button>
-                ) : undefined
-              }
-            />
-          )}
-        </CardContent>
-      </Card>
+      {isError ? (
+        <OpsErrorState
+          message={errorMessage ?? "Failed to load partners"}
+          onRetry={onRefresh}
+        />
+      ) : isLoading ? (
+        <DataTableSkeleton searchBar={false} />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={rows}
+          searchBar={false}
+          searchParamKey="search"
+          searchFields={["displayName", "name", "id", "contactEmail"]}
+          title="Partners"
+          description={`Operational roster of Reward Partners — readiness first (${totalCount} total)`}
+          emptyStateTitle={
+            totalCount === 0
+              ? "No reward partners yet"
+              : "No partners match these filters"
+          }
+          emptyStateDescription={
+            totalCount === 0
+              ? "Fulfilment needs Reward Partners — create the first partner to enable collection and validation capacity."
+              : "No partners in this readiness cohort — adjust filters or review active partners."
+          }
+          emptyStateIcon={Handshake}
+          onRowClick={onSelectPartner}
+          enableRowSelection
+          onSelectionChange={setSelectedRows}
+        />
+      )}
     </div>
   );
 }

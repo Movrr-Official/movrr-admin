@@ -9,7 +9,6 @@ import {
   Building2,
   Calendar,
   Edit,
-  ExternalLink,
   Globe,
   Handshake,
   Layers,
@@ -680,79 +679,57 @@ export function OrganisationDetailsDrawer({
                   </CardContent>
                 </Card>
 
-                <Card className="border-border shadow-none">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Related work</CardTitle>
-                    <p className="text-sm font-normal text-muted-foreground">
-                      Handoffs between jobs — not duplicate homes for the same
-                      job.
-                    </p>
-                  </CardHeader>
-                  <CardContent className="flex flex-wrap gap-2">
-                    {mode === "partner" ? (
-                      <>
-                        <Button asChild variant="outline" size="sm">
-                          <Link
-                            href={FULFILMENT_ROUTES.organisationDetail(org.id)}
-                          >
-                            <Building2 className="mr-2 h-4 w-4" />
-                            Organisation directory
-                          </Link>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={FULFILMENT_ROUTES.queue}>
-                            <Layers className="mr-2 h-4 w-4" />
-                            Fulfilment Queue
-                          </Link>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={FULFILMENT_ROUTES.resourcePools}>
-                            <Layers className="mr-2 h-4 w-4" />
-                            Resource Pools
-                          </Link>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={FULFILMENT_ROUTES.analytics}>
-                            Analytics
-                          </Link>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                          <a
-                            href="https://app.movrr.nl"
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                            Business Workspace
-                          </a>
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        {isRewardPartner ? (
+                {(mode === "partner" || isRewardPartner) ? (
+                  <Card className="border-border shadow-none">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Related work</CardTitle>
+                      <p className="text-sm font-normal text-muted-foreground">
+                        Handoffs between jobs — not duplicate homes for the same
+                        job.
+                      </p>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap gap-2">
+                      {mode === "partner" ? (
+                        <>
                           <Button asChild variant="outline" size="sm">
                             <Link
-                              href={FULFILMENT_ROUTES.partnerDetail(org.id)}
+                              href={FULFILMENT_ROUTES.organisationDetail(org.id)}
                             >
-                              <Handshake className="mr-2 h-4 w-4" />
-                              Partner readiness
+                              <Building2 className="mr-2 h-4 w-4" />
+                              Organisation directory
                             </Link>
                           </Button>
-                        ) : null}
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={FULFILMENT_ROUTES.queue}>
+                              <Layers className="mr-2 h-4 w-4" />
+                              Fulfilment Queue
+                            </Link>
+                          </Button>
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={FULFILMENT_ROUTES.resourcePools}>
+                              <Layers className="mr-2 h-4 w-4" />
+                              Resource Pools
+                            </Link>
+                          </Button>
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={FULFILMENT_ROUTES.analytics}>
+                              Analytics
+                            </Link>
+                          </Button>
+                        </>
+                      ) : (
                         <Button asChild variant="outline" size="sm">
-                          <a
-                            href="https://app.movrr.nl"
-                            target="_blank"
-                            rel="noreferrer"
+                          <Link
+                            href={FULFILMENT_ROUTES.partnerDetail(org.id)}
                           >
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                            Business Workspace
-                          </a>
+                            <Handshake className="mr-2 h-4 w-4" />
+                            Partner readiness
+                          </Link>
                         </Button>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : null}
               </>
             )}
           </div>
