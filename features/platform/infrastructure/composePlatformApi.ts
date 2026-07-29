@@ -1,0 +1,427 @@
+import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import type { RequestContext } from "@/features/identity/domain/Principal";
+import type { AuthenticateRequestDeps } from "@/features/identity/application/contracts/AuthenticateRequest";
+import { authorisationService } from "@/features/organisations/application/commands/authorisationService";
+import { platformRoute } from "@/lib/http/platformRoute";
+import { DomainEventBus } from "@/lib/events/DomainEventBus";
+import { createFraudPolicyEngine } from "@/features/fraud/application/commands/fraudPolicyEngine";
+import { createInMemoryIdempotencyStore } from "@/features/fraud/infrastructure/policies/idempotency";
+import { createInMemoryReplayStore } from "@/features/fraud/infrastructure/policies/replay";
+import { createInMemoryRateLimitStore } from "@/features/fraud/infrastructure/policies/rateLimit";
+import { createInMemoryLedgerRepository } from "@/features/wallet/infrastructure/ledgerRepository";
+import { createImmediateDebitCompensatingRefundStrategy } from "@/features/wallet/application/strategies/ImmediateDebitCompensatingRefundStrategy";
+import { createWalletQueries } from "@/features/wallet/application/queries/walletQueries";
+import {
+  createRedeemRewardService,
+  type CatalogItem,
+} from "@/features/rewards/application/commands/redeemReward";
+import {
+  createCatalogQueries,
+  createInMemoryCatalogListPort,
+  createInMemoryRedemptionListPort,
+  createRedemptionQueries,
+} from "@/features/rewards/application/queries/catalogAndRedemptions";
+import { createFulfilmentStateMachine } from "@/features/fulfilment/application/FulfilmentStateMachine";
+import { createHandlerRegistry } from "@/features/fulfilment/application/HandlerRegistry";
+import { createFulfilmentEngine } from "@/features/fulfilment/application/FulfilmentEngine";
+import { createInstantDigitalHandler } from "@/features/fulfilment/application/handlers/InstantDigitalHandler";
+import { createQrBarcodeHandler } from "@/features/fulfilment/application/handlers/QrBarcodeHandler";
+import { createUnsupportedFulfilmentHandler } from "@/features/fulfilment/application/handlers/UnsupportedFulfilmentHandler";
+import { createGeneratedDigitalResourceProvider } from "@/features/fulfilment/infrastructure/providers/GeneratedDigitalResourceProvider";
+import { createVoucherPoolResourceProvider } from "@/features/fulfilment/infrastructure/providers/VoucherPoolResourceProvider";
+import { createTokenService } from "@/features/fulfilment/application/commands/tokenService";
+import type { ResourceAllocationService } from "@/features/fulfilment/application/contracts/ResourceAllocationService";
+import type { FulfilmentResourceProvider } from "@/features/fulfilment/application/contracts/FulfilmentResourceProvider";
+import {
+  createFulfilmentQueries,
+  createInMemoryFulfilmentQueryPort,
+} from "@/features/fulfilment/application/queries/fulfilmentQueries";
+import { createFulfilment } from "@/features/fulfilment/domain/Fulfilment";
+import {
+  createPartnerCommands,
+  createPartnerQueries,
+} from "@/features/partners/application/partnerServices";
+import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
+
+export type RouteParams = { id: string };
+
+export type PlatformApiHandlers = {
+  rewards: {
+    catalog: (request: Request) => Promise<Response>;
+    catalogById: (request: Request, params: RouteParams) => Promise<Response>;
+    redeem: (request: Request) => Promise<Response>;
+    redemptions: (request: Request) => Promise<Response>;
+    redemptionById: (request: Request, params: RouteParams) => Promise<Response>;
+  };
+  wallet: {
+    balance: (request: Request) => Promise<Response>;
+    transactions: (request: Request) => Promise<Response>;
+  };
+  fulfilment: {
+    list: (request: Request) => Promise<Response>;
+    get: (request: Request, params: RouteParams) => Promise<Response>;
+    timeline: (request: Request, params: RouteParams) => Promise<Response>;
+    token: (request: Request, params: RouteParams) => Promise<Response>;
+    cancel: (request: Request, params: RouteParams) => Promise<Response>;
+    refund: (request: Request, params: RouteParams) => Promise<Response>;
+    confirmCollection: (
+      request: Request,
+      params: RouteParams,
+    ) => Promise<Response>;
+    consumeToken: (request: Request) => Promise<Response>;
+  };
+  partners: {
+    me: (request: Request) => Promise<Response>;
+    pending: (request: Request) => Promise<Response>;
+    validate: (request: Request) => Promise<Response>;
+    confirmCollection: (request: Request) => Promise<Response>;
+    resources: (request: Request) => Promise<Response>;
+    rewards: (request: Request) => Promise<Response>;
+    staff: (request: Request) => Promise<Response>;
+    analytics: (request: Request) => Promise<Response>;
+    settings: (request: Request) => Promise<Response>;
+  };
+};
+
+export type PlatformApiHooks = {
+  onFulfilmentCancel?: (
+    ctx: RequestContext,
+    input: { id: string; reason: string },
+  ) => Promise<ApplicationResult<unknown>>;
+  onFulfilmentRefund?: (
+    ctx: RequestContext,
+    input: { id: string; reason: string },
+  ) => Promise<ApplicationResult<unknown>>;
+  onFulfilmentConfirm?: (
+    ctx: RequestContext,
+    input: { id: string },
+  ) => Promise<ApplicationResult<unknown>>;
+  onConsumeToken?: (
+    ctx: RequestContext,
+    input: { token: string },
+  ) => Promise<ApplicationResult<unknown>>;
+};
+
+export type CreatePlatformApiOptions = {
+  authDeps: AuthenticateRequestDeps;
+  seed?: {
+    balance?: number;
+    catalog?: CatalogItem[];
+  };
+  hooks?: PlatformApiHooks;
+};
+
+function asResourceService(
+  provider: FulfilmentResourceProvider,
+): ResourceAllocationService {
+  return {
+    allocate: (input) => provider.allocate(input),
+    release: (input) => provider.release(input),
+    fulfil: (input) => provider.fulfil(input),
+  };
+}
+
+async function readJsonBody(request: Request): Promise<Record<string, unknown>> {
+  try {
+    const body = await request.json();
+    if (body && typeof body === "object") {
+      return body as Record<string, unknown>;
+    }
+  } catch {
+    // empty / invalid
+  }
+  return {};
+}
+
+/**
+ * Test/composition factory wiring AuthN + AuthZ + application services into
+ * thin HTTP handlers. Production route modules call the same handler builders.
+ */
+export async function createPlatformApiForTests(
+  options: CreatePlatformApiOptions,
+): Promise<PlatformApiHandlers> {
+  const authDeps = options.authDeps;
+  const authorisation = authorisationService;
+  const bus = new DomainEventBus();
+  const ledger = createInMemoryLedgerRepository();
+  const catalogPort = createInMemoryCatalogListPort(options.seed?.catalog ?? []);
+  const redemptionPort = createInMemoryRedemptionListPort();
+  const fulfilmentPort = createInMemoryFulfilmentQueryPort([
+    createFulfilment({
+      id: "f-1",
+      redemptionId: "red-1",
+      riderId: "rider-1",
+      catalogItemId: "cat-1",
+      fulfilmentType: "instant_digital",
+      state: "ready",
+      version: 1,
+      partnerOrgId: "org-1",
+      idempotencyKey: "seed-f-1",
+    }),
+  ]);
+
+  const walletQueries = createWalletQueries({ authorisation, ledger });
+  const catalogQueries = createCatalogQueries({
+    authorisation,
+    catalog: catalogPort,
+  });
+  const redemptionQueries = createRedemptionQueries({
+    authorisation,
+    redemptions: redemptionPort,
+  });
+  const fulfilmentQueries = createFulfilmentQueries({
+    authorisation,
+    port: fulfilmentPort,
+  });
+  const partnerQueries = createPartnerQueries({ authorisation });
+  const partnerCommands = createPartnerCommands({ authorisation });
+
+  let redeemService: ReturnType<typeof createRedeemRewardService> | null = null;
+  let fulfilmentEngine: ReturnType<typeof createFulfilmentEngine> | null = null;
+  let tokenService: ReturnType<typeof createTokenService> | null = null;
+
+  if (options.seed) {
+    await ledger.seedBalance("rider-1", options.seed.balance ?? 100);
+
+    const generated = createGeneratedDigitalResourceProvider();
+    const pool = createVoucherPoolResourceProvider();
+    await pool.seedPool("res-pool-1", [{ id: "item-1", code: "VOUCHER-1" }]);
+    tokenService = createTokenService({ eventBus: bus });
+    const sm = createFulfilmentStateMachine();
+    const resources = asResourceService(generated);
+    const poolResources = asResourceService(pool);
+    const registry = createHandlerRegistry();
+    const unsupported = createUnsupportedFulfilmentHandler();
+    const instant = createInstantDigitalHandler({ resources });
+    const qr = createQrBarcodeHandler({
+      resources: poolResources,
+      tokens: tokenService,
+    });
+    for (const type of FULFILMENT_TYPES) {
+      if (type === "instant_digital") registry.register(type, instant);
+      else if (type === "qr_barcode") registry.register(type, qr);
+      else registry.register(type, unsupported);
+    }
+    registry.freeze();
+    const settlement = createImmediateDebitCompensatingRefundStrategy({
+      ledger,
+      eventBus: bus,
+    });
+    fulfilmentEngine = createFulfilmentEngine({
+      stateMachine: sm,
+      registry,
+      settlement,
+      tokens: tokenService,
+    });
+    const fraud = createFraudPolicyEngine({
+      idempotency: createInMemoryIdempotencyStore(),
+      replay: createInMemoryReplayStore(),
+      rateLimit: createInMemoryRateLimitStore({ max: 100, windowMs: 60_000 }),
+    });
+    redeemService = createRedeemRewardService({
+      authorisation,
+      fraud,
+      catalog: catalogPort,
+      settlement,
+      redemptions: redemptionPort,
+      fulfilmentEngine,
+      eventBus: bus,
+    });
+  }
+
+  const route = <T>(
+    request: Request,
+    capability: string,
+    handle: (
+      ctx: RequestContext,
+      request: Request,
+    ) => Promise<ApplicationResult<T>>,
+  ) =>
+    platformRoute({
+      request,
+      capability,
+      authDeps,
+      authorisation,
+      handle,
+    });
+
+  return {
+    rewards: {
+      catalog: (request) =>
+        route(request, "rewards.catalog.read", (ctx) =>
+          catalogQueries.list(ctx),
+        ),
+      catalogById: (request, params) =>
+        route(request, "rewards.catalog.read", (ctx) =>
+          catalogQueries.getById(ctx, params.id),
+        ),
+      redeem: (request) =>
+        route(request, "rewards.redeem", async (ctx, req) => {
+          const key = req.headers.get("Idempotency-Key")?.trim();
+          if (!key) {
+            return fail("validation", "Idempotency-Key header is required");
+          }
+          const body = await readJsonBody(req);
+          const catalogItemId =
+            typeof body.catalogItemId === "string" ? body.catalogItemId : "";
+          if (!redeemService) {
+            // Authz-only stub
+            return ok({
+              redemption: { id: "stub-redemption", catalogItemId },
+              fulfilment: { id: "stub-fulfilment" },
+            });
+          }
+          const result = await redeemService.execute(ctx, {
+            catalogItemId,
+            idempotencyKey: key,
+          });
+          if (result.ok) {
+            await bus.flushAfterCommit();
+          }
+          return result;
+        }),
+      redemptions: (request) =>
+        route(request, "fulfilment.read", (ctx) =>
+          redemptionQueries.listMine(ctx),
+        ),
+      redemptionById: (request, params) =>
+        route(request, "fulfilment.read", (ctx) =>
+          redemptionQueries.getById(ctx, params.id),
+        ),
+    },
+    wallet: {
+      balance: (request) =>
+        route(request, "wallet.read", (ctx) => walletQueries.getBalance(ctx)),
+      transactions: (request) =>
+        route(request, "wallet.read", (ctx) =>
+          walletQueries.listTransactions(ctx),
+        ),
+    },
+    fulfilment: {
+      list: (request) =>
+        route(request, "fulfilment.read", (ctx) => {
+          const url = new URL(request.url);
+          return fulfilmentQueries.listForOps(ctx, {
+            status: url.searchParams.get("status") ?? undefined,
+            type: url.searchParams.get("type") ?? undefined,
+          });
+        }),
+      get: (request, params) =>
+        route(request, "fulfilment.read", (ctx) =>
+          fulfilmentQueries.getById(ctx, params.id),
+        ),
+      timeline: (request, params) =>
+        route(request, "fulfilment.read", (ctx) =>
+          fulfilmentQueries.timeline(ctx, params.id),
+        ),
+      token: (request, params) =>
+        route(request, "fulfilment.read", (ctx) =>
+          fulfilmentQueries.getToken(ctx, params.id),
+        ),
+      cancel: (request, params) =>
+        route(request, "fulfilment.cancel", async (ctx, req) => {
+          const body = await readJsonBody(req);
+          const reason =
+            typeof body.reason === "string" ? body.reason : "cancelled";
+          if (options.hooks?.onFulfilmentCancel) {
+            return options.hooks.onFulfilmentCancel(ctx, {
+              id: params.id,
+              reason,
+            });
+          }
+          if (fulfilmentEngine) {
+            return fulfilmentEngine.cancel(params.id, reason);
+          }
+          return ok({ fulfilmentId: params.id, cancelled: true });
+        }),
+      refund: (request, params) =>
+        route(request, "fulfilment.refund", async (ctx, req) => {
+          const body = await readJsonBody(req);
+          const reason =
+            typeof body.reason === "string" ? body.reason : "refunded";
+          if (options.hooks?.onFulfilmentRefund) {
+            return options.hooks.onFulfilmentRefund(ctx, {
+              id: params.id,
+              reason,
+            });
+          }
+          if (fulfilmentEngine) {
+            return fulfilmentEngine.refund(params.id, reason);
+          }
+          return ok({ fulfilmentId: params.id, refunded: true });
+        }),
+      confirmCollection: (request, params) =>
+        route(request, "fulfilment.confirm", async (ctx) => {
+          if (options.hooks?.onFulfilmentConfirm) {
+            return options.hooks.onFulfilmentConfirm(ctx, { id: params.id });
+          }
+          if (fulfilmentEngine) {
+            return fulfilmentEngine.confirmCollection(params.id);
+          }
+          return ok({ fulfilmentId: params.id, confirmed: true });
+        }),
+      consumeToken: (request) =>
+        route(request, "fulfilment.validate", async (ctx, req) => {
+          const body = await readJsonBody(req);
+          const token = typeof body.token === "string" ? body.token : "";
+          if (options.hooks?.onConsumeToken) {
+            return options.hooks.onConsumeToken(ctx, { token });
+          }
+          if (tokenService && fulfilmentEngine) {
+            const consumed = await tokenService.consume({
+              plaintext: token,
+              correlationId: ctx.correlationId,
+            });
+            if (!consumed.ok) return consumed;
+            return fulfilmentEngine.onTokenConsumed({
+              fulfilmentId: consumed.value.fulfilmentId,
+              token: consumed.value,
+              correlationId: ctx.correlationId,
+            });
+          }
+          return ok({ consumed: true });
+        }),
+    },
+    partners: {
+      me: (request) =>
+        route(request, "fulfilment.read", (ctx) => partnerQueries.me(ctx)),
+      pending: (request) =>
+        route(request, "fulfilment.read", (ctx) =>
+          partnerQueries.pendingFulfilments(ctx),
+        ),
+      validate: (request) =>
+        route(request, "fulfilment.validate", async (ctx, req) => {
+          const body = await readJsonBody(req);
+          const token = typeof body.token === "string" ? body.token : "";
+          return partnerCommands.validate(ctx, { token });
+        }),
+      confirmCollection: (request) =>
+        route(request, "fulfilment.confirm", async (ctx, req) => {
+          const body = await readJsonBody(req);
+          const fulfilmentId =
+            typeof body.fulfilmentId === "string"
+              ? body.fulfilmentId
+              : "";
+          return partnerCommands.confirmCollection(ctx, { fulfilmentId });
+        }),
+      resources: (request) =>
+        route(request, "resources.manage", (ctx) =>
+          partnerQueries.listResources(ctx),
+        ),
+      rewards: (request) =>
+        route(request, "rewards.catalog.read", (ctx) =>
+          partnerQueries.listRewards(ctx),
+        ),
+      staff: (request) =>
+        route(request, "staff.manage", (ctx) => partnerQueries.listStaff(ctx)),
+      analytics: (request) =>
+        route(request, "analytics.view", (ctx) =>
+          partnerQueries.analytics(ctx),
+        ),
+      settings: (request) =>
+        route(request, "fulfilment.read", (ctx) =>
+          partnerQueries.settings(ctx),
+        ),
+    },
+  };
+}
