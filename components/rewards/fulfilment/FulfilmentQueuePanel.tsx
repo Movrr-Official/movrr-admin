@@ -40,7 +40,7 @@ const QUEUE_FILTER_CONFIG: FilterConfig[] = [
   {
     id: "status",
     label: "State",
-    type: "select",
+    type: "multi-select",
     key: "status",
     options: FULFILMENT_STATES.map((state) => ({
       value: state,
@@ -50,7 +50,7 @@ const QUEUE_FILTER_CONFIG: FilterConfig[] = [
   {
     id: "type",
     label: "Type",
-    type: "select",
+    type: "multi-select",
     key: "type",
     options: FULFILMENT_TYPES.map((type) => ({
       value: type,
@@ -157,8 +157,8 @@ function FulfilmentQueueContent({
             Live queue
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Platform fulfilment cases — state and type filters are applied as
-            API query params ({totalCount} loaded).
+            Platform fulfilment cases — multi-select state and type on the bar (
+            {totalCount} loaded).
           </p>
         </CardHeader>
         <CardContent>

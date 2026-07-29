@@ -5,14 +5,8 @@ import { BatchExportDialog } from "../export/BatchExportDialog";
 import { Button } from "@/components/ui/button";
 import { ExportDialog } from "@/components/export/ExportDialog";
 import { FilterDropdown } from "../filters/FilterDropdown";
+import { InlineFilterControls } from "../filters/InlineFilterControls";
 import { DataTableSearch } from "@/components/table/DataTableSearch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Download, RefreshCw, Package, Clock, LayoutGrid, Table, Plus } from "lucide-react";
 import { ScheduledExportDialog } from "../export/ScheduledExportDialog";
 import { useDataTable } from "@/context/DataTableContext";
@@ -210,46 +204,11 @@ export function DataTableToolbar({
       )}
 
       {useInlineFilters && (
-        <div className="flex flex-wrap items-center gap-2">
-          {filterConfig.map((filter) => {
-            if (!filter.options?.length) return null;
-            const raw = activeFilters[filter.key];
-            const current = Array.isArray(raw)
-              ? (raw[0] as string | undefined)
-              : typeof raw === "string"
-                ? raw
-                : undefined;
-            const value = current || "__all__";
-
-            return (
-              <Select
-                key={filter.id}
-                value={value}
-                onValueChange={(next) => {
-                  updateFilter(
-                    filter.key,
-                    next === "__all__" ? null : next,
-                  );
-                }}
-              >
-                <SelectTrigger
-                  className="h-9 w-[150px] bg-background"
-                  aria-label={filter.label}
-                >
-                  <SelectValue placeholder={filter.label} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All {filter.label}</SelectItem>
-                  {filter.options.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            );
-          })}
-        </div>
+        <InlineFilterControls
+          filterConfig={filterConfig}
+          activeFilters={activeFilters}
+          updateFilter={updateFilter}
+        />
       )}
 
       {/* Action Buttons */}

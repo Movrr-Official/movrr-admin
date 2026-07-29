@@ -52,7 +52,7 @@ const PARTNER_FILTER_CONFIG: FilterConfig[] = [
   {
     id: "readiness",
     label: "Readiness",
-    type: "select",
+    type: "multi-select",
     key: "readiness",
     options: [
       { value: "ready", label: "Ready" },
@@ -63,7 +63,7 @@ const PARTNER_FILTER_CONFIG: FilterConfig[] = [
   {
     id: "status",
     label: "Status",
-    type: "select",
+    type: "multi-select",
     key: "status",
     options: [
       { value: "active", label: "Active" },

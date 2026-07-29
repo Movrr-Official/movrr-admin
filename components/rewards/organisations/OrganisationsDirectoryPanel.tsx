@@ -37,7 +37,7 @@ function buildOrganisationFilterConfig(): FilterConfig[] {
     {
       id: "type",
       label: "Type",
-      type: "select",
+      type: "multi-select",
       key: "type",
       options: [
         {
@@ -52,7 +52,7 @@ function buildOrganisationFilterConfig(): FilterConfig[] {
     {
       id: "status",
       label: "Status",
-      type: "select",
+      type: "multi-select",
       key: "status",
       options: [
         { value: "active", label: "Active" },
