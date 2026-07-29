@@ -62,6 +62,18 @@ function requireOrg(ctx: RequestContext): ApplicationResult<{
   });
 }
 
+/** Admin ops may call partner list endpoints; empty read models until tenant-scoped data exists. */
+function allowPartnerOrAdminList(
+  ctx: RequestContext,
+): ApplicationResult<{ organisationId: string | null; role: string | null }> {
+  if (ctx.principal.type === "admin") {
+    return ok({ organisationId: null, role: ctx.principal.role });
+  }
+  const org = requireOrg(ctx);
+  if (!org.ok) return org;
+  return ok(org.value);
+}
+
 export function createPartnerQueries(deps: {
   authorisation: AuthorisationService;
 }): PartnerQueries {
@@ -87,8 +99,8 @@ export function createPartnerQueries(deps: {
     async listResources(ctx) {
       const authz = deps.authorisation.assertCapability(ctx, "resources.manage");
       if (!authz.ok) return authz;
-      const org = requireOrg(ctx);
-      if (!org.ok) return org;
+      const scope = allowPartnerOrAdminList(ctx);
+      if (!scope.ok) return scope;
       return ok([]);
     },
     async listRewards(ctx) {
@@ -97,29 +109,29 @@ export function createPartnerQueries(deps: {
         "rewards.catalog.read",
       );
       if (!authz.ok) return authz;
-      const org = requireOrg(ctx);
-      if (!org.ok) return org;
+      const scope = allowPartnerOrAdminList(ctx);
+      if (!scope.ok) return scope;
       return ok([]);
     },
     async listStaff(ctx) {
       const authz = deps.authorisation.assertCapability(ctx, "staff.manage");
       if (!authz.ok) return authz;
-      const org = requireOrg(ctx);
-      if (!org.ok) return org;
+      const scope = allowPartnerOrAdminList(ctx);
+      if (!scope.ok) return scope;
       return ok([]);
     },
     async analytics(ctx) {
       const authz = deps.authorisation.assertCapability(ctx, "analytics.view");
       if (!authz.ok) return authz;
-      const org = requireOrg(ctx);
-      if (!org.ok) return org;
+      const scope = allowPartnerOrAdminList(ctx);
+      if (!scope.ok) return scope;
       return ok({ series: [] });
     },
     async settings(ctx) {
       const authz = deps.authorisation.assertCapability(ctx, "fulfilment.read");
       if (!authz.ok) return authz;
-      const org = requireOrg(ctx);
-      if (!org.ok) return org;
+      const scope = allowPartnerOrAdminList(ctx);
+      if (!scope.ok) return scope;
       return ok({});
     },
   };

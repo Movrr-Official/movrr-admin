@@ -412,9 +412,33 @@ export async function createPlatformApiForTests(
           return partnerCommands.confirmCollection(ctx, { fulfilmentId });
         }),
       resources: (request) =>
-        route(request, "resources.manage", (ctx) =>
-          partnerQueries.listResources(ctx),
-        ),
+        route(request, "resources.manage", async (ctx, req) => {
+          if (req.method === "POST") {
+            const key = req.headers.get("Idempotency-Key")?.trim();
+            if (!key) {
+              return fail("validation", "Idempotency-Key header is required");
+            }
+            const body = await readJsonBody(req);
+            const resourceId =
+              typeof body.resourceId === "string" ? body.resourceId.trim() : "";
+            const codes = Array.isArray(body.codes)
+              ? body.codes.filter(
+                  (code): code is string =>
+                    typeof code === "string" && code.trim().length > 0,
+                )
+              : [];
+            if (!resourceId) {
+              return fail("validation", "resourceId is required");
+            }
+            // Empty-provider stub: authz + shape validation only (no pool mutation yet).
+            return ok({
+              resourceId,
+              imported: codes.length,
+              accepted: true,
+            });
+          }
+          return partnerQueries.listResources(ctx);
+        }),
       rewards: (request) =>
         route(request, "rewards.catalog.read", (ctx) =>
           partnerQueries.listRewards(ctx),
