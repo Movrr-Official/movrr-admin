@@ -2,7 +2,7 @@
 
 **Status:** DONE_WITH_CONCERNS  
 **Branch:** `feat/fulfilment-engine-plan-1`  
-**Commit:** (pending — filled after commit)
+**Commit:** `e4e98d0`
 
 ---
 
@@ -26,7 +26,7 @@ Added a thin Admin ops HTTP client for `/api/v1`:
 | 2 | `npx vitest run __tests__/ui/platformApiClient.test.ts` | FAIL — `@/lib/platformApi/client` not found |
 | 3 | Implemented `types.ts` + `client.ts`; added vitest `__tests__/ui` include | Minimal green |
 | 4 | Re-ran vitest | PASS — 4/4 |
-| 5 | Committed | see Commit below |
+| 5 | Committed | `e4e98d0` |
 
 ---
 
