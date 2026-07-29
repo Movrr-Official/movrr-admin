@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { Building2 } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/PageHeader";
 import { OrganisationListTable } from "@/components/rewards/organisations/OrganisationListTable";
 import { useOrganisations } from "@/hooks/useOrganisationsData";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
@@ -14,34 +13,27 @@ export default function OrganisationsPageClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <Building2 className="h-6 w-6" />
-            Organisations
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Organisation directory for fulfilment tenancy and partner ops.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void refetch()}
-            disabled={isFetching}
-          >
-            Refresh
-          </Button>
-          <Button asChild size="sm">
-            <Link href={FULFILMENT_ROUTES.partnerCreate}>Create partner</Link>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Organisations"
+        description="Organisation directory for fulfilment tenancy and partner ops."
+        actions={[
+          {
+            label: isFetching ? "Refreshing…" : "Refresh",
+            icon: <RefreshCw className="h-4 w-4" />,
+            onClick: () => void refetch(),
+            variant: "outline",
+          },
+          {
+            label: "Create Partner",
+            href: FULFILMENT_ROUTES.partnerCreate,
+            icon: <Plus className="h-4 w-4" />,
+          },
+        ]}
+      />
 
-      <Card className="border-border">
+      <Card className="border-border animate-slide-up">
         <CardHeader>
-          <CardTitle className="text-base">All organisations</CardTitle>
+          <CardTitle className="text-lg">All Organisations</CardTitle>
         </CardHeader>
         <CardContent>
           {isError ? (

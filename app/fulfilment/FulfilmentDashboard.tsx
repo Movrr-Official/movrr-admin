@@ -8,7 +8,7 @@ import {
   CheckCircle2,
   Clock3,
   Handshake,
-  Package,
+  Plus,
   RefreshCw,
   ShieldAlert,
   Timer,
@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/PageHeader";
 import { StatsCard } from "@/components/stats/StatsCard";
 import { FulfilmentQueueTable } from "@/components/rewards/fulfilment/FulfilmentQueueTable";
 import { ResourcePoolTable } from "@/components/rewards/resources/ResourcePoolTable";
@@ -48,38 +49,41 @@ export default function FulfilmentDashboard() {
         (typeof pool.availableCount === "number" && pool.availableCount <= 5),
     ) ?? [];
   const timelinePreview = (queue.data ?? []).slice(0, 10);
+  const isRefreshing =
+    queue.isFetching || pools.isFetching || partners.isFetching;
+
+  const refreshAll = () => {
+    void queue.refetch();
+    void pools.refetch();
+    void partners.refetch();
+  };
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <Package className="h-6 w-6" aria-hidden="true" />
-            Fulfilment Operations
-          </h1>
-          <p className="text-sm text-muted-foreground max-w-2xl">
-            Operational health of every redeemed reward — queue, capacity,
-            partner collections, and completion.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            void queue.refetch();
-            void pools.refetch();
-            void partners.refetch();
-          }}
-          disabled={queue.isFetching || pools.isFetching || partners.isFetching}
-        >
-          <RefreshCw className="h-4 w-4 mr-1.5" />
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Fulfilment Operations"
+        description="Operational health of every redeemed reward — queue, capacity, partner collections, and completion."
+        actions={[
+          {
+            label: isRefreshing ? "Refreshing…" : "Refresh",
+            icon: <RefreshCw className="h-4 w-4" />,
+            onClick: refreshAll,
+            variant: "outline",
+          },
+          {
+            label: "Open Queue",
+            href: FULFILMENT_ROUTES.queue,
+            variant: "outline",
+          },
+          {
+            label: "Create Partner",
+            href: FULFILMENT_ROUTES.partnerCreate,
+            icon: <Plus className="h-4 w-4" />,
+          },
+        ]}
+      />
 
-      <TodaysRedemptionsCrossLink />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 md:gap-6">
         <StatsCard
           title="Processing"
           value={health.processing}
@@ -95,7 +99,7 @@ export default function FulfilmentDashboard() {
           description="Ready for rider or partner"
         />
         <StatsCard
-          title="Awaiting collection"
+          title="Awaiting Collection"
           value={health.awaiting_collection}
           icon={Clock3}
           size="mini"
@@ -119,17 +123,19 @@ export default function FulfilmentDashboard() {
         />
       </div>
 
+      <TodaysRedemptionsCrossLink />
+
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
-        <Card className="border-border xl:col-span-8">
+        <Card className="border-border animate-slide-up xl:col-span-8">
           <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
             <div>
-              <CardTitle className="text-base">Live fulfilment queue</CardTitle>
+              <CardTitle className="text-lg">Live Fulfilment Queue</CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
                 Recent fulfilments with status, partner, and type.
               </p>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link href={FULFILMENT_ROUTES.queue}>Open queue</Link>
+              <Link href={FULFILMENT_ROUTES.queue}>Open Queue</Link>
             </Button>
           </CardHeader>
           <CardContent>
@@ -146,61 +152,67 @@ export default function FulfilmentDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-border xl:col-span-4">
+        <Card
+          className="border-border animate-slide-up xl:col-span-4"
+          style={{ animationDelay: "0.05s" }}
+        >
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Operational health
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Operational Health
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg bg-muted/40 p-3">
-                <p className="text-xs text-muted-foreground">Success rate</p>
+                <p className="text-xs text-muted-foreground">Success Rate</p>
                 <p className="text-2xl font-semibold tabular-nums">
                   {ops.successRate}%
                 </p>
               </div>
               <div className="rounded-lg bg-muted/40 p-3">
-                <p className="text-xs text-muted-foreground">In flight</p>
+                <p className="text-xs text-muted-foreground">In Flight</p>
                 <p className="text-2xl font-semibold tabular-nums">
                   {ops.inFlight}
                 </p>
               </div>
               <div className="rounded-lg bg-muted/40 p-3">
-                <p className="text-xs text-muted-foreground">Failure rate</p>
+                <p className="text-xs text-muted-foreground">Failure Rate</p>
                 <p className="text-2xl font-semibold tabular-nums">
                   {ops.failureRate}%
                 </p>
               </div>
               <div className="rounded-lg bg-muted/40 p-3">
-                <p className="text-xs text-muted-foreground">Refund rate</p>
+                <p className="text-xs text-muted-foreground">Refund Rate</p>
                 <p className="text-2xl font-semibold tabular-nums">
                   {ops.refundRate}%
                 </p>
               </div>
             </div>
             <Button asChild variant="outline" size="sm" className="w-full">
-              <Link href={FULFILMENT_ROUTES.analytics}>View analytics</Link>
+              <Link href={FULFILMENT_ROUTES.analytics}>View Analytics</Link>
             </Button>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
-        <Card className="border-border xl:col-span-7">
+        <Card
+          className="border-border animate-slide-up xl:col-span-7"
+          style={{ animationDelay: "0.1s" }}
+        >
           <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
             <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Boxes className="h-4 w-4" />
-                Resource pools
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Boxes className="h-5 w-5" />
+                Resource Pools
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
                 Operational capacity and low-inventory warnings.
               </p>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link href={FULFILMENT_ROUTES.resourcePools}>Manage pools</Link>
+              <Link href={FULFILMENT_ROUTES.resourcePools}>Manage Pools</Link>
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -231,12 +243,15 @@ export default function FulfilmentDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-border xl:col-span-5">
+        <Card
+          className="border-border animate-slide-up xl:col-span-5"
+          style={{ animationDelay: "0.15s" }}
+        >
           <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
             <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Handshake className="h-4 w-4" />
-                Partner operations
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Handshake className="h-5 w-5" />
+                Partner Operations
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
                 Reward partners available for collection and validation.
@@ -262,16 +277,19 @@ export default function FulfilmentDashboard() {
         </Card>
       </div>
 
-      <Card className="border-border">
+      <Card
+        className="border-border animate-slide-up"
+        style={{ animationDelay: "0.2s" }}
+      >
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
           <div>
-            <CardTitle className="text-base">Fulfilment timeline</CardTitle>
+            <CardTitle className="text-lg">Fulfilment Timeline</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
               Recent operational states across the live queue.
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link href={FULFILMENT_ROUTES.timeline}>Open timeline</Link>
+            <Link href={FULFILMENT_ROUTES.timeline}>Open Timeline</Link>
           </Button>
         </CardHeader>
         <CardContent>
@@ -300,7 +318,7 @@ export default function FulfilmentDashboard() {
                     <p className="text-xs text-muted-foreground">
                       {formatFulfilmentType(row.fulfilmentType)}
                       {row.partnerOrgId
-                        ? ` · partner ${row.partnerOrgId.slice(0, 8)}…`
+                        ? ` · Partner ${row.partnerOrgId.slice(0, 8)}…`
                         : ""}
                     </p>
                   </div>

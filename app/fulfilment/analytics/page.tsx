@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Activity, AlertTriangle, Boxes } from "lucide-react";
+import { Activity, AlertTriangle, Boxes, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/PageHeader";
 import { StatsCard } from "@/components/stats/StatsCard";
 import { useFulfilmentQueue } from "@/hooks/useFulfilmentOpsData";
 import { useResourcePools } from "@/hooks/useResourcePoolsData";
@@ -18,6 +19,7 @@ export default function FulfilmentAnalyticsPage() {
   const pools = useResourcePools();
   const health = countByQueueHealth(queue.data);
   const ops = deriveOpsHealth(queue.data);
+  const isRefreshing = queue.isFetching || pools.isFetching;
   const lowPools =
     pools.data?.filter(
       (pool) =>
@@ -28,40 +30,30 @@ export default function FulfilmentAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <Activity className="h-6 w-6" />
-            Fulfilment analytics
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Operational rates derived from live Platform queue and pool read
-            models — no separate analytics API.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
+      <PageHeader
+        title="Fulfilment Analytics"
+        description="Operational rates derived from live Platform queue and pool read models — no separate analytics API."
+        action={{
+          label: isRefreshing ? "Refreshing…" : "Refresh",
+          icon: <RefreshCw className="h-4 w-4" />,
+          onClick: () => {
             void queue.refetch();
             void pools.refetch();
-          }}
-          disabled={queue.isFetching || pools.isFetching}
-        >
-          Refresh
-        </Button>
-      </div>
+          },
+          variant: "outline",
+        }}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatsCard
-          title="Success rate"
+          title="Success Rate"
           value={`${ops.successRate}%`}
           icon={Activity}
           size="mini"
           description={`${ops.completed} completed / collected`}
         />
         <StatsCard
-          title="Failure rate"
+          title="Failure Rate"
           value={`${ops.failureRate}%`}
           icon={AlertTriangle}
           iconColor="destructive"
@@ -69,7 +61,7 @@ export default function FulfilmentAnalyticsPage() {
           description={`${ops.failed} failed / expired`}
         />
         <StatsCard
-          title="Refund rate"
+          title="Refund Rate"
           value={`${ops.refundRate}%`}
           icon={AlertTriangle}
           iconColor="warning"
@@ -77,7 +69,7 @@ export default function FulfilmentAnalyticsPage() {
           description={`${ops.refunded} refunded / reversed`}
         />
         <StatsCard
-          title="Queue throughput"
+          title="Queue Throughput"
           value={ops.total}
           icon={Activity}
           size="mini"
@@ -89,52 +81,52 @@ export default function FulfilmentAnalyticsPage() {
         <StatsCard title="Processing" value={health.processing} size="mini" />
         <StatsCard title="Ready" value={health.ready} size="mini" />
         <StatsCard
-          title="Awaiting collection"
+          title="Awaiting Collection"
           value={health.awaiting_collection}
           size="mini"
         />
         <StatsCard
-          title="Failed bucket"
+          title="Failed Bucket"
           value={health.failed}
           iconColor="destructive"
           size="mini"
         />
         <StatsCard
-          title="Refunded bucket"
+          title="Refunded Bucket"
           value={health.refunded}
           iconColor="warning"
           size="mini"
         />
       </div>
 
-      <Card className="border-border">
+      <Card className="border-border animate-slide-up">
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
           <div>
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-lg flex items-center gap-2">
               <Boxes className="h-4 w-4" />
-              Capacity signals
+              Capacity Signals
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
               Pool inventory health from partner resource read models.
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link href={FULFILMENT_ROUTES.resourcePools}>Resource pools</Link>
+            <Link href={FULFILMENT_ROUTES.resourcePools}>Resource Pools</Link>
           </Button>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-lg bg-muted/40 p-4">
-            <p className="text-xs text-muted-foreground">Total pools</p>
+            <p className="text-xs text-muted-foreground">Total Pools</p>
             <p className="text-2xl font-semibold tabular-nums">
               {(pools.data ?? []).length}
             </p>
           </div>
           <div className="rounded-lg bg-muted/40 p-4">
-            <p className="text-xs text-muted-foreground">Low inventory</p>
+            <p className="text-xs text-muted-foreground">Low Inventory</p>
             <p className="text-2xl font-semibold tabular-nums">{lowPools}</p>
           </div>
           <div className="rounded-lg bg-muted/40 p-4">
-            <p className="text-xs text-muted-foreground">Avg fulfilment time</p>
+            <p className="text-xs text-muted-foreground">Avg Fulfilment Time</p>
             <p className="text-2xl font-semibold tabular-nums">—</p>
             <p className="text-xs text-muted-foreground mt-1">
               Requires createdAt on fulfilment read models

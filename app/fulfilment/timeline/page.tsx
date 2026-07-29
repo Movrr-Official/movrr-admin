@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { History } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/PageHeader";
 import { FulfilmentStateBadge } from "@/components/fulfilment/FulfilmentStateBadge";
 import { FulfilmentTypeBadge } from "@/components/fulfilment/FulfilmentTypeBadge";
 import { useFulfilmentQueue } from "@/hooks/useFulfilmentOpsData";
@@ -15,30 +15,20 @@ export default function FulfilmentTimelinePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <History className="h-6 w-6" />
-            Fulfilment timeline
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Recent operational states across the live queue — created through
-            completed, refunded, and failed.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void refetch()}
-          disabled={isFetching}
-        >
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Fulfilment Timeline"
+        description="Recent operational states across the live queue — created through completed, refunded, and failed."
+        action={{
+          label: isFetching ? "Refreshing…" : "Refresh",
+          icon: <RefreshCw className="h-4 w-4" />,
+          onClick: () => void refetch(),
+          variant: "outline",
+        }}
+      />
 
-      <Card className="border-border">
+      <Card className="border-border animate-slide-up">
         <CardHeader>
-          <CardTitle className="text-base">Operational events</CardTitle>
+          <CardTitle className="text-lg">Operational Events</CardTitle>
         </CardHeader>
         <CardContent>
           {isError ? (

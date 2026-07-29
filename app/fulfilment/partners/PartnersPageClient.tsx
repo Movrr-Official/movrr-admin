@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { Handshake } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/PageHeader";
 import { OrganisationListTable } from "@/components/rewards/organisations/OrganisationListTable";
 import { useOrganisations } from "@/hooks/useOrganisationsData";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
@@ -14,35 +13,27 @@ export default function PartnersPageClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <Handshake className="h-6 w-6" />
-            Partner operations
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Reward partners for collection, validation, and fulfilment
-            capacity.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void refetch()}
-            disabled={isFetching}
-          >
-            Refresh
-          </Button>
-          <Button asChild size="sm">
-            <Link href={FULFILMENT_ROUTES.partnerCreate}>Create partner</Link>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Partner Operations"
+        description="Reward partners for collection, validation, and fulfilment capacity."
+        actions={[
+          {
+            label: isFetching ? "Refreshing…" : "Refresh",
+            icon: <RefreshCw className="h-4 w-4" />,
+            onClick: () => void refetch(),
+            variant: "outline",
+          },
+          {
+            label: "Create Partner",
+            href: FULFILMENT_ROUTES.partnerCreate,
+            icon: <Plus className="h-4 w-4" />,
+          },
+        ]}
+      />
 
-      <Card className="border-border">
+      <Card className="border-border animate-slide-up">
         <CardHeader>
-          <CardTitle className="text-base">Partners</CardTitle>
+          <CardTitle className="text-lg">Partners</CardTitle>
         </CardHeader>
         <CardContent>
           {isError ? (

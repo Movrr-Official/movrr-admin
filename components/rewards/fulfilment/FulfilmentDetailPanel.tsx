@@ -70,7 +70,7 @@ export function FulfilmentDetailPanel({
         <Button asChild variant="ghost" size="sm">
           <Link href={FULFILMENT_ROUTES.queue}>
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to queue
+            Back to Queue
           </Link>
         </Button>
         <p className="text-sm text-destructive">
@@ -86,7 +86,7 @@ export function FulfilmentDetailPanel({
         <Button asChild variant="ghost" size="sm">
           <Link href={FULFILMENT_ROUTES.queue}>
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to queue
+            Back to Queue
           </Link>
         </Button>
         <div className="flex flex-wrap items-center gap-2">
@@ -111,7 +111,7 @@ export function FulfilmentDetailPanel({
         </div>
       </div>
 
-      <Card className="border-border">
+      <Card className="border-border animate-slide-up">
         <CardHeader>
           <CardTitle className="text-lg font-mono">{fulfilment.id}</CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -131,10 +131,10 @@ export function FulfilmentDetailPanel({
             value={formatFulfilmentType(fulfilment.fulfilmentType)}
           />
           <Field label="Version" value={fulfilment.version} />
-          <Field label="Partner org" value={fulfilment.partnerOrgId ?? "—"} />
+          <Field label="Partner Org" value={fulfilment.partnerOrgId ?? "—"} />
           <Field label="Rider" value={fulfilment.riderId} />
           <Field label="Redemption" value={fulfilment.redemptionId} />
-          <Field label="Catalog item" value={fulfilment.catalogItemId} />
+          <Field label="Catalog Item" value={fulfilment.catalogItemId} />
           <Field
             label="Expires"
             value={
@@ -154,9 +154,12 @@ export function FulfilmentDetailPanel({
         </CardContent>
       </Card>
 
-      <Card className="border-border">
+      <Card
+        className="border-border animate-slide-up"
+        style={{ animationDelay: "0.05s" }}
+      >
         <CardHeader>
-          <CardTitle className="text-base">Timeline</CardTitle>
+          <CardTitle className="text-lg">Timeline</CardTitle>
         </CardHeader>
         <CardContent>
           <FulfilmentTimeline

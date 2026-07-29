@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/PageHeader";
 import { PartnerStaffPanel } from "@/components/rewards/partners/PartnerStaffPanel";
 import {
   useOrganisation,
@@ -51,24 +52,23 @@ export default function PartnerDetailPageClient({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
+      <div className="space-y-3">
         <Button asChild variant="ghost" size="sm" className="-ml-2">
           <Link href={FULFILMENT_ROUTES.partners}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Partners
           </Link>
         </Button>
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold">{org.name}</h1>
+        <PageHeader title={org.name} description={org.id} />
+        <div className="flex flex-wrap items-center gap-2 -mt-2">
           <Badge variant="outline">{org.type}</Badge>
           <Badge variant="secondary">{org.status}</Badge>
         </div>
-        <p className="text-xs font-mono text-muted-foreground">{org.id}</p>
       </div>
 
-      <Card className="border-border">
+      <Card className="border-border animate-slide-up">
         <CardHeader>
-          <CardTitle className="text-base">Profile</CardTitle>
+          <CardTitle className="text-lg">Profile</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 text-sm">
           <div>
@@ -82,9 +82,12 @@ export default function PartnerDetailPageClient({
         </CardContent>
       </Card>
 
-      <Card className="border-border">
+      <Card
+        className="border-border animate-slide-up"
+        style={{ animationDelay: "0.05s" }}
+      >
         <CardHeader>
-          <CardTitle className="text-base">Staff</CardTitle>
+          <CardTitle className="text-lg">Staff</CardTitle>
           <p className="text-sm text-muted-foreground">
             Invite and change roles through Platform API. Buttons hide nothing
             client-side beyond capability-gated API responses.

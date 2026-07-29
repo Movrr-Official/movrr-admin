@@ -23,7 +23,7 @@ export function ActiveFulfilmentsCrossLink() {
       <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
         <Package className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span>
-          Active fulfilments{" "}
+          Active Fulfilments{" "}
           <span className="font-semibold tabular-nums text-foreground">
             {isLoading ? "—" : activeCount.toLocaleString()}
           </span>
