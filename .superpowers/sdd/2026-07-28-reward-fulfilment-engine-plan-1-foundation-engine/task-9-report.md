@@ -2,7 +2,7 @@
 
 **Status:** DONE  
 **Branch:** `feat/fulfilment-engine-plan-1`  
-**Commit:** _(filled after commit)_
+**Commit:** `f4c9e28`
 
 ---
 
@@ -79,7 +79,7 @@ Depends only on contracts: `AuthorisationService`, `FraudPolicyEngine`, `Settlem
 ## Commit
 
 ```
-_(hash)_ feat(rewards): redeem creates financial commitment and fulfilment
+f4c9e28 feat(rewards): redeem creates financial commitment and fulfilment
 ```
 
 ---
