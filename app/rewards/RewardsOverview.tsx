@@ -92,15 +92,35 @@ export default function RewardsOverview() {
           <div>
             <p className="text-sm font-medium">Fulfilment operations</p>
             <p className="text-xs text-muted-foreground">
-              Inspect queue state, outcomes, and timelines via Platform API
+              Queue, resource pools, and reward partner ops via Platform API
             </p>
           </div>
-          <Link
-            href="/rewards/fulfilment"
-            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Open fulfilment ops →
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/rewards/fulfilment"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Fulfilment →
+            </Link>
+            <Link
+              href="/rewards/resource-pools"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Resource pools →
+            </Link>
+            <Link
+              href="/rewards/partners"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Partners →
+            </Link>
+            <Link
+              href="/rewards/organisations"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Organisations →
+            </Link>
+          </div>
         </div>
 
         {/* Summary Row - Featured + Compact Stats + Insight Card */}
