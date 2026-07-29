@@ -44,6 +44,9 @@ jobs:
           RESEND_API_KEY: re_ci_placeholder
           FROM_EMAIL: ci@example.com
           WELCOME_EMAIL: welcome@example.com
+          ADMIN_EMAIL: admin@example.com
           SYSTEM_EMAIL: system@example.com
           ROUTE_OPTIMIZER_URL: https://optimizer.example.com
+          ROUTE_OPTIMIZER_TOKEN: ci-optimizer-token
+          INTERNAL_JOB_SECRET: ci-internal-job-secret
         run: npm run build
