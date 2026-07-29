@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import {
   createFulfilment,
   type Fulfilment,
@@ -37,7 +38,7 @@ function outcomeFor(to: FulfilmentState): FulfilmentOutcome | null {
 }
 
 function newEventId(): string {
-  return `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  return randomUUID();
 }
 
 export function createFulfilmentStateMachine(): FulfilmentStateMachine {

@@ -35,6 +35,8 @@ import {
   createFulfilmentMetrics,
   type FulfilmentMetrics,
 } from "@/lib/observability/fulfilmentMetrics";
+import type { FulfilmentAggregateStore } from "@/features/fulfilment/application/contracts/FulfilmentAggregateStore";
+import { createInMemoryFulfilmentAggregateStore } from "@/features/fulfilment/infrastructure/inMemoryFulfilmentAggregateStore";
 
 function asResourceService(
   provider: FulfilmentResourceProvider,
@@ -65,6 +67,8 @@ export type ComposeFulfilmentModuleOptions = {
   notifications?: InMemoryNotificationInsertPort;
   analytics?: FulfilmentMetricsSink;
   metrics?: FulfilmentMetrics;
+  /** Defaults to in-memory; production injects Supabase store. */
+  fulfilmentStore?: FulfilmentAggregateStore;
   /** When false, skip subscribeFulfilmentSideEffects (tests that wire consumers manually). Default true. */
   subscribeSideEffects?: boolean;
 };
@@ -116,6 +120,7 @@ export function composeFulfilmentModule(
     settlement,
     tokens,
     eventBus: bus,
+    store: options.fulfilmentStore ?? createInMemoryFulfilmentAggregateStore(),
   });
 
   if (options.subscribeSideEffects !== false) {
@@ -141,10 +146,26 @@ export function composeFulfilmentModule(
 
 let sharedModule: FulfilmentModule | null = null;
 
+function isTestRuntime(): boolean {
+  return (
+    process.env.NODE_ENV === "test" ||
+    process.env.VITEST === "true" ||
+    typeof process.env.VITEST_WORKER_ID === "string"
+  );
+}
+
 /** Process-wide singleton shared by `/api/v1` and internal job routes. */
 export function getSharedFulfilmentModule(): FulfilmentModule {
   if (!sharedModule) {
-    sharedModule = composeFulfilmentModule();
+    let fulfilmentStore = createInMemoryFulfilmentAggregateStore();
+    if (!isTestRuntime()) {
+      // Lazy require keeps Vitest from loading server-only Supabase adapter.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createSupabaseFulfilmentAggregateStore } =
+        require("@/features/fulfilment/infrastructure/supabaseFulfilmentAggregateStore") as typeof import("@/features/fulfilment/infrastructure/supabaseFulfilmentAggregateStore");
+      fulfilmentStore = createSupabaseFulfilmentAggregateStore();
+    }
+    sharedModule = composeFulfilmentModule({ fulfilmentStore });
   }
   return sharedModule;
 }
