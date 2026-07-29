@@ -10,6 +10,9 @@ create table if not exists public.reward_partner (
   updated_at timestamp with time zone not null default now()
 );
 
+-- organisation_id is added by scripts/045_reward_partner_organisation_link.sql
+-- (links catalog partner profile → Platform organisation tenancy).
+
 create table if not exists public.reward_catalog (
   id uuid primary key default gen_random_uuid(),
   sku text not null unique,

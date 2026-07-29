@@ -65,7 +65,7 @@ export type OrganisationListPort = OrganisationRepository & {
   }) => Promise<OrganisationMembership | null>;
 };
 
-/** Process-local ops store until durable organisation adapter is wired. */
+/** Process-local ops store for tests / local composition without Supabase. */
 let sharedOpsStore: OrganisationListPort | null = null;
 
 export function getSharedOrganisationOpsStore(): OrganisationListPort {

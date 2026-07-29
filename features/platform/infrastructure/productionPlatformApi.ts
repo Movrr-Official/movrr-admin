@@ -4,6 +4,7 @@ import { verifySupabaseAccessToken } from "@/features/identity/infrastructure/su
 import { findAdminUser } from "@/features/identity/infrastructure/supabaseAdminUserLookup";
 import { findRiderProfile } from "@/features/identity/infrastructure/supabaseRiderProfileLookup";
 import { findOrganisationMembership } from "@/features/organisations/infrastructure/supabaseOrganisationMembershipLookup";
+import { createSupabaseOrganisationOpsStore } from "@/features/organisations/infrastructure/supabaseOrganisationOpsStore";
 import type { AuthenticateRequestDeps } from "@/features/identity/application/contracts/AuthenticateRequest";
 import {
   createPlatformApiForTests,
@@ -31,6 +32,7 @@ export function getProductionPlatformApi(): Promise<PlatformApiHandlers> {
     cached = createPlatformApiForTests({
       authDeps: productionAuthDeps,
       fulfilmentModule,
+      organisationStore: createSupabaseOrganisationOpsStore(),
     });
   }
   return cached;

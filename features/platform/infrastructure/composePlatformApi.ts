@@ -37,6 +37,7 @@ import {
   createOrganisationOpsCommands,
   createOrganisationOpsQueries,
   getSharedOrganisationOpsStore,
+  type OrganisationListPort,
 } from "@/features/organisations/application/organisationOps";
 import type { Organisation } from "@/features/organisations/domain/Organisation";
 import { isMembershipRole } from "@/features/organisations/domain/CapabilityCatalog";
@@ -117,6 +118,8 @@ export type CreatePlatformApiOptions = {
   hooks?: PlatformApiHooks;
   /** Shared fulfilment composition (API + jobs). When omitted and seed is set, a module is composed inline. */
   fulfilmentModule?: FulfilmentModule;
+  /** Durable org store in production; defaults to in-memory for tests. */
+  organisationStore?: OrganisationListPort;
 };
 
 async function readJsonBody(request: Request): Promise<Record<string, unknown>> {
@@ -180,7 +183,8 @@ export async function createPlatformApiForTests(
   });
   const partnerQueries = createPartnerQueries({ authorisation });
   const partnerCommands = createPartnerCommands({ authorisation });
-  const organisationStore = getSharedOrganisationOpsStore();
+  const organisationStore =
+    options.organisationStore ?? getSharedOrganisationOpsStore();
   const organisationQueries = createOrganisationOpsQueries({
     authorisation,
     store: organisationStore,
