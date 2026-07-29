@@ -200,7 +200,7 @@ export async function createPlatformApiForTests(
   let tokenService: TokenService | null =
     fulfilmentModule?.tokens ?? null;
 
-  if (options.seed && fulfilmentModule) {
+  if (fulfilmentModule && options.seed) {
     const seedable = ledger as typeof ledger & {
       seedBalance?: (riderId: string, points: number) => Promise<void>;
     };
@@ -222,6 +222,32 @@ export async function createPlatformApiForTests(
       catalog: catalogPort,
       settlement: fulfilmentModule.settlement,
       redemptions: redemptionPort,
+      fulfilmentEngine: fulfilmentModule.engine,
+      eventBus: bus,
+    });
+  } else if (fulfilmentModule && !options.seed) {
+    // Production path: durable catalog / redemption / idempotency.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createSupabaseCatalogRepository } =
+      require("@/features/rewards/infrastructure/supabaseCatalogRepository") as typeof import("@/features/rewards/infrastructure/supabaseCatalogRepository");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createSupabaseRedemptionRepository } =
+      require("@/features/rewards/infrastructure/supabaseRedemptionRepository") as typeof import("@/features/rewards/infrastructure/supabaseRedemptionRepository");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createSupabaseIdempotencyStore } =
+      require("@/features/fraud/infrastructure/supabaseIdempotencyStore") as typeof import("@/features/fraud/infrastructure/supabaseIdempotencyStore");
+
+    const fraud = createFraudPolicyEngine({
+      idempotency: createSupabaseIdempotencyStore(),
+      replay: createInMemoryReplayStore(),
+      rateLimit: createInMemoryRateLimitStore({ max: 100, windowMs: 60_000 }),
+    });
+    redeemService = createRedeemRewardService({
+      authorisation,
+      fraud,
+      catalog: createSupabaseCatalogRepository(),
+      settlement: fulfilmentModule.settlement,
+      redemptions: createSupabaseRedemptionRepository(),
       fulfilmentEngine: fulfilmentModule.engine,
       eventBus: bus,
     });
@@ -263,11 +289,10 @@ export async function createPlatformApiForTests(
           const catalogItemId =
             typeof body.catalogItemId === "string" ? body.catalogItemId : "";
           if (!redeemService) {
-            // Authz-only stub when catalog/ledger not seeded
-            return ok({
-              redemption: { id: "stub-redemption", catalogItemId },
-              fulfilment: { id: "stub-fulfilment" },
-            });
+            return fail(
+              "unavailable",
+              "Redeem service is not configured for this environment",
+            );
           }
           fulfilmentModule?.metrics.recordRedeemAttempt({
             correlationId: ctx.correlationId,
