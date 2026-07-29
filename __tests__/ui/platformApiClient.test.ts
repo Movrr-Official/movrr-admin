@@ -26,6 +26,7 @@ describe("platformApi client", () => {
     const result = await platformGet("/api/v1/fulfilment/f1", {
       fetch: fetchMock,
       correlationId: "corr-409",
+      getAccessToken: async () => null,
     });
 
     expect(result.ok).toBe(false);
@@ -57,6 +58,7 @@ describe("platformApi client", () => {
       fetch: fetchMock,
       correlationId: "corr-403",
       body: { version: 1, reason: "ops" },
+      getAccessToken: async () => null,
     });
 
     expect(result.ok).toBe(false);
@@ -84,6 +86,7 @@ describe("platformApi client", () => {
     const result = await platformGet<{ id: string }>("/api/v1/fulfilment/f1", {
       fetch: fetchMock,
       correlationId: "client-corr",
+      getAccessToken: async () => null,
     });
 
     expect(result.ok).toBe(true);
@@ -122,6 +125,7 @@ describe("platformApi client", () => {
         correlationId: "post-corr",
         body: { version: 2 },
         headers: { "Idempotency-Key": "idem-1" },
+        getAccessToken: async () => null,
       },
     );
 
@@ -137,5 +141,63 @@ describe("platformApi client", () => {
     expect(headers.get("Content-Type")).toBe("application/json");
     expect(headers.get("X-Correlation-Id")).toBe("post-corr");
     expect(headers.get("Idempotency-Key")).toBe("idem-1");
+  });
+
+  it("attaches Authorization Bearer from getAccessToken when not provided", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({ data: { id: "f1" }, correlationId: "auth-corr" }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "x-correlation-id": "auth-corr",
+          },
+        },
+      ),
+    );
+
+    const getAccessToken = vi.fn().mockResolvedValue("session-jwt-token");
+
+    const result = await platformGet<{ id: string }>("/api/v1/fulfilment/f1", {
+      fetch: fetchMock,
+      correlationId: "auth-corr",
+      getAccessToken,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(getAccessToken).toHaveBeenCalledTimes(1);
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const headers = new Headers(init.headers);
+    expect(headers.get("Authorization")).toBe("Bearer session-jwt-token");
+  });
+
+  it("does not override an explicit Authorization header", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({ data: { id: "f1" }, correlationId: "auth-corr" }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "x-correlation-id": "auth-corr",
+          },
+        },
+      ),
+    );
+
+    const getAccessToken = vi.fn().mockResolvedValue("session-jwt-token");
+
+    await platformGet<{ id: string }>("/api/v1/fulfilment/f1", {
+      fetch: fetchMock,
+      correlationId: "auth-corr",
+      headers: { Authorization: "Bearer explicit-token" },
+      getAccessToken,
+    });
+
+    expect(getAccessToken).not.toHaveBeenCalled();
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const headers = new Headers(init.headers);
+    expect(headers.get("Authorization")).toBe("Bearer explicit-token");
   });
 });

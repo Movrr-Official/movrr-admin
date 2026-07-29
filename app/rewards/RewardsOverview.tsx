@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import {
@@ -87,6 +88,21 @@ export default function RewardsOverview() {
   return (
     <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+          <div>
+            <p className="text-sm font-medium">Fulfilment operations</p>
+            <p className="text-xs text-muted-foreground">
+              Inspect queue state, outcomes, and timelines via Platform API
+            </p>
+          </div>
+          <Link
+            href="/rewards/fulfilment"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Open fulfilment ops →
+          </Link>
+        </div>
+
         {/* Summary Row - Featured + Compact Stats + Insight Card */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
           <motion.div

@@ -34,6 +34,14 @@ function kindForStatus(status: number, bodyKind?: string): string {
   return "HttpError";
 }
 
+/** Default AuthN: Supabase browser session access_token (lazy import avoids env at module load). */
+async function defaultGetAccessToken(): Promise<string | null> {
+  const { createSupabaseBrowserClient } = await import("@/lib/supabase-client");
+  const supabase = createSupabaseBrowserClient();
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token?.trim() || null;
+}
+
 async function platformRequest<T>(
   method: "GET" | "POST",
   path: string,
@@ -47,6 +55,14 @@ async function platformRequest<T>(
   headers.set("X-Correlation-Id", correlationId);
   if (method === "POST" && options.body !== undefined) {
     headers.set("Content-Type", "application/json");
+  }
+
+  if (!headers.has("Authorization")) {
+    const getAccessToken = options.getAccessToken ?? defaultGetAccessToken;
+    const token = await getAccessToken();
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
   }
 
   const response = await fetchImpl(path, {
@@ -106,7 +122,7 @@ async function platformRequest<T>(
   };
 }
 
-/** Authenticated same-origin GET against `/api/v1` (admin session cookies). */
+/** Authenticated same-origin GET against `/api/v1` (Bearer from Supabase session). */
 export function platformGet<T>(
   path: string,
   options?: PlatformRequestOptions,
@@ -114,7 +130,7 @@ export function platformGet<T>(
   return platformRequest<T>("GET", path, options);
 }
 
-/** Authenticated same-origin POST against `/api/v1` (admin session cookies). */
+/** Authenticated same-origin POST against `/api/v1` (Bearer from Supabase session). */
 export function platformPost<T>(
   path: string,
   options?: PlatformRequestOptions,

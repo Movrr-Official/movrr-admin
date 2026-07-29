@@ -54,7 +54,7 @@ export type FulfilmentQueries = {
   ) => Promise<ApplicationResult<FulfilmentReadModel>>;
   listForOps: (
     ctx: RequestContext,
-    filter?: { status?: string; type?: string },
+    filter?: { status?: string; type?: string; partnerOrgId?: string },
   ) => Promise<ApplicationResult<FulfilmentReadModel[]>>;
   timeline: (
     ctx: RequestContext,

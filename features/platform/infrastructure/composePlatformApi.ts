@@ -282,6 +282,7 @@ export async function createPlatformApiForTests(
           return fulfilmentQueries.listForOps(ctx, {
             status: url.searchParams.get("status") ?? undefined,
             type: url.searchParams.get("type") ?? undefined,
+            partnerOrgId: url.searchParams.get("partnerOrgId") ?? undefined,
           });
         }),
       get: (request, params) =>

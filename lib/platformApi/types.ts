@@ -28,8 +28,13 @@ export type PlatformRequestOptions = {
   body?: unknown;
   /** Injected fetch for tests; defaults to globalThis.fetch. */
   fetch?: typeof fetch;
+  /**
+   * Resolve Supabase access token for `Authorization: Bearer`.
+   * Defaults to browser session via `createSupabaseBrowserClient`.
+   * Injected in tests; skipped when `Authorization` is already set.
+   */
+  getAccessToken?: () => Promise<string | null>;
 };
-
 /** Success envelope returned by `platformRoute`. */
 export type PlatformSuccessBody<T> = {
   data: T;
