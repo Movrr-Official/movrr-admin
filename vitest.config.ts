@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       "__tests__/contracts/**/*.test.ts",
       "__tests__/security/**/*.test.ts",
+      "__tests__/features/**/*.test.ts",
     ],
     reporters: ["verbose"],
   },
