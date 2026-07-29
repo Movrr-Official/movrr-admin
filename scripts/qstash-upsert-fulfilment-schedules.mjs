@@ -4,7 +4,7 @@
  *
  * Required env:
  *   QSTASH_TOKEN     — Upstash QStash token
- *   ADMIN_APP_URL    — production admin origin (no trailing slash)
+ *   ADMIN_APP_URL    — production admin origin with https:// (no trailing slash)
  *
  * Usage:
  *   node scripts/qstash-upsert-fulfilment-schedules.mjs
@@ -19,6 +19,12 @@ if (!token) {
 }
 if (!baseUrl) {
   console.error("Missing ADMIN_APP_URL");
+  process.exit(1);
+}
+if (!/^https?:\/\//i.test(baseUrl)) {
+  console.error(
+    `ADMIN_APP_URL must include http:// or https:// (got: ${baseUrl})`,
+  );
   process.exit(1);
 }
 
@@ -43,7 +49,12 @@ const schedules = [
 
 async function upsertSchedule(schedule) {
   const destination = `${baseUrl}${schedule.path}`;
-  const url = `https://qstash.upstash.io/v2/schedules/${encodeURIComponent(destination)}`;
+  // QStash expects the raw destination URL in the path (same as @upstash/qstash).
+  // Do NOT encodeURIComponent the whole URL — that turns https:// into https%3A%2F%2F
+  // and QStash rejects it as "invalid scheme".
+  const url = ["https://qstash.upstash.io", "v2", "schedules", destination].join(
+    "/",
+  );
 
   const response = await fetch(url, {
     method: "POST",

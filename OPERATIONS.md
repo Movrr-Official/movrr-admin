@@ -107,11 +107,13 @@ Sub-daily fulfilment work is **not** on Vercel Cron (Hobby blocks intervals unde
 
 **Provision / refresh schedules** (once per environment):
 
-```bash
-set QSTASH_TOKEN=<qstash-token>
-set ADMIN_APP_URL=https://your-admin-host
+```powershell
+$env:QSTASH_TOKEN = "<qstash-token>"
+$env:ADMIN_APP_URL = "https://your-admin-host"
 node scripts/qstash-upsert-fulfilment-schedules.mjs
 ```
+
+`ADMIN_APP_URL` must include `https://` (no trailing slash). The script posts the destination URL unencoded in the QStash path (encoding `https://` breaks scheme validation).
 
 Stable schedule IDs: `fulfilment-expire`, `fulfilment-release`, `fulfilment-retry` (re-runs upsert).
 
