@@ -88,6 +88,7 @@ export type PlatformApiHandlers = {
     list: (request: Request) => Promise<Response>;
     create: (request: Request) => Promise<Response>;
     get: (request: Request, params: RouteParams) => Promise<Response>;
+    update: (request: Request, params: RouteParams) => Promise<Response>;
     listStaff: (request: Request, params: RouteParams) => Promise<Response>;
     addStaff: (request: Request, params: RouteParams) => Promise<Response>;
     updateStaff: (request: Request, params: RouteParams) => Promise<Response>;
@@ -732,6 +733,56 @@ export async function createPlatformApiForTests(
         route(request, "rewards.manage", (ctx) =>
           organisationQueries.getById(ctx, params.id),
         ),
+      update: (request, params) =>
+        route(request, "rewards.manage", async (ctx, req) => {
+          const body = await readJsonBody(req);
+          const name = typeof body.name === "string" ? body.name : undefined;
+          const status =
+            body.status === "active" ||
+            body.status === "inactive" ||
+            body.status === "suspended"
+              ? body.status
+              : undefined;
+          const partnerRaw =
+            body.partnerProfile && typeof body.partnerProfile === "object"
+              ? (body.partnerProfile as Record<string, unknown>)
+              : null;
+          const partnerProfile = partnerRaw
+            ? {
+                contactEmail:
+                  partnerRaw.contactEmail === null
+                    ? null
+                    : typeof partnerRaw.contactEmail === "string"
+                      ? partnerRaw.contactEmail
+                      : undefined,
+                website:
+                  partnerRaw.website === null
+                    ? null
+                    : typeof partnerRaw.website === "string"
+                      ? partnerRaw.website
+                      : undefined,
+                logoUrl:
+                  partnerRaw.logoUrl === null
+                    ? null
+                    : typeof partnerRaw.logoUrl === "string"
+                      ? partnerRaw.logoUrl
+                      : undefined,
+              }
+            : undefined;
+          if (
+            name === undefined &&
+            status === undefined &&
+            partnerProfile === undefined
+          ) {
+            return fail("validation", "No organisation fields to update");
+          }
+          return organisationCommands.update(ctx, {
+            id: params.id,
+            name,
+            status,
+            partnerProfile,
+          });
+        }),
       listStaff: (request, params) =>
         route(request, "staff.manage", (ctx) =>
           organisationQueries.listStaff(ctx, params.id),

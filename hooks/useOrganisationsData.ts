@@ -27,6 +27,17 @@ export type UpdateStaffRoleInput = {
   role: MembershipRole;
 };
 
+export type UpdateOrganisationInput = {
+  id: string;
+  name?: string;
+  status?: Organisation["status"];
+  partnerProfile?: {
+    contactEmail?: string | null;
+    website?: string | null;
+    logoUrl?: string | null;
+  };
+};
+
 export function useOrganisations(type?: Organisation["type"]) {
   return useQuery<Organisation[]>({
     queryKey: ["organisations", type ?? "all"],
@@ -89,6 +100,29 @@ export function useCreateOrganisation() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["organisations"] });
+    },
+  });
+}
+
+export function useUpdateOrganisation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: UpdateOrganisationInput) => {
+      const { id, ...body } = input;
+      const result = await platformPatch<Organisation>(
+        `/api/v1/organisations/${encodeURIComponent(id)}`,
+        { body },
+      );
+      if (!result.ok) {
+        throw new Error(result.message || "Failed to update organisation");
+      }
+      return result.value;
+    },
+    onSuccess: (organisation) => {
+      void queryClient.invalidateQueries({ queryKey: ["organisations"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["organisation", organisation.id],
+      });
     },
   });
 }

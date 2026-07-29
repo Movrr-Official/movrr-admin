@@ -150,7 +150,7 @@ async function linkRewardPartnerProfile(
  *  and dual-writes public.reward_partner when type = reward_partner.
  */
 export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
-  return {
+  const store: OrganisationListPort = {
     async createOrganisation(input) {
       const supabase = createSupabaseAdminClient();
       const { data, error } = await supabase
@@ -321,5 +321,82 @@ export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
       }
       return data ? mapMembership(data as MembershipRow) : null;
     },
+
+    async updateOrganisation(input) {
+      const supabase = createSupabaseAdminClient();
+      const existing = await store.findOrganisationById(input.id);
+      if (!existing) return null;
+
+      const now = new Date().toISOString();
+      const nextName = input.name?.trim() || existing.name;
+      const nextStatus = input.status ?? existing.status;
+
+      const { data, error } = await supabase
+        .from("organisation")
+        .update({
+          name: nextName,
+          status: nextStatus,
+          updated_at: now,
+        })
+        .eq("id", input.id)
+        .select("id, name, type, status, created_at, updated_at")
+        .maybeSingle();
+
+      throwOnError(error, "updateOrganisation");
+      if (!data) return null;
+
+      const organisation = mapOrganisation(data as OrganisationRow);
+
+      if (organisation.type === "reward_partner") {
+        const partnerPatch: Record<string, string | null> = {
+          name: nextName,
+          status: nextStatus === "active" ? "active" : "inactive",
+          updated_at: now,
+        };
+        if (input.partnerProfile?.contactEmail !== undefined) {
+          partnerPatch.contact_email = input.partnerProfile.contactEmail;
+        }
+        if (input.partnerProfile?.website !== undefined) {
+          partnerPatch.website = input.partnerProfile.website;
+        }
+        if (input.partnerProfile?.logoUrl !== undefined) {
+          partnerPatch.logo_url = input.partnerProfile.logoUrl;
+        }
+
+        const { data: linked } = await supabase
+          .from("reward_partner")
+          .select("id")
+          .eq("organisation_id", organisation.id)
+          .maybeSingle();
+
+        if (linked?.id) {
+          const { error: partnerError } = await supabase
+            .from("reward_partner")
+            .update(partnerPatch)
+            .eq("id", linked.id);
+          throwOnError(partnerError, "updateOrganisation.partner");
+        } else {
+          await linkRewardPartnerProfile(supabase, organisation);
+          if (
+            input.partnerProfile?.contactEmail !== undefined ||
+            input.partnerProfile?.website !== undefined ||
+            input.partnerProfile?.logoUrl !== undefined
+          ) {
+            const { error: partnerError } = await supabase
+              .from("reward_partner")
+              .update(partnerPatch)
+              .eq("organisation_id", organisation.id);
+            throwOnError(partnerError, "updateOrganisation.partner.afterLink");
+          }
+        }
+
+        organisation.partnerProfile =
+          await findRewardPartnerByOrganisationId(supabase, organisation.id);
+      }
+
+      return organisation;
+    },
   };
+
+  return store;
 }

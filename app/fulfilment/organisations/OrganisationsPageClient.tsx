@@ -59,6 +59,7 @@ export default function OrganisationsPageClient() {
         onOpenChange={(open) => {
           if (!open) setSelectedId(null);
         }}
+        onOrganisationUpdate={() => void refetch()}
         title="Organisation Details"
       />
     </div>

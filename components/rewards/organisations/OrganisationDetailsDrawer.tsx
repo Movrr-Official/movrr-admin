@@ -1,11 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Building2,
   Calendar,
+  Edit,
   Globe,
   Loader2,
   Mail,
+  Save,
   X,
 } from "lucide-react";
 import {
@@ -16,15 +22,34 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PartnerStaffPanel } from "@/components/rewards/partners/PartnerStaffPanel";
 import {
   useOrganisation,
   useOrganisationStaff,
+  useUpdateOrganisation,
 } from "@/hooks/useOrganisationsData";
 import { CopyButton } from "@/components/CopyButton";
+import { useToast } from "@/hooks/useToast";
 import {
   formatOrganisationStatus,
   formatOrganisationType,
@@ -32,6 +57,26 @@ import {
   getOrganisationTypePresentation,
   humanizeEnumToken,
 } from "@/features/organisations/presentation";
+import type { OrganisationStatus } from "@/features/organisations/domain/Organisation";
+
+const editOrganisationSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(120, "Name must be less than 120 characters"),
+  status: z.enum(["active", "inactive", "suspended"]),
+  contactEmail: z.union([z.literal(""), z.string().email("Enter a valid email")]),
+  website: z.union([
+    z.literal(""),
+    z.string().url("Enter a valid URL"),
+  ]),
+  logoUrl: z.union([
+    z.literal(""),
+    z.string().url("Enter a valid URL"),
+  ]),
+});
+
+type EditOrganisationFormData = z.infer<typeof editOrganisationSchema>;
 
 type OrganisationDetailsDrawerProps = {
   organisationId: string | null;
@@ -39,6 +84,7 @@ type OrganisationDetailsDrawerProps = {
   onOpenChange: (open: boolean) => void;
   /** Drawer title context — Partners vs Organisations list. */
   title?: string;
+  onOrganisationUpdate?: () => void;
 };
 
 function DetailField({
@@ -60,15 +106,25 @@ function DetailField({
   );
 }
 
+function emptyToNull(value: string | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed ? trimmed : null;
+}
+
 export function OrganisationDetailsDrawer({
   organisationId,
   open,
   onOpenChange,
   title = "Organisation Details",
+  onOrganisationUpdate,
 }: OrganisationDetailsDrawerProps) {
+  const { toast } = useToast();
   const id = organisationId ?? "";
   const organisation = useOrganisation(id);
   const staff = useOrganisationStaff(id);
+  const updateOrganisation = useUpdateOrganisation();
+
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const org = organisation.data;
   const partner = org?.partnerProfile ?? null;
@@ -80,6 +136,74 @@ export function OrganisationDetailsDrawer({
     .join("")
     .toUpperCase()
     .slice(0, 2);
+  const isRewardPartner = org?.type === "reward_partner";
+  const isLoading = updateOrganisation.isPending;
+
+  const form = useForm<EditOrganisationFormData>({
+    resolver: zodResolver(editOrganisationSchema),
+    defaultValues: {
+      name: "",
+      status: "active",
+      contactEmail: "",
+      website: "",
+      logoUrl: "",
+    },
+  });
+
+  useEffect(() => {
+    if (!org || !isEditMode) return;
+    form.reset({
+      name: org.name,
+      status: org.status,
+      contactEmail: partner?.contactEmail ?? "",
+      website: partner?.website ?? "",
+      logoUrl: partner?.logoUrl ?? "",
+    });
+  }, [org, partner, isEditMode, form]);
+
+  useEffect(() => {
+    if (!open) {
+      setIsEditMode(false);
+    }
+  }, [open]);
+
+  const handleCancel = () => {
+    setIsEditMode(false);
+    form.reset();
+  };
+
+  const handleSave = async (data: EditOrganisationFormData) => {
+    if (!org) return;
+    try {
+      await updateOrganisation.mutateAsync({
+        id: org.id,
+        name: data.name.trim(),
+        status: data.status as OrganisationStatus,
+        partnerProfile: isRewardPartner
+          ? {
+              contactEmail: emptyToNull(data.contactEmail),
+              website: emptyToNull(data.website),
+              logoUrl: emptyToNull(data.logoUrl),
+            }
+          : undefined,
+      });
+      toast({
+        title: "Saved",
+        description: `${data.name.trim()} has been updated.`,
+      });
+      setIsEditMode(false);
+      onOrganisationUpdate?.();
+    } catch (error) {
+      toast({
+        title: "Update failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update organisation.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
@@ -106,6 +230,119 @@ export function OrganisationDetailsDrawer({
                 {(organisation.error as Error)?.message ??
                   "Organisation not found."}
               </p>
+            ) : isEditMode ? (
+              <Form {...form}>
+                <form
+                  className="space-y-6"
+                  onSubmit={form.handleSubmit(handleSave)}
+                >
+                  <Card className="border-border shadow-none">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Organisation</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} disabled={isLoading} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Status</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={isLoading}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="inactive">
+                                  Inactive
+                                </SelectItem>
+                                <SelectItem value="suspended">
+                                  Suspended
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {isRewardPartner ? (
+                    <Card className="border-border shadow-none">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base">
+                          Partner Catalog Profile
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="contactEmail"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Contact Email</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="email"
+                                  {...field}
+                                  disabled={isLoading}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="website"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Website</FormLabel>
+                              <FormControl>
+                                <Input {...field} disabled={isLoading} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="logoUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Logo URL</FormLabel>
+                              <FormControl>
+                                <Input {...field} disabled={isLoading} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </CardContent>
+                    </Card>
+                  ) : null}
+                </form>
+              </Form>
             ) : (
               <>
                 <div className="flex items-start gap-4">
@@ -158,7 +395,7 @@ export function OrganisationDetailsDrawer({
 
                 <Separator />
 
-                {org.type === "reward_partner" ? (
+                {isRewardPartner ? (
                   <Card className="border-border shadow-none">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base">
@@ -224,7 +461,7 @@ export function OrganisationDetailsDrawer({
                   </CardContent>
                 </Card>
 
-                {org.type === "reward_partner" ? (
+                {isRewardPartner ? (
                   <Card className="border-border shadow-none">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base">
@@ -309,6 +546,59 @@ export function OrganisationDetailsDrawer({
               </>
             )}
           </div>
+
+          {organisationId && org && !organisation.isLoading ? (
+            <div className="px-6 py-4 border-t border-border flex justify-between items-center bg-background/50">
+              <div className="flex gap-2">
+                {isEditMode ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancel}
+                      disabled={isLoading}
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={form.handleSubmit(handleSave)}
+                      disabled={isLoading}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Save
+                        </>
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditMode(true)}
+                    disabled={isLoading}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </Button>
+                )}
+              </div>
+              {!isEditMode ? (
+                <DrawerClose asChild>
+                  <Button variant="outline">Close</Button>
+                </DrawerClose>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </DrawerContent>
     </Drawer>

@@ -1,7 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Plus, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/PageHeader";
@@ -61,6 +59,7 @@ export default function PartnersPageClient() {
         onOpenChange={(open) => {
           if (!open) setSelectedId(null);
         }}
+        onOrganisationUpdate={() => void refetch()}
         title="Partner Details"
       />
     </div>

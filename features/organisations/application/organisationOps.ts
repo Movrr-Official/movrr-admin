@@ -28,10 +28,25 @@ export type OrganisationOpsQueries = {
   ) => Promise<ApplicationResult<OrganisationMembership[]>>;
 };
 
+export type UpdateOrganisationInput = {
+  id: string;
+  name?: string;
+  status?: Organisation["status"];
+  partnerProfile?: {
+    contactEmail?: string | null;
+    website?: string | null;
+    logoUrl?: string | null;
+  };
+};
+
 export type OrganisationOpsCommands = {
   create: (
     ctx: RequestContext,
     input: { name: string; type: Organisation["type"] },
+  ) => Promise<ApplicationResult<Organisation>>;
+  update: (
+    ctx: RequestContext,
+    input: UpdateOrganisationInput,
   ) => Promise<ApplicationResult<Organisation>>;
   addStaff: (
     ctx: RequestContext,
@@ -63,6 +78,9 @@ export type OrganisationListPort = OrganisationRepository & {
     organisationId: string;
     role: MembershipRole;
   }) => Promise<OrganisationMembership | null>;
+  updateOrganisation: (
+    input: UpdateOrganisationInput,
+  ) => Promise<Organisation | null>;
 };
 
 /** Process-local ops store for tests / local composition without Supabase. */
@@ -158,6 +176,54 @@ export function createOrganisationOpsStore(): OrganisationListPort {
       memberships.set(updated.id, updated);
       return updated;
     },
+    async updateOrganisation(input) {
+      const existing = organisations.get(input.id);
+      if (!existing) return null;
+      const now = new Date().toISOString();
+      const partnerProfile =
+        existing.type === "reward_partner"
+          ? {
+              ...(existing.partnerProfile ?? {
+                id: randomUUID(),
+                name: input.name?.trim() || existing.name,
+                website: null,
+                logoUrl: null,
+                contactEmail: null,
+                status: existing.status === "active" ? "active" : "inactive",
+                organisationId: existing.id,
+                createdAt: existing.createdAt,
+                updatedAt: now,
+              }),
+              name: input.name?.trim() || existing.name,
+              status:
+                (input.status ?? existing.status) === "active"
+                  ? "active"
+                  : "inactive",
+              contactEmail:
+                input.partnerProfile?.contactEmail !== undefined
+                  ? input.partnerProfile.contactEmail
+                  : (existing.partnerProfile?.contactEmail ?? null),
+              website:
+                input.partnerProfile?.website !== undefined
+                  ? input.partnerProfile.website
+                  : (existing.partnerProfile?.website ?? null),
+              logoUrl:
+                input.partnerProfile?.logoUrl !== undefined
+                  ? input.partnerProfile.logoUrl
+                  : (existing.partnerProfile?.logoUrl ?? null),
+              updatedAt: now,
+            }
+          : existing.partnerProfile;
+      const updated: Organisation = {
+        ...existing,
+        name: input.name?.trim() || existing.name,
+        status: input.status ?? existing.status,
+        updatedAt: now,
+        partnerProfile,
+      };
+      organisations.set(updated.id, updated);
+      return updated;
+    },
   };
 }
 
@@ -195,6 +261,24 @@ export function createOrganisationOpsCommands(deps: {
       const authz = deps.authorisation.assertCapability(ctx, "rewards.manage");
       if (!authz.ok) return authz;
       return createOrganisation(input, { organisations: deps.store });
+    },
+    async update(ctx, input) {
+      const authz = deps.authorisation.assertCapability(ctx, "rewards.manage");
+      if (!authz.ok) return authz;
+      if (input.name !== undefined && !input.name.trim()) {
+        return fail("validation_failed", "Organisation name is required");
+      }
+      if (
+        input.status !== undefined &&
+        input.status !== "active" &&
+        input.status !== "inactive" &&
+        input.status !== "suspended"
+      ) {
+        return fail("validation_failed", "Invalid organisation status");
+      }
+      const updated = await deps.store.updateOrganisation(input);
+      if (!updated) return fail("not_found", "Organisation not found");
+      return ok(updated);
     },
     async addStaff(ctx, input) {
       const authz = deps.authorisation.assertCapability(ctx, "staff.manage");
