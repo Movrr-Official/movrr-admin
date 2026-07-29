@@ -39,6 +39,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/hooks/useToast";
 import { useCreateOrganisation } from "@/hooks/useOrganisationsData";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
+import { trackOpsEvent } from "@/lib/opsTelemetry";
 
 const createPartnerFormSchema = z.object({
   name: z
@@ -79,6 +80,11 @@ export default function CreatePartnerPageClient() {
       const organisation = await createOrganisation.mutateAsync({
         name: data.name.trim(),
         type: "reward_partner",
+      });
+      trackOpsEvent("partner_created", {
+        surface: "partner_operations",
+        organisationId: organisation.id,
+        source: "create_partner_flow",
       });
       toast({
         title: "Partner Created Successfully",

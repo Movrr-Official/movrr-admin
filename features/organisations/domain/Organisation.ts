@@ -28,4 +28,8 @@ export type Organisation = {
   updatedAt: string;
   /** Present when type is reward_partner and a linked catalog profile exists. */
   partnerProfile?: RewardPartnerProfile | null;
+  /** Active + invited memberships when list/detail enrichment is available. */
+  memberCount?: number;
+  /** Memberships with status active (fulfilment/tenancy staffing signal). */
+  activeMemberCount?: number;
 };

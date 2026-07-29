@@ -154,9 +154,19 @@ export function createOrganisationOpsStore(): OrganisationListPort {
       return updated;
     },
     async listOrganisations(filter) {
-      return [...organisations.values()].filter((org) =>
-        filter?.type ? org.type === filter.type : true,
-      );
+      return [...organisations.values()]
+        .filter((org) => (filter?.type ? org.type === filter.type : true))
+        .map((org) => {
+          const members = [...memberships.values()].filter(
+            (m) => m.organisationId === org.id,
+          );
+          return {
+            ...org,
+            memberCount: members.filter((m) => m.status !== "revoked").length,
+            activeMemberCount: members.filter((m) => m.status === "active")
+              .length,
+          };
+        });
     },
     async listMembersByOrganisation(organisationId) {
       return [...memberships.values()].filter(

@@ -34,6 +34,7 @@ import {
   getMembershipStatusPresentation,
 } from "@/features/organisations/presentation";
 import { Badge } from "@/components/ui/badge";
+import { trackOpsEvent } from "@/lib/opsTelemetry";
 
 const ROLES: MembershipRole[] = ["owner", "manager", "staff", "viewer"];
 
@@ -70,6 +71,12 @@ export function PartnerStaffPanel({
         role,
       });
       setUserId("");
+      trackOpsEvent("membership_action", {
+        surface: "organisations",
+        action: "add",
+        organisationId,
+        role,
+      });
       toast({
         title: "Staff added",
         description: "Membership created via Platform API.",
@@ -92,6 +99,12 @@ export function PartnerStaffPanel({
       await updateRole.mutateAsync({
         organisationId,
         membershipId,
+        role: nextRole,
+      });
+      trackOpsEvent("membership_action", {
+        surface: "organisations",
+        action: "role_change",
+        organisationId,
         role: nextRole,
       });
       toast({

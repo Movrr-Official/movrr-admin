@@ -4,23 +4,41 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Link from "next/link";
 import {
   Building2,
   Calendar,
   Edit,
+  ExternalLink,
   Globe,
+  Handshake,
+  Layers,
   Loader2,
   Mail,
   Save,
   X,
 } from "lucide-react";
+import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
+import {
+  assessPartnerReadiness,
+  formatOrganisationStatus,
+  formatOrganisationType,
+  formatPartnerReadiness,
+  getOrganisationStatusPresentation,
+  getOrganisationTypePresentation,
+  getPartnerReadinessPresentation,
+  humanizeEnumToken,
+} from "@/features/organisations/presentation";
+import type { OrganisationStatus } from "@/features/organisations/domain/Organisation";
 import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { trackOpsEvent } from "@/lib/opsTelemetry";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,14 +68,6 @@ import {
 } from "@/hooks/useOrganisationsData";
 import { CopyButton } from "@/components/CopyButton";
 import { useToast } from "@/hooks/useToast";
-import {
-  formatOrganisationStatus,
-  formatOrganisationType,
-  getOrganisationStatusPresentation,
-  getOrganisationTypePresentation,
-  humanizeEnumToken,
-} from "@/features/organisations/presentation";
-import type { OrganisationStatus } from "@/features/organisations/domain/Organisation";
 
 const editOrganisationSchema = z.object({
   name: z
@@ -78,12 +88,19 @@ const editOrganisationSchema = z.object({
 
 type EditOrganisationFormData = z.infer<typeof editOrganisationSchema>;
 
+export type OrganisationDetailsDrawerMode = "partner" | "organisation";
+
 type OrganisationDetailsDrawerProps = {
   organisationId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Drawer title context — Partners vs Organisations list. */
   title?: string;
+  /**
+   * Product framing for the drawer story.
+   * partner → readiness-first; organisation → identity/membership-first.
+   */
+  mode?: OrganisationDetailsDrawerMode;
   onOrganisationUpdate?: () => void;
 };
 
@@ -115,7 +132,8 @@ export function OrganisationDetailsDrawer({
   organisationId,
   open,
   onOpenChange,
-  title = "Organisation Details",
+  title,
+  mode = "organisation",
   onOrganisationUpdate,
 }: OrganisationDetailsDrawerProps) {
   const { toast } = useToast();
@@ -125,6 +143,9 @@ export function OrganisationDetailsDrawer({
   const updateOrganisation = useUpdateOrganisation();
 
   const [isEditMode, setIsEditMode] = useState(false);
+  const resolvedTitle =
+    title ??
+    (mode === "partner" ? "Partner Details" : "Organisation Details");
 
   const org = organisation.data;
   const partner = org?.partnerProfile ?? null;
@@ -137,6 +158,8 @@ export function OrganisationDetailsDrawer({
     .toUpperCase()
     .slice(0, 2);
   const isRewardPartner = org?.type === "reward_partner";
+  const readiness =
+    org && isRewardPartner ? assessPartnerReadiness(org) : null;
   const isLoading = updateOrganisation.isPending;
 
   const form = useForm<EditOrganisationFormData>({
@@ -191,6 +214,25 @@ export function OrganisationDetailsDrawer({
         title: "Saved",
         description: `${data.name.trim()} has been updated.`,
       });
+      if (mode === "partner") {
+        trackOpsEvent("partner_updated", {
+          surface: "partner_operations",
+          organisationId: org.id,
+        });
+        if (data.status !== org.status) {
+          trackOpsEvent("partner_status_changed", {
+            surface: "partner_operations",
+            organisationId: org.id,
+            status: data.status,
+            source: "drawer",
+          });
+        }
+      } else {
+        trackOpsEvent("organisation_updated", {
+          surface: "organisations",
+          organisationId: org.id,
+        });
+      }
       setIsEditMode(false);
       onOrganisationUpdate?.();
     } catch (error) {
@@ -211,8 +253,15 @@ export function OrganisationDetailsDrawer({
         <div className="flex h-full flex-col bg-background">
           <DrawerHeader className="px-6 py-4 border-b border-border">
             <div className="flex items-center justify-between">
-              <DrawerTitle className="text-2xl font-bold">{title}</DrawerTitle>
-              <DrawerClose className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-muted transition-colors">
+              <DrawerTitle className="text-2xl font-bold">
+                {resolvedTitle}
+              </DrawerTitle>
+              <DrawerDescription className="sr-only">
+                {mode === "partner"
+                  ? "Partner readiness details, profile, staff access, and related fulfilment handoffs."
+                  : "Organisation identity, membership, and type-specific handoffs."}
+              </DrawerDescription>
+              <DrawerClose className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
               </DrawerClose>
@@ -395,6 +444,84 @@ export function OrganisationDetailsDrawer({
 
                 <Separator />
 
+                {mode === "partner" && readiness ? (
+                  <Card className="border-border shadow-none">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">
+                        Fulfilment readiness
+                      </CardTitle>
+                      <p className="text-sm font-normal text-muted-foreground">
+                        Primary question: is this reward partner ready to
+                        fulfil?
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Badge
+                        variant={
+                          getPartnerReadinessPresentation(readiness.readiness)
+                            .badgeVariant
+                        }
+                      >
+                        {formatPartnerReadiness(readiness.readiness)}
+                      </Badge>
+                      {readiness.reasons.length > 0 ? (
+                        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                          {readiness.reasons.map((reason) => (
+                            <li key={reason}>{reason}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Active, staffed, and contactable for collection and
+                          validation.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : null}
+
+                {mode === "organisation" ? (
+                  <Card className="border-border shadow-none">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Organisation</CardTitle>
+                      <p className="text-sm font-normal text-muted-foreground">
+                        Platform identity and tenancy standing.
+                      </p>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 sm:grid-cols-2 text-sm">
+                      <DetailField label="Name" value={org.name} />
+                      <DetailField
+                        label="Type"
+                        value={formatOrganisationType(org.type)}
+                      />
+                      <DetailField
+                        label="Status"
+                        value={formatOrganisationStatus(org.status)}
+                      />
+                      <DetailField
+                        label="Members"
+                        value={String(
+                          org.memberCount ?? staff.data?.length ?? "—",
+                        )}
+                      />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Created</p>
+                        <p className="text-sm flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          {new Date(org.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Updated</p>
+                        <p className="text-sm flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          {new Date(org.updatedAt).toLocaleString()}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : null}
+
                 {isRewardPartner ? (
                   <Card className="border-border shadow-none">
                     <CardHeader className="pb-3">
@@ -430,36 +557,41 @@ export function OrganisationDetailsDrawer({
                   </Card>
                 ) : null}
 
-                <Card className="border-border shadow-none">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Organisation</CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid gap-3 sm:grid-cols-2 text-sm">
-                    <DetailField label="Name" value={org.name} />
-                    <DetailField
-                      label="Type"
-                      value={formatOrganisationType(org.type)}
-                    />
-                    <DetailField
-                      label="Status"
-                      value={formatOrganisationStatus(org.status)}
-                    />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Created</p>
-                      <p className="text-sm flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                        {new Date(org.createdAt).toLocaleString()}
+                {mode === "partner" ? (
+                  <Card className="border-border shadow-none">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Organisation</CardTitle>
+                      <p className="text-sm font-normal text-muted-foreground">
+                        Tenancy identity consumed by Partner Operations.
                       </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Updated</p>
-                      <p className="text-sm flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                        {new Date(org.updatedAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 sm:grid-cols-2 text-sm">
+                      <DetailField label="Name" value={org.name} />
+                      <DetailField
+                        label="Type"
+                        value={formatOrganisationType(org.type)}
+                      />
+                      <DetailField
+                        label="Status"
+                        value={formatOrganisationStatus(org.status)}
+                      />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Created</p>
+                        <p className="text-sm flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          {new Date(org.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Updated</p>
+                        <p className="text-sm flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          {new Date(org.updatedAt).toLocaleString()}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : null}
 
                 {isRewardPartner ? (
                   <Card className="border-border shadow-none">
@@ -530,9 +662,13 @@ export function OrganisationDetailsDrawer({
 
                 <Card className="border-border shadow-none">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Staff</CardTitle>
+                    <CardTitle className="text-base">
+                      {mode === "partner" ? "Staff access" : "Membership"}
+                    </CardTitle>
                     <p className="text-sm text-muted-foreground font-normal">
-                      Invite and change roles through the Platform API.
+                      {mode === "partner"
+                        ? "Invite staff so the Business Workspace can validate and confirm."
+                        : "Tenancy membership administered via the Platform API."}
                     </p>
                   </CardHeader>
                   <CardContent>
@@ -541,6 +677,80 @@ export function OrganisationDetailsDrawer({
                       staff={staff.data ?? []}
                       isLoading={staff.isLoading}
                     />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border shadow-none">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Related work</CardTitle>
+                    <p className="text-sm font-normal text-muted-foreground">
+                      Handoffs between jobs — not duplicate homes for the same
+                      job.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="flex flex-wrap gap-2">
+                    {mode === "partner" ? (
+                      <>
+                        <Button asChild variant="outline" size="sm">
+                          <Link
+                            href={FULFILMENT_ROUTES.organisationDetail(org.id)}
+                          >
+                            <Building2 className="mr-2 h-4 w-4" />
+                            Organisation directory
+                          </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={FULFILMENT_ROUTES.queue}>
+                            <Layers className="mr-2 h-4 w-4" />
+                            Fulfilment Queue
+                          </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={FULFILMENT_ROUTES.resourcePools}>
+                            <Layers className="mr-2 h-4 w-4" />
+                            Resource Pools
+                          </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={FULFILMENT_ROUTES.analytics}>
+                            Analytics
+                          </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                          <a
+                            href="https://app.movrr.nl"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            Business Workspace
+                          </a>
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        {isRewardPartner ? (
+                          <Button asChild variant="outline" size="sm">
+                            <Link
+                              href={FULFILMENT_ROUTES.partnerDetail(org.id)}
+                            >
+                              <Handshake className="mr-2 h-4 w-4" />
+                              Partner readiness
+                            </Link>
+                          </Button>
+                        ) : null}
+                        <Button asChild variant="outline" size="sm">
+                          <a
+                            href="https://app.movrr.nl"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            Business Workspace
+                          </a>
+                        </Button>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </>

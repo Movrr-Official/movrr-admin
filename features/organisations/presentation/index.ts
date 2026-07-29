@@ -29,3 +29,19 @@ export {
   formatMembershipStatus,
   getMembershipStatusPresentation,
 } from "./membershipStatuses";
+
+export {
+  assessPartnerReadiness,
+  computePartnerFleetKpis,
+  formatPartnerReadiness,
+  getPartnerReadinessPresentation,
+  readinessSortRank,
+  type PartnerFleetKpis,
+  type PartnerReadiness,
+  type PartnerReadinessAssessment,
+} from "./partnerReadiness";
+
+export {
+  computeOrganisationDirectoryKpis,
+  type OrganisationDirectoryKpis,
+} from "./organisationDirectory";

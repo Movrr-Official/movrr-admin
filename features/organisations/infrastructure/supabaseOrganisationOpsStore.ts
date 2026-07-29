@@ -191,6 +191,20 @@ export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
         organisation.partnerProfile =
           await findRewardPartnerByOrganisationId(supabase, organisation.id);
       }
+
+      const { data: membershipRows, error: membershipError } = await supabase
+        .from("organisation_membership")
+        .select("status")
+        .eq("organisation_id", organisation.id);
+      throwOnError(membershipError, "findOrganisationById.memberships");
+      const members = membershipRows ?? [];
+      organisation.memberCount = members.filter(
+        (row) => row.status !== "revoked",
+      ).length;
+      organisation.activeMemberCount = members.filter(
+        (row) => row.status === "active",
+      ).length;
+
       return organisation;
     },
 
@@ -283,7 +297,61 @@ export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
 
       const { data, error } = await query;
       throwOnError(error, "listOrganisations");
-      return ((data ?? []) as OrganisationRow[]).map(mapOrganisation);
+      const rows = (data ?? []) as OrganisationRow[];
+      if (rows.length === 0) return [];
+
+      const ids = rows.map((row) => row.id);
+      const { data: membershipRows, error: membershipError } = await supabase
+        .from("organisation_membership")
+        .select("organisation_id, status")
+        .in("organisation_id", ids);
+      throwOnError(membershipError, "listOrganisations.memberships");
+
+      const memberTotals = new Map<string, { total: number; active: number }>();
+      for (const membership of membershipRows ?? []) {
+        const orgId = membership.organisation_id as string;
+        const current = memberTotals.get(orgId) ?? { total: 0, active: 0 };
+        if (membership.status !== "revoked") {
+          current.total += 1;
+        }
+        if (membership.status === "active") {
+          current.active += 1;
+        }
+        memberTotals.set(orgId, current);
+      }
+
+      const rewardPartnerIds = rows
+        .filter((row) => row.type === "reward_partner")
+        .map((row) => row.id);
+      const profilesByOrgId = new Map<string, RewardPartnerProfile>();
+      if (rewardPartnerIds.length > 0) {
+        const { data: partnerRows, error: partnerError } = await supabase
+          .from("reward_partner")
+          .select(
+            "id, name, website, logo_url, contact_email, status, organisation_id, created_at, updated_at",
+          )
+          .in("organisation_id", rewardPartnerIds);
+        throwOnError(partnerError, "listOrganisations.partnerProfiles");
+        for (const partner of (partnerRows ?? []) as RewardPartnerRow[]) {
+          if (partner.organisation_id) {
+            profilesByOrgId.set(
+              partner.organisation_id,
+              mapRewardPartnerProfile(partner),
+            );
+          }
+        }
+      }
+
+      return rows.map((row) => {
+        const organisation = mapOrganisation(row);
+        const counts = memberTotals.get(row.id);
+        organisation.memberCount = counts?.total ?? 0;
+        organisation.activeMemberCount = counts?.active ?? 0;
+        if (row.type === "reward_partner") {
+          organisation.partnerProfile = profilesByOrgId.get(row.id) ?? null;
+        }
+        return organisation;
+      });
     },
 
     async listMembersByOrganisation(organisationId) {
