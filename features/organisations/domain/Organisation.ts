@@ -6,6 +6,19 @@ export type OrganisationType =
 
 export type OrganisationStatus = "active" | "inactive" | "suspended";
 
+/** Catalog-facing partner profile linked via reward_partner.organisation_id. */
+export type RewardPartnerProfile = {
+  id: string;
+  name: string;
+  website: string | null;
+  logoUrl: string | null;
+  contactEmail: string | null;
+  status: string;
+  organisationId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Organisation = {
   id: string;
   name: string;
@@ -13,4 +26,6 @@ export type Organisation = {
   status: OrganisationStatus;
   createdAt: string;
   updatedAt: string;
+  /** Present when type is reward_partner and a linked catalog profile exists. */
+  partnerProfile?: RewardPartnerProfile | null;
 };

@@ -26,9 +26,13 @@ export const FULFILMENT_ROUTES = {
   collections: "/fulfilment/collections",
   partners: "/fulfilment/partners",
   partnerCreate: "/fulfilment/partners/create",
+  /** Opens Partner Operations list with details drawer (`?id=`). */
   partnerDetail: (id: string) =>
-    `/fulfilment/partners/${encodeURIComponent(id)}`,
+    `/fulfilment/partners?id=${encodeURIComponent(id)}`,
   organisations: "/fulfilment/organisations",
+  /** Opens Organisations list with details drawer (`?id=`). */
+  organisationDetail: (id: string) =>
+    `/fulfilment/organisations?id=${encodeURIComponent(id)}`,
   analytics: "/fulfilment/analytics",
 } as const;
 

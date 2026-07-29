@@ -1,7 +1,10 @@
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import type { Organisation } from "@/features/organisations/domain/Organisation";
+import type {
+  Organisation,
+  RewardPartnerProfile,
+} from "@/features/organisations/domain/Organisation";
 import type { OrganisationMembership } from "@/features/organisations/domain/Membership";
 import type { MembershipRole } from "@/features/organisations/domain/CapabilityCatalog";
 import { ORG_ROLE_BUNDLE_KEYS } from "@/features/organisations/domain/CapabilityCatalog";
@@ -12,6 +15,18 @@ type OrganisationRow = {
   name: string;
   type: Organisation["type"];
   status: Organisation["status"];
+  created_at: string;
+  updated_at: string;
+};
+
+type RewardPartnerRow = {
+  id: string;
+  name: string;
+  website: string | null;
+  logo_url: string | null;
+  contact_email: string | null;
+  status: string;
+  organisation_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -38,6 +53,20 @@ function mapOrganisation(row: OrganisationRow): Organisation {
   };
 }
 
+function mapRewardPartnerProfile(row: RewardPartnerRow): RewardPartnerProfile {
+  return {
+    id: row.id,
+    name: row.name,
+    website: row.website,
+    logoUrl: row.logo_url,
+    contactEmail: row.contact_email,
+    status: row.status,
+    organisationId: row.organisation_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 function mapMembership(row: MembershipRow): OrganisationMembership {
   return {
     id: row.id,
@@ -58,6 +87,21 @@ function throwOnError(error: { message: string } | null, action: string): void {
 }
 
 type SupabaseAdmin = ReturnType<typeof createSupabaseAdminClient>;
+
+async function findRewardPartnerByOrganisationId(
+  supabase: SupabaseAdmin,
+  organisationId: string,
+): Promise<RewardPartnerProfile | null> {
+  const { data, error } = await supabase
+    .from("reward_partner")
+    .select(
+      "id, name, website, logo_url, contact_email, status, organisation_id, created_at, updated_at",
+    )
+    .eq("organisation_id", organisationId)
+    .maybeSingle();
+  throwOnError(error, "findRewardPartnerByOrganisationId");
+  return data ? mapRewardPartnerProfile(data as RewardPartnerRow) : null;
+}
 
 /**
  * Keep catalog `reward_partner` in sync with Organisation tenancy.
@@ -140,7 +184,14 @@ export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
       if (error) {
         throwOnError(error, "findOrganisationById");
       }
-      return data ? mapOrganisation(data as OrganisationRow) : null;
+      if (!data) return null;
+
+      const organisation = mapOrganisation(data as OrganisationRow);
+      if (organisation.type === "reward_partner") {
+        organisation.partnerProfile =
+          await findRewardPartnerByOrganisationId(supabase, organisation.id);
+      }
+      return organisation;
     },
 
     async addMember(input) {

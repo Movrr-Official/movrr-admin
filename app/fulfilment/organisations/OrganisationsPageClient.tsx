@@ -1,15 +1,35 @@
 "use client";
 
+import { useCallback } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Plus, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/PageHeader";
 import { OrganisationListTable } from "@/components/rewards/organisations/OrganisationListTable";
+import { OrganisationDetailsDrawer } from "@/components/rewards/organisations/OrganisationDetailsDrawer";
 import { useOrganisations } from "@/hooks/useOrganisationsData";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
 
 export default function OrganisationsPageClient() {
   const { data, isLoading, isError, error, refetch, isFetching } =
     useOrganisations();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const selectedId = searchParams.get("id");
+
+  const setSelectedId = useCallback(
+    (id: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (id) params.set("id", id);
+      else params.delete("id");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
+    },
+    [pathname, router, searchParams],
+  );
 
   return (
     <div className="space-y-6">
@@ -44,15 +64,20 @@ export default function OrganisationsPageClient() {
             <OrganisationListTable
               rows={data ?? []}
               isLoading={isLoading}
-              detailHref={(org) =>
-                org.type === "reward_partner"
-                  ? FULFILMENT_ROUTES.partnerDetail(org.id)
-                  : FULFILMENT_ROUTES.organisations
-              }
+              onSelectOrg={(org) => setSelectedId(org.id)}
             />
           )}
         </CardContent>
       </Card>
+
+      <OrganisationDetailsDrawer
+        organisationId={selectedId}
+        open={Boolean(selectedId)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedId(null);
+        }}
+        title="Organisation Details"
+      />
     </div>
   );
 }
