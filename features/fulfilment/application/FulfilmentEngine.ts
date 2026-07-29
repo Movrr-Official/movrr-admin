@@ -43,6 +43,8 @@ export type FulfilmentEngine = {
   createFromRedemption: (
     input: CreateFromRedemptionInput,
   ) => Promise<ApplicationResult<Fulfilment>>;
+  get: (fulfilmentId: string) => Promise<ApplicationResult<Fulfilment>>;
+  list: () => Promise<Fulfilment[]>;
   start: (
     fulfilmentId: string,
   ) => Promise<ApplicationResult<FulfilmentHandlerResult>>;
@@ -50,6 +52,10 @@ export type FulfilmentEngine = {
     input: OnTokenConsumedInput,
   ) => Promise<ApplicationResult<FulfilmentHandlerResult>>;
   cancel: (
+    fulfilmentId: string,
+    reason: string,
+  ) => Promise<ApplicationResult<FulfilmentHandlerResult>>;
+  expire: (
     fulfilmentId: string,
     reason: string,
   ) => Promise<ApplicationResult<FulfilmentHandlerResult>>;
@@ -174,6 +180,16 @@ export function createFulfilmentEngine(
       return ok(fulfilment);
     },
 
+    async get(fulfilmentId) {
+      const loaded = getStored(fulfilmentId);
+      if (!loaded.ok) return loaded;
+      return ok(loaded.value.fulfilment);
+    },
+
+    async list() {
+      return [...store.values()].map((entry) => entry.fulfilment);
+    },
+
     async start(fulfilmentId) {
       const loaded = getStored(fulfilmentId);
       if (!loaded.ok) return loaded;
@@ -268,6 +284,41 @@ export function createFulfilmentEngine(
       const value = { fulfilment: cancelled.value };
       persist({ ...stored, fulfilment: cancelled.value });
       return ok(value);
+    },
+
+    async expire(fulfilmentId, reason) {
+      const loaded = getStored(fulfilmentId);
+      if (!loaded.ok) return loaded;
+      const stored = loaded.value;
+
+      // Idempotent: already expired is a successful no-op.
+      if (stored.fulfilment.state === "expired") {
+        return ok({ fulfilment: stored.fulfilment });
+      }
+
+      const handler = deps.registry.resolve(
+        stored.fulfilment.fulfilmentType,
+      );
+      const requestTransition = requestTransitionFor(fulfilmentId);
+
+      if (handler.expire) {
+        const result = await handler.expire({
+          fulfilment: stored.fulfilment,
+          reason,
+          resourceId: stored.resourceId,
+          correlationId: stored.correlationId,
+          requestTransition,
+        });
+        if (result.ok) {
+          persist({ ...stored, fulfilment: result.value.fulfilment });
+        }
+        return result;
+      }
+
+      const expired = requestTransition(stored.fulfilment, "expired", reason);
+      if (!expired.ok) return expired;
+      persist({ ...stored, fulfilment: expired.value });
+      return ok({ fulfilment: expired.value });
     },
 
     async refund(fulfilmentId, reason) {

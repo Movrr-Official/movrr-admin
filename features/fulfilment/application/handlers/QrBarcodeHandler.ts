@@ -198,5 +198,27 @@ export function createQrBarcodeHandler(
       if (!cancelled.ok) return cancelled;
       return ok({ fulfilment: cancelled.value });
     },
+
+    async expire(
+      ctx: FulfilmentHandlerCancelContext,
+    ): Promise<ApplicationResult<FulfilmentHandlerResult>> {
+      const ref = allocations.get(ctx.fulfilment.id);
+      if (ref) {
+        await deps.resources.release({
+          fulfilmentId: ctx.fulfilment.id,
+          resourceId: ref.resourceId,
+          allocationId: ref.allocationId,
+        });
+        allocations.delete(ctx.fulfilment.id);
+      }
+
+      const expired = ctx.requestTransition(
+        ctx.fulfilment,
+        "expired",
+        ctx.reason,
+      );
+      if (!expired.ok) return expired;
+      return ok({ fulfilment: expired.value });
+    },
   };
 }

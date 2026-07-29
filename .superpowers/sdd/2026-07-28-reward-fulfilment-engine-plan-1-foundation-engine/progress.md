@@ -34,3 +34,12 @@ Task 9: minor (deferred): compensate refund result; event flush on failure; rede
 
 Task 10: complete (DONE_WITH_CONCERNS, commit 359dbe2)
 Task 10: minor (deferred): production principal lookups stubbed; in-memory empty stores in prod singleton; partner empty-list stubs; admin wallet placeholder
+
+Task 10: complete (commits 9100f3f..c679bad, review clean)
+Task 10: minor (deferred): prod principal stubs; no seed catalog; partner validate wiring; HTTP status matrix tests
+
+Task 11: complete (commits c679bad..f7a47d7, DONE_WITH_CONCERNS)
+Task 11: Important deferred to Task 13 — engine must enqueue FulfilmentStateChanged/Completed for consumers
+
+Task 12: complete (commits f7a47d7..1a655c2, DONE_WITH_CONCERNS)
+Task 12: minor (deferred): job engine singleton separate from API store; retry stub; expire no auto-refund

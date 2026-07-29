@@ -49,6 +49,8 @@ export type FulfilmentHandlerCancelContext = {
   requestTransition: RequestTransition;
 };
 
+export type FulfilmentHandlerExpireContext = FulfilmentHandlerCancelContext;
+
 export type FulfilmentHandler = {
   start: (
     ctx: FulfilmentHandlerStartContext,
@@ -61,5 +63,8 @@ export type FulfilmentHandler = {
   ) => Promise<ApplicationResult<FulfilmentHandlerResult>>;
   cancel?: (
     ctx: FulfilmentHandlerCancelContext,
+  ) => Promise<ApplicationResult<FulfilmentHandlerResult>>;
+  expire?: (
+    ctx: FulfilmentHandlerExpireContext,
   ) => Promise<ApplicationResult<FulfilmentHandlerResult>>;
 };

@@ -85,6 +85,7 @@ const serverEnvSchema = publicEnvSchema
   ERROR_WEBHOOK_URL: z.string().url("Invalid ERROR_WEBHOOK_URL").optional(),
   MAINTENANCE_JOB_TOKEN: z.string().optional(),
   CRON_SECRET: z.string().optional(),
+  INTERNAL_JOB_SECRET: z.string().optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   TURNSTILE_SECRET_KEY: z.string().optional(),
