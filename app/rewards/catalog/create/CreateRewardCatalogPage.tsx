@@ -31,6 +31,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/useToast";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { upsertRewardCatalog } from "@/app/actions/rewardCatalog";
+import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
+import { SUPPORTED_REDEEM_FULFILMENT_TYPES } from "@/features/rewards/application/contracts/RedeemRewardCommand";
 
 const requiredNumber = (schema: z.ZodNumber) =>
   z.preprocess((value) => Number(value), schema);
@@ -51,24 +53,59 @@ const optionalString = (schema: z.ZodString) =>
     return value;
   }, schema.optional());
 
-const rewardCatalogFormSchema = z.object({
-  sku: z.string().min(3, "SKU is required."),
-  title: z.string().min(3, "Title is required."),
-  description: z.string().optional(),
-  category: z.string().min(1, "Category is required."),
-  status: z.enum(["draft", "active", "paused", "archived"]),
-  pointsPrice: requiredNumber(z.number().int().min(0)),
-  partnerName: z.string().optional(),
-  partnerUrl: optionalString(z.string().url()),
-  thumbnailUrl: optionalString(z.string().url()),
-  galleryUrls: z.string().optional(),
-  inventoryType: z.enum(["unlimited", "limited"]),
-  inventoryCount: optionalNumber(z.number().int().min(0)),
-  maxPerRider: optionalNumber(z.number().int().min(1)),
-  featuredRank: optionalNumber(z.number().int().min(1)),
-  isFeatured: z.boolean(),
-  tags: z.string().optional(),
-});
+const NONE = "__none__";
+
+const rewardCatalogFormSchema = z
+  .object({
+    sku: z.string().min(3, "SKU is required."),
+    title: z.string().min(3, "Title is required."),
+    description: z.string().optional(),
+    category: z.string().min(1, "Category is required."),
+    status: z.enum(["draft", "active", "paused", "archived"]),
+    pointsPrice: requiredNumber(z.number().int().min(0)),
+    partnerName: z.string().optional(),
+    partnerUrl: optionalString(z.string().url()),
+    thumbnailUrl: optionalString(z.string().url()),
+    galleryUrls: z.string().optional(),
+    inventoryType: z.enum(["unlimited", "limited"]),
+    inventoryCount: optionalNumber(z.number().int().min(0)),
+    maxPerRider: optionalNumber(z.number().int().min(1)),
+    featuredRank: optionalNumber(z.number().int().min(1)),
+    isFeatured: z.boolean(),
+    tags: z.string().optional(),
+    fulfilmentType: z.enum(FULFILMENT_TYPES).optional(),
+    resourceId: optionalString(z.string().uuid("Resource ID must be a UUID.")),
+  })
+  .superRefine((value, ctx) => {
+    if (value.status === "active" && !value.fulfilmentType) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["fulfilmentType"],
+        message: "Active catalog items require a fulfilment_type.",
+      });
+    }
+    if (
+      value.status === "active" &&
+      value.fulfilmentType &&
+      !SUPPORTED_REDEEM_FULFILMENT_TYPES.includes(
+        value.fulfilmentType as (typeof SUPPORTED_REDEEM_FULFILMENT_TYPES)[number],
+      )
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["fulfilmentType"],
+        message:
+          "This fulfilment type is not supported for redeem yet. Choose instant_digital or qr_barcode, or keep the item as draft.",
+      });
+    }
+    if (value.status === "active" && !value.resourceId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["resourceId"],
+        message: "Active catalog items require a resource binding.",
+      });
+    }
+  });
 
 type RewardCatalogFormValues = z.infer<typeof rewardCatalogFormSchema>;
 
@@ -97,6 +134,8 @@ export default function CreateRewardCatalogPage() {
       featuredRank: undefined,
       isFeatured: false,
       tags: "",
+      fulfilmentType: undefined,
+      resourceId: undefined,
     },
   });
 
@@ -143,6 +182,8 @@ export default function CreateRewardCatalogPage() {
             .map((tag) => tag.trim())
             .filter(Boolean)
         : undefined,
+      fulfilmentType: values.fulfilmentType ?? null,
+      resourceId: values.resourceId?.trim() || null,
     });
 
     setIsSubmitting(false);
@@ -292,6 +333,73 @@ export default function CreateRewardCatalogPage() {
                     )}
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border">
+              <CardHeader>
+                <CardTitle>Fulfilment</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Active items must use a redeem-supported fulfilment type and
+                  bind a resource. Unsupported types can stay in draft.
+                </p>
+              </CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="fulfilmentType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fulfilment type</FormLabel>
+                      <Select
+                        value={field.value ?? NONE}
+                        onValueChange={(value) =>
+                          field.onChange(value === NONE ? undefined : value)
+                        }
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select fulfilment type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={NONE}>Not set</SelectItem>
+                          {FULFILMENT_TYPES.map((type) => {
+                            const supported =
+                              SUPPORTED_REDEEM_FULFILMENT_TYPES.includes(
+                                type as (typeof SUPPORTED_REDEEM_FULFILMENT_TYPES)[number],
+                              );
+                            return (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                                {supported ? "" : " (unsupported for redeem)"}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="resourceId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Resource ID</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          placeholder="fulfilment resource uuid"
+                          className="font-mono text-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 

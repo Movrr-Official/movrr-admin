@@ -31,9 +31,12 @@ import {
   updateRewardCatalogStatus,
   upsertRewardCatalog,
 } from "@/app/actions/rewardCatalog";
+import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
+import { SUPPORTED_REDEEM_FULFILMENT_TYPES } from "@/features/rewards/application/contracts/RedeemRewardCommand";
 
 const inventoryOptions = ["unlimited", "limited"] as const;
 const statusOptions = ["draft", "active", "paused", "archived"] as const;
+const NONE = "__none__";
 
 export function RewardCatalogPanel() {
   const router = useRouter();
@@ -62,6 +65,8 @@ export function RewardCatalogPanel() {
     featuredRank: "",
     isFeatured: false,
     tags: "",
+    fulfilmentType: "",
+    resourceId: "",
   });
 
   const resetForm = (item?: RewardCatalogItem | null) => {
@@ -83,6 +88,8 @@ export function RewardCatalogPanel() {
         featuredRank: "",
         isFeatured: false,
         tags: "",
+        fulfilmentType: "",
+        resourceId: "",
       });
       return;
     }
@@ -104,6 +111,8 @@ export function RewardCatalogPanel() {
       featuredRank: item.featuredRank?.toString() ?? "",
       isFeatured: item.isFeatured ?? false,
       tags: (item.tags ?? []).join(","),
+      fulfilmentType: item.fulfilmentType ?? "",
+      resourceId: item.resourceId ?? "",
     });
   };
 
@@ -133,6 +142,38 @@ export function RewardCatalogPanel() {
         variant: "destructive",
       });
       return;
+    }
+
+    if (formState.status === "active") {
+      if (!formState.fulfilmentType) {
+        toast({
+          title: "Fulfilment type required",
+          description: "Active catalog items require a fulfilment_type.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (
+        !SUPPORTED_REDEEM_FULFILMENT_TYPES.includes(
+          formState.fulfilmentType as (typeof SUPPORTED_REDEEM_FULFILMENT_TYPES)[number],
+        )
+      ) {
+        toast({
+          title: "Unsupported fulfilment type",
+          description:
+            "This fulfilment type is not supported for redeem yet. Choose instant_digital or qr_barcode, or keep the item as draft.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!formState.resourceId.trim()) {
+        toast({
+          title: "Resource binding required",
+          description: "Active catalog items require a resource ID.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -172,6 +213,12 @@ export function RewardCatalogPanel() {
             .map((tag) => tag.trim())
             .filter(Boolean)
         : undefined,
+      fulfilmentType: formState.fulfilmentType
+        ? (formState.fulfilmentType as NonNullable<
+            RewardCatalogItem["fulfilmentType"]
+          >)
+        : null,
+      resourceId: formState.resourceId.trim() || null,
     });
     setIsSaving(false);
 
@@ -410,6 +457,58 @@ export function RewardCatalogPanel() {
                       partnerUrl: event.target.value,
                     }))
                   }
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Fulfilment type</Label>
+                <Select
+                  value={formState.fulfilmentType || NONE}
+                  onValueChange={(value) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      fulfilmentType: value === NONE ? "" : value,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select fulfilment type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Not set</SelectItem>
+                    {FULFILMENT_TYPES.map((type) => {
+                      const supported =
+                        SUPPORTED_REDEEM_FULFILMENT_TYPES.includes(
+                          type as (typeof SUPPORTED_REDEEM_FULFILMENT_TYPES)[number],
+                        );
+                      return (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                          {supported ? "" : " (unsupported for redeem)"}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Active items require a redeem-supported type and resource
+                  binding.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Resource ID</Label>
+                <Input
+                  value={formState.resourceId}
+                  onChange={(event) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      resourceId: event.target.value,
+                    }))
+                  }
+                  placeholder="fulfilment resource uuid"
+                  className="font-mono text-sm"
                 />
               </div>
             </div>

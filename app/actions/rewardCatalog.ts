@@ -45,6 +45,8 @@ const mapCatalogRow = (row: any): RewardCatalogItem => {
     isFeatured: Boolean(row.is_featured ?? false),
     visibilityRules: row.visibility_rules ?? {},
     tags: row.tags ?? [],
+    fulfilmentType: row.fulfilment_type ?? null,
+    resourceId: row.resource_id ?? null,
     publishedAt: row.published_at ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -87,7 +89,7 @@ export async function getRewardCatalog(
     let query = supabaseAdmin
       .from("reward_catalog")
       .select(
-        "id, sku, title, description, category, status, points_price, partner_id, partner_url, thumbnail_url, gallery_urls, inventory_type, inventory_count, max_per_rider, featured_rank, is_featured, visibility_rules, tags, published_at, created_at, updated_at, partner:partner_id (id, name, website)",
+        "id, sku, title, description, category, status, points_price, partner_id, partner_url, thumbnail_url, gallery_urls, inventory_type, inventory_count, max_per_rider, featured_rank, is_featured, visibility_rules, tags, fulfilment_type, resource_id, published_at, created_at, updated_at, partner:partner_id (id, name, website)",
       )
       .order("updated_at", { ascending: false });
 
@@ -159,17 +161,20 @@ export async function upsertRewardCatalog(
       is_featured: validatedData.isFeatured ?? false,
       visibility_rules: validatedData.visibilityRules ?? {},
       tags: validatedData.tags ?? [],
+      fulfilment_type: validatedData.fulfilmentType ?? null,
+      resource_id: validatedData.resourceId ?? null,
       updated_at: new Date().toISOString(),
     };
+
+    const selectColumns =
+      "id, sku, title, description, category, status, points_price, partner_id, partner_url, thumbnail_url, gallery_urls, inventory_type, inventory_count, max_per_rider, featured_rank, is_featured, visibility_rules, tags, fulfilment_type, resource_id, published_at, created_at, updated_at, partner:partner_id (id, name, website)";
 
     const response = validatedData.id
       ? await supabaseAdmin
           .from("reward_catalog")
           .update(payload)
           .eq("id", validatedData.id)
-          .select(
-            "id, sku, title, description, category, status, points_price, partner_id, partner_url, thumbnail_url, gallery_urls, inventory_type, inventory_count, max_per_rider, featured_rank, is_featured, visibility_rules, tags, published_at, created_at, updated_at, partner:partner_id (id, name, website)",
-          )
+          .select(selectColumns)
           .single()
       : await supabaseAdmin
           .from("reward_catalog")
@@ -177,9 +182,7 @@ export async function upsertRewardCatalog(
             ...payload,
             created_at: new Date().toISOString(),
           })
-          .select(
-            "id, sku, title, description, category, status, points_price, partner_id, partner_url, thumbnail_url, gallery_urls, inventory_type, inventory_count, max_per_rider, featured_rank, is_featured, visibility_rules, tags, published_at, created_at, updated_at, partner:partner_id (id, name, website)",
-          )
+          .select(selectColumns)
           .single();
 
     if (response.error) {

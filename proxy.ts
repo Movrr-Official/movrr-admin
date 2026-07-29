@@ -30,6 +30,7 @@ const RIDER_API_PREFIX = "/api/sessions/";
 
 /** Cron/maintenance jobs — bearer token validated in route handlers. */
 const INTERNAL_API_PREFIX = "/api/internal/";
+const INTERNAL_V1_JOBS_PREFIX = "/api/v1/internal/";
 
 const DASHBOARD_ACCESS_ROLES = new Set([
   "admin",
@@ -52,7 +53,10 @@ function isRiderApiPath(pathname: string): boolean {
 }
 
 function isInternalApiPath(pathname: string): boolean {
-  return pathname.startsWith(INTERNAL_API_PREFIX);
+  return (
+    pathname.startsWith(INTERNAL_API_PREFIX) ||
+    pathname.startsWith(INTERNAL_V1_JOBS_PREFIX)
+  );
 }
 
 function isOptimizerServiceAuthorized(request: NextRequest): boolean {
