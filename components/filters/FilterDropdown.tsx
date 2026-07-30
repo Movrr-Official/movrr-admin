@@ -29,6 +29,7 @@ interface FilterDropdownProps {
   updateFilter: (key: string, value: any) => void;
   clearAllFilters: () => void;
   hasActiveFilters: boolean;
+  label?: string;
 }
 
 export function FilterDropdown({
@@ -38,22 +39,33 @@ export function FilterDropdown({
   updateFilter,
   clearAllFilters,
   hasActiveFilters,
+  label = "Filter",
 }: FilterDropdownProps) {
+  const triggerLabel = hasActiveFilters
+    ? `${label}, ${activeFilterCount} active`
+    : label;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 group">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 gap-2 group"
+          aria-label={triggerLabel}
+        >
           <SlidersHorizontal className="h-4 w-4 group-hover:scale-110 transition-transform" />
-          <span className="hidden lg:inline">Filter</span>
+          <span className="hidden md:inline">{label}</span>
           {hasActiveFilters && (
             <Badge
               variant="secondary"
               className="ml-1 h-5 min-w-5 px-1 flex items-center justify-center"
+              aria-hidden
             >
               {activeFilterCount}
             </Badge>
           )}
-          <ChevronDown className="h-4 w-4 hidden lg:inline" />
+          <ChevronDown className="h-4 w-4 hidden md:inline" aria-hidden />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

@@ -5,12 +5,10 @@ import { Bike, List, MapPin, Users } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { ActiveFiltersDisplay } from "../filters/ActiveFiltersDisplay";
 import { getWaitlistTableColumns } from "./WaitlistTableColumns";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "../skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
-import { FilterSummary } from "../filters/FilterSummary";
 import { WaitlistEntry } from "@/types/types";
 import { ScheduleManager } from "../export/ScheduleManager";
 import { StatusUpdateDialog } from "../StatusUpdateDialog";
@@ -53,12 +51,7 @@ export default function WaitlistTableContent({
   const {
     data: entries,
     filteredData,
-    filters: activeFilters,
-    clearFilter,
-    clearAllFilters,
-    isLoading: filtersLoading,
     activeFilterCount,
-    filterConfig,
   } = useDataTable();
 
   // Handle status update from dropdown menu
@@ -300,6 +293,7 @@ export default function WaitlistTableContent({
             enabled: true,
             placeholder: "Search waitlist...",
           }}
+          primaryFilterKeys={["status", "audience", "city"]}
           export={{
             enabled: true,
             data: entries || [],
@@ -320,22 +314,6 @@ export default function WaitlistTableContent({
           }}
         />
       )}
-
-      {/* Active Filters Display and Filter Summary below the toolbar */}
-      <ActiveFiltersDisplay
-        activeFilters={activeFilters}
-        filterConfig={filterConfig}
-        clearFilter={clearFilter}
-        clearAllFilters={clearAllFilters}
-        variant="default"
-      />
-
-      <FilterSummary
-        filteredDataLength={filteredData.length}
-        totalDataLength={tableData.length}
-        activeFilterCount={activeFilterCount}
-        isLoading={filtersLoading}
-      />
 
       {showLoading ? (
         <DataTableSkeleton

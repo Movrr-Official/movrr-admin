@@ -32,6 +32,7 @@ export function AdvertisersTable({
       label: "Status",
       type: "multi-select",
       key: "status",
+      primary: true,
       options: [
         { value: "active", label: "Active" },
         { value: "pending", label: "Pending" },

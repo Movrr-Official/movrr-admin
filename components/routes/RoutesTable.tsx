@@ -60,6 +60,7 @@ export function RoutesTable({
       label: "Status",
       type: "multi-select",
       key: "status",
+      primary: true,
       options: [
         { value: "assigned", label: "Assigned" },
         { value: "in-progress", label: "In Progress" },
@@ -82,6 +83,7 @@ export function RoutesTable({
       label: "Performance",
       type: "multi-select",
       key: "performance",
+      primary: true,
       options: [
         { value: "high", label: "High" },
         { value: "medium", label: "Medium" },

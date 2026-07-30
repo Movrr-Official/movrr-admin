@@ -5,8 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { Layers } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
-import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
-import { FilterSummary } from "@/components/filters/FilterSummary";
 import { FulfilmentQueueTable } from "@/components/rewards/fulfilment/FulfilmentQueueTable";
 import {
   DataTableContainer,
@@ -42,6 +40,7 @@ const QUEUE_FILTER_CONFIG: FilterConfig[] = [
     label: "State",
     type: "multi-select",
     key: "status",
+    primary: true,
     options: FULFILMENT_STATES.map((state) => ({
       value: state,
       label: formatFulfilmentState(state),
@@ -52,6 +51,7 @@ const QUEUE_FILTER_CONFIG: FilterConfig[] = [
     label: "Type",
     type: "multi-select",
     key: "type",
+    primary: true,
     options: FULFILMENT_TYPES.map((type) => ({
       value: type,
       label: formatFulfilmentType(type),
@@ -77,15 +77,7 @@ function FulfilmentQueueContent({
   totalCount,
 }: Omit<FulfilmentQueuePanelProps, "rows"> & { totalCount: number }) {
   const searchParams = useSearchParams();
-  const {
-    data,
-    filteredData,
-    filters: activeFilters,
-    clearFilter,
-    clearAllFilters,
-    activeFilterCount,
-    filterConfig,
-  } = useDataTable();
+  const { filteredData } = useDataTable();
 
   const search = searchParams.get("search") ?? "";
 
@@ -133,22 +125,6 @@ function FulfilmentQueueContent({
           isLoading: isFetching,
         }}
       />
-
-      {activeFilterCount > 0 && (
-        <div className="flex flex-col gap-2">
-          <ActiveFiltersDisplay
-            activeFilters={activeFilters}
-            filterConfig={filterConfig}
-            clearFilter={clearFilter}
-            clearAllFilters={clearAllFilters}
-          />
-          <FilterSummary
-            filteredDataLength={displayRows.length}
-            totalDataLength={data.length}
-            activeFilterCount={activeFilterCount}
-          />
-        </div>
-      )}
 
       <Card className="border-border">
         <CardHeader className="pb-2">

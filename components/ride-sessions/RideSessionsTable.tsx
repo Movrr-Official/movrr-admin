@@ -9,8 +9,6 @@ import { DataTableContainer } from "@/context/DataTableContext";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
-import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
-import { FilterSummary } from "@/components/filters/FilterSummary";
 import { useDataTable } from "@/context/DataTableContext";
 import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import { getRideSessionsTableColumns } from "./RideSessionsTableColumns";
@@ -41,11 +39,6 @@ function RideSessionsTableContent({
   const {
     data: sessions,
     filteredData,
-    filters: activeFilters,
-    clearFilter,
-    clearAllFilters,
-    activeFilterCount,
-    filterConfig,
   } = useDataTable();
 
   useEffect(() => {
@@ -126,22 +119,6 @@ function RideSessionsTableContent({
           />
         )}
 
-        {activeFilterCount > 0 && (
-          <div className="flex flex-col gap-2">
-            <ActiveFiltersDisplay
-              activeFilters={activeFilters}
-              filterConfig={filterConfig}
-              clearFilter={clearFilter}
-              clearAllFilters={clearAllFilters}
-            />
-            <FilterSummary
-              filteredDataLength={filteredData.length}
-              totalDataLength={sessions.length}
-              activeFilterCount={activeFilterCount}
-            />
-          </div>
-        )}
-
         <DataTable
           columns={columns}
           data={filteredData}
@@ -199,8 +176,9 @@ export function RideSessionsTable({
     {
       id: "earningMode",
       label: "Ride Mode",
-      type: "multi-select",
+      type: "select",
       key: "earningMode",
+      primary: true,
       options: [
         { value: "standard_ride", label: "Standard Ride" },
         { value: "ad_enhanced_ride", label: "Boosted Ride" },
@@ -211,6 +189,7 @@ export function RideSessionsTable({
       label: "Verification",
       type: "multi-select",
       key: "verificationStatus",
+      primary: true,
       options: [
         { value: "verified", label: "Verified" },
         { value: "pending", label: "Pending" },

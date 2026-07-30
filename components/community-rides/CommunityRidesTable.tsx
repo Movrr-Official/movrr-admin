@@ -26,6 +26,7 @@ export function CommunityRidesTable({
       label: "Status",
       type: "multi-select",
       key: "status",
+      primary: true,
       options: [
         { value: "upcoming", label: "Upcoming" },
         { value: "active", label: "Active" },
@@ -38,6 +39,7 @@ export function CommunityRidesTable({
       label: "Category",
       type: "multi-select",
       key: "category",
+      primary: true,
       options: [
         { value: "beginner", label: "Beginner" },
         { value: "intermediate", label: "Intermediate" },

@@ -32,6 +32,7 @@ export function UsersTable({
       label: "Role",
       type: "multi-select",
       key: "role",
+      primary: true,
       options: [
         { value: "rider", label: "Rider" },
         { value: "advertiser", label: "Advertiser" },
@@ -46,6 +47,7 @@ export function UsersTable({
       label: "Status",
       type: "multi-select",
       key: "status",
+      primary: true,
       options: [
         { value: "active", label: "Active" },
         { value: "inactive", label: "Inactive" },

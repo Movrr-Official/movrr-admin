@@ -10,6 +10,79 @@ export interface FilterConfig {
     count?: number;
   }>;
   placeholder?: string;
+  /**
+   * Prefer this filter as an inline toolbar control when space is limited.
+   * Unmarked filters overflow into "More filters" once the primary slots are full.
+   */
+  primary?: boolean;
+  /**
+   * Lower number = higher importance when choosing inline filters.
+   * Defaults: primary filters ≈ 0, others ≈ 100 (stable to config order).
+   */
+  priority?: number;
+}
+
+/** Max dedicated inline filter controls before overflow goes to "More filters". */
+export const MAX_INLINE_PRIMARY_FILTERS = 3;
+
+export function resolveInlineFilterSplit(
+  filterConfig: FilterConfig[],
+  primaryFilterKeys?: string[],
+): { primaryFilters: FilterConfig[]; overflowFilters: FilterConfig[] } {
+  if (!filterConfig.length) {
+    return { primaryFilters: [], overflowFilters: [] };
+  }
+
+  if (primaryFilterKeys?.length) {
+    const primaryKeys = new Set(primaryFilterKeys);
+    return {
+      primaryFilters: filterConfig.filter(
+        (filter) =>
+          primaryKeys.has(filter.key) || primaryKeys.has(filter.id),
+      ),
+      overflowFilters: filterConfig.filter(
+        (filter) =>
+          !primaryKeys.has(filter.key) && !primaryKeys.has(filter.id),
+      ),
+    };
+  }
+
+  const ranked = filterConfig
+    .map((filter, index) => ({
+      filter,
+      index,
+      rank:
+        filter.priority ??
+        (filter.primary ? index : 100 + index),
+    }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map((entry) => entry.filter);
+
+  const markedPrimary = ranked.filter((filter) => filter.primary);
+
+  if (markedPrimary.length > 0) {
+    const primaryFilters = markedPrimary.slice(0, MAX_INLINE_PRIMARY_FILTERS);
+    const primaryIds = new Set(primaryFilters.map((filter) => filter.id));
+    return {
+      primaryFilters,
+      overflowFilters: filterConfig.filter(
+        (filter) => !primaryIds.has(filter.id),
+      ),
+    };
+  }
+
+  if (ranked.length > MAX_INLINE_PRIMARY_FILTERS) {
+    const primaryFilters = ranked.slice(0, MAX_INLINE_PRIMARY_FILTERS);
+    const primaryIds = new Set(primaryFilters.map((filter) => filter.id));
+    return {
+      primaryFilters,
+      overflowFilters: filterConfig.filter(
+        (filter) => !primaryIds.has(filter.id),
+      ),
+    };
+  }
+
+  return { primaryFilters: ranked, overflowFilters: [] };
 }
 
 export type FilterState = {

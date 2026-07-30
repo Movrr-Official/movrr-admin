@@ -24,6 +24,7 @@ export function ProTipsTable({
       label: "Category",
       type: "multi-select",
       key: "category",
+      primary: true,
       options: [
         { value: "earning", label: "Earning" },
         { value: "timing", label: "Timing" },
@@ -36,8 +37,9 @@ export function ProTipsTable({
     {
       id: "isActive",
       label: "Status",
-      type: "multi-select",
+      type: "select",
       key: "isActive",
+      primary: true,
       options: [
         { value: "true", label: "Active" },
         { value: "false", label: "Inactive" },

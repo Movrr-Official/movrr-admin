@@ -41,6 +41,7 @@ export function RidersTable({
       label: "Status",
       type: "multi-select",
       key: "status",
+      primary: true,
       options: [
         { value: "active", label: "Active" },
         { value: "pending", label: "Pending" },
@@ -52,6 +53,7 @@ export function RidersTable({
       label: "Vehicle",
       type: "multi-select",
       key: "vehicleType",
+      primary: true,
       options: [
         { value: "standard_bike", label: "Standard Bike" },
         { value: "e_bike", label: "E-Bike" },

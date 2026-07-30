@@ -6,11 +6,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Rider } from "@/schemas";
 import { useDataTable } from "@/context/DataTableContext";
-import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
-import { FilterSummary } from "@/components/filters/FilterSummary";
 import { Button } from "@/components/ui/button";
 import { RiderDetailsDrawer } from "./RiderDetailsDrawer";
 import { getRidersTableColumns } from "./RidersTableColumns";
@@ -49,11 +47,6 @@ export default function RidersTableContent({
   const {
     data: riders,
     filteredData,
-    filters: activeFilters,
-    clearFilter,
-    clearAllFilters,
-    activeFilterCount,
-    filterConfig,
   } = useDataTable();
 
   // Migrate legacy ?selected= deep-links to ?id=
@@ -201,22 +194,6 @@ export default function RidersTableContent({
               isLoading: isRefetching,
             }}
           />
-        )}
-
-        {activeFilterCount > 0 && (
-          <div className="flex flex-col gap-2">
-            <ActiveFiltersDisplay
-              activeFilters={activeFilters}
-              filterConfig={filterConfig}
-              clearFilter={clearFilter}
-              clearAllFilters={clearAllFilters}
-            />
-            <FilterSummary
-              filteredDataLength={filteredData.length}
-              totalDataLength={riders.length}
-              activeFilterCount={activeFilterCount}
-            />
-          </div>
         )}
 
         {selectedRows.length > 0 && (

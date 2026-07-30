@@ -3,12 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { ActiveFiltersDisplay } from "../filters/ActiveFiltersDisplay";
 import { getUsersTableColumns } from "./UsersTableColumns";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "../skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
-import { FilterSummary } from "../filters/FilterSummary";
 import { User } from "@/schemas";
 import { useDataTable } from "@/context/DataTableContext";
 import { useToast } from "@/hooks/useToast";
@@ -57,12 +55,6 @@ export default function UsersTableContent({
   const {
     data: users,
     filteredData,
-    filters: activeFilters,
-    clearFilter,
-    clearAllFilters,
-    isLoading: filtersLoading,
-    activeFilterCount,
-    filterConfig,
   } = useDataTable();
 
   useEffect(() => {
@@ -360,23 +352,6 @@ export default function UsersTableContent({
               isLoading: isRefetching,
             }}
           />
-        )}
-
-        {/* Active Filters */}
-        {activeFilterCount > 0 && (
-          <div className="flex flex-col gap-2">
-            <ActiveFiltersDisplay
-              activeFilters={activeFilters}
-              filterConfig={filterConfig}
-              clearFilter={clearFilter}
-              clearAllFilters={clearAllFilters}
-            />
-            <FilterSummary
-              filteredDataLength={filteredData.length}
-              totalDataLength={users.length}
-              activeFilterCount={activeFilterCount}
-            />
-          </div>
         )}
 
         {/* Bulk Actions - shown above table when rows are selected */}

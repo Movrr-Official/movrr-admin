@@ -35,6 +35,7 @@ export function WaitlistTable({
         label: "City",
         type: "multi-select",
         key: "city",
+        primary: true,
         options: [...new Set(entries.map((entry) => entry.city))].map(
           (city) => ({
             value: city,
@@ -47,6 +48,7 @@ export function WaitlistTable({
         label: "Audience",
         type: "multi-select",
         key: "audience",
+        primary: true,
         options: [
           { value: "rider", label: "Rider" },
           { value: "brand", label: "Brand" },
@@ -67,7 +69,7 @@ export function WaitlistTable({
       {
         id: "source",
         label: "Source",
-        type: "multi-select",
+        type: "select",
         key: "source",
         options: [
           { value: "movrr_website", label: "Website" },
@@ -92,8 +94,9 @@ export function WaitlistTable({
       {
         id: "status",
         label: "Status",
-        type: "select",
+        type: "multi-select",
         key: "status",
+        primary: true,
         options: [
           { value: "pending", label: "Pending" },
           { value: "approved", label: "Approved" },

@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
-import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
-import { FilterSummary } from "@/components/filters/FilterSummary";
 import { getCommunityRidesTableColumns } from "./CommunityRidesTableColumns";
 import { CommunityRideDetailsDrawer } from "./CommunityRideDetailsDrawer";
 import { CommunityRideFormDrawer } from "./CommunityRideFormDrawer";
@@ -45,11 +43,6 @@ export default function CommunityRidesTableContent({
   const {
     data: rides,
     filteredData,
-    filters: activeFilters,
-    clearFilter,
-    clearAllFilters,
-    activeFilterCount,
-    filterConfig,
   } = useDataTable();
 
   useEffect(() => {
@@ -168,22 +161,6 @@ export default function CommunityRidesTableContent({
             }}
           />
         )}
-
-        {activeFilterCount > 0 && (
-          <ActiveFiltersDisplay
-            activeFilters={activeFilters}
-            filterConfig={filterConfig}
-            clearFilter={clearFilter}
-            clearAllFilters={clearAllFilters}
-          />
-        )}
-
-        <FilterSummary
-          filteredDataLength={filteredData.length}
-          totalDataLength={filteredData.length}
-          activeFilterCount={activeFilterCount}
-          entityName="ride"
-        />
 
         <DataTable
           columns={columns}

@@ -58,6 +58,7 @@ export function RewardsTable({
       label: "Type",
       type: "multi-select",
       key: "type",
+      primary: true,
       options: [
         { value: "awarded", label: "Awarded" },
         { value: "redeemed", label: "Redeemed" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { FilterConfig, FilterState } from "@/lib/applyFilters";
 
@@ -10,6 +10,51 @@ interface UseFiltersProps {
   persistToUrl?: boolean;
   debounceMs?: number;
   onFilteredDataChange?: (filteredData: any[]) => void;
+}
+
+const MULTI_SELECT_URL_DEBOUNCE_MS = 500;
+
+function buildUrl(
+  pathname: string,
+  params: URLSearchParams,
+): string {
+  const query = params.toString();
+  return query ? `${pathname}?${query}` : pathname;
+}
+
+function readFiltersFromSearchParams(
+  searchParams: URLSearchParams,
+  filterConfig: FilterConfig[],
+): FilterState {
+  const urlFilters: FilterState = {};
+  filterConfig.forEach((config) => {
+    const value = searchParams.get(config.key);
+    if (!value) return;
+    if (config.type === "multi-select") {
+      urlFilters[config.key] = value.split(",").filter(Boolean);
+    } else if (config.type === "checkbox") {
+      urlFilters[config.key] = value === "true";
+    } else {
+      urlFilters[config.key] = value;
+    }
+  });
+  return urlFilters;
+}
+
+function filtersEqual(a: FilterState, b: FilterState): boolean {
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) return false;
+  return aKeys.every((key) => {
+    const av = a[key];
+    const bv = b[key];
+    if (Array.isArray(av) && Array.isArray(bv)) {
+      return (
+        av.length === bv.length && av.every((value, index) => value === bv[index])
+      );
+    }
+    return av === bv;
+  });
 }
 
 export function useFilters({
@@ -27,78 +72,96 @@ export function useFilters({
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize filters from URL
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
+
+  const filterKeys = useMemo(
+    () => new Set(filterConfig.map((config) => config.key)),
+    [filterConfig],
+  );
+
+  const filterConfigByKey = useMemo(() => {
+    const map = new Map<string, FilterConfig>();
+    filterConfig.forEach((config) => map.set(config.key, config));
+    return map;
+  }, [filterConfig]);
+
+  // Initialize / resync filters from URL (preserves back/forward + deep links).
+  // Skip while a local URL write is pending so search/other params don't wipe filters.
   useEffect(() => {
-    if (!persistToUrl || isInitialized) return;
+    if (!persistToUrl) {
+      if (!isInitialized) setIsInitialized(true);
+      return;
+    }
+    if (timeoutRef.current) return;
 
-    const urlFilters: FilterState = {};
-    filterConfig.forEach((config) => {
-      const value = searchParams.get(config.key);
-      if (value) {
-        if (config.type === "multi-select") {
-          urlFilters[config.key] = value.split(",");
-        } else if (config.type === "checkbox") {
-          urlFilters[config.key] = value === "true";
-        } else {
-          urlFilters[config.key] = value;
-        }
-      }
-    });
-
-    setFilters(urlFilters);
-    setIsInitialized(true);
+    const urlFilters = readFiltersFromSearchParams(searchParams, filterConfig);
+    setFilters((prev) => (filtersEqual(prev, urlFilters) ? prev : urlFilters));
+    if (!isInitialized) setIsInitialized(true);
   }, [searchParams, filterConfig, persistToUrl, isInitialized]);
 
-  // Update URL when filters change
   const updateUrl = useCallback(
     (newFilters: FilterState) => {
       if (!persistToUrl) return;
 
-      const params = new URLSearchParams(searchParams.toString());
+      // Start from current params so non-filter keys (id, search, etc.) stay intact
+      const params = new URLSearchParams(searchParamsRef.current.toString());
 
-      // Clear existing filter params
       filterConfig.forEach((config) => {
         params.delete(config.key);
       });
 
-      // Add new filter params
-      Object.entries(newFilters).forEach(([key, value]: [string, any]) => {
-        if (value !== null && value !== undefined && value !== "") {
-          if (Array.isArray(value)) {
-            if (value.length > 0) {
-              params.set(key, value.join(","));
-            }
-          } else if (typeof value === "boolean") {
-            params.set(key, value.toString());
-          } else {
-            params.set(key, value.toString());
-          }
+      Object.entries(newFilters).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === "") return;
+        if (Array.isArray(value)) {
+          if (value.length > 0) params.set(key, value.join(","));
+          return;
         }
+        if (typeof value === "boolean") {
+          params.set(key, value.toString());
+          return;
+        }
+        if (typeof value === "object") return;
+        params.set(key, String(value));
       });
 
-      const newUrl = `${pathname}?${params.toString()}`;
-      router.push(newUrl, { scroll: false });
+      router.push(buildUrl(pathname, params), { scroll: false });
     },
-    [pathname, router, searchParams, filterConfig, persistToUrl]
+    [pathname, router, filterConfig, persistToUrl],
   );
 
-  // Debounced filter update
-  const debouncedUpdate = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    return (newFilters: FilterState) => {
+  const scheduleUrlUpdate = useCallback(
+    (newFilters: FilterState, key?: string) => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       setIsLoading(true);
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
+
+      const config = key ? filterConfigByKey.get(key) : undefined;
+      const delay =
+        config?.type === "multi-select"
+          ? Math.max(debounceMs, MULTI_SELECT_URL_DEBOUNCE_MS)
+          : debounceMs;
+
+      timeoutRef.current = setTimeout(() => {
         updateUrl(newFilters);
         setIsLoading(false);
-      }, debounceMs);
+        timeoutRef.current = null;
+      }, delay);
+    },
+    [debounceMs, filterConfigByKey, updateUrl],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [debounceMs, updateUrl]);
+  }, []);
 
   const updateFilter = useCallback(
     (key: string, value: any) => {
-      const newFilters = { ...filters };
+      const newFilters = { ...filtersRef.current };
 
       if (
         value === null ||
@@ -111,33 +174,36 @@ export function useFilters({
       }
 
       setFilters(newFilters);
-      debouncedUpdate(newFilters);
+      scheduleUrlUpdate(newFilters, key);
     },
-    [filters, debouncedUpdate]
+    [scheduleUrlUpdate],
   );
 
   const clearFilter = useCallback(
     (key: string) => {
       updateFilter(key, null);
     },
-    [updateFilter]
+    [updateFilter],
   );
 
   const clearAllFilters = useCallback(() => {
-    setFilters({});
-    if (persistToUrl) {
-      const params = new URLSearchParams();
-      // Preserve non-filter search params
-      searchParams.forEach((value, key) => {
-        if (!filterConfig.some((config) => config.key === key)) {
-          params.set(key, value);
-        }
-      });
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
-  }, [persistToUrl, searchParams, pathname, router, filterConfig]);
+    setFilters({});
+    setIsLoading(false);
+    if (!persistToUrl) return;
 
-  // Apply filters to data
+    const params = new URLSearchParams();
+    searchParamsRef.current.forEach((value, key) => {
+      if (!filterKeys.has(key)) {
+        params.set(key, value);
+      }
+    });
+    router.push(buildUrl(pathname, params), { scroll: false });
+  }, [persistToUrl, pathname, router, filterKeys]);
+
   const filteredData = useMemo(() => {
     if (Object.keys(filters).length === 0) return data;
 
@@ -147,27 +213,22 @@ export function useFilters({
 
         if (filterValue === null || filterValue === undefined) return true;
 
-        // Search filter - enhanced to search across multiple fields
         if (key === "search" && typeof filterValue === "string") {
           const searchTerm = filterValue.toLowerCase();
-          return Object.entries(item).some(([fieldKey, value]) => {
-            // You could make this configurable per use case
-            const stringValue = String(value).toLowerCase();
-            return stringValue.includes(searchTerm);
-          });
+          return Object.values(item).some((value) =>
+            String(value).toLowerCase().includes(searchTerm),
+          );
         }
 
-        // Multi-select filter
         if (Array.isArray(filterValue)) {
-          return filterValue.includes(itemValue);
+          const normalized = String(itemValue);
+          return filterValue.some((value) => String(value) === normalized);
         }
 
-        // Single select filter
         if (typeof filterValue === "string") {
-          return itemValue === filterValue;
+          return String(itemValue) === filterValue;
         }
 
-        // Checkbox filter
         if (typeof filterValue === "boolean") {
           return itemValue === filterValue;
         }
@@ -177,36 +238,29 @@ export function useFilters({
     });
   }, [data, filters]);
 
-  // Notify parent of filtered data changes
   useEffect(() => {
     onFilteredDataChange?.(filteredData);
   }, [filteredData, onFilteredDataChange]);
 
-  // Get active filters count
   const activeFilterCount = useMemo(() => {
     return Object.values(filters).filter(
       (value) =>
         value !== null &&
         value !== undefined &&
         value !== "" &&
-        !(Array.isArray(value) && value.length === 0)
+        !(Array.isArray(value) && value.length === 0),
     ).length;
   }, [filters]);
 
   return {
-    // State
     data,
     filteredData,
     filters,
     isLoading,
     activeFilterCount,
-
-    // Actions
     updateFilter,
     clearFilter,
     clearAllFilters,
-
-    // Configuration
     filterConfig,
   };
 }

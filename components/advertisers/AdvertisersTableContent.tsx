@@ -5,11 +5,9 @@ import { Building2, Plus } from "lucide-react";
 
 import { Advertiser } from "@/schemas";
 import { useDataTable } from "@/context/DataTableContext";
-import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
-import { FilterSummary } from "@/components/filters/FilterSummary";
 import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import { AdvertiserDetailsDrawer } from "./AdvertiserDetailsDrawer";
 import { getAdvertisersTableColumns } from "./AdvertisersTableColumns";
@@ -40,11 +38,6 @@ export default function AdvertisersTableContent({
   const {
     data: advertisers,
     filteredData,
-    filters: activeFilters,
-    clearFilter,
-    clearAllFilters,
-    activeFilterCount,
-    filterConfig,
   } = useDataTable();
 
   useEffect(() => {
@@ -139,22 +132,6 @@ export default function AdvertisersTableContent({
               isLoading: isRefetching,
             }}
           />
-        )}
-
-        {activeFilterCount > 0 && (
-          <div className="flex flex-col gap-2">
-            <ActiveFiltersDisplay
-              activeFilters={activeFilters}
-              filterConfig={filterConfig}
-              clearFilter={clearFilter}
-              clearAllFilters={clearAllFilters}
-            />
-            <FilterSummary
-              filteredDataLength={filteredData.length}
-              totalDataLength={advertisers.length}
-              activeFilterCount={activeFilterCount}
-            />
-          </div>
         )}
 
         <DataTable

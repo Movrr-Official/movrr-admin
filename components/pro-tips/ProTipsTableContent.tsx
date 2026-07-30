@@ -4,8 +4,6 @@ import { useState } from "react";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
-import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
-import { FilterSummary } from "@/components/filters/FilterSummary";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -44,14 +42,7 @@ export default function ProTipsTableContent({
   const deleteMutation = useDeleteProTip();
   const toggleMutation = useToggleProTipActive();
 
-  const {
-    filteredData,
-    filters: activeFilters,
-    clearFilter,
-    clearAllFilters,
-    activeFilterCount,
-    filterConfig,
-  } = useDataTable();
+  const { filteredData } = useDataTable();
 
   const handleEdit = (tip: ProTip) => {
     setEditTip(tip);
@@ -119,22 +110,6 @@ export default function ProTipsTableContent({
             New Tip
           </Button>
         </div>
-
-        {activeFilterCount > 0 && (
-          <ActiveFiltersDisplay
-            activeFilters={activeFilters}
-            filterConfig={filterConfig}
-            clearFilter={clearFilter}
-            clearAllFilters={clearAllFilters}
-          />
-        )}
-
-        <FilterSummary
-          filteredDataLength={filteredData.length}
-          totalDataLength={filteredData.length}
-          activeFilterCount={activeFilterCount}
-          entityName="tip"
-        />
 
         <DataTable columns={columns} data={filteredData as ProTip[]} />
       </div>

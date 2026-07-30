@@ -6,8 +6,6 @@ import { Download, Handshake, Plus, ShieldOff, UserCheck } from "lucide-react";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
-import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
-import { FilterSummary } from "@/components/filters/FilterSummary";
 import { BulkActions, type BulkAction } from "@/components/filters/BulkActions";
 import { OpsErrorState } from "@/components/ops/OpsEmptyState";
 import {
@@ -54,6 +52,7 @@ const PARTNER_FILTER_CONFIG: FilterConfig[] = [
     label: "Readiness",
     type: "multi-select",
     key: "readiness",
+    primary: true,
     options: [
       { value: "ready", label: "Ready" },
       { value: "at_risk", label: "At risk" },
@@ -65,6 +64,7 @@ const PARTNER_FILTER_CONFIG: FilterConfig[] = [
     label: "Status",
     type: "multi-select",
     key: "status",
+    primary: true,
     options: [
       { value: "active", label: "Active" },
       { value: "inactive", label: "Inactive" },
@@ -123,13 +123,8 @@ function PartnerOperationsTableContent({
   const lastTrackedSearch = useRef("");
 
   const {
-    data,
     filteredData,
     filters: activeFilters,
-    clearFilter,
-    clearAllFilters,
-    activeFilterCount,
-    filterConfig,
   } = useDataTable();
 
   const search = searchParams.get("search") ?? "";
@@ -312,22 +307,6 @@ function PartnerOperationsTableContent({
           isLoading: isFetching,
         }}
       />
-
-      {activeFilterCount > 0 && (
-        <div className="flex flex-col gap-2">
-          <ActiveFiltersDisplay
-            activeFilters={activeFilters}
-            filterConfig={filterConfig}
-            clearFilter={clearFilter}
-            clearAllFilters={clearAllFilters}
-          />
-          <FilterSummary
-            filteredDataLength={rows.length}
-            totalDataLength={data.length}
-            activeFilterCount={activeFilterCount}
-          />
-        </div>
-      )}
 
       <BulkActions
         selectedRows={selectedRows}

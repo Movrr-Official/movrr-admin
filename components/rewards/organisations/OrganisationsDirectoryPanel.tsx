@@ -6,8 +6,6 @@ import { Building2, Plus } from "lucide-react";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
-import { ActiveFiltersDisplay } from "@/components/filters/ActiveFiltersDisplay";
-import { FilterSummary } from "@/components/filters/FilterSummary";
 import { OpsErrorState } from "@/components/ops/OpsEmptyState";
 import {
   getOrganisationsDirectoryTableColumns,
@@ -39,6 +37,7 @@ function buildOrganisationFilterConfig(): FilterConfig[] {
       label: "Type",
       type: "multi-select",
       key: "type",
+      primary: true,
       options: [
         {
           value: "reward_partner",
@@ -54,6 +53,7 @@ function buildOrganisationFilterConfig(): FilterConfig[] {
       label: "Status",
       type: "multi-select",
       key: "status",
+      primary: true,
       options: [
         { value: "active", label: "Active" },
         { value: "inactive", label: "Inactive" },
@@ -100,13 +100,8 @@ function OrganisationsDirectoryContent({
   const lastTrackedSearch = useRef("");
 
   const {
-    data,
     filteredData,
     filters: activeFilters,
-    clearFilter,
-    clearAllFilters,
-    activeFilterCount,
-    filterConfig,
   } = useDataTable();
 
   const search = searchParams.get("search") ?? "";
@@ -181,22 +176,6 @@ function OrganisationsDirectoryContent({
           isLoading: isFetching,
         }}
       />
-
-      {activeFilterCount > 0 && (
-        <div className="flex flex-col gap-2">
-          <ActiveFiltersDisplay
-            activeFilters={activeFilters}
-            filterConfig={filterConfig}
-            clearFilter={clearFilter}
-            clearAllFilters={clearAllFilters}
-          />
-          <FilterSummary
-            filteredDataLength={rows.length}
-            totalDataLength={data.length}
-            activeFilterCount={activeFilterCount}
-          />
-        </div>
-      )}
 
       {isError ? (
         <OpsErrorState

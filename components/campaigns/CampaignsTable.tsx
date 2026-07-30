@@ -35,6 +35,7 @@ export function CampaignsTable({
       label: "Status",
       type: "multi-select",
       key: "status",
+      primary: true,
       options: [
         { value: "active", label: "Active" },
         { value: "paused", label: "Paused" },
@@ -46,8 +47,9 @@ export function CampaignsTable({
     {
       id: "campaignType",
       label: "Type",
-      type: "multi-select",
+      type: "select",
       key: "campaignType",
+      primary: true,
       options: [
         { value: "destination_ride", label: "Destination Ride" },
         { value: "swarm", label: "Swarm" },
