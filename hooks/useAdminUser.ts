@@ -22,8 +22,9 @@ export function useAdminUser(options?: { enabled?: boolean }) {
 
 /** Capability-first permission hook (also accepts legacy `module:action` strings). */
 export function usePermission(permission: string) {
-  const { data: adminUser } = useAdminUser();
-  if (!adminUser?.role) return false;
+  const { data: adminUser, isFetched } = useAdminUser();
+  // Keep SSR and the first client paint aligned — deny until the query settles.
+  if (!isFetched || !adminUser?.role) return false;
 
   if (permission.includes(".")) {
     return hasCapability(adminUser.role, permission);
@@ -34,7 +35,23 @@ export function usePermission(permission: string) {
 
 /** Direct capability check for UI gating. */
 export function useCapability(capability: string) {
-  const { data: adminUser } = useAdminUser();
-  if (!adminUser?.role) return false;
+  const { data: adminUser, isFetched } = useAdminUser();
+  // Keep SSR and the first client paint aligned — deny until the query settles.
+  if (!isFetched || !adminUser?.role) return false;
   return hasCapability(adminUser.role, capability);
+}
+
+/**
+ * Capability check with an explicit readiness flag for markup that must not
+ * change between SSR and hydration (badges, labels, etc.).
+ */
+export function useCapabilityState(capability: string): {
+  ready: boolean;
+  allowed: boolean;
+} {
+  const { data: adminUser, isFetched } = useAdminUser();
+  const ready = isFetched;
+  const allowed =
+    ready && !!adminUser?.role && hasCapability(adminUser.role, capability);
+  return { ready, allowed };
 }

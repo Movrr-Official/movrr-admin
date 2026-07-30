@@ -18,10 +18,11 @@ import {
 import { simulateEmployeeRole } from "@/features/authorization/diagnostics";
 import { EMPLOYEE_ROLE_OPTIONS } from "@/features/authorization/roleOptions";
 import { SOD_RULES } from "@/features/authorization/sod";
-import { useCapability } from "@/hooks/useAdminUser";
+import { useCapabilityState } from "@/hooks/useAdminUser";
 
 export function AuthorizationDiagnosticsPage() {
-  const canManage = useCapability("authz.manage");
+  const { ready: capabilityReady, allowed: canManage } =
+    useCapabilityState("authz.manage");
   const [role, setRole] = useState<CanonicalEmployeeRole>("operations_manager");
 
   const simulation = useMemo(() => simulateEmployeeRole(role), [role]);
@@ -65,7 +66,9 @@ export function AuthorizationDiagnosticsPage() {
               <Badge variant="outline">
                 {simulation.capabilities.length} capabilities
               </Badge>
-              {canManage ? (
+              {!capabilityReady ? (
+                <Badge variant="outline">checking access</Badge>
+              ) : canManage ? (
                 <Badge>authz.manage</Badge>
               ) : (
                 <Badge variant="outline">inspect only</Badge>

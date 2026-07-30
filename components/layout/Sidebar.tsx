@@ -122,6 +122,7 @@ function resolveNavIcon(name: string) {
 const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [sidebarPreferenceReady, setSidebarPreferenceReady] = useState(false);
   const sidebarOpen = useAppSelector((state) => state.ui.sidebarOpen);
   const pathname = usePathname();
   const dispatch = useAppDispatch();
@@ -157,26 +158,24 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("sidebarOpen", JSON.stringify(sidebarOpen));
-  }, [sidebarOpen]);
-
+  // Restore preference before any persist write, so the default collapsed
+  // state does not overwrite a saved expanded choice on reload.
   useEffect(() => {
     const stored = localStorage.getItem("sidebarOpen");
     if (stored !== null) {
-      dispatch(setSidebarOpen(JSON.parse(stored)));
+      try {
+        dispatch(setSidebarOpen(JSON.parse(stored) === true));
+      } catch {
+        // Ignore corrupt values; keep Redux default (collapsed).
+      }
     }
+    setSidebarPreferenceReady(true);
   }, [dispatch]);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024 && sidebarOpen) {
-        dispatch(toggleSidebar());
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [dispatch, sidebarOpen]);
+    if (!sidebarPreferenceReady) return;
+    localStorage.setItem("sidebarOpen", JSON.stringify(sidebarOpen));
+  }, [sidebarOpen, sidebarPreferenceReady]);
 
   const countBadgeForHref = (href: string): JSX.Element | null => {
     if (!BADGE_HREFS.has(href)) return null;
