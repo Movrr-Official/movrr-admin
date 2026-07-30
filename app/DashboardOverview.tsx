@@ -53,8 +53,16 @@ import {
   ChevronRight,
   Ruler,
   Leaf,
+  Shield,
+  AlertTriangle,
+  Activity,
+  List,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { useCounts } from "@/providers/CountProvider";
+import { useRideSessionsData } from "@/hooks/useRideSessionsData";
+import { useOpenIncidentCount } from "@/hooks/useIncidentsData";
+import { useAdminUser } from "@/hooks/useAdminUser";
 
 const DASHBOARD_LOCALE = "nl-NL";
 const DASHBOARD_TIMEZONE = "Europe/Amsterdam";
@@ -250,8 +258,27 @@ export default function DashboardOverview() {
   );
   const { data: distanceStats, isLoading: distanceLoading } =
     useDistanceStats();
+  const { data: adminUser } = useAdminUser();
+  const canViewOpsQueues =
+    adminUser?.role === "admin" || adminUser?.role === "super_admin";
+
   const { data: sessionAnalytics, isLoading: analyticsLoading } =
     useSessionAnalytics(co2Period);
+  const { totalWaitlist, isLoading: countsLoading } = useCounts();
+  const { data: rideSessions, isLoading: rideSessionsLoading } =
+    useRideSessionsData(undefined, { enabled: canViewOpsQueues });
+  const { data: openIncidents = 0, isLoading: incidentsLoading } =
+    useOpenIncidentCount({ enabled: canViewOpsQueues });
+
+  const pendingVerificationCount =
+    rideSessions?.filter(
+      (session) =>
+        session.verificationStatus === "pending" ||
+        session.verificationStatus === "manual_review",
+    ).length ?? 0;
+
+  const queuesLoading =
+    countsLoading || rideSessionsLoading || incidentsLoading;
 
   const isDateWithinRange = (value?: string | null) => {
     if (!value) return false;
@@ -690,6 +717,78 @@ export default function DashboardOverview() {
             },
           ]}
         />
+
+        {canViewOpsQueues ? (
+          <Card className="border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xl font-bold">Pending queues</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Link
+                  href="/waitlist"
+                  className="rounded-xl border border-border/60 bg-background/40 p-4 transition hover:bg-muted/40"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <List className="h-4 w-4" />
+                      Waitlist
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="mt-2 text-2xl font-bold text-foreground">
+                    {queuesLoading ? "—" : totalWaitlist}
+                  </p>
+                </Link>
+                <Link
+                  href="/fraud"
+                  className="rounded-xl border border-border/60 bg-background/40 p-4 transition hover:bg-muted/40"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Shield className="h-4 w-4" />
+                      Sessions pending verify
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="mt-2 text-2xl font-bold text-foreground">
+                    {queuesLoading ? "—" : pendingVerificationCount}
+                  </p>
+                </Link>
+                <Link
+                  href="/incidents"
+                  className="rounded-xl border border-border/60 bg-background/40 p-4 transition hover:bg-muted/40"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <AlertTriangle className="h-4 w-4" />
+                      Open incidents
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="mt-2 text-2xl font-bold text-foreground">
+                    {queuesLoading ? "—" : openIncidents}
+                  </p>
+                </Link>
+                <Link
+                  href="/ops/health"
+                  className="rounded-xl border border-border/60 bg-background/40 p-4 transition hover:bg-muted/40"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Activity className="h-4 w-4" />
+                      System health
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-primary">
+                    View diagnostics
+                  </p>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 md:gap-6">
           <StatsCard

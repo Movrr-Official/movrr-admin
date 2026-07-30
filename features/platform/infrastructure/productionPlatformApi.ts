@@ -16,7 +16,7 @@ import { getSharedFulfilmentModule } from "@/features/fulfilment/infrastructure/
  * Production AuthN ports — JWT verify + real Supabase principal lookups
  * (admin_users, organisation_membership, rider).
  */
-const productionAuthDeps: AuthenticateRequestDeps = {
+export const productionAuthDeps: AuthenticateRequestDeps = {
   verifyAccessToken: verifySupabaseAccessToken,
   findAdminUser,
   findOrganisationMembership,

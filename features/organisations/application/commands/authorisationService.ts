@@ -11,6 +11,8 @@ import {
 import {
   capabilitiesForOrgRole,
   capabilitiesForRider,
+  capabilitiesForAdvertiser,
+  capabilitiesForGovernment,
   isMembershipRole,
 } from "@/features/organisations/domain/CapabilityCatalog";
 import { mapAdminRoleToCapabilities } from "@/features/organisations/application/adminCapabilityMapper";
@@ -27,6 +29,12 @@ export function resolvePermissions(
     case "admin":
       return mapAdminRoleToCapabilities(principal.role);
     case "organisation": {
+      if (principal.organisationType === "advertiser") {
+        return capabilitiesForAdvertiser();
+      }
+      if (principal.organisationType === "government") {
+        return capabilitiesForGovernment();
+      }
       if (!isMembershipRole(principal.role)) return [];
       return capabilitiesForOrgRole(principal.role);
     }

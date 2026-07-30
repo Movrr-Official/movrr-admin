@@ -14,7 +14,7 @@ export const findOrganisationMembership: FindOrganisationMembership = async (
 
   const { data, error } = await supabase
     .from("organisation_membership")
-    .select("id, organisation_id, user_id, role, status")
+    .select("id, organisation_id, user_id, role, status, organisation:organisation_id (type)")
     .eq("user_id", userId)
     .eq("status", "active")
     .order("created_at", { ascending: true })
@@ -25,10 +25,19 @@ export const findOrganisationMembership: FindOrganisationMembership = async (
     return null;
   }
 
+  const orgRow = data.organisation as { type?: string } | { type?: string }[] | null;
+  const orgType = Array.isArray(orgRow) ? orgRow[0]?.type : orgRow?.type;
+
   return {
     id: data.id as string,
     organisationId: data.organisation_id as string,
     userId: data.user_id as string,
     role: data.role as string | undefined,
+    organisationType: orgType as
+      | "reward_partner"
+      | "advertiser"
+      | "government"
+      | "movrr"
+      | undefined,
   };
 };

@@ -23,6 +23,7 @@ export type OrganisationMembershipRecord = {
   organisationId: string;
   userId: string;
   role?: string;
+  organisationType?: "reward_partner" | "advertiser" | "government" | "movrr";
 };
 
 /** Verifies a Supabase access token; returns null when missing/invalid. */

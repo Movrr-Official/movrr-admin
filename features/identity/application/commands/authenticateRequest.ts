@@ -64,6 +64,7 @@ export async function authenticateRequest(
           organisationId: membership.organisationId,
           membershipId: membership.id,
           role: membership.role,
+          organisationType: membership.organisationType,
         },
         correlationId,
       ),

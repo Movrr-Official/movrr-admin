@@ -166,7 +166,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     icon: "route",
     badgeClassName: "text-secondary-foreground bg-secondary border-border",
     access: {
-      roles: ["admin", "super_admin", "moderator"],
+      roles: ["admin", "super_admin", "moderator", "compliance_officer", "government"],
       permission: "routes:read",
     },
     navigation: {
@@ -174,8 +174,8 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
       href: ADMIN_ENTITY_ROUTES.routeDetail,
       listHref: ADMIN_ENTITY_ROUTES.routes,
     },
-    /** Registry-ready; provider can be enabled without touching SearchDialog. */
-    searchable: false,
+    /** Enabled for cross-entity operational search. */
+    searchable: true,
     searchLimit: 8,
   },
   fulfilment_item: {
@@ -185,7 +185,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     icon: "package",
     badgeClassName: "text-muted-foreground bg-muted border-border",
     access: {
-      roles: ["admin", "super_admin"],
+      roles: ["admin", "super_admin", "compliance_officer"],
       permission: "rewards:read",
     },
     navigation: {
@@ -193,7 +193,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
       href: ADMIN_ENTITY_ROUTES.fulfilmentQueueDetail,
       listHref: FULFILMENT_ROUTES.queue,
     },
-    searchable: false,
+    searchable: true,
     searchLimit: 8,
   },
 };

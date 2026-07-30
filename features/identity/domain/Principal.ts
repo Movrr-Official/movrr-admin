@@ -19,6 +19,7 @@ export type OrganisationPrincipal = {
   organisationId: string;
   membershipId: string;
   role?: string;
+  organisationType?: "reward_partner" | "advertiser" | "government" | "movrr";
 };
 
 export type RiderPrincipal = {

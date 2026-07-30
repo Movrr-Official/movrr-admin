@@ -275,4 +275,46 @@ export const SEARCH_PROVIDERS: Partial<
       };
     });
   },
+
+  route: async (supabase, query, limit) => {
+    const searchTerm = ilikePattern(query);
+    if (!searchTerm) return [];
+
+    const { data, error } = await supabase
+      .from("route")
+      .select("id, name, status, description")
+      .or(`name.ilike.${searchTerm},description.ilike.${searchTerm}`)
+      .limit(limit);
+
+    if (error || !data) return [];
+
+    return data.map((route) => ({
+      id: route.id,
+      title: route.name || "Route",
+      subtitle: route.description ?? undefined,
+      status: route.status ?? undefined,
+      relevance: scoreIncludes(route.name, query) * 3,
+    }));
+  },
+
+  fulfilment_item: async (supabase, query, limit) => {
+    const searchTerm = ilikePattern(query);
+    if (!searchTerm) return [];
+
+    const { data, error } = await supabase
+      .from("fulfilment")
+      .select("id, state, progress, rider_id")
+      .or(`id.ilike.${searchTerm},state.ilike.${searchTerm}`)
+      .limit(limit);
+
+    if (error || !data) return [];
+
+    return data.map((item) => ({
+      id: item.id,
+      title: `Fulfilment ${item.id.slice(0, 8)}`,
+      subtitle: item.progress ?? item.state ?? undefined,
+      status: item.state ?? undefined,
+      relevance: 1,
+    }));
+  },
 };

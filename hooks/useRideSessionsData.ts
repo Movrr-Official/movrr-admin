@@ -87,9 +87,13 @@ const mockRideSessions: RideSession[] = [
   },
 ];
 
-export const useRideSessionsData = (filters?: RideSessionFilters) => {
+export const useRideSessionsData = (
+  filters?: RideSessionFilters,
+  options?: { enabled?: boolean },
+) => {
   return useQuery<RideSession[]>({
     queryKey: ["rideSessions", filters],
+    enabled: options?.enabled ?? true,
     queryFn: async () => {
       await new Promise((resolve) => setTimeout(resolve, 300));
 

@@ -25,6 +25,12 @@ import {
   Lightbulb,
   Route,
   Package,
+  Shield,
+  AlertTriangle,
+  Landmark,
+  Clock3,
+  Activity,
+  CreditCard,
 } from "lucide-react";
 import { FaRoute } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -48,13 +54,38 @@ import useShouldHideComponent from "@/hooks/useShouldHideComponent";
 import Image from "next/image";
 import { ImSpinner8 } from "react-icons/im";
 
+const STAFF_READ_ROLES: UserRole[] = [
+  "admin",
+  "super_admin",
+  "moderator",
+  "support",
+  "compliance_officer",
+  "government",
+];
+
+const OPS_WRITE_ROLES: UserRole[] = ["admin", "super_admin"];
+
+const MODERATOR_ROLES: UserRole[] = ["admin", "super_admin", "moderator"];
+
 interface NavItem {
+  type?: "item";
   name: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   roles: UserRole[];
   badge: JSX.Element | null;
 }
+
+interface NavSection {
+  type: "section";
+  name: string;
+  roles: UserRole[];
+}
+
+type NavEntry = NavItem | NavSection;
+
+const isNavSection = (entry: NavEntry): entry is NavSection =>
+  entry.type === "section";
 
 const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
   const [isMobile, setIsMobile] = useState(false);
@@ -114,27 +145,59 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, [dispatch, sidebarOpen]);
 
-  const navigation: NavItem[] = useMemo(
+  const PROGRAMMES_READ_ROLES: UserRole[] = [
+    ...OPS_WRITE_ROLES,
+    "compliance_officer",
+  ];
+
+  const navigation: NavEntry[] = useMemo(
     () => [
       {
+        type: "item",
         name: "Overview",
         href: "/",
         icon: LayoutDashboard,
-        roles: ["admin", "super_admin", "moderator", "support"],
+        roles: STAFF_READ_ROLES,
         badge: null,
       },
       {
+        type: "item",
         name: "Workboard",
         href: "/workboard",
         icon: KanbanSquare,
-        roles: ["admin", "super_admin", "moderator"],
+        roles: MODERATOR_ROLES,
         badge: null,
       },
       {
+        type: "item",
+        name: "Fraud",
+        href: "/fraud",
+        icon: Shield,
+        roles: OPS_WRITE_ROLES,
+        badge: null,
+      },
+      {
+        type: "item",
+        name: "Incidents",
+        href: "/incidents",
+        icon: AlertTriangle,
+        roles: OPS_WRITE_ROLES,
+        badge: null,
+      },
+      {
+        type: "item",
+        name: "Programmes",
+        href: "/programmes",
+        icon: Landmark,
+        roles: PROGRAMMES_READ_ROLES,
+        badge: null,
+      },
+      {
+        type: "item",
         name: "Waitlist",
         href: "/waitlist",
         icon: List,
-        roles: ["admin", "super_admin"],
+        roles: OPS_WRITE_ROLES,
         badge: (
           <CountDisplay
             count={totalWaitlist}
@@ -144,10 +207,11 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
+        type: "item",
         name: "Users",
         href: "/users",
         icon: Users,
-        roles: ["admin", "super_admin"],
+        roles: OPS_WRITE_ROLES,
         badge: (
           <CountDisplay
             count={totalUsers}
@@ -157,10 +221,11 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
+        type: "item",
         name: "Riders",
         href: "/riders",
         icon: Bike,
-        roles: ["admin", "super_admin"],
+        roles: [...OPS_WRITE_ROLES, "compliance_officer", "government"],
         badge: (
           <CountDisplay
             count={totalRiders}
@@ -170,38 +235,43 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
+        type: "item",
         name: "Ride Sessions",
         href: "/ride-sessions",
         icon: Timer,
-        roles: ["admin", "super_admin"],
+        roles: [...OPS_WRITE_ROLES, "compliance_officer", "government"],
         badge: null,
       },
       {
+        type: "item",
         name: "Suggested Routes",
         href: "/suggested-routes",
         icon: Route,
-        roles: ["admin", "super_admin"],
+        roles: MODERATOR_ROLES,
         badge: null,
       },
       {
+        type: "item",
         name: "Rewards",
         href: "/rewards",
         icon: Coins,
-        roles: ["admin", "super_admin"],
+        roles: [...OPS_WRITE_ROLES, "compliance_officer"],
         badge: null,
       },
       {
+        type: "item",
         name: "Fulfilment",
         href: "/fulfilment",
         icon: Package,
-        roles: ["admin", "super_admin"],
+        roles: [...OPS_WRITE_ROLES, "compliance_officer"],
         badge: null,
       },
       {
+        type: "item",
         name: "Advertisers",
         href: "/advertisers",
         icon: Building2,
-        roles: ["admin", "super_admin"],
+        roles: [...OPS_WRITE_ROLES, "compliance_officer"],
         badge: (
           <CountDisplay
             count={totalAdvertisers}
@@ -211,10 +281,11 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
+        type: "item",
         name: "Campaigns",
         href: "/campaigns",
         icon: Megaphone,
-        roles: ["admin", "super_admin"],
+        roles: [...OPS_WRITE_ROLES, "compliance_officer", "government"],
         badge: (
           <CountDisplay
             count={totalCampaigns}
@@ -224,10 +295,11 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
+        type: "item",
         name: "Planned Routes",
         href: "/routes",
         icon: FaRoute,
-        roles: ["admin", "super_admin", "moderator"],
+        roles: MODERATOR_ROLES,
         badge: (
           <CountDisplay
             count={totalPlannedRoutes}
@@ -237,10 +309,11 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
+        type: "item",
         name: "Community Rides",
         href: "/community-rides",
         icon: CalendarClock,
-        roles: ["admin", "super_admin"],
+        roles: [...OPS_WRITE_ROLES, "compliance_officer", "government"],
         badge: (
           <CountDisplay
             count={totalCommunityRides}
@@ -250,24 +323,56 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         ),
       },
       {
+        type: "item",
         name: "Pro Tips",
         href: "/pro-tips",
         icon: Lightbulb,
-        roles: ["admin", "super_admin"],
+        roles: OPS_WRITE_ROLES,
         badge: null,
       },
       {
+        type: "item",
         name: "Notifications",
         href: "/notifications",
         icon: Bell,
-        roles: ["admin", "super_admin", "moderator", "support"],
+        roles: STAFF_READ_ROLES,
         badge: null,
       },
       {
+        type: "section",
+        name: "Ops",
+        roles: OPS_WRITE_ROLES,
+      },
+      {
+        type: "item",
+        name: "Jobs",
+        href: "/ops/jobs",
+        icon: Clock3,
+        roles: OPS_WRITE_ROLES,
+        badge: null,
+      },
+      {
+        type: "item",
+        name: "Health",
+        href: "/ops/health",
+        icon: Activity,
+        roles: OPS_WRITE_ROLES,
+        badge: null,
+      },
+      {
+        type: "item",
+        name: "Billing",
+        href: "/ops/billing",
+        icon: CreditCard,
+        roles: OPS_WRITE_ROLES,
+        badge: null,
+      },
+      {
+        type: "item",
         name: "Settings",
         href: "/settings",
         icon: Settings,
-        roles: ["admin", "super_admin"],
+        roles: OPS_WRITE_ROLES,
         badge: null,
       },
     ],
@@ -285,8 +390,8 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
   );
 
   const visibleNavigation = useMemo(() => {
-    if (!currentRole) return [] as NavItem[];
-    return navigation.filter((item) => item.roles.includes(currentRole));
+    if (!currentRole) return [] as NavEntry[];
+    return navigation.filter((entry) => entry.roles.includes(currentRole));
   }, [currentRole, navigation]);
 
   const handleSignOut = async () => {
@@ -410,7 +515,20 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
         <ScrollArea className="flex-1 px-3 py-4">
           <TooltipProvider delayDuration={0}>
             <nav className="space-y-2">
-              {visibleNavigation.map((item, idx) => {
+              {visibleNavigation.map((entry, idx) => {
+                if (isNavSection(entry)) {
+                  if (!sidebarOpen) return null;
+                  return (
+                    <p
+                      key={`section-${entry.name}-${idx}`}
+                      className="px-4 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      {entry.name}
+                    </p>
+                  );
+                }
+
+                const item = entry;
                 const isActive =
                   item.href === "/"
                     ? pathname === "/"

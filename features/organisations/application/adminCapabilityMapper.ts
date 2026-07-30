@@ -19,6 +19,14 @@ const ADMIN_WRITE_CAPABILITIES: readonly KnownCapability[] = [
   "wallet.read",
   "staff.manage",
   "analytics.view",
+  "campaigns.read",
+  "campaigns.write",
+  "campaigns.launch",
+  "campaigns.pause",
+  "billing.read",
+  "programmes.read",
+  "compliance.read",
+  "impact.read",
 ];
 
 const ADMIN_OPS_CAPABILITIES: readonly KnownCapability[] = [
@@ -39,6 +47,11 @@ const ADMIN_READ_CAPABILITIES: readonly KnownCapability[] = [
   "fulfilment.read",
   "wallet.read",
   "analytics.view",
+  "campaigns.read",
+  "programmes.read",
+  "compliance.read",
+  "impact.read",
+  "billing.read",
 ];
 
 export function mapAdminRoleToCapabilities(

@@ -228,6 +228,7 @@ export const privacySettingsSchema = z.object({
 
 export const billingConnectionStatusSchema = z.enum([
   "not_connected",
+  "handoff",
   "connected",
   "degraded",
 ]);
