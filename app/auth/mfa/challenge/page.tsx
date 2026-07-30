@@ -43,15 +43,15 @@ export default async function AdminMfaChallengePage({
 
   return (
     <Card className="border-0 bg-transparent shadow-none">
-      <CardHeader className="pb-6 text-center">
-        <CardTitle className="text-2xl font-semibold tracking-tight text-movrr-text-heading md:text-3xl">
-          Verify Your Admin Session
+      <CardHeader className="space-y-2 px-6 pb-2 pt-6 sm:px-8 sm:pt-8">
+        <CardTitle className="text-xl font-semibold tracking-tight text-movrr-text-heading sm:text-2xl">
+          Two-Factor Authentication
         </CardTitle>
-        <CardDescription className="text-base text-movrr-text-secondary">
-          Complete your authenticator challenge to continue into MOVRR Admin.
+        <CardDescription className="text-sm text-movrr-text-secondary sm:text-[15px]">
+          Enter the verification code from your authenticator app.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6 pb-6 pt-4 sm:px-8 sm:pb-8">
         <AdminMfaChallengeForm
           redirectTo={redirectTo}
           factors={context.verifiedFactors.map((factor) => ({
