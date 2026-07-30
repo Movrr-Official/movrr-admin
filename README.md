@@ -75,7 +75,7 @@ The app reads/writes Supabase tables used across operations, including:
 - Campaign ops: `campaign`, `campaign_assignment`, `campaign_signup`, `campaign_zone`, `campaign_hot_zone`, `advertiser`.
 - Rewards: `reward_transactions`, `reward_redemptions`, `rider_reward_balance`, `reward_catalog`, `reward_partner`.
 - Admin ops: `notifications`, `user_preferences`, `platform_settings`, `audit_log`/`audit_logs`.
-- Workboard: `workboard_teams`, `workboard_team_members`, `workboard_boards`, `workboard_cards`, `workboard_invites`.
+- Workboard: `workboard_teams`, `workboard_team_members`, `workboard_boards`, `workboard_cards`, plus `platform_invitations` (Migration 050).
 - Optimizer audit: `route_optimizer_runs`, `route_optimizer_decisions`.
 
 ## Integration with rider mobile app

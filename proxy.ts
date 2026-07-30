@@ -88,11 +88,19 @@ function isOptimizerServiceAuthorized(request: NextRequest): boolean {
 }
 
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
-
   const pathname = request.nextUrl.pathname || "";
+  const search = request.nextUrl.search || "";
+  const fullPath = `${pathname}${search}`;
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  requestHeaders.set("x-url", fullPath);
+
+  let supabaseResponse = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 
   // Optimizer routes: deny when unconfigured; allow valid service tokens
   if (pathname.startsWith("/api/optimize")) {
@@ -152,10 +160,7 @@ export async function proxy(request: NextRequest) {
 
   if (!user) {
     const redirectUrl = new URL("/auth/signin", request.url);
-    redirectUrl.searchParams.set(
-      "redirectTo",
-      `${pathname}${request.nextUrl.search || ""}`,
-    );
+    redirectUrl.searchParams.set("redirectTo", fullPath);
     return applySecurityHeaders(NextResponse.redirect(redirectUrl), request);
   }
 

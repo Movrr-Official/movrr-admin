@@ -2,14 +2,15 @@
 
 import { z } from "zod";
 import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+import { requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { APP_URL, RESEND_API_KEY, FROM_EMAIL } from "@/lib/env";
 import {
-  getPlatformSecurityPolicy,
-  isInviteDomainAllowed,
-} from "@/lib/platformSettings";
-import { Resend } from "resend";
+  acceptWorkboardInvitation,
+  issueWorkboardInvitation,
+  listWorkboardInvitations,
+  resendWorkboardInvitation,
+  revokeWorkboardInvitation,
+} from "@/features/invitations/application/workboard/workboardInvitationAdapter";
 
 const roleSchema = z.enum(["owner", "admin", "editor", "viewer"]);
 const workboardWriteRoles = new Set(["owner", "admin", "editor"]);
@@ -187,107 +188,180 @@ export async function inviteWorkboardMember(input: {
     })
     .parse(input);
 
-  const securityPolicy = await getPlatformSecurityPolicy();
-  if (
-    !isInviteDomainAllowed(payload.email, securityPolicy.inviteDomainAllowlist)
-  ) {
-    throw new Error(
-      "This invite email domain is not allowed by the current security policy.",
-    );
-  }
-
   const membership = await requireWorkboardMembership(
     supabase,
     payload.teamId,
     auth.authUser.id,
   );
 
-  if (!workboardAdminRoles.has(membership.role)) {
-    throw new Error("Not authorized to invite members");
-  }
-
-  const token = crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
-
-  const { data: invite, error } = await supabase
-    .from("workboard_invites")
-    .insert({
-      team_id: payload.teamId,
-      email: payload.email.toLowerCase(),
-      role: payload.role,
-      token,
-      invited_by: auth.authUser.id,
-      expires_at: expiresAt.toISOString(),
-    })
-    .select("id, token")
-    .single();
-
-  if (error || !invite) {
-    throw new Error(error?.message || "Failed to create invite");
-  }
-
-  if (RESEND_API_KEY) {
-    const resend = new Resend(RESEND_API_KEY);
-    const inviteLink = `${APP_URL}/workboard/invite?token=${invite.token}`;
-
-    await resend.emails.send({
-      from: FROM_EMAIL ? `MOVRR <${FROM_EMAIL}>` : "MOVRR <no-reply@movrr.nl>",
-      to: payload.email,
-      subject: "You have been invited to the MOVRR Workboard",
-      html: `<p>You have been invited to join the MOVRR Workboard.</p><p><a href="${inviteLink}">Accept invite</a></p>`,
-    });
-  }
-
-  return { success: true, token: invite.token };
-}
-
-export async function acceptWorkboardInvite(token: string) {
-  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
-  const supabase = createSupabaseAdminClient();
-
-  const { data: invite, error } = await supabase
-    .from("workboard_invites")
-    .select("id, team_id, role, accepted_at, expires_at, email")
-    .eq("token", token)
-    .maybeSingle();
-
-  if (error || !invite) {
-    throw new Error("Invite not found");
-  }
-  if (invite.accepted_at) {
-    return { success: true, status: "already_accepted" } as const;
-  }
-  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
-    throw new Error("Invite expired");
-  }
-
-  const { data: adminUser } = await supabase
-    .from("admin_users")
-    .select("email")
-    .eq("user_id", auth.authUser.id)
-    .maybeSingle();
-
-  if (!adminUser?.email) {
-    throw new Error("User email not found");
-  }
-
-  if (adminUser.email.toLowerCase() !== invite.email.toLowerCase()) {
-    throw new Error("Invite email does not match current user");
-  }
-
-  await supabase.from("workboard_team_members").upsert({
-    team_id: invite.team_id,
-    user_id: auth.authUser.id,
-    role: invite.role,
-    status: "active",
+  const result = await issueWorkboardInvitation({
+    teamId: payload.teamId,
+    email: payload.email,
+    role: payload.role,
+    invitedByUserId: auth.authUser.id,
+    invitedByEmail: auth.adminUser.email,
+    actorWorkboardRole: membership.role,
   });
 
-  await supabase
-    .from("workboard_invites")
-    .update({ accepted_at: new Date().toISOString() })
-    .eq("id", invite.id);
+  if (!result.ok) {
+    throw new Error(result.message);
+  }
 
-  return { success: true, status: "accepted" } as const;
+  return {
+    success: true as const,
+    invitationId: result.value.invitationId,
+    emailSent: result.value.emailSent,
+    expiresAt: result.value.expiresAt,
+  };
+}
+
+export async function listWorkboardInvites(teamId: string) {
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+  const supabase = createSupabaseAdminClient();
+  const payload = z.string().uuid().parse(teamId);
+
+  const membership = await requireWorkboardMembership(
+    supabase,
+    payload,
+    auth.authUser.id,
+  );
+  if (!workboardAdminRoles.has(membership.role)) {
+    throw new Error("Not authorized to view invitations");
+  }
+
+  const result = await listWorkboardInvitations(payload);
+  if (!result.ok) {
+    throw new Error(result.message);
+  }
+  return result.value;
+}
+
+export async function revokeWorkboardInvite(input: {
+  teamId: string;
+  invitationId: string;
+}) {
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+  const supabase = createSupabaseAdminClient();
+  const payload = z
+    .object({
+      teamId: z.string().uuid(),
+      invitationId: z.string().uuid(),
+    })
+    .parse(input);
+
+  const membership = await requireWorkboardMembership(
+    supabase,
+    payload.teamId,
+    auth.authUser.id,
+  );
+  if (!workboardAdminRoles.has(membership.role)) {
+    throw new Error("Not authorized to revoke invitations");
+  }
+
+  const result = await revokeWorkboardInvitation({
+    invitationId: payload.invitationId,
+    teamId: payload.teamId,
+    revokedByUserId: auth.authUser.id,
+    revokedByEmail: auth.adminUser.email,
+  });
+  if (!result.ok) {
+    throw new Error(result.message);
+  }
+  return { success: true as const };
+}
+
+export async function resendWorkboardInvite(input: {
+  teamId: string;
+  invitationId: string;
+}) {
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+  const supabase = createSupabaseAdminClient();
+  const payload = z
+    .object({
+      teamId: z.string().uuid(),
+      invitationId: z.string().uuid(),
+    })
+    .parse(input);
+
+  const membership = await requireWorkboardMembership(
+    supabase,
+    payload.teamId,
+    auth.authUser.id,
+  );
+  if (!workboardAdminRoles.has(membership.role)) {
+    throw new Error("Not authorized to resend invitations");
+  }
+
+  const result = await resendWorkboardInvitation({
+    invitationId: payload.invitationId,
+    teamId: payload.teamId,
+    invitedByUserId: auth.authUser.id,
+    invitedByEmail: auth.adminUser.email,
+  });
+  if (!result.ok) {
+    throw new Error(result.message);
+  }
+  return {
+    success: true as const,
+    invitationId: result.value.invitationId,
+    emailSent: result.value.emailSent,
+  };
+}
+
+/**
+ * Typed accept outcomes for the invite page. Never reports success unless
+ * membership is confirmed by the transactional accept RPC.
+ */
+export type AcceptWorkboardInviteResult =
+  | {
+      success: true;
+      status: "accepted" | "already_accepted";
+      teamId: string;
+      membershipId: string;
+      role: string;
+    }
+  | {
+      success: false;
+      code: string;
+      message: string;
+    };
+
+export async function acceptWorkboardInvite(
+  token: string,
+): Promise<AcceptWorkboardInviteResult> {
+  const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+
+  if (!token?.trim()) {
+    return {
+      success: false,
+      code: "missing_token",
+      message: "Invite link is missing a token. Use the link from your email.",
+    };
+  }
+
+  const result = await acceptWorkboardInvitation({
+    plaintextToken: token,
+    userId: auth.authUser.id,
+    email: auth.adminUser.email,
+  });
+
+  if (!result.ok) {
+    return {
+      success: false,
+      code: result.kind,
+      message: result.message,
+    };
+  }
+
+  return {
+    success: true,
+    status: result.value.status === "already_accepted"
+      ? "already_accepted"
+      : "accepted",
+    teamId: result.value.teamId,
+    membershipId: result.value.membershipId,
+    role: result.value.role,
+  };
 }
 
 export async function updateWorkboardMemberRole(input: {

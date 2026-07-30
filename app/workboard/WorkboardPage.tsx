@@ -64,6 +64,9 @@ import {
   getWorkboardCards,
   getWorkboardMembers,
   inviteWorkboardMember,
+  listWorkboardInvites,
+  resendWorkboardInvite,
+  revokeWorkboardInvite,
   updateWorkboardBoard,
   updateWorkboardBoardOrder,
   updateWorkboardCard,
@@ -176,6 +179,18 @@ export default function WorkboardPage() {
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<WorkboardRole>("editor");
+  const [invites, setInvites] = useState<
+    Array<{
+      id: string;
+      email: string;
+      role: string;
+      status: string;
+      expiresAt: string;
+      createdAt: string;
+      acceptedAt: string | null;
+      revokedAt: string | null;
+    }>
+  >([]);
   const [showArchived, setShowArchived] = useState(false);
   const [pendingBoardScrollId, setPendingBoardScrollId] = useState<
     string | null
@@ -845,41 +860,130 @@ export default function WorkboardPage() {
     setCardToDelete(null);
   };
 
+  const fetchInvites = async (id: string) => {
+    if (useMockData) return;
+    try {
+      const rows = await listWorkboardInvites(id);
+      setInvites(rows);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({
+        title: "Unable to load invitations",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!teamId || useMockData || !isTeamModalOpen) return;
+    void fetchInvites(teamId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId, useMockData, isTeamModalOpen]);
+
   const handleInvite = async () => {
     if (!teamId || !canManageTeam) return;
     if (useMockData) {
-      setMembers((prev) => [
-        ...prev,
+      setInvites((prev) => [
         {
-          id: `mock-member-${Date.now()}`,
-          team_id: teamId,
-          user_id: `mock-${Date.now()}`,
+          id: `mock-invite-${Date.now()}`,
           email: inviteEmail,
           role: inviteRole,
-          status: "active",
+          status: "pending",
+          expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+          createdAt: new Date().toISOString(),
+          acceptedAt: null,
+          revokedAt: null,
         },
+        ...prev,
       ]);
       setInviteEmail("");
       setInviteRole("editor");
       return;
     }
     try {
-      await inviteWorkboardMember({
+      const result = await inviteWorkboardMember({
         teamId,
         email: inviteEmail,
         role: inviteRole,
       });
       toast({
-        title: "Invite sent",
-        description: `Invite sent to ${inviteEmail}.`,
+        title: result.emailSent ? "Invitation emailed" : "Invitation created",
+        description: result.emailSent
+          ? `Invitation emailed to ${inviteEmail}. They must sign in with that admin account.`
+          : `Invitation created for ${inviteEmail}, but email delivery was not confirmed.`,
       });
       setInviteEmail("");
       setInviteRole("editor");
       fetchMembers(teamId);
+      fetchInvites(teamId);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       toast({
         title: "Invite failed",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRevokeInvite = async (invitationId: string) => {
+    if (!teamId || !canManageTeam) return;
+    if (useMockData) {
+      setInvites((prev) =>
+        prev.map((invite) =>
+          invite.id === invitationId
+            ? {
+                ...invite,
+                status: "revoked",
+                revokedAt: new Date().toISOString(),
+              }
+            : invite,
+        ),
+      );
+      return;
+    }
+    try {
+      await revokeWorkboardInvite({ teamId, invitationId });
+      toast({ title: "Invitation revoked" });
+      fetchInvites(teamId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({
+        title: "Unable to revoke invite",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResendInvite = async (invitationId: string) => {
+    if (!teamId || !canManageTeam) return;
+    if (useMockData) {
+      toast({ title: "Invitation resent (mock)" });
+      return;
+    }
+    try {
+      const result = await resendWorkboardInvite({ teamId, invitationId });
+      if (!result.emailSent) {
+        toast({
+          title: "Invitation not emailed",
+          description:
+            "Resend did not complete email delivery. The previous invite remains valid.",
+          variant: "destructive",
+        });
+        fetchInvites(teamId);
+        return;
+      }
+      toast({
+        title: "Invitation resent",
+        description: "A new invite link was emailed to the recipient.",
+      });
+      fetchInvites(teamId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({
+        title: "Unable to resend invite",
         description: message,
         variant: "destructive",
       });
@@ -1049,6 +1153,10 @@ export default function WorkboardPage() {
             </DialogHeader>
             <div className="space-y-5">
               <div className="rounded-xl border bg-muted/30 p-4">
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Invite existing MOVRR admin users only (admin, super admin, or
+                  moderator). Create the account under Users before inviting.
+                </p>
                 <div className="flex flex-col gap-3 md:flex-row md:items-end">
                   <div className="flex-1 space-y-1">
                     <label className="text-xs font-medium text-muted-foreground">
@@ -1057,7 +1165,7 @@ export default function WorkboardPage() {
                     <Input
                       value={inviteEmail}
                       onChange={(event) => setInviteEmail(event.target.value)}
-                      placeholder="name@movrr.nl"
+                      placeholder="existing-admin@movrr.nl"
                       disabled={!canManageTeam}
                     />
                   </div>
@@ -1076,7 +1184,9 @@ export default function WorkboardPage() {
                         <SelectValue placeholder="Role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="owner">Owner</SelectItem>
+                        {currentRole === "owner" && (
+                          <SelectItem value="owner">Owner</SelectItem>
+                        )}
                         <SelectItem value="admin">Admin</SelectItem>
                         <SelectItem value="editor">Editor</SelectItem>
                         <SelectItem value="viewer">Viewer</SelectItem>
@@ -1089,6 +1199,57 @@ export default function WorkboardPage() {
                   >
                     Send invite
                   </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Invitations</h3>
+                <div className="space-y-2">
+                  {invites.map((invite) => (
+                    <div
+                      key={invite.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2"
+                    >
+                      <div className="min-w-[200px]">
+                        <p className="text-sm font-medium text-foreground">
+                          {invite.email}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {invite.role} · {invite.status}
+                          {invite.status === "pending"
+                            ? ` · expires ${new Date(invite.expiresAt).toLocaleDateString()}`
+                            : null}
+                        </p>
+                      </div>
+                      {canManageTeam &&
+                        (invite.status === "pending" ||
+                          invite.status === "expired") && (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleResendInvite(invite.id)}
+                            >
+                              Resend
+                            </Button>
+                            {invite.status === "pending" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRevokeInvite(invite.id)}
+                              >
+                                Cancel
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                    </div>
+                  ))}
+                  {!invites.length && (
+                    <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                      No invitations yet.
+                    </div>
+                  )}
                 </div>
               </div>
 

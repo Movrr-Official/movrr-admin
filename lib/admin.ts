@@ -89,24 +89,30 @@ const extractSourceIp = (value?: string | null) => {
 
 const resolveRequestContext = async () => {
   const headerStore = await headers();
-  const rawPath =
-    headerStore.get("x-pathname") ??
+  const rawUrl =
+    headerStore.get("x-url") ??
     headerStore.get("x-invoke-path") ??
     headerStore.get("next-url") ??
-    headerStore.get("x-url");
+    headerStore.get("x-pathname");
 
   let pathname: string | undefined;
+  let search = "";
 
-  if (rawPath) {
+  if (rawUrl) {
     try {
-      pathname = new URL(rawPath, "http://localhost").pathname;
+      const parsed = new URL(rawUrl, "http://localhost");
+      pathname = parsed.pathname;
+      search = parsed.search || "";
     } catch {
-      pathname = rawPath.split("?")[0];
+      const [pathPart, queryPart] = rawUrl.split("?");
+      pathname = pathPart || undefined;
+      search = queryPart ? `?${queryPart}` : "";
     }
   }
 
   return {
     pathname,
+    search,
     sourceIp:
       extractSourceIp(headerStore.get("x-forwarded-for")) ??
       extractSourceIp(headerStore.get("x-real-ip")),
@@ -119,14 +125,18 @@ const resolvePathnameFromHeaders = async (): Promise<string | undefined> => {
   return requestContext.pathname;
 };
 
+/**
+ * Preserve path + query (e.g. /workboard/invite?token=…) across sign-in / MFA.
+ * Invitation acceptance depends on the token surviving authentication continuation.
+ */
 export const resolveAdminAuthRedirectTarget = async (): Promise<string> => {
-  const pathname = await resolvePathnameFromHeaders();
+  const { pathname, search } = await resolveRequestContext();
 
   if (!pathname || !shouldResolveRoleForPath(pathname)) {
     return "/";
   }
 
-  return pathname;
+  return `${pathname}${search || ""}`;
 };
 
 const shouldResolveRoleForPath = (pathname?: string) => {

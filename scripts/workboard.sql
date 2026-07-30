@@ -45,17 +45,8 @@ create table if not exists public.workboard_team_members (
   unique (team_id, user_id)
 );
 
-create table if not exists public.workboard_invites (
-  id uuid primary key default gen_random_uuid(),
-  team_id uuid not null references public.workboard_teams(id) on delete cascade,
-  email text not null,
-  role public.workboard_member_role not null,
-  token text not null unique,
-  invited_by uuid not null,
-  accepted_at timestamptz,
-  expires_at timestamptz,
-  created_at timestamptz not null default now()
-);
+-- Invitations: use platform_invitations (scripts/050_platform_invitations.sql).
+-- Legacy workboard_invites has been removed; do not recreate it.
 
 create table if not exists public.workboard_boards (
   id uuid primary key default gen_random_uuid(),
@@ -140,7 +131,6 @@ $$;
 -- Enable RLS
 alter table public.workboard_teams enable row level security;
 alter table public.workboard_team_members enable row level security;
-alter table public.workboard_invites enable row level security;
 alter table public.workboard_boards enable row level security;
 alter table public.workboard_cards enable row level security;
 
@@ -185,22 +175,6 @@ create policy workboard_members_update on public.workboard_team_members
 drop policy if exists workboard_members_delete on public.workboard_team_members;
 create policy workboard_members_delete on public.workboard_team_members
   for delete
-  using (public.is_workboard_admin(team_id));
-
--- Invites policies
-drop policy if exists workboard_invites_select on public.workboard_invites;
-create policy workboard_invites_select on public.workboard_invites
-  for select
-  using (public.is_workboard_admin(team_id));
-
-drop policy if exists workboard_invites_insert on public.workboard_invites;
-create policy workboard_invites_insert on public.workboard_invites
-  for insert
-  with check (public.is_workboard_admin(team_id));
-
-drop policy if exists workboard_invites_update on public.workboard_invites;
-create policy workboard_invites_update on public.workboard_invites
-  for update
   using (public.is_workboard_admin(team_id));
 
 -- Boards policies
