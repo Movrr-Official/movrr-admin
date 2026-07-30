@@ -16,7 +16,7 @@ interface UIState {
 }
 
 const initialState: UIState = {
-  sidebarOpen: true,
+  sidebarOpen: false,
   theme: "light",
   modals: {
     createCampaign: false,
