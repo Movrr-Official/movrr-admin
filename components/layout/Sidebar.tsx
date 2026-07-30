@@ -190,7 +190,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
     };
     return (
       <CountDisplay
-        count={countByHref[href]}
+        count={countByHref[href] ?? 0}
         isLoading={isLoading}
         isError={isError}
       />
