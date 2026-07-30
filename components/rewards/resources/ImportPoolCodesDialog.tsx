@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,8 @@ import { useImportPoolCodes } from "@/hooks/useResourcePoolsData";
 type ImportPoolCodesDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Prefill resource id when importing from a selected pool. */
+  defaultResourceId?: string | null;
 };
 
 function parseCodes(raw: string): string[] {
@@ -31,6 +33,7 @@ function parseCodes(raw: string): string[] {
 export function ImportPoolCodesDialog({
   open,
   onOpenChange,
+  defaultResourceId = null,
 }: ImportPoolCodesDialogProps) {
   const { toast } = useToast();
   const importMutation = useImportPoolCodes();
@@ -41,6 +44,11 @@ export function ImportPoolCodesDialog({
     setResourceId("");
     setCodesText("");
   };
+
+  useEffect(() => {
+    if (!open) return;
+    setResourceId(defaultResourceId?.trim() ?? "");
+  }, [open, defaultResourceId]);
 
   const handleSubmit = async () => {
     const id = resourceId.trim();

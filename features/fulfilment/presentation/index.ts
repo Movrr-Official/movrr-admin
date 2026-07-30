@@ -23,3 +23,13 @@ export {
   formatRiderProgress,
   getRiderProgressPresentation,
 } from "./progress";
+
+export {
+  deriveResourcePoolHealth,
+  formatResourceKind,
+  formatResourcePoolHealth,
+  formatResourceStatus,
+  getResourcePoolHealthPresentation,
+  getResourceStatusPresentation,
+  type ResourcePoolHealth,
+} from "./resourcePools";

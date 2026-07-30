@@ -1,11 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Layers } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
-import { FulfilmentQueueTable } from "@/components/rewards/fulfilment/FulfilmentQueueTable";
+import { DataTable } from "@/components/table/DataTable";
+import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
+import { OpsErrorState } from "@/components/ops/OpsEmptyState";
+import {
+  getFulfilmentQueueTableColumns,
+  toFulfilmentQueueRows,
+  type FulfilmentQueueRow,
+} from "@/components/rewards/fulfilment/FulfilmentQueueTableColumns";
 import {
   DataTableContainer,
   useDataTable,
@@ -18,21 +24,9 @@ import {
   formatFulfilmentState,
   formatFulfilmentType,
 } from "@/features/fulfilment/presentation";
+import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
 
-export type FulfilmentQueueRow = FulfilmentReadModel & {
-  /** Alias for API/URL filter key `status` */
-  status: FulfilmentReadModel["state"];
-  /** Alias for API/URL filter key `type` */
-  type: FulfilmentReadModel["fulfilmentType"];
-};
-
-function toQueueRows(rows: FulfilmentReadModel[]): FulfilmentQueueRow[] {
-  return rows.map((row) => ({
-    ...row,
-    status: row.state,
-    type: row.fulfilmentType,
-  }));
-}
+export type { FulfilmentQueueRow };
 
 const QUEUE_FILTER_CONFIG: FilterConfig[] = [
   {
@@ -59,13 +53,43 @@ const QUEUE_FILTER_CONFIG: FilterConfig[] = [
   },
 ];
 
+/** Light filters for collection worklists — no state multi-select (cohort is fixed). */
+const WORKLIST_FILTER_CONFIG: FilterConfig[] = [
+  {
+    id: "type",
+    label: "Type",
+    type: "multi-select",
+    key: "type",
+    primary: true,
+    options: FULFILMENT_TYPES.map((type) => ({
+      value: type,
+      label: formatFulfilmentType(type),
+    })),
+  },
+];
+
 type FulfilmentQueuePanelProps = {
   rows: FulfilmentReadModel[];
+  partnerNames?: Record<string, string>;
   isLoading: boolean;
   isError: boolean;
   errorMessage?: string;
   isFetching: boolean;
   onRefresh: () => void;
+  /**
+   * `queue` — full ops directory filters.
+   * `worklist` — cohort table for Collections (Awaiting / Collected).
+   */
+  variant?: "queue" | "worklist";
+  title?: string;
+  description?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  /** Unique search param when multiple worklists share a page. */
+  searchParamKey?: string;
+  exportFilename?: string;
+  /** Defaults true for queue; false for worklists to avoid URL clashes. */
+  persistToUrl?: boolean;
 };
 
 function FulfilmentQueueContent({
@@ -75,11 +99,22 @@ function FulfilmentQueueContent({
   isFetching,
   onRefresh,
   totalCount,
-}: Omit<FulfilmentQueuePanelProps, "rows"> & { totalCount: number }) {
+  variant,
+  title,
+  description,
+  emptyTitle,
+  emptyDescription,
+  searchParamKey,
+  exportFilename,
+}: Omit<FulfilmentQueuePanelProps, "rows" | "partnerNames" | "persistToUrl"> & {
+  totalCount: number;
+}) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { filteredData } = useDataTable();
-
-  const search = searchParams.get("search") ?? "";
+  const paramKey = searchParamKey ?? "search";
+  const search = searchParams.get(paramKey) ?? "";
+  const isWorklist = variant === "worklist";
 
   const displayRows = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -91,6 +126,7 @@ function FulfilmentQueueContent({
           row.redemptionId,
           row.riderId,
           row.partnerOrgId,
+          row.partnerLabel,
           row.outcome,
           row.state,
           row.fulfilmentType,
@@ -104,61 +140,102 @@ function FulfilmentQueueContent({
     return list;
   }, [filteredData, search]);
 
+  const openDetail = (row: FulfilmentQueueRow) => {
+    router.push(FULFILMENT_ROUTES.detail(row.id));
+  };
+
+  const columns = useMemo(
+    () =>
+      getFulfilmentQueueTableColumns({
+        onView: openDetail,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- openDetail closes over router
+    [],
+  );
+
   return (
     <div className="space-y-4 animate-slide-up">
       <DataTableToolbar
         search={{
           enabled: true,
-          placeholder: "Search by id, rider, partner org, or outcome...",
-          paramKey: "search",
+          placeholder: "Search by id, rider, partner, or outcome...",
+          paramKey,
         }}
         filterPresentation="inline"
         export={{
           enabled: true,
           data: displayRows,
-          filename: "fulfilment_queue_export",
+          filename: exportFilename ?? "fulfilment_queue_export",
           formats: ["csv", "xlsx", "json"],
         }}
         refresh={{
           enabled: true,
-          onRefresh: onRefresh,
+          onRefresh,
           isLoading: isFetching,
         }}
       />
 
-      <Card className="border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Layers className="h-5 w-5" />
-            Live queue
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Platform fulfilment cases — multi-select state and type on the bar (
-            {totalCount} loaded).
-          </p>
-        </CardHeader>
-        <CardContent>
-          {isError ? (
-            <p className="py-8 text-center text-sm text-destructive">
-              {errorMessage ?? "Failed to load queue"}
-            </p>
-          ) : (
-            <FulfilmentQueueTable rows={displayRows} isLoading={isLoading} />
-          )}
-        </CardContent>
-      </Card>
+      {isError ? (
+        <OpsErrorState
+          message={errorMessage ?? "Failed to load fulfilments"}
+          onRetry={onRefresh}
+        />
+      ) : isLoading ? (
+        <DataTableSkeleton searchBar={false} />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={displayRows}
+          searchBar={false}
+          searchParamKey={paramKey}
+          searchFields={[
+            "id",
+            "redemptionId",
+            "riderId",
+            "partnerOrgId",
+            "partnerLabel",
+            "outcome",
+            "status",
+            "type",
+          ]}
+          title={title ?? (isWorklist ? "Worklist" : "Live queue")}
+          description={
+            description ??
+            `Platform fulfilment cases (${totalCount} loaded)`
+          }
+          emptyStateTitle={
+            emptyTitle ??
+            (totalCount === 0
+              ? "No fulfilments in queue"
+              : "No fulfilments match these filters")
+          }
+          emptyStateDescription={
+            emptyDescription ??
+            (totalCount === 0
+              ? "Fulfilments appear here when riders redeem catalog rewards through the Platform API."
+              : "Try adjusting filters or search.")
+          }
+          emptyStateIcon={Layers}
+          onRowClick={openDetail}
+        />
+      )}
     </div>
   );
 }
 
 export function FulfilmentQueuePanel(props: FulfilmentQueuePanelProps) {
-  const rows = useMemo(() => toQueueRows(props.rows), [props.rows]);
+  const variant = props.variant ?? "queue";
+  const isWorklist = variant === "worklist";
+  const rows = useMemo(
+    () => toFulfilmentQueueRows(props.rows, props.partnerNames),
+    [props.rows, props.partnerNames],
+  );
 
   return (
     <DataTableContainer
       data={rows}
-      filterConfig={QUEUE_FILTER_CONFIG}
-      persistToUrl
+      filterConfig={isWorklist ? WORKLIST_FILTER_CONFIG : QUEUE_FILTER_CONFIG}
+      persistToUrl={props.persistToUrl ?? !isWorklist}
       debounceMs={500}
     >
       <FulfilmentQueueContent
@@ -168,6 +245,13 @@ export function FulfilmentQueuePanel(props: FulfilmentQueuePanelProps) {
         isFetching={props.isFetching}
         onRefresh={props.onRefresh}
         totalCount={props.rows.length}
+        variant={variant}
+        title={props.title}
+        description={props.description}
+        emptyTitle={props.emptyTitle}
+        emptyDescription={props.emptyDescription}
+        searchParamKey={props.searchParamKey}
+        exportFilename={props.exportFilename}
       />
     </DataTableContainer>
   );

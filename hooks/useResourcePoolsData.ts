@@ -7,6 +7,8 @@ import { platformGet, platformPost } from "@/lib/platformApi/client";
 export type ResourcePoolReadModel = {
   id: string;
   name?: string | null;
+  resourceKind?: string | null;
+  status?: string | null;
   partnerOrgId?: string | null;
   availableCount?: number;
   reservedCount?: number;

@@ -13,9 +13,7 @@ import {
 import type { FulfilmentReadModel } from "@/features/fulfilment/application/queries/fulfilmentQueries";
 import { FulfilmentStateBadge } from "@/components/fulfilment/FulfilmentStateBadge";
 import { FulfilmentTypeBadge } from "@/components/fulfilment/FulfilmentTypeBadge";
-import {
-  formatRiderProgress,
-} from "@/features/fulfilment/presentation";
+import { formatRiderProgress } from "@/features/fulfilment/presentation";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
 
 type FulfilmentQueueTableProps = {
@@ -23,6 +21,7 @@ type FulfilmentQueueTableProps = {
   isLoading: boolean;
 };
 
+/** Compact queue table for dashboard previews. Full ops list uses FulfilmentQueuePanel. */
 export function FulfilmentQueueTable({
   rows,
   isLoading,
@@ -52,9 +51,7 @@ export function FulfilmentQueueTable({
           <TableHead>State</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Progress</TableHead>
-          <TableHead>Outcome</TableHead>
           <TableHead>Partner</TableHead>
-          <TableHead className="text-right">Version</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -65,7 +62,7 @@ export function FulfilmentQueueTable({
                 href={FULFILMENT_ROUTES.detail(row.id)}
                 className="text-primary underline-offset-4 hover:underline"
               >
-                {row.id}
+                {row.id.slice(0, 8)}…
               </Link>
             </TableCell>
             <TableCell>
@@ -77,12 +74,17 @@ export function FulfilmentQueueTable({
             <TableCell className="text-sm">
               {formatRiderProgress(row.progress)}
             </TableCell>
-            <TableCell className="text-sm">{row.outcome ?? "—"}</TableCell>
             <TableCell className="font-mono text-xs">
-              {row.partnerOrgId ?? "—"}
-            </TableCell>
-            <TableCell className="text-right font-mono text-xs">
-              {row.version}
+              {row.partnerOrgId ? (
+                <Link
+                  href={FULFILMENT_ROUTES.partnerDetail(row.partnerOrgId)}
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  {row.partnerOrgId.slice(0, 8)}…
+                </Link>
+              ) : (
+                "—"
+              )}
             </TableCell>
           </TableRow>
         ))}

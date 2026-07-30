@@ -11,13 +11,19 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { ResourcePoolReadModel } from "@/hooks/useResourcePoolsData";
-import { humanizeEnumToken } from "@/features/fulfilment/presentation";
+import {
+  deriveResourcePoolHealth,
+  formatResourceKind,
+  formatResourcePoolHealth,
+  getResourcePoolHealthPresentation,
+} from "@/features/fulfilment/presentation";
 
 type ResourcePoolTableProps = {
   rows: ResourcePoolReadModel[];
   isLoading: boolean;
 };
 
+/** Compact pool table for dashboard previews. Full ops list uses ResourcePoolsTablePanel. */
 export function ResourcePoolTable({ rows, isLoading }: ResourcePoolTableProps) {
   if (isLoading) {
     return (
@@ -41,18 +47,15 @@ export function ResourcePoolTable({ rows, isLoading }: ResourcePoolTableProps) {
       <TableHeader>
         <TableRow>
           <TableHead>Pool</TableHead>
-          <TableHead>Partner org</TableHead>
+          <TableHead>Kind</TableHead>
           <TableHead className="text-right">Available</TableHead>
-          <TableHead className="text-right">Reserved</TableHead>
-          <TableHead className="text-right">Fulfilled</TableHead>
           <TableHead>Health</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {rows.map((row) => {
-          const exhausted =
-            row.exhausted === true ||
-            (typeof row.availableCount === "number" && row.availableCount <= 0);
+          const health = deriveResourcePoolHealth(row);
+          const healthPresentation = getResourcePoolHealthPresentation(health);
           return (
             <TableRow key={row.id}>
               <TableCell>
@@ -65,26 +68,18 @@ export function ResourcePoolTable({ rows, isLoading }: ResourcePoolTableProps) {
                   </p>
                 </div>
               </TableCell>
-              <TableCell className="font-mono text-xs">
-                {row.partnerOrgId ?? "—"}
+              <TableCell>
+                <Badge variant="outline">
+                  {formatResourceKind(row.resourceKind)}
+                </Badge>
               </TableCell>
-              <TableCell className="text-right text-sm">
+              <TableCell className="text-right text-sm tabular-nums">
                 {row.availableCount ?? "—"}
               </TableCell>
-              <TableCell className="text-right text-sm">
-                {row.reservedCount ?? "—"}
-              </TableCell>
-              <TableCell className="text-right text-sm">
-                {row.fulfilledCount ?? "—"}
-              </TableCell>
               <TableCell>
-                {exhausted ? (
-                  <Badge variant="destructive">Exhausted</Badge>
-                ) : (
-                  <Badge variant="secondary">
-                    {humanizeEnumToken(row.health ?? "ok")}
-                  </Badge>
-                )}
+                <Badge variant={healthPresentation.badgeVariant}>
+                  {formatResourcePoolHealth(health)}
+                </Badge>
               </TableCell>
             </TableRow>
           );

@@ -1,53 +1,60 @@
 "use client";
 
-import { useState } from "react";
-import { RefreshCw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { ResourcePoolTable } from "@/components/rewards/resources/ResourcePoolTable";
+import { ResourcePoolsTablePanel } from "@/components/rewards/resources/ResourcePoolsTablePanel";
 import { ImportPoolCodesDialog } from "@/components/rewards/resources/ImportPoolCodesDialog";
+import type { ResourcePoolRow } from "@/components/rewards/resources/ResourcePoolsTableColumns";
 import { useResourcePools } from "@/hooks/useResourcePoolsData";
+import { useOrganisations } from "@/hooks/useOrganisationsData";
 
 export default function ResourcePoolsPageClient() {
   const { data, isLoading, isError, error, refetch, isFetching } =
     useResourcePools();
+  const organisations = useOrganisations("reward_partner");
   const [importOpen, setImportOpen] = useState(false);
+  const [importResourceId, setImportResourceId] = useState<string | null>(null);
+
+  const partnerNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const org of organisations.data ?? []) {
+      map[org.id] =
+        org.partnerProfile?.name?.trim() || org.name?.trim() || org.id;
+    }
+    return map;
+  }, [organisations.data]);
+
+  const openImport = (pool?: ResourcePoolRow | null) => {
+    setImportResourceId(pool?.id ?? null);
+    setImportOpen(true);
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Resource Pools"
         description="Operational capacity — voucher pools, generated codes, and inventory health from Platform API read models."
-        actions={[
-          {
-            label: isFetching ? "Refreshing…" : "Refresh",
-            icon: <RefreshCw className="h-4 w-4" />,
-            onClick: () => void refetch(),
-            variant: "outline",
-          },
-          {
-            label: "Import Codes",
-            onClick: () => setImportOpen(true),
-          },
-        ]}
       />
 
-      <Card className="border-border animate-slide-up">
-        <CardHeader>
-          <CardTitle className="text-lg">Pools</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isError ? (
-            <p className="py-8 text-center text-sm text-destructive">
-              {(error as Error)?.message ?? "Failed to load resource pools"}
-            </p>
-          ) : (
-            <ResourcePoolTable rows={data ?? []} isLoading={isLoading} />
-          )}
-        </CardContent>
-      </Card>
+      <ResourcePoolsTablePanel
+        pools={data ?? []}
+        partnerNames={partnerNames}
+        isLoading={isLoading}
+        isError={isError}
+        errorMessage={(error as Error)?.message}
+        isFetching={isFetching}
+        onRefresh={() => void refetch()}
+        onImportCodes={openImport}
+      />
 
-      <ImportPoolCodesDialog open={importOpen} onOpenChange={setImportOpen} />
+      <ImportPoolCodesDialog
+        open={importOpen}
+        onOpenChange={(open) => {
+          setImportOpen(open);
+          if (!open) setImportResourceId(null);
+        }}
+        defaultResourceId={importResourceId}
+      />
     </div>
   );
 }
