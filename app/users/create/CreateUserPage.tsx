@@ -68,8 +68,24 @@ const createUserFormSchema = z.object({
   role: z.enum([
     "admin",
     "super_admin",
+    "security_admin",
+    "operations_manager",
+    "platform_operator",
+    "campaign_manager",
+    "partner_operations_manager",
+    "fraud_analyst",
+    "trust_safety_analyst",
+    "support_agent",
+    "support_lead",
+    "finance_operator",
+    "compliance_analyst",
+    "programme_operations_manager",
+    "executive_viewer",
+    "product_operations",
+    "engineering_operations",
     "moderator",
     "support",
+    "compliance_officer",
     "advertiser",
     "rider",
     "government",
@@ -104,13 +120,54 @@ const createUserFormSchema = z.object({
 type CreateUserFormData = z.infer<typeof createUserFormSchema>;
 
 const roleDescriptions: Record<string, string> = {
-  admin: "Administrator with full system access",
-  super_admin: "Super administrator with elevated privileges",
-  moderator: "Content and user moderation access",
-  support: "Customer support and assistance access",
+  admin: "Legacy administrator alias (maps to Operations Manager)",
+  super_admin: "Unrestricted platform authority including security break-glass",
+  security_admin: "Privileged role approval and security settings",
+  operations_manager: "Broad operational ownership without security admin powers",
+  platform_operator: "Jobs, health, and platform reliability",
+  campaign_manager: "Campaign lifecycle without user admin powers",
+  partner_operations_manager: "Fulfilment, rewards catalog, and partner approvals",
+  fraud_analyst: "Fraud review and ride verification",
+  trust_safety_analyst: "Incident handling and safety investigations",
+  support_agent: "Customer support read access and incident intake",
+  support_lead: "Support leadership including waitlist escalations",
+  finance_operator: "Billing operations and audited exports",
+  compliance_analyst: "Compliance and programme oversight (read-heavy)",
+  programme_operations_manager: "Government programme visibility",
+  executive_viewer: "Executive read-only analytics and reports",
+  product_operations: "Routes, workboard, and product workflows",
+  engineering_operations: "Platform reliability and feature flags",
+  moderator: "Legacy alias for Product Operations",
+  support: "Legacy alias for Support Agent",
+  compliance_officer: "Legacy alias for Compliance Analyst",
+  government: "Legacy alias for Programme Operations Manager",
   rider: "Rider with route and campaign participation",
-  government: "Government or regulatory access",
+  advertiser: "Advertiser product account",
 };
+
+const EMPLOYEE_CREATE_ROLE_VALUES = [
+  "operations_manager",
+  "campaign_manager",
+  "partner_operations_manager",
+  "fraud_analyst",
+  "trust_safety_analyst",
+  "support_agent",
+  "support_lead",
+  "finance_operator",
+  "compliance_analyst",
+  "programme_operations_manager",
+  "executive_viewer",
+  "product_operations",
+  "engineering_operations",
+  "platform_operator",
+  "security_admin",
+  "super_admin",
+  "admin",
+  "moderator",
+  "support",
+  "government",
+  "compliance_officer",
+] as const;
 
 const languageOptions = [
   { value: "en", label: "English" },
@@ -466,56 +523,35 @@ export default function CreateUserPage() {
                                   </span>
                                 </div>
                               </SelectItem>
-                              <SelectItem value="admin">
+                              <SelectItem value="advertiser">
                                 <div className="flex flex-col">
                                   <span className="font-medium self-start">
-                                    Admin
+                                    Advertiser
                                   </span>
                                   <span className="text-xs text-muted-foreground">
-                                    {roleDescriptions.admin}
+                                    {roleDescriptions.advertiser}
                                   </span>
                                 </div>
                               </SelectItem>
-                              <SelectItem value="super_admin">
-                                <div className="flex flex-col">
-                                  <span className="font-medium self-start">
-                                    Super Admin
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {roleDescriptions["super_admin"]}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="moderator">
-                                <div className="flex flex-col">
-                                  <span className="font-medium self-start">
-                                    Moderator
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {roleDescriptions.moderator}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="support">
-                                <div className="flex flex-col">
-                                  <span className="font-medium self-start">
-                                    Support
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {roleDescriptions.support}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="government">
-                                <div className="flex flex-col">
-                                  <span className="font-medium self-start">
-                                    Government
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {roleDescriptions.government}
-                                  </span>
-                                </div>
-                              </SelectItem>
+                              {EMPLOYEE_CREATE_ROLE_VALUES.map((roleValue) => (
+                                <SelectItem key={roleValue} value={roleValue}>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium self-start">
+                                      {roleValue
+                                        .split("_")
+                                        .map(
+                                          (part) =>
+                                            part.charAt(0).toUpperCase() +
+                                            part.slice(1),
+                                        )
+                                        .join(" ")}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {roleDescriptions[roleValue]}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           {selectedRoleDescription && (

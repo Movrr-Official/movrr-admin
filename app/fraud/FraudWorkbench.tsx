@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { ExternalLink, Shield } from "lucide-react";
+import { Check, ExternalLink, Shield, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OpsEmptyState } from "@/components/ops/OpsEmptyState";
 import { OpsKpiGrid } from "@/components/ops/OpsKpiGrid";
 import { useRideSessionsData } from "@/hooks/useRideSessionsData";
+import { useCapability } from "@/hooks/useAdminUser";
+import { useToast } from "@/hooks/useToast";
+import { verifyRideSession } from "@/app/actions/rideSessions";
 import type { RideSession } from "@/schemas";
 
 const verificationBadge = (status: RideSession["verificationStatus"]) => {
@@ -26,6 +30,10 @@ const verificationBadge = (status: RideSession["verificationStatus"]) => {
 export default function FraudWorkbench() {
   const { data: sessions, isLoading, isFetching, refetch } =
     useRideSessionsData();
+  const canResolve = useCapability("fraud.resolve");
+  const { toast } = useToast();
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const reviewQueue = (sessions ?? []).filter(
     (session) =>
@@ -39,6 +47,33 @@ export default function FraudWorkbench() {
   const pendingCount = reviewQueue.filter(
     (session) => session.verificationStatus === "pending",
   ).length;
+
+  const dispose = (sessionId: string, action: "approve" | "reject") => {
+    setPendingId(sessionId);
+    startTransition(async () => {
+      const result = await verifyRideSession({
+        sessionId,
+        action,
+        reason:
+          action === "approve"
+            ? "Fraud workbench approval"
+            : "Fraud workbench rejection",
+      });
+      setPendingId(null);
+      if (!result.success) {
+        toast({
+          title: "Disposition failed",
+          description: result.error ?? "Unable to update verification",
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({
+        title: action === "approve" ? "Session verified" : "Session rejected",
+      });
+      void refetch();
+    });
+  };
 
   return (
     <div className="min-h-screen page-canvas">
@@ -154,12 +189,36 @@ export default function FraudWorkbench() {
                             : "In progress"}
                         </td>
                         <td className="py-3">
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/ride-sessions?id=${session.id}`}>
-                              Open session
-                              <ExternalLink className="ml-2 h-3.5 w-3.5" />
-                            </Link>
-                          </Button>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {canResolve && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  disabled={isPending && pendingId === session.id}
+                                  onClick={() => dispose(session.id, "approve")}
+                                >
+                                  <Check className="mr-1 h-3.5 w-3.5" />
+                                  Verify
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  disabled={isPending && pendingId === session.id}
+                                  onClick={() => dispose(session.id, "reject")}
+                                >
+                                  <X className="mr-1 h-3.5 w-3.5" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            <Button asChild variant="outline" size="sm">
+                              <Link href={`/ride-sessions?id=${session.id}`}>
+                                Open
+                                <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                              </Link>
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}

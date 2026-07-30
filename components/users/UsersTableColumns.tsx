@@ -31,15 +31,18 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { User } from "@/schemas";
+import { getEmployeeRoleLabel } from "@/features/authorization/roleOptions";
 
 const getRoleBadge = (role: string) => {
   switch (role) {
     case "admin":
     case "super_admin":
+    case "security_admin":
+    case "operations_manager":
       return (
         <Badge variant="warning">
           <Shield className="h-3 w-3 mr-1" />
-          {role === "super_admin" ? "Super Admin" : "Admin"}
+          {getEmployeeRoleLabel(role)}
         </Badge>
       );
     case "advertiser":
@@ -80,7 +83,7 @@ const getRoleBadge = (role: string) => {
     default:
       return (
         <Badge variant="secondary" className="font-medium">
-          {role}
+          {getEmployeeRoleLabel(role)}
         </Badge>
       );
   }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { LayoutDashboard, Landmark, Shield } from "lucide-react";
 import {
   collectOpsChildHrefs,
+  filterNavigationByCapabilities,
   filterNavigationByRole,
   findOpsGroup,
   isOnOpsRoute,
@@ -11,6 +12,11 @@ import {
   type NavEntry,
   type NavGroup,
 } from "@/components/layout/sidebarNavigation";
+import {
+  filterGeneratedNavigation,
+  generateNavigationFromCapabilities,
+} from "@/features/authorization/navigation";
+import { capabilitiesForEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
 
 const sampleNavigation: NavEntry[] = [
   {
@@ -18,6 +24,7 @@ const sampleNavigation: NavEntry[] = [
     name: "Overview",
     href: "/",
     icon: LayoutDashboard,
+    capabilities: ["dashboard.read"],
     roles: ["admin", "super_admin", "compliance_officer"],
     badge: null,
   },
@@ -26,6 +33,7 @@ const sampleNavigation: NavEntry[] = [
     id: OPS_NAV_GROUP_ID,
     name: "Ops",
     icon: Shield,
+    capabilities: ["fraud.review", "programmes.read"],
     roles: ["admin", "super_admin", "compliance_officer", "government"],
     children: [
       {
@@ -33,6 +41,7 @@ const sampleNavigation: NavEntry[] = [
         name: "Fraud",
         href: "/fraud",
         icon: Shield,
+        capabilities: ["fraud.review"],
         roles: ["admin", "super_admin"],
         badge: null,
       },
@@ -41,6 +50,7 @@ const sampleNavigation: NavEntry[] = [
         name: "Programmes",
         href: "/programmes",
         icon: Landmark,
+        capabilities: ["programmes.read"],
         roles: ["admin", "super_admin", "compliance_officer", "government"],
         badge: null,
       },
@@ -61,15 +71,16 @@ describe("isPathActive", () => {
   });
 });
 
-describe("filterNavigationByRole", () => {
-  it("returns empty navigation when role is missing", () => {
-    expect(filterNavigationByRole(sampleNavigation, null)).toEqual([]);
+describe("filterNavigationByCapabilities", () => {
+  it("returns empty navigation when capabilities are missing", () => {
+    expect(filterNavigationByCapabilities(sampleNavigation, null)).toEqual([]);
   });
 
-  it("filters ops children by role while keeping the group shell", () => {
-    const complianceNav = filterNavigationByRole(
+  it("filters ops children by capability while keeping the group shell", () => {
+    const complianceCaps = capabilitiesForEmployeeRole("compliance_analyst");
+    const complianceNav = filterNavigationByCapabilities(
       sampleNavigation,
-      "compliance_officer",
+      complianceCaps,
     );
     const opsGroup = findOpsGroup(complianceNav);
 
@@ -79,8 +90,51 @@ describe("filterNavigationByRole", () => {
   });
 
   it("hides ops group when role has no visible children", () => {
-    const moderatorNav = filterNavigationByRole(sampleNavigation, "moderator");
-    expect(findOpsGroup(moderatorNav)).toBeNull();
+    const supportCaps = capabilitiesForEmployeeRole("support_agent");
+    const supportNav = filterNavigationByCapabilities(
+      sampleNavigation,
+      supportCaps,
+    );
+    expect(findOpsGroup(supportNav)).toBeNull();
+  });
+});
+
+describe("filterNavigationByRole (legacy shim)", () => {
+  it("still filters by role arrays when present", () => {
+    const complianceNav = filterNavigationByRole(
+      sampleNavigation,
+      "compliance_officer",
+    );
+    expect(findOpsGroup(complianceNav)?.children.map((c) => c.name)).toEqual([
+      "Programmes",
+    ]);
+  });
+});
+
+describe("generated capability navigation", () => {
+  it("gives compliance_analyst programmes but not fraud", () => {
+    const nav = filterGeneratedNavigation(
+      generateNavigationFromCapabilities(),
+      capabilitiesForEmployeeRole("compliance_analyst"),
+    );
+    const ops = nav.find((e) => e.type === "group");
+    expect(ops?.type).toBe("group");
+    if (ops?.type === "group") {
+      expect(ops.children.map((c) => c.href)).toContain("/programmes");
+      expect(ops.children.map((c) => c.href)).not.toContain("/fraud");
+    }
+  });
+
+  it("aligns campaign_manager with campaigns nav", () => {
+    const nav = filterGeneratedNavigation(
+      generateNavigationFromCapabilities(),
+      capabilitiesForEmployeeRole("campaign_manager"),
+    );
+    const hrefs = nav.flatMap((e) =>
+      e.type === "group" ? e.children.map((c) => c.href) : [e.href],
+    );
+    expect(hrefs).toContain("/campaigns");
+    expect(hrefs).not.toContain("/settings");
   });
 });
 

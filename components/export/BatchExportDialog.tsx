@@ -39,10 +39,12 @@ import {
   BarChart3,
 } from "lucide-react";
 import {
-  exportData,
+  serializeExportData,
+  downloadSerializedExport,
   type ExportOptions,
   type ExportableData,
 } from "@/lib/export";
+import { executeAuditedExport } from "@/app/actions/exportAudit";
 
 interface DataSource {
   id: string;
@@ -198,7 +200,38 @@ export function BatchExportDialog({
             }),
         };
 
-        await exportData(source.data, options);
+        const serialized = serializeExportData(source.data, options);
+        if (!serialized) {
+          setExportProgress((prev) =>
+            prev.map((item) =>
+              item.sourceId === source.id
+                ? { ...item, status: "completed", progress: 100 }
+                : item,
+            ),
+          );
+          continue;
+        }
+
+        const audited = await executeAuditedExport({
+          module: source.id,
+          format: selectedFormat,
+          rowCount: serialized.rowCount,
+          filename: serialized.filename,
+          content: serialized.content,
+          contentType: serialized.contentType,
+          reason: `BatchExportDialog:${source.name}`,
+        });
+
+        if (!audited.success) {
+          throw new Error(audited.error);
+        }
+
+        downloadSerializedExport({
+          ...serialized,
+          content: audited.content,
+          contentType: audited.contentType,
+          filename: audited.filename,
+        });
 
         setExportProgress((prev) =>
           prev.map((item) =>
@@ -207,7 +240,7 @@ export function BatchExportDialog({
                   ...item,
                   status: "completed",
                   progress: 100,
-                  filename: `${options.filename}.${selectedFormat}`,
+                  filename: audited.filename,
                 }
               : item
           )

@@ -1,4 +1,7 @@
-export type AdminRole = "super_admin" | "admin" | "moderator" | "support" | "compliance_officer" | "government";
+import type { EmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
+
+/** Dashboard staff roles stored on admin_users.role */
+export type AdminRole = EmployeeRole;
 
 export interface AdminUser {
   id: string;

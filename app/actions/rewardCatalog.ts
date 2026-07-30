@@ -1,10 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireMutatingAdminRoles } from "@/lib/admin";
+
+import { requireCapability } from "@/lib/admin";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { logger } from "@/lib/logger";
+import {
+  enforceApprovalSod,
+  recordEntityInitiator,
+} from "@/features/authorization/sodEnforcement";
 import {
   cleanupUnreferencedRewardCatalogMedia,
   deleteRewardCatalogImage,
@@ -167,7 +171,7 @@ export async function getRewardCatalog(
   filters?: RewardCatalogFilters,
 ): Promise<{ success: boolean; data?: RewardCatalogItem[]; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("rewards.catalog.read");
     const supabaseAdmin = createSupabaseAdminClient();
     let query = supabaseAdmin
       .from("reward_catalog")
@@ -214,7 +218,7 @@ export async function upsertRewardCatalog(
   data: z.infer<typeof upsertRewardCatalogSchema>,
 ): Promise<{ success: boolean; data?: RewardCatalogItem; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireCapability("rewards.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = upsertRewardCatalogSchema.parse(data);
 
@@ -288,6 +292,14 @@ export async function upsertRewardCatalog(
     }
 
     const saved = mapCatalogRow(response.data);
+    if (!validatedData.id && saved.id) {
+      await recordEntityInitiator(supabaseAdmin, {
+        adminId: auth.authUser.id,
+        entityType: "reward_catalog",
+        entityId: saved.id,
+        action: "reward_catalog.create",
+      });
+    }
     if (validatedData.id && previousMediaUrls.length > 0) {
       const nextMediaUrls = [
         saved.thumbnailUrl ?? "",
@@ -317,9 +329,25 @@ export async function updateRewardCatalogStatus(
   data: z.infer<typeof publishRewardSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
-    const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = publishRewardSchema.parse(data);
+    const auth =
+      validatedData.status === "active"
+        ? await requireCapability("rewards.approve", { mutation: true })
+        : await requireCapability("rewards.manage", { mutation: true });
+    const supabaseAdmin = createSupabaseAdminClient();
+
+    if (validatedData.status === "active") {
+      const sodError = await enforceApprovalSod({
+        supabase: supabaseAdmin,
+        workflowId: "reward_approval",
+        entityType: "reward_catalog",
+        entityId: validatedData.id,
+        approverUserId: auth.authUser.id,
+      });
+      if (sodError) {
+        return { success: false, error: sodError };
+      }
+    }
 
     const updatePayload: Record<string, any> = {
       status: validatedData.status,
@@ -354,7 +382,7 @@ export async function toggleRewardFeatured(
   data: z.infer<typeof toggleFeaturedSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("rewards.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = toggleFeaturedSchema.parse(data);
 
@@ -392,7 +420,7 @@ export async function uploadRewardCatalogThumbnail(
   rewardId: string,
   formData: FormData,
 ): Promise<{ success: boolean; error?: string; thumbnailUrl?: string }> {
-  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+  await requireCapability("rewards.manage", { mutation: true });
 
   if (shouldUseMockData()) {
     revalidatePath("/rewards");
@@ -472,7 +500,7 @@ export async function uploadRewardCatalogThumbnail(
 export async function removeRewardCatalogThumbnail(
   rewardId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+  await requireCapability("rewards.manage", { mutation: true });
 
   if (shouldUseMockData()) {
     revalidatePath("/rewards");
@@ -532,7 +560,7 @@ export async function uploadRewardCatalogGalleryImage(
   formData: FormData,
   replaceIndex?: number,
 ): Promise<{ success: boolean; error?: string; galleryUrls?: string[] }> {
-  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+  await requireCapability("rewards.manage", { mutation: true });
 
   if (shouldUseMockData()) {
     revalidatePath("/rewards");
@@ -634,7 +662,7 @@ export async function removeRewardCatalogGalleryImage(
   rewardId: string,
   index: number,
 ): Promise<{ success: boolean; error?: string; galleryUrls?: string[] }> {
-  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+  await requireCapability("rewards.manage", { mutation: true });
 
   if (shouldUseMockData()) {
     revalidatePath("/rewards");
@@ -698,7 +726,7 @@ export async function reorderRewardCatalogGallery(
   rewardId: string,
   orderedUrls: string[],
 ): Promise<{ success: boolean; error?: string; galleryUrls?: string[] }> {
-  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+  await requireCapability("rewards.manage", { mutation: true });
 
   if (shouldUseMockData()) {
     revalidatePath("/rewards");

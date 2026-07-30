@@ -1,7 +1,7 @@
 "use server";
 
 import { getAuthenticatedUser } from "@/lib/admin";
-import { hasAdminPermission } from "@/lib/authPermissions";
+import { hasAdminPermission, hasCapability } from "@/lib/authPermissions";
 import { logger } from "@/lib/logger";
 import type { AdminRole } from "@/types/auth";
 
@@ -39,6 +39,11 @@ export async function checkPermission(permission: string) {
     const normalizedPermission = permission.trim().toLowerCase();
     if (!normalizedPermission) {
       return false;
+    }
+
+    // Capability ids use dotted form (e.g. users.read); legacy uses module:action.
+    if (normalizedPermission.includes(".")) {
+      return hasCapability(user.adminUser.role as AdminRole, normalizedPermission);
     }
 
     return hasAdminPermission(user.adminUser.role as AdminRole, normalizedPermission);

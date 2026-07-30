@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAnyCapability } from "@/lib/admin";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { RESEND_API_KEY } from "@/lib/env";
@@ -112,7 +111,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    await requireAdminRoles(DASHBOARD_ACCESS_ROLES);
+    await requireAnyCapability(["platform.health.read", "dashboard.read"]);
   } catch {
     return NextResponse.json(
       { error: "unauthorized" },

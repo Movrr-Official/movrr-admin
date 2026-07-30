@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { logger } from "@/lib/logger";
 import {
@@ -593,7 +592,7 @@ const sendOperationalEmailAlert = async (subject: string, message: string) => {
 };
 
 const buildAuditActor = (
-  auth: Awaited<ReturnType<typeof requireAdminRoles>>,
+  auth: Awaited<ReturnType<typeof requireCapability>>,
 ): SettingsActor => ({
   id: auth.authUser.id,
   name:
@@ -719,7 +718,7 @@ export async function getAdminSettings(): Promise<{
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("settings.manage");
     const [rows, auditEntries, integrationStatus] = await Promise.all([
       loadSettingsRows(),
       fetchAuditEntries(),
@@ -771,7 +770,7 @@ export async function getAdminSettings(): Promise<{
 
 export async function getSettingsSection(section: SettingsSectionId) {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("settings.manage");
     const result = await getAdminSettings();
 
     if (!result.success || !result.data) {
@@ -799,7 +798,7 @@ export async function getSettingsSection(section: SettingsSectionId) {
 
 export async function getSettingsAudit(section?: SettingsSectionId) {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("settings.manage");
     const [rows, entries] = await Promise.all([
       loadSettingsRows(),
       fetchAuditEntries(section),
@@ -825,7 +824,7 @@ export async function getSettingsAudit(section?: SettingsSectionId) {
 
 export async function recheckIntegrationStatus() {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("settings.manage");
     const data = await deriveIntegrationStatus();
     return { success: true as const, data };
   } catch (error) {
@@ -850,8 +849,11 @@ export async function updateSettingsSection(input: {
   riskyChanges?: string[];
 }> {
   try {
-    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
     const section = settingsSectionIdSchema.parse(input.section);
+    const auth = await requireCapability(
+      section === "security" ? "settings.security" : "settings.manage",
+      { mutation: true },
+    );
 
     if (READ_ONLY_SECTIONS.has(section)) {
       return {
@@ -1004,7 +1006,7 @@ export async function syncPlatformSettings(): Promise<{
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("settings.manage", { mutation: true });
     const rows = await loadSettingsRows();
     const existingKeys = new Set(rows.map((r) => r.key));
     const values = mergeRows(rows);

@@ -62,7 +62,11 @@ import { PageHeader } from "@/components/PageHeader";
 import { useCounts } from "@/providers/CountProvider";
 import { useRideSessionsData } from "@/hooks/useRideSessionsData";
 import { useOpenIncidentCount } from "@/hooks/useIncidentsData";
-import { useAdminUser } from "@/hooks/useAdminUser";
+import { useAdminUser, useCapability } from "@/hooks/useAdminUser";
+import { executeAuditedExport } from "@/app/actions/exportAudit";
+import { useToast } from "@/hooks/useToast";
+import { canSeeNavHref } from "@/features/authorization/navigation";
+import { getCapabilitiesForRole } from "@/lib/authPermissions";
 
 const DASHBOARD_LOCALE = "nl-NL";
 const DASHBOARD_TIMEZONE = "Europe/Amsterdam";
@@ -259,8 +263,16 @@ export default function DashboardOverview() {
   const { data: distanceStats, isLoading: distanceLoading } =
     useDistanceStats();
   const { data: adminUser } = useAdminUser();
+  const canExport = useCapability("exports.execute");
+  const { toast } = useToast();
+  const grantedCapabilities = useMemo(
+    () => getCapabilitiesForRole(adminUser?.role),
+    [adminUser?.role],
+  );
   const canViewOpsQueues =
-    adminUser?.role === "admin" || adminUser?.role === "super_admin";
+    grantedCapabilities.includes("fraud.review") ||
+    grantedCapabilities.includes("incidents.read") ||
+    grantedCapabilities.includes("waitlist.manage");
 
   const { data: sessionAnalytics, isLoading: analyticsLoading } =
     useSessionAnalytics(co2Period);
@@ -605,7 +617,16 @@ export default function DashboardOverview() {
 
   const routeCompletionXAxisInterval = routeCompletionView === "daily" ? 1 : 0;
 
-  const handleExportData = () => {
+  const handleExportData = async () => {
+    if (!canExport) {
+      toast({
+        title: "Export not permitted",
+        description: "You lack the exports.execute capability.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const rows = (campaigns ?? []).map((campaign) => ({
       id: campaign.id,
       name: campaign.name,
@@ -617,6 +638,8 @@ export default function DashboardOverview() {
       endDate: campaign.endDate,
     }));
 
+    if (!rows.length) return;
+
     const header = Object.keys(rows[0] ?? {}).join(",");
     const body = rows
       .map((row) =>
@@ -627,11 +650,29 @@ export default function DashboardOverview() {
       .join("\n");
 
     const csv = [header, body].filter(Boolean).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const result = await executeAuditedExport({
+      module: "dashboard",
+      format: "csv",
+      rowCount: rows.length,
+      filename: "movrr-dashboard-export.csv",
+      content: csv,
+      reason: "Dashboard campaign overview export",
+    });
+
+    if (!result.success) {
+      toast({
+        title: "Export failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const blob = new Blob([result.content], { type: result.contentType });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "movrr-dashboard-export.csv";
+    link.download = result.filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -642,35 +683,47 @@ export default function DashboardOverview() {
     {
       label: "View rewards",
       href: "/rewards",
+      capability: "rewards.catalog.read",
       icon: FileText,
     },
     {
       label: "Manage riders",
       href: "/riders",
+      capability: "riders.read",
       icon: Bike,
     },
     {
       label: "Create campaign",
       href: "/campaigns/create",
+      capability: "campaigns.write",
       icon: Plus,
     },
     {
       label: "Run campaign selection",
       href: "/campaigns",
+      capability: "campaigns.read",
       icon: CheckSquare,
     },
     {
       label: "Export data",
       onClick: handleExportData,
-      disabled: !campaigns?.length,
+      capability: "exports.execute",
+      disabled: !campaigns?.length || !canExport,
       icon: Download,
     },
     {
       label: "View pending approvals",
       href: "/waitlist",
+      capability: "waitlist.manage",
       icon: CheckSquare,
     },
-  ];
+  ].filter((action) => {
+    if (action.capability === "exports.execute") return canExport;
+    if (action.href) {
+      return canSeeNavHref(action.href, grantedCapabilities);
+    }
+    return grantedCapabilities.includes(action.capability as never);
+  });
 
   const renderChartEmptyState = (title: string, description: string) => (
     <div className="h-full rounded-2xl border border-dashed border-border/60 bg-muted/40 px-4 py-6 flex flex-col items-center justify-center text-center">

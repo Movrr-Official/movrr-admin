@@ -1,7 +1,7 @@
 "use server";
 
-import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+
+import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { canAccessSearchableEntity } from "@/lib/search/access";
 import { listActiveSearchableEntities } from "@/lib/search/registry";
@@ -23,7 +23,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
   }
 
   try {
-    const user = await requireAdminRoles(DASHBOARD_ACCESS_ROLES);
+    const user = await requireCapability("dashboard.read");
     const role = user.adminUser.role;
     const supabase = createSupabaseAdminClient();
     const q = query.trim();

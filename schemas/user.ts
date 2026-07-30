@@ -6,13 +6,31 @@ import {
 } from "./dashboard";
 
 export const userRoleSchema = z.enum([
-  "admin",
+  // Product principals
+  "advertiser",
+  "rider",
+  // Canonical employee operating roles
   "super_admin",
+  "security_admin",
+  "operations_manager",
+  "platform_operator",
+  "campaign_manager",
+  "partner_operations_manager",
+  "fraud_analyst",
+  "trust_safety_analyst",
+  "support_agent",
+  "support_lead",
+  "finance_operator",
+  "compliance_analyst",
+  "programme_operations_manager",
+  "executive_viewer",
+  "product_operations",
+  "engineering_operations",
+  // Legacy employee aliases (DB / migration compatibility)
+  "admin",
   "moderator",
   "support",
   "compliance_officer",
-  "advertiser",
-  "rider",
   "government",
 ]);
 

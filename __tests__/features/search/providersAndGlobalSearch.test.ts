@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const requireAdminRoles = vi.fn();
+const requireCapability = vi.fn();
 const createSupabaseAdminClient = vi.fn();
 
 vi.mock("@/lib/admin", () => ({
-  requireAdminRoles: (...args: unknown[]) => requireAdminRoles(...args),
+  requireCapability: (...args: unknown[]) => requireCapability(...args),
 }));
 
 vi.mock("@/lib/supabase-admin", () => ({
@@ -132,7 +132,7 @@ describe("search providers", () => {
 describe("globalSearch result contract", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireAdminRoles.mockResolvedValue({
+    requireCapability.mockResolvedValue({
       adminUser: { role: "admin" },
     });
   });
@@ -176,7 +176,7 @@ describe("globalSearch result contract", () => {
   });
 
   it("returns empty when role cannot access any searchable entity", async () => {
-    requireAdminRoles.mockResolvedValue({
+    requireCapability.mockResolvedValue({
       adminUser: { role: "government" },
     });
     createSupabaseAdminClient.mockReturnValue({

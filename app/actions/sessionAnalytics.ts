@@ -1,7 +1,6 @@
 "use server";
 
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   BIKE_TYPE_LABELS,
@@ -68,7 +67,7 @@ export async function getSessionAnalytics(days = 30): Promise<{
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("analytics.read");
     const supabase = createSupabaseAdminClient();
 
     const windowStart = new Date();
@@ -239,7 +238,7 @@ export async function getStreakLeaderboard(limit = 10): Promise<{
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("analytics.read");
     const supabase = createSupabaseAdminClient();
 
     // reward_transactions where source = 'bonus' and metadata contains streak entries,

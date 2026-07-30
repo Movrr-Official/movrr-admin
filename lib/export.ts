@@ -267,11 +267,10 @@ export function exportToJSON(
   downloadFile(jsonContent, `${filename}.json`, "application/json");
 }
 
-export function exportData(
+function filterExportRows(
   data: ExportableData[],
-  options: ExportOptions
-): void {
-  // Apply date range filter if specified
+  options: ExportOptions,
+): ExportableData[] {
   let filteredData = data;
   if (options.dateRange) {
     filteredData = data.filter((row) => {
@@ -282,22 +281,180 @@ export function exportData(
     });
   }
 
+  if (!options.selectedFields?.length) return filteredData;
+
+  return filteredData.map((row) => {
+    const filteredRow: ExportableData = {};
+    options.selectedFields!.forEach((field) => {
+      if (row[field] !== undefined) {
+        filteredRow[field] = row[field];
+      }
+    });
+    return filteredRow;
+  });
+}
+
+export type SerializedExport = {
+  content: string;
+  contentType: string;
+  filename: string;
+  rowCount: number;
+  /** When true, content is base64 (xlsx). */
+  encoding?: "utf8" | "base64";
+};
+
+/**
+ * Build export payload without triggering a browser download.
+ * Callers must audit via executeAuditedExport before downloading.
+ */
+export function serializeExportData(
+  data: ExportableData[],
+  options: ExportOptions,
+): SerializedExport | null {
+  const processedData = filterExportRows(data, options);
+  if (!processedData.length) return null;
+
+  const baseName = options.filename || "export";
+  const includeHeaders = options.includeHeaders !== false;
+  const headers = Object.keys(processedData[0]);
+
   switch (options.format) {
-    case "csv":
-      exportToCSV(filteredData, options);
-      break;
-    case "xlsx":
-      exportToExcel(filteredData, options);
-      break;
-    case "pdf":
-      exportToPDF(filteredData, options);
-      break;
-    case "json":
-      exportToJSON(filteredData, options);
-      break;
+    case "csv": {
+      const csvContent = [
+        ...(includeHeaders ? [headers.join(",")] : []),
+        ...processedData.map((row) =>
+          headers
+            .map((header) => {
+              const value = row[header];
+              if (
+                typeof value === "string" &&
+                (value.includes(",") || value.includes('"'))
+              ) {
+                return `"${value.replace(/"/g, '""')}"`;
+              }
+              return value;
+            })
+            .join(","),
+        ),
+      ].join("\n");
+      return {
+        content: csvContent,
+        contentType: "text/csv;charset=utf-8;",
+        filename: `${baseName}.csv`,
+        rowCount: processedData.length,
+      };
+    }
+    case "json": {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        totalRecords: processedData.length,
+        data: processedData,
+      };
+      return {
+        content: JSON.stringify(payload, null, 2),
+        contentType: "application/json",
+        filename: `${baseName}.json`,
+        rowCount: processedData.length,
+      };
+    }
+    case "xlsx": {
+      const worksheet = XLSX.utils.json_to_sheet(processedData, {
+        header: headers,
+        skipHeader: !includeHeaders,
+      });
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Export");
+      const base64 = XLSX.write(workbook, {
+        type: "base64",
+        bookType: "xlsx",
+      }) as string;
+      return {
+        content: base64,
+        contentType:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename: `${baseName}.xlsx`,
+        rowCount: processedData.length,
+        encoding: "base64",
+      };
+    }
+    case "pdf": {
+      // PDF binary is awkward to audit as text — serialize JSON twin for audit,
+      // then still generate PDF client-side after audit succeeds.
+      return {
+        content: JSON.stringify({
+          exportedAt: new Date().toISOString(),
+          totalRecords: processedData.length,
+          format: "pdf",
+          data: processedData,
+        }),
+        contentType: "application/json",
+        filename: `${baseName}.pdf`,
+        rowCount: processedData.length,
+      };
+    }
     default:
       throw new Error(`Unsupported export format: ${options.format}`);
   }
+}
+
+export function downloadSerializedExport(serialized: SerializedExport): void {
+  if (serialized.filename.endsWith(".pdf")) {
+    // Reconstruct PDF from JSON twin for download after audit.
+    try {
+      const parsed = JSON.parse(serialized.content) as {
+        data?: ExportableData[];
+      };
+      if (parsed.data?.length) {
+        exportToPDF(parsed.data, {
+          format: "pdf",
+          filename: serialized.filename.replace(/\.pdf$/i, ""),
+          includeHeaders: true,
+        });
+        return;
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  if (serialized.encoding === "base64") {
+    const binary = atob(serialized.content);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: serialized.contentType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = serialized.filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    return;
+  }
+
+  downloadFile(serialized.content, serialized.filename, serialized.contentType);
+}
+
+/**
+ * @deprecated Prefer serializeExportData + executeAuditedExport + downloadSerializedExport.
+ */
+export function exportData(
+  data: ExportableData[],
+  options: ExportOptions
+): void {
+  const serialized = serializeExportData(data, options);
+  if (!serialized) return;
+
+  if (options.format === "pdf") {
+    const processedData = filterExportRows(data, options);
+    exportToPDF(processedData, options);
+    return;
+  }
+
+  downloadSerializedExport(serialized);
 }
 
 export function batchExport(

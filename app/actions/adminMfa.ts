@@ -2,11 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireAdminRoles } from "@/lib/admin";
+import { requireCapability } from "@/lib/admin";
 import { getServerAdminAuthenticatorAssurance } from "@/lib/adminMfa";
-import {
-  DASHBOARD_ACCESS_ROLES,
-} from "@/lib/authPermissions";
 import {
   getAdminMfaContext,
   recordAdminMfaChallengeResult,
@@ -34,7 +31,7 @@ type ManagedFactorRow = {
 };
 
 type ElevatedAdminMfaSession = {
-  auth: Awaited<ReturnType<typeof requireAdminRoles>>;
+  auth: Awaited<ReturnType<typeof requireCapability>>;
   context: Awaited<ReturnType<typeof getAdminMfaContext>> & {
     adminUser: NonNullable<Awaited<ReturnType<typeof getAdminMfaContext>>["adminUser"]>;
     currentLevel: "aal2";
@@ -90,9 +87,10 @@ const listFactorsForUser = async (userId: string) => {
 };
 
 const requireElevatedAdminMfaSession = async (
-  allowedRoles: readonly string[],
+  capability: string,
+  options?: { mutation?: boolean },
 ): Promise<ElevatedAdminMfaSession> => {
-  const auth = await requireAdminRoles(allowedRoles);
+  const auth = await requireCapability(capability, options);
   const context = await getAdminMfaContext();
 
   if (!context.user || !context.adminUser) {
@@ -127,7 +125,7 @@ export async function removeOwnAdminMfaFactor(input: { factorId: string }) {
     }
 
     const { auth, context } =
-      await requireElevatedAdminMfaSession(DASHBOARD_ACCESS_ROLES);
+      await requireElevatedAdminMfaSession("dashboard.read", { mutation: true });
     const factors = await listFactorsForUser(auth.authUser.id);
     const factor = factors.find((candidate) => candidate.id === factorId);
 
@@ -198,9 +196,7 @@ export async function resetAdminMfaRecovery(input: {
       };
     }
 
-    const { auth, context } = await requireElevatedAdminMfaSession([
-      "super_admin",
-    ]);
+    const { auth, context } = await requireElevatedAdminMfaSession("settings.security", { mutation: true });
     const targetAdmin = await getTargetAdminByUserIdOrEmail({
       email: input.targetAdminEmail?.trim(),
       userId: input.targetAdminUserId?.trim(),
@@ -270,9 +266,7 @@ export async function recordAdminMfaEnrollmentSuccess(input: {
   redirectTo?: string;
 }) {
   try {
-    const auth = await requireAdminRoles(DASHBOARD_ACCESS_ROLES, {
-      mutation: true,
-    });
+    const auth = await requireCapability("dashboard.read", { mutation: true });
     await recordAdminMfaEnrollment(input.factorId, {
       redirect_to: input.redirectTo ?? MFA_MANAGEMENT_PATH,
     });
@@ -293,9 +287,7 @@ export async function recordAdminMfaChallengeEvent(input: {
   success: boolean;
 }) {
   try {
-    const auth = await requireAdminRoles(DASHBOARD_ACCESS_ROLES, {
-      mutation: true,
-    });
+    const auth = await requireCapability("dashboard.read", { mutation: true });
 
     if (input.success) {
       const assurance = await getServerAdminAuthenticatorAssurance(auth.authUser);

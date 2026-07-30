@@ -3,7 +3,12 @@ import "server-only";
 import { createSupabaseServerClient } from "./supabase-server";
 import { createSupabaseAdminClient } from "./supabase-admin";
 import { headers } from "next/headers";
-import { normalizeAdminRole, isReadOnlyAdminRole, hasAdminPermission } from "@/lib/authPermissions";
+import {
+  normalizeAdminRole,
+  isReadOnlyAdminRole,
+  hasAdminPermission,
+  getCapabilitiesForRole,
+} from "@/lib/authPermissions";
 import {
   ADMIN_DASHBOARD_SESSION_AUDIT_ACTION,
   ADMIN_SESSION_ACTIVITY_ACTION,
@@ -17,15 +22,12 @@ import {
   type AuthenticatedUser,
   type AdminRole,
 } from "@/types/auth";
+import { EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
+import type { KnownCapability } from "@/features/organisations/domain/CapabilityCatalog";
+import { canAccessPage } from "@/features/authorization/dashboardRegistry";
+import { mergeTemporaryCapabilities } from "@/features/authorization/securityElevations";
 
-const VALID_ADMIN_ROLES: AdminRole[] = [
-  "super_admin",
-  "admin",
-  "moderator",
-  "support",
-  "compliance_officer",
-  "government",
-];
+const VALID_ADMIN_ROLES: AdminRole[] = [...EMPLOYEE_ROLES];
 
 const EXCLUDED_PATHS = ["/auth", "/unauthorized"] as const;
 const ADMIN_SESSION_BOOTSTRAP_GRACE_MS = 10 * 60_000;
@@ -558,6 +560,10 @@ export async function requireAdmin(): Promise<AuthenticatedUser> {
   return user;
 }
 
+/**
+ * @deprecated Prefer requireCapability / requireAnyCapability.
+ * Retained for gradual migration of call sites that still pass role arrays.
+ */
 export async function requireAdminRoles(
   allowedRoles: readonly string[],
   options?: { mutation?: boolean; permission?: string },
@@ -587,6 +593,86 @@ export async function requireMutatingAdminRoles(
   allowedRoles: readonly string[],
 ): Promise<AuthenticatedUser> {
   return requireAdminRoles(allowedRoles, { mutation: true });
+}
+
+export type RequireCapabilityOptions = {
+  /** When true, also rejects read-only employee templates. */
+  mutation?: boolean;
+};
+
+/**
+ * Capability-first dashboard authorization.
+ * Identity → role template → capability bundle (+ temporary grants) → assertion.
+ */
+export async function requireCapability(
+  capability: KnownCapability | string,
+  options?: RequireCapabilityOptions,
+): Promise<AuthenticatedUser> {
+  const user = await requireAdmin();
+  const granted = new Set<string>(
+    mergeTemporaryCapabilities(
+      getCapabilitiesForRole(user.adminUser.role),
+      user.authUser.id,
+    ),
+  );
+
+  if (!granted.has(capability)) {
+    throw new AdminAuthError(
+      "NOT_AUTHORIZED",
+      `Missing capability: ${capability}`,
+    );
+  }
+
+  if (options?.mutation && isReadOnlyAdminRole(user.adminUser.role)) {
+    throw new AdminAuthError(
+      "NOT_AUTHORIZED",
+      "Read-only admin role cannot perform this action.",
+    );
+  }
+
+  return user;
+}
+
+export async function requireAnyCapability(
+  capabilities: readonly (KnownCapability | string)[],
+  options?: RequireCapabilityOptions,
+): Promise<AuthenticatedUser> {
+  const user = await requireAdmin();
+  const granted = new Set<string>(
+    mergeTemporaryCapabilities(
+      getCapabilitiesForRole(user.adminUser.role),
+      user.authUser.id,
+    ),
+  );
+
+  const allowed = capabilities.some((cap) => granted.has(cap));
+  if (!allowed) {
+    throw new AdminAuthError(
+      "NOT_AUTHORIZED",
+      `Missing one of capabilities: ${capabilities.join(", ")}`,
+    );
+  }
+
+  if (options?.mutation && isReadOnlyAdminRole(user.adminUser.role)) {
+    throw new AdminAuthError(
+      "NOT_AUTHORIZED",
+      "Read-only admin role cannot perform this action.",
+    );
+  }
+
+  return user;
+}
+
+/** Assert the authenticated employee may open a dashboard page path. */
+export async function requirePageAccess(
+  pathname: string,
+): Promise<AuthenticatedUser> {
+  const user = await requireAdmin();
+  const granted = getCapabilitiesForRole(user.adminUser.role);
+  if (!canAccessPage(pathname, granted)) {
+    throw new AdminAuthError("NOT_AUTHORIZED", "Not authorized for this page.");
+  }
+  return user;
 }
 
 export async function getAdminRoleForLayout(): Promise<AdminRole | undefined> {

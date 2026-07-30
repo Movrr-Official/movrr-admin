@@ -44,13 +44,15 @@ export interface SearchableEntityNavigation {
 
 export interface SearchableEntityAccess {
   /**
-   * Sidebar-aligned role allow-list. Entity is omitted from search when
-   * the caller's role is not included.
+   * Preferred: capability from the Dashboard Capability Registry.
    */
-  roles: readonly UserRole[];
+  capability?: string;
   /**
-   * Optional fine-grained permission from ROLE_PERMISSIONS.
-   * When set, caller must also satisfy hasAdminPermission.
+   * @deprecated Prefer `capability`. Legacy role allow-list fallback.
+   */
+  roles?: readonly UserRole[];
+  /**
+   * @deprecated Prefer `capability`. Legacy permission string bridge.
    */
   permission?: string;
 }

@@ -12,8 +12,7 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAnyCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getResolvedPlatformSettingsValues } from "@/lib/platformSettings";
 
@@ -37,9 +36,8 @@ const querySchema = z.object({
 });
 
 export async function GET(request: Request) {
-  // Require admin-only role (not moderator)
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireAnyCapability(["routes.write", "platform.jobs.manage"]);
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

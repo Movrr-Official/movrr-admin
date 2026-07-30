@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
+
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+import { requireCapability } from "@/lib/admin";
 import {
   RewardTransaction,
   RiderBalance,
@@ -64,7 +64,7 @@ export async function getRewardStats(dateRange?: {
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("rewards.catalog.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: transactions, error: txnError } = await supabaseAdmin
@@ -325,7 +325,7 @@ export async function getRewardTransactions(filters?: {
   endDate?: string;
 }): Promise<{ success: boolean; data?: RewardTransaction[]; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("rewards.catalog.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     let txnQuery = supabaseAdmin
@@ -471,7 +471,7 @@ export async function getSessionRewardTransactions(
   riderId: string,
 ): Promise<{ success: boolean; data?: RewardTransaction[]; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("rewards.catalog.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: txns, error } = await supabaseAdmin
@@ -541,7 +541,7 @@ export async function getRiderBalances(): Promise<{
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("rewards.catalog.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: balances, error } = await supabaseAdmin
@@ -666,7 +666,7 @@ export async function adjustRiderPoints(
   data: z.infer<typeof adjustPointsSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireCapability("rewards.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = adjustPointsSchema.parse(data);
 

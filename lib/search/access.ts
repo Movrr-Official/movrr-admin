@@ -1,31 +1,33 @@
-import {
-  hasAdminPermission,
-  normalizeAdminRole,
-} from "@/lib/authPermissions";
+import { hasCapability } from "@/lib/authPermissions";
+import { getSearchEntityCapability } from "@/features/authorization/dashboardRegistry";
 import type { SearchableEntityDefinition } from "@/lib/search/types";
-import type { UserRole } from "@/schemas";
 
 /**
  * Whether the caller may see/search this entity type.
- * Combines sidebar-aligned roles with optional ROLE_PERMISSIONS checks.
+ * Capability-first: derives from Dashboard Capability Registry.
  */
 export function canAccessSearchableEntity(
   entity: SearchableEntityDefinition,
   role: string | null | undefined,
 ): boolean {
-  const normalized = normalizeAdminRole(role);
-  if (!normalized) return false;
+  const capability =
+    entity.access.capability ??
+    getSearchEntityCapability(entity.type) ??
+    (entity.access.permission?.includes(".")
+      ? entity.access.permission
+      : undefined);
 
-  if (!entity.access.roles.includes(normalized as UserRole)) {
-    return false;
+  if (capability) {
+    return hasCapability(role, capability);
   }
 
-  if (
-    entity.access.permission &&
-    !hasAdminPermission(normalized, entity.access.permission)
-  ) {
-    return false;
+  // Legacy fallback during migration
+  if (entity.access.roles?.length) {
+    const normalized = role?.replace(/-/g, "_");
+    if (!normalized || !entity.access.roles.includes(normalized as never)) {
+      return false;
+    }
   }
 
-  return true;
+  return false;
 }

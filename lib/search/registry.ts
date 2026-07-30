@@ -7,27 +7,7 @@ import type {
 
 /**
  * Single source of truth for searchable Admin entities.
- * Global Search consumes this registry — it must not hardcode destinations.
- *
- * Paths follow existing Admin IA (drawer `?id=` or dedicated detail pages).
- * Hypothesized aliases like `/partner-operations` are intentionally not used.
- *
- * ## Extending Global Search
- *
- * 1. Add a `SearchableEntityType` in `lib/search/types.ts`.
- * 2. Register the entity here with label, icon, access, navigation.href,
- *    navigation.listHref, and `searchable: true` when ready to query.
- * 3. Implement a provider in `lib/search/providers.ts` (table/RPC + mapping).
- * 4. Add an icon key in `lib/search/icons.ts` if needed.
- *
- * SearchDialog does not require changes for new entity types — it navigates
- * via `result.href` and renders registry metadata only.
- *
- * ## Search index
- *
- * Live Supabase `.ilike` with per-entity caps (8) and a global cap (12) is
- * intentional at current Admin scale. Providers are the swap point for a
- * dedicated index/RPC if latency or cardinality later require it.
+ * Access is capability-first via the Dashboard Capability Registry.
  */
 export const SEARCHABLE_ENTITY_REGISTRY: Record<
   SearchableEntityType,
@@ -39,10 +19,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     pluralLabel: "users",
     icon: "user",
     badgeClassName: "text-warning bg-warning/15 border-warning/20",
-    access: {
-      roles: ["admin", "super_admin"],
-      permission: "users:read",
-    },
+    access: { capability: "users.read" },
     navigation: {
       strategy: "drawer-query",
       href: ADMIN_ENTITY_ROUTES.userDetail,
@@ -57,10 +34,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     pluralLabel: "campaigns",
     icon: "megaphone",
     badgeClassName: "text-success bg-success/12 border-success/20",
-    access: {
-      roles: ["admin", "super_admin"],
-      permission: "campaigns:read",
-    },
+    access: { capability: "campaigns.read" },
     navigation: {
       strategy: "drawer-query",
       href: ADMIN_ENTITY_ROUTES.campaignDetail,
@@ -75,10 +49,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     pluralLabel: "riders",
     icon: "bike",
     badgeClassName: "text-primary bg-primary/10 border-primary/20",
-    access: {
-      roles: ["admin", "super_admin"],
-      permission: "users:read",
-    },
+    access: { capability: "riders.read" },
     navigation: {
       strategy: "drawer-query",
       href: ADMIN_ENTITY_ROUTES.riderDetail,
@@ -93,10 +64,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     pluralLabel: "advertisers",
     icon: "building",
     badgeClassName: "text-secondary-foreground bg-secondary border-border",
-    access: {
-      roles: ["admin", "super_admin"],
-      permission: "campaigns:read",
-    },
+    access: { capability: "advertisers.manage" },
     navigation: {
       strategy: "drawer-query",
       href: ADMIN_ENTITY_ROUTES.advertiserDetail,
@@ -111,10 +79,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     pluralLabel: "partners",
     icon: "handshake",
     badgeClassName: "text-primary bg-primary/10 border-primary/20",
-    access: {
-      roles: ["admin", "super_admin"],
-      permission: "rewards:read",
-    },
+    access: { capability: "fulfilment.read" },
     navigation: {
       strategy: "drawer-query",
       href: ADMIN_ENTITY_ROUTES.partnerDetail,
@@ -129,10 +94,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     pluralLabel: "organisations",
     icon: "landmark",
     badgeClassName: "text-muted-foreground bg-muted border-border",
-    access: {
-      roles: ["admin", "super_admin"],
-      permission: "rewards:read",
-    },
+    access: { capability: "fulfilment.read" },
     navigation: {
       strategy: "drawer-query",
       href: ADMIN_ENTITY_ROUTES.organisationDetail,
@@ -147,10 +109,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     pluralLabel: "rewards",
     icon: "gift",
     badgeClassName: "text-warning bg-warning/15 border-warning/20",
-    access: {
-      roles: ["admin", "super_admin"],
-      permission: "rewards:read",
-    },
+    access: { capability: "rewards.catalog.read" },
     navigation: {
       strategy: "section-query",
       href: ADMIN_ENTITY_ROUTES.rewardCatalogDetail,
@@ -165,16 +124,12 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     pluralLabel: "routes",
     icon: "route",
     badgeClassName: "text-secondary-foreground bg-secondary border-border",
-    access: {
-      roles: ["admin", "super_admin", "moderator", "compliance_officer", "government"],
-      permission: "routes:read",
-    },
+    access: { capability: "routes.read" },
     navigation: {
       strategy: "drawer-query",
       href: ADMIN_ENTITY_ROUTES.routeDetail,
       listHref: ADMIN_ENTITY_ROUTES.routes,
     },
-    /** Enabled for cross-entity operational search. */
     searchable: true,
     searchLimit: 8,
   },
@@ -184,10 +139,7 @@ export const SEARCHABLE_ENTITY_REGISTRY: Record<
     pluralLabel: "fulfilment items",
     icon: "package",
     badgeClassName: "text-muted-foreground bg-muted border-border",
-    access: {
-      roles: ["admin", "super_admin", "compliance_officer"],
-      permission: "rewards:read",
-    },
+    access: { capability: "fulfilment.read" },
     navigation: {
       strategy: "detail-page",
       href: ADMIN_ENTITY_ROUTES.fulfilmentQueueDetail,

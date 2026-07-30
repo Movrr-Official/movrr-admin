@@ -1,8 +1,16 @@
 /**
  * Domain-oriented capability strings for Platform AuthZ.
  * Unresolved / ungranted capability ⇒ deny (default-deny).
+ *
+ * This catalog is the canonical capability vocabulary for:
+ * - Platform API (org / rider / advertiser / government principals)
+ * - MOVRR Admin employee dashboard (via employee role templates)
+ *
+ * Roles are implementation constructs. Capabilities are the platform contract.
  */
-export const CAPABILITIES = [
+
+/** Product / organisation capabilities (existing Platform API contract). */
+export const PRODUCT_CAPABILITIES = [
   "rewards.redeem",
   "rewards.catalog.read",
   "rewards.manage",
@@ -27,7 +35,64 @@ export const CAPABILITIES = [
   "org.settings",
 ] as const;
 
+/**
+ * Employee / Operations Control Centre capabilities.
+ * Dashboard navigation, pages, actions, search, exports and SoD derive from these.
+ */
+export const EMPLOYEE_CAPABILITIES = [
+  "dashboard.read",
+  "users.read",
+  "users.manage",
+  "users.role.assign",
+  "users.role.approve",
+  "waitlist.manage",
+  "riders.read",
+  "riders.manage",
+  "rides.read",
+  "rides.verify",
+  "routes.read",
+  "routes.write",
+  "routes.approve",
+  "campaigns.approve",
+  "campaigns.publish",
+  "campaigns.archive",
+  "rewards.approve",
+  "partners.approve",
+  "fraud.review",
+  "fraud.resolve",
+  "incidents.read",
+  "incidents.create",
+  "incidents.manage",
+  "notifications.read",
+  "notifications.send",
+  "settings.manage",
+  "settings.security",
+  "exports.execute",
+  "privacy.erase",
+  "platform.health.read",
+  "platform.jobs.manage",
+  "featureflags.manage",
+  "billing.manage",
+  "workboard.access",
+  "analytics.read",
+  "reports.read",
+  "protips.manage",
+  "community.manage",
+  "advertisers.manage",
+  "authz.inspect",
+  "authz.manage",
+  "break_glass.use",
+  "delegation.manage",
+] as const;
+
+export const CAPABILITIES = [
+  ...PRODUCT_CAPABILITIES,
+  ...EMPLOYEE_CAPABILITIES,
+] as const;
+
 export type KnownCapability = (typeof CAPABILITIES)[number];
+export type ProductCapability = (typeof PRODUCT_CAPABILITIES)[number];
+export type EmployeeCapability = (typeof EMPLOYEE_CAPABILITIES)[number];
 
 export type MembershipRole = "owner" | "manager" | "staff" | "viewer";
 
@@ -126,4 +191,8 @@ export function capabilitiesForAdvertiser(): KnownCapability[] {
 
 export function capabilitiesForGovernment(): KnownCapability[] {
   return [...BUNDLE_CAPABILITIES[GOVERNMENT_BUNDLE_KEY]];
+}
+
+export function isKnownCapability(value: string): value is KnownCapability {
+  return (CAPABILITIES as readonly string[]).includes(value);
 }

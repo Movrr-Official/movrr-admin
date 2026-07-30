@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireAnyCapability } from "@/lib/admin";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import {
   ROUTE_OPTIMIZER_KEY,
@@ -13,8 +12,8 @@ const SERVICE_TOKEN = ROUTE_OPTIMIZER_TOKEN || ROUTE_OPTIMIZER_KEY || "";
 
 async function requireAdminOrDeny() {
   try {
-    return await requireAdminRoles(ADMIN_MODERATOR_ROLES);
-  } catch (err) {
+    return await requireAnyCapability(["routes.read", "platform.health.read"]);
+  } catch {
     return null;
   }
 }

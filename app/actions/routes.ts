@@ -1,10 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+
+import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { writeUserActivities } from "@/lib/userActivity";
+import {
+  enforceApprovalSod,
+  recordEntityInitiator,
+} from "@/features/authorization/sodEnforcement";
 import { RiderRoute, routeStatusSchema } from "@/schemas";
 import { DB_TABLES } from "@/lib/rewardConstants";
 import { z } from "zod";
@@ -342,7 +346,7 @@ export async function getRoutes(): Promise<{
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: riderRoutes, error } = await supabaseAdmin
@@ -449,7 +453,7 @@ export async function getRouteTemplates(): Promise<{
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: routes, error } = await supabaseAdmin
@@ -535,7 +539,7 @@ export async function createRouteTemplate(
   data: z.infer<typeof routeTemplatePayloadSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = routeTemplatePayloadSchema.parse(data);
 
@@ -604,7 +608,7 @@ export async function duplicateRouteTemplate(
   data: z.infer<typeof duplicateRouteTemplateSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = duplicateRouteTemplateSchema.parse(data);
 
@@ -669,7 +673,7 @@ export async function assignRouteToRiders(
   error?: string;
 }> {
   try {
-    const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    const auth = await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = assignRouteToRidersSchema.parse(data);
 
@@ -722,10 +726,24 @@ export async function assignRouteToRiders(
       updated_at: now,
     }));
 
-    const { error } = await supabaseAdmin.from("rider_route").insert(payload);
+    const { data: insertedRoutes, error } = await supabaseAdmin
+      .from("rider_route")
+      .insert(payload)
+      .select("id");
 
     if (error) {
       return { success: false, error: error.message };
+    }
+
+    for (const row of insertedRoutes ?? []) {
+      if (row.id) {
+        await recordEntityInitiator(supabaseAdmin, {
+          adminId: auth.authUser.id,
+          entityType: "rider_route",
+          entityId: String(row.id),
+          action: "rider_route.create",
+        });
+      }
     }
 
     const { data: assignedRiders } = await supabaseAdmin
@@ -781,7 +799,7 @@ export async function createRoute(
   data: z.infer<typeof routePayloadSchema>,
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = routePayloadSchema.parse(data);
 
@@ -842,7 +860,7 @@ export async function createRouteStops(
   data: z.infer<typeof createRouteStopsSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = createRouteStopsSchema.parse(data);
 
@@ -891,7 +909,7 @@ export async function getRouteStops(routeId: string): Promise<{
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
     const { data, error } = await supabaseAdmin
       .from("route_stop")
@@ -931,7 +949,7 @@ export async function upsertRouteStop(
   data: z.infer<typeof upsertRouteStopSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = upsertRouteStopSchema.parse(data);
 
@@ -985,7 +1003,7 @@ export async function deleteRouteStop(
   data: z.infer<typeof deleteRouteStopSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = deleteRouteStopSchema.parse(data);
 
@@ -1017,7 +1035,7 @@ export async function unassignRouteAssignment(
   data: z.infer<typeof unassignRouteSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    const auth = await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = unassignRouteSchema.parse(data);
 
@@ -1086,7 +1104,7 @@ export async function updateRoute(
   data: z.infer<typeof routePayloadSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = routePayloadSchema.parse(data);
 
@@ -1152,8 +1170,19 @@ export async function approveRoute(
   routeId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    const auth = await requireCapability("routes.approve", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
+
+    const sodError = await enforceApprovalSod({
+      supabase: supabaseAdmin,
+      workflowId: "route_approval",
+      entityType: "rider_route",
+      entityId: routeId,
+      approverUserId: auth.authUser.id,
+    });
+    if (sodError) {
+      return { success: false, error: sodError };
+    }
 
     const { error } = await supabaseAdmin
       .from("rider_route")
@@ -1188,14 +1217,26 @@ export async function rejectRoute(
   reason?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    const auth = await requireCapability("routes.approve", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
+
+    const sodError = await enforceApprovalSod({
+      supabase: supabaseAdmin,
+      workflowId: "route_approval",
+      entityType: "rider_route",
+      entityId: routeId,
+      approverUserId: auth.authUser.id,
+    });
+    if (sodError) {
+      return { success: false, error: sodError };
+    }
 
     const { error } = await supabaseAdmin
       .from("rider_route")
       .update({
         status: "cancelled",
         updated_at: new Date().toISOString(),
+        ...(reason ? { notes: reason } : {}),
       })
       .eq("id", routeId);
 
@@ -1222,7 +1263,7 @@ export async function updateRouteStatus(
   data: z.infer<typeof updateRouteStatusSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    const auth = await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateRouteStatusSchema.parse(data);
     const { data: assignmentRow } = await supabaseAdmin
@@ -1317,7 +1358,7 @@ export async function deleteRoute(
   data: z.infer<typeof deleteRouteSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = deleteRouteSchema.parse(data);
 
@@ -1371,7 +1412,7 @@ export async function recalculateRouteCompliance(
   data: z.infer<typeof recalculateComplianceSchema>,
 ): Promise<{ success: boolean; compliance?: number; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = recalculateComplianceSchema.parse(data);
 
@@ -1479,7 +1520,7 @@ export async function getRouteGPSTracking(
   routeId: string,
 ): Promise<{ success: boolean; data?: any[]; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
     const canonicalRouteId = await resolveCanonicalRouteId(
       supabaseAdmin,
@@ -1519,7 +1560,7 @@ export async function getRouteComplianceBreakdown(
   routeId: string,
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: riderRoute, error } = await supabaseAdmin
@@ -1607,7 +1648,7 @@ export async function getRoutePointsAwarded(
   routeId: string,
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
     const canonicalRouteId = await resolveCanonicalRouteId(
       supabaseAdmin,
@@ -1664,7 +1705,7 @@ export async function getRouteTimeline(
   routeId: string,
 ): Promise<{ success: boolean; data?: any[]; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: routeData, error: routeError } = await supabaseAdmin
@@ -1758,7 +1799,7 @@ export async function exportRouteData(
   data: z.infer<typeof exportRouteDataSchema>,
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = exportRouteDataSchema.parse(data);
 
@@ -1809,7 +1850,7 @@ export async function getRouteDetails(
   routeId: string,
 ): Promise<{ success: boolean; data?: RiderRoute; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin

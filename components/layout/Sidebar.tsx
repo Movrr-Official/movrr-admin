@@ -56,33 +56,68 @@ import Image from "next/image";
 import { ImSpinner8 } from "react-icons/im";
 import {
   collectOpsChildHrefs,
-  filterNavigationByRole,
+  filterNavigationByCapabilities,
   findOpsGroup,
   isNavGroup,
   isNavItem,
   isNavSection,
   isOnOpsRoute as checkIsOnOpsRoute,
   isPathActive,
-  OPS_NAV_GROUP_ID,
   resolveShowOpsPanel,
   type NavGroup,
   type NavItem,
   type NavEntry,
   type OpsPanelOverride,
 } from "@/components/layout/sidebarNavigation";
+import {
+  generateNavigationFromCapabilities,
+  type GeneratedNavEntry,
+} from "@/features/authorization/navigation";
+import { getCapabilitiesForRole } from "@/lib/authPermissions";
+import type { KnownCapability } from "@/features/organisations/domain/CapabilityCatalog";
 
-const STAFF_READ_ROLES: UserRole[] = [
-  "admin",
-  "super_admin",
-  "moderator",
-  "support",
-  "compliance_officer",
-  "government",
-];
+const NAV_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
+  LayoutDashboard,
+  KanbanSquare,
+  Shield,
+  AlertTriangle,
+  Landmark,
+  Clock3,
+  Activity,
+  CreditCard,
+  SlidersHorizontal,
+  List,
+  Users,
+  Bike,
+  Timer,
+  Route,
+  FaRoute,
+  Coins,
+  Package,
+  Building2,
+  Megaphone,
+  CalendarClock,
+  Lightbulb,
+  Bell,
+  Settings,
+};
 
-const OPS_WRITE_ROLES: UserRole[] = ["admin", "super_admin"];
+const BADGE_HREFS = new Set([
+  "/waitlist",
+  "/users",
+  "/riders",
+  "/advertisers",
+  "/campaigns",
+  "/routes",
+  "/community-rides",
+]);
 
-const MODERATOR_ROLES: UserRole[] = ["admin", "super_admin", "moderator"];
+function resolveNavIcon(name: string) {
+  return NAV_ICONS[name] ?? LayoutDashboard;
+}
 
 const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
   const [isMobile, setIsMobile] = useState(false);
@@ -143,246 +178,57 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, [dispatch, sidebarOpen]);
 
-  const PROGRAMMES_READ_ROLES: UserRole[] = [
-    ...OPS_WRITE_ROLES,
-    "compliance_officer",
-    "government",
-  ];
+  const countBadgeForHref = (href: string): JSX.Element | null => {
+    if (!BADGE_HREFS.has(href)) return null;
+    const countByHref: Record<string, number | undefined> = {
+      "/waitlist": totalWaitlist,
+      "/users": totalUsers,
+      "/riders": totalRiders,
+      "/advertisers": totalAdvertisers,
+      "/campaigns": totalCampaigns,
+      "/routes": totalPlannedRoutes,
+      "/community-rides": totalCommunityRides,
+    };
+    return (
+      <CountDisplay
+        count={countByHref[href]}
+        isLoading={isLoading}
+        isError={isError}
+      />
+    );
+  };
+
+  const materializeNav = (entries: GeneratedNavEntry[]): NavEntry[] =>
+    entries.map((entry) => {
+      if (entry.type === "group") {
+        return {
+          type: "group" as const,
+          id: entry.id,
+          name: entry.name,
+          icon: resolveNavIcon(entry.icon),
+          capabilities: entry.capabilities as KnownCapability[],
+          children: entry.children.map((child) => ({
+            type: "item" as const,
+            name: child.name,
+            href: child.href,
+            icon: resolveNavIcon(child.icon),
+            capabilities: child.capabilities as KnownCapability[],
+            badge: countBadgeForHref(child.href),
+          })),
+        };
+      }
+      return {
+        type: "item" as const,
+        name: entry.name,
+        href: entry.href,
+        icon: resolveNavIcon(entry.icon),
+        capabilities: entry.capabilities as KnownCapability[],
+        badge: countBadgeForHref(entry.href),
+      };
+    });
 
   const navigation: NavEntry[] = useMemo(
-    () => [
-      {
-        type: "item",
-        name: "Overview",
-        href: "/",
-        icon: LayoutDashboard,
-        roles: STAFF_READ_ROLES,
-        badge: null,
-      },
-      {
-        type: "item",
-        name: "Workboard",
-        href: "/workboard",
-        icon: KanbanSquare,
-        roles: MODERATOR_ROLES,
-        badge: null,
-      },
-      {
-        type: "group",
-        id: OPS_NAV_GROUP_ID,
-        name: "Ops",
-        icon: SlidersHorizontal,
-        roles: [
-          ...OPS_WRITE_ROLES,
-          "compliance_officer",
-          "government",
-        ],
-        children: [
-          {
-            type: "item",
-            name: "Fraud",
-            href: "/fraud",
-            icon: Shield,
-            roles: OPS_WRITE_ROLES,
-            badge: null,
-          },
-          {
-            type: "item",
-            name: "Incidents",
-            href: "/incidents",
-            icon: AlertTriangle,
-            roles: OPS_WRITE_ROLES,
-            badge: null,
-          },
-          {
-            type: "item",
-            name: "Programmes",
-            href: "/programmes",
-            icon: Landmark,
-            roles: PROGRAMMES_READ_ROLES,
-            badge: null,
-          },
-          {
-            type: "item",
-            name: "Jobs",
-            href: "/ops/jobs",
-            icon: Clock3,
-            roles: OPS_WRITE_ROLES,
-            badge: null,
-          },
-          {
-            type: "item",
-            name: "Health",
-            href: "/ops/health",
-            icon: Activity,
-            roles: OPS_WRITE_ROLES,
-            badge: null,
-          },
-          {
-            type: "item",
-            name: "Billing",
-            href: "/ops/billing",
-            icon: CreditCard,
-            roles: OPS_WRITE_ROLES,
-            badge: null,
-          },
-        ],
-      },
-      {
-        type: "item",
-        name: "Waitlist",
-        href: "/waitlist",
-        icon: List,
-        roles: OPS_WRITE_ROLES,
-        badge: (
-          <CountDisplay
-            count={totalWaitlist}
-            isLoading={isLoading}
-            isError={isError}
-          />
-        ),
-      },
-      {
-        type: "item",
-        name: "Users",
-        href: "/users",
-        icon: Users,
-        roles: OPS_WRITE_ROLES,
-        badge: (
-          <CountDisplay
-            count={totalUsers}
-            isLoading={isLoading}
-            isError={isError}
-          />
-        ),
-      },
-      {
-        type: "item",
-        name: "Riders",
-        href: "/riders",
-        icon: Bike,
-        roles: [...OPS_WRITE_ROLES, "compliance_officer", "government"],
-        badge: (
-          <CountDisplay
-            count={totalRiders}
-            isLoading={isLoading}
-            isError={isError}
-          />
-        ),
-      },
-      {
-        type: "item",
-        name: "Ride Sessions",
-        href: "/ride-sessions",
-        icon: Timer,
-        roles: [...OPS_WRITE_ROLES, "compliance_officer", "government"],
-        badge: null,
-      },
-      {
-        type: "item",
-        name: "Suggested Routes",
-        href: "/suggested-routes",
-        icon: Route,
-        roles: MODERATOR_ROLES,
-        badge: null,
-      },
-      {
-        type: "item",
-        name: "Rewards",
-        href: "/rewards",
-        icon: Coins,
-        roles: [...OPS_WRITE_ROLES, "compliance_officer"],
-        badge: null,
-      },
-      {
-        type: "item",
-        name: "Fulfilment",
-        href: "/fulfilment",
-        icon: Package,
-        roles: [...OPS_WRITE_ROLES, "compliance_officer"],
-        badge: null,
-      },
-      {
-        type: "item",
-        name: "Advertisers",
-        href: "/advertisers",
-        icon: Building2,
-        roles: [...OPS_WRITE_ROLES, "compliance_officer"],
-        badge: (
-          <CountDisplay
-            count={totalAdvertisers}
-            isLoading={isLoading}
-            isError={isError}
-          />
-        ),
-      },
-      {
-        type: "item",
-        name: "Campaigns",
-        href: "/campaigns",
-        icon: Megaphone,
-        roles: [...OPS_WRITE_ROLES, "compliance_officer", "government"],
-        badge: (
-          <CountDisplay
-            count={totalCampaigns}
-            isLoading={isLoading}
-            isError={isError}
-          />
-        ),
-      },
-      {
-        type: "item",
-        name: "Planned Routes",
-        href: "/routes",
-        icon: FaRoute,
-        roles: MODERATOR_ROLES,
-        badge: (
-          <CountDisplay
-            count={totalPlannedRoutes}
-            isLoading={isLoading}
-            isError={isError}
-          />
-        ),
-      },
-      {
-        type: "item",
-        name: "Community Rides",
-        href: "/community-rides",
-        icon: CalendarClock,
-        roles: [...OPS_WRITE_ROLES, "compliance_officer", "government"],
-        badge: (
-          <CountDisplay
-            count={totalCommunityRides}
-            isLoading={isLoading}
-            isError={isError}
-          />
-        ),
-      },
-      {
-        type: "item",
-        name: "Pro Tips",
-        href: "/pro-tips",
-        icon: Lightbulb,
-        roles: OPS_WRITE_ROLES,
-        badge: null,
-      },
-      {
-        type: "item",
-        name: "Notifications",
-        href: "/notifications",
-        icon: Bell,
-        roles: STAFF_READ_ROLES,
-        badge: null,
-      },
-      {
-        type: "item",
-        name: "Settings",
-        href: "/settings",
-        icon: Settings,
-        roles: OPS_WRITE_ROLES,
-        badge: null,
-      },
-    ],
+    () => materializeNav(generateNavigationFromCapabilities()),
     [
       isError,
       isLoading,
@@ -396,9 +242,14 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
     ],
   );
 
+  const grantedCapabilities = useMemo(
+    () => getCapabilitiesForRole(currentRole),
+    [currentRole],
+  );
+
   const visibleNavigation = useMemo(
-    () => filterNavigationByRole(navigation, currentRole),
-    [currentRole, navigation],
+    () => filterNavigationByCapabilities(navigation, grantedCapabilities),
+    [grantedCapabilities, navigation],
   );
 
   const opsGroup = useMemo(

@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { createUser } from "@/app/actions/users";
@@ -124,7 +123,7 @@ export async function getAdvertiserOptions(): Promise<{
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("advertisers.manage", { mutation: true });
 
     if (shouldUseMockData()) {
       const options = mockUsers
@@ -220,7 +219,7 @@ export async function getAdvertisers(
   };
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("advertisers.manage", { mutation: true });
     const page = clampPageNumber(filters?.page);
     const pageSize = clampPageSize(filters?.pageSize);
 
@@ -454,7 +453,7 @@ export async function getAdvertiserById(
   id: string,
 ): Promise<{ success: boolean; data?: Advertiser; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("advertisers.manage", { mutation: true });
 
     if (shouldUseMockData()) {
       const result = await getAdvertisers({ page: 1, pageSize: 1000 });
@@ -574,7 +573,7 @@ export async function createAdvertiserProfile(
   data: z.infer<typeof createAdvertiserSchema>,
 ): Promise<{ success: boolean; data?: AdvertiserOption; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireCapability("advertisers.manage", { mutation: true });
     const validatedData = createAdvertiserSchema.parse(data);
 
     if (shouldUseMockData()) {
@@ -751,6 +750,16 @@ export async function createAdvertiserProfile(
       return { success: false, error: "Failed to resolve advertiser profile id" };
     }
 
+    const { recordEntityInitiator } = await import(
+      "@/features/authorization/sodEnforcement"
+    );
+    await recordEntityInitiator(supabaseAdmin, {
+      adminId: auth.authUser.id,
+      entityType: "advertiser",
+      entityId: advertiserId,
+      action: "advertiser.create",
+    });
+
     revalidatePath("/advertisers");
     revalidatePath("/campaigns");
     revalidatePath("/campaigns/create");
@@ -786,7 +795,7 @@ export async function updateAdvertiserProfile(
   data: z.infer<typeof updateAdvertiserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireCapability("advertisers.manage", { mutation: true });
     const validatedData = updateAdvertiserSchema.parse(data);
 
     if (shouldUseMockData()) {
@@ -810,7 +819,7 @@ export async function updateAdvertiserProfile(
 
     const { data: linkedUser, error: linkedUserError } = await supabaseAdmin
       .from("user")
-      .select("id, email")
+      .select("id, email, status")
       .eq("id", advertiser.user_id)
       .maybeSingle();
 
@@ -820,6 +829,28 @@ export async function updateAdvertiserProfile(
 
     if (!linkedUser?.id) {
       return { success: false, error: "Linked advertiser user not found" };
+    }
+
+    const activatingPending =
+      validatedData.status === "active" &&
+      (linkedUser.status === "pending" ||
+        mapUiStatusToDb(String(linkedUser.status)) === "pending");
+
+    if (activatingPending) {
+      await requireCapability("partners.approve", { mutation: true });
+      const { enforceApprovalSod } = await import(
+        "@/features/authorization/sodEnforcement"
+      );
+      const sodError = await enforceApprovalSod({
+        supabase: supabaseAdmin,
+        workflowId: "partner_approval",
+        entityType: "advertiser",
+        entityId: advertiser.id,
+        approverUserId: auth.authUser.id,
+      });
+      if (sodError) {
+        return { success: false, error: sodError };
+      }
     }
 
     const nextEmail = normalizeOptionalText(validatedData.email)?.toLowerCase();
@@ -959,7 +990,7 @@ export async function deleteAdvertiserProfile(
   data: z.infer<typeof deleteAdvertiserSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("advertisers.manage", { mutation: true });
     const validatedData = deleteAdvertiserSchema.parse(data);
 
     if (shouldUseMockData()) {

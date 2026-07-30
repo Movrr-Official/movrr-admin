@@ -40,13 +40,14 @@ import {
   Info,
 } from "lucide-react";
 import {
-  exportData,
+  serializeExportData,
+  downloadSerializedExport,
   getAvailableFields,
   formatFieldName,
   type ExportOptions,
   type ExportableData,
 } from "@/lib/export";
-import { recordDataExport } from "@/app/actions/exportAudit";
+import { executeAuditedExport } from "@/app/actions/exportAudit";
 
 interface ExportDialogProps {
   data: ExportableData[];
@@ -180,12 +181,31 @@ export function ExportDialog({
           }),
       };
 
-      await exportData(data, options);
-      await recordDataExport({
+      const serialized = serializeExportData(data, options);
+      if (!serialized) {
+        return;
+      }
+
+      const audited = await executeAuditedExport({
         module: auditModule,
         format: selectedFormat,
-        rowCount: data.length,
-        filename,
+        rowCount: serialized.rowCount,
+        filename: serialized.filename,
+        content: serialized.content,
+        contentType: serialized.contentType,
+        reason: `ExportDialog:${auditModule}`,
+      });
+
+      if (!audited.success) {
+        console.error("Export authorization failed:", audited.error);
+        return;
+      }
+
+      downloadSerializedExport({
+        ...serialized,
+        content: audited.content,
+        contentType: audited.contentType,
+        filename: audited.filename,
       });
       setExportSuccess(true);
 

@@ -1,23 +1,45 @@
 import { redirect } from "next/navigation";
-import type { UserRole } from "@/schemas";
 import {
   isAdminAuthError,
-  requireAdminRoles,
+  requireAnyCapability,
+  requirePageAccess,
   resolveAdminAuthRedirectTarget,
 } from "@/lib/admin";
-import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
+import type { KnownCapability } from "@/features/organisations/domain/CapabilityCatalog";
 
 interface AuthWrapperProps {
   children: React.ReactNode;
-  allowedRoles?: readonly UserRole[];
+  /**
+   * @deprecated Prefer `capability` / `capabilities` / `pathname`.
+   * Retained only for transitional call sites — resolves to dashboard.read.
+   */
+  allowedRoles?: readonly string[];
+  /** Single required capability (preferred). */
+  capability?: KnownCapability | string;
+  /** Allow if any listed capability is granted. */
+  capabilities?: readonly (KnownCapability | string)[];
+  /** Resolve required capabilities from the dashboard registry by path. */
+  pathname?: string;
 }
 
 export default async function AuthWrapper({
   children,
-  allowedRoles,
+  allowedRoles: _allowedRoles,
+  capability,
+  capabilities,
+  pathname,
 }: AuthWrapperProps) {
   try {
-    await requireAdminRoles(allowedRoles ?? DASHBOARD_ACCESS_ROLES);
+    if (pathname) {
+      await requirePageAccess(pathname);
+    } else if (capability) {
+      await requireAnyCapability([capability]);
+    } else if (capabilities && capabilities.length > 0) {
+      await requireAnyCapability(capabilities);
+    } else {
+      // Capability-first baseline — never authorize by role name.
+      await requireAnyCapability(["dashboard.read"]);
+    }
   } catch (error) {
     if (isAdminAuthError(error)) {
       if (

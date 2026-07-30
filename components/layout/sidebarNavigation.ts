@@ -1,5 +1,5 @@
 import type { JSX } from "react";
-import type { UserRole } from "@/schemas";
+import type { KnownCapability } from "@/features/organisations/domain/CapabilityCatalog";
 
 export const OPS_NAV_GROUP_ID = "ops";
 
@@ -8,7 +8,13 @@ export interface NavItem {
   name: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  roles: UserRole[];
+  /** Capability-first visibility (any match). */
+  capabilities: KnownCapability[];
+  /**
+   * @deprecated Role arrays removed from authorization path.
+   * Retained optional for transitional tests only.
+   */
+  roles?: string[];
   badge: JSX.Element | null;
 }
 
@@ -17,14 +23,16 @@ export interface NavGroup {
   id: string;
   name: string;
   icon: React.ComponentType<{ className?: string }>;
-  roles: UserRole[];
+  capabilities: KnownCapability[];
+  roles?: string[];
   children: NavItem[];
 }
 
 export interface NavSection {
   type: "section";
   name: string;
-  roles: UserRole[];
+  capabilities: KnownCapability[];
+  roles?: string[];
 }
 
 export type NavEntry = NavItem | NavGroup | NavSection;
@@ -46,9 +54,47 @@ export function isPathActive(pathname: string, href: string): boolean {
     : pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function hasAnyCapability(
+  granted: ReadonlySet<string>,
+  required: readonly KnownCapability[] | undefined,
+): boolean {
+  if (!required || required.length === 0) return false;
+  return required.some((cap) => granted.has(cap));
+}
+
+/**
+ * Filter navigation by granted capabilities (canonical path).
+ */
+export function filterNavigationByCapabilities(
+  navigation: NavEntry[],
+  capabilities: ReadonlySet<string> | readonly string[] | null | undefined,
+): NavEntry[] {
+  if (!capabilities) return [];
+  const granted =
+    capabilities instanceof Set ? capabilities : new Set(capabilities);
+
+  return navigation
+    .map((entry) => {
+      if (isNavGroup(entry)) {
+        const children = entry.children.filter((child) =>
+          hasAnyCapability(granted, child.capabilities),
+        );
+        if (children.length === 0) return null;
+        return { ...entry, children };
+      }
+
+      if (hasAnyCapability(granted, entry.capabilities)) return entry;
+      return null;
+    })
+    .filter((entry): entry is NavEntry => entry !== null);
+}
+
+/**
+ * @deprecated Use filterNavigationByCapabilities. Role filtering is a migration shim.
+ */
 export function filterNavigationByRole(
   navigation: NavEntry[],
-  role: UserRole | null | undefined,
+  role: string | null | undefined,
 ): NavEntry[] {
   if (!role) return [];
 
@@ -56,13 +102,13 @@ export function filterNavigationByRole(
     .map((entry) => {
       if (isNavGroup(entry)) {
         const children = entry.children.filter((child) =>
-          child.roles.includes(role),
+          child.roles ? child.roles.includes(role) : false,
         );
         if (children.length === 0) return null;
         return { ...entry, children };
       }
 
-      if (entry.roles.includes(role)) return entry;
+      if (entry.roles?.includes(role)) return entry;
       return null;
     })
     .filter((entry): entry is NavEntry => entry !== null);

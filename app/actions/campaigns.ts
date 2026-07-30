@@ -2,9 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+
+import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import {
+  enforceApprovalSod,
+  recordEntityInitiator,
+} from "@/features/authorization/sodEnforcement";
 import {
   Campaign,
   CampaignFiltersSchema,
@@ -150,7 +154,7 @@ export async function getCampaigns(
   advertiserUserIds: string[] = [],
 ): Promise<{ success: boolean; data?: Campaign[]; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: advertisers } = await supabaseAdmin
@@ -353,7 +357,7 @@ export async function createCampaign(
   },
 ): Promise<{ success: boolean; error?: string; data?: Campaign }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireCapability("campaigns.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = createCampaignSchema.parse(data);
 
@@ -378,6 +382,15 @@ export async function createCampaign(
       return { success: false, error };
     }
 
+    if (campaign?.id) {
+      await recordEntityInitiator(supabaseAdmin, {
+        adminId: auth.authUser.id,
+        entityType: "campaign",
+        entityId: String(campaign.id),
+        action: "campaign.create",
+      });
+    }
+
     revalidatePath("/campaigns");
     return { success: true, data: campaign as unknown as Campaign };
   } catch (error) {
@@ -397,7 +410,7 @@ export async function updateCampaign(
   data: z.infer<typeof updateCampaignSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.write", { mutation: true });
     const validatedData = updateCampaignSchema.parse(data);
 
     const { error } = await updateCampaignRecord({
@@ -442,8 +455,30 @@ export async function updateCampaignStatus(
   status: z.infer<typeof campaignStatusSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    let auth;
+    if (status === "active") {
+      auth = await requireCapability("campaigns.launch", { mutation: true });
+    } else if (status === "paused") {
+      auth = await requireCapability("campaigns.pause", { mutation: true });
+    } else if (status === "confirmed") {
+      auth = await requireCapability("campaigns.approve", { mutation: true });
+    } else {
+      auth = await requireCapability("campaigns.write", { mutation: true });
+    }
     const supabaseAdmin = createSupabaseAdminClient();
+
+    if (status === "confirmed") {
+      const sodError = await enforceApprovalSod({
+        supabase: supabaseAdmin,
+        workflowId: "campaign_approval",
+        entityType: "campaign",
+        entityId: campaignId,
+        approverUserId: auth.authUser.id,
+      });
+      if (sodError) {
+        return { success: false, error: sodError };
+      }
+    }
 
     const { error } = await supabaseAdmin
       .from("campaign")
@@ -485,7 +520,7 @@ export async function runCampaignSelection(
   data?: { selectedCount: number; rejectedCount: number };
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.launch", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin.rpc("run_campaign_selection", {
@@ -526,7 +561,7 @@ export async function deleteCampaign(
   campaignId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { error } = await supabaseAdmin
@@ -558,7 +593,7 @@ export async function duplicateCampaign(
   campaignId: string,
 ): Promise<{ success: boolean; error?: string; data?: Campaign }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
 
     // Fetch the original campaign
@@ -615,7 +650,7 @@ export async function updateCampaignAttributes(
   data: z.infer<typeof updateCampaignAttributesSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateCampaignAttributesSchema.parse(data);
 
@@ -697,7 +732,7 @@ export async function updateCampaignAttributes(
 }
 
 export async function getCampaignZones(campaignId: string) {
-  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+  await requireCapability("campaigns.read");
   const supabaseAdmin = createSupabaseAdminClient();
   return supabaseAdmin
     .from("campaign_zone")
@@ -710,7 +745,7 @@ export async function upsertCampaignZone(
   data: z.infer<typeof campaignZoneSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = campaignZoneSchema.parse(data);
 
@@ -756,7 +791,7 @@ export async function deleteCampaignZone(
   zoneId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const { error } = await supabaseAdmin
       .from("campaign_zone")
@@ -781,7 +816,7 @@ export async function deleteCampaignZone(
 }
 
 export async function getCampaignHotZones(campaignId: string) {
-  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+  await requireCapability("campaigns.read");
   const supabaseAdmin = createSupabaseAdminClient();
   return supabaseAdmin
     .from("campaign_hot_zone")
@@ -796,7 +831,7 @@ export async function upsertCampaignHotZone(
   data: z.infer<typeof campaignHotZoneSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = campaignHotZoneSchema.parse(data);
 
@@ -874,7 +909,7 @@ export async function getCampaignAnalyticsData(
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.read");
     const supabaseAdmin = createSupabaseAdminClient();
     const since = new Date(
       Date.now() - days * 24 * 60 * 60 * 1000,
@@ -1042,7 +1077,7 @@ export async function deleteCampaignHotZone(
   zoneId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("campaigns.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const { error } = await supabaseAdmin
       .from("campaign_hot_zone")

@@ -1,8 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { requireAdminRoles } from "@/lib/admin";
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
+import { requireCapability } from "@/lib/admin";
+
 import { executeRiderDataErasure } from "@/lib/services/dataErasure";
 import { logger } from "@/lib/logger";
 
@@ -18,10 +18,7 @@ export async function requestRiderDataErasure(input: z.infer<typeof erasureSchem
   }
 
   try {
-    const auth = await requireAdminRoles(ADMIN_ONLY_ROLES, {
-      mutation: true,
-      permission: "privacy:erase",
-    });
+    const auth = await requireCapability("privacy.erase", { mutation: true });
     const result = await executeRiderDataErasure({
       riderId: parsed.data.riderId,
       requestedByAdminId: auth.authUser.id,

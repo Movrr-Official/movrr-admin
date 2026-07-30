@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireCapability } from "@/lib/admin";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 const MAX_BODY_BYTES = 100_000;
@@ -32,8 +31,8 @@ function makeTraceId(req: Request) {
 
 async function requireAdminOrDeny() {
   try {
-    return await requireAdminRoles(ADMIN_MODERATOR_ROLES);
-  } catch (err) {
+    return await requireCapability("routes.write", { mutation: true });
+  } catch {
     return null;
   }
 }

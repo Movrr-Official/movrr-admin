@@ -11,7 +11,7 @@ import { assertPlatformInvitationsReady } from "@/features/invitations/infrastru
 import { createSupabaseInvitationStore } from "@/features/invitations/infrastructure/supabaseInvitationStore";
 import { appendPlatformAuditRecordSafe } from "@/features/platform/infrastructure/supabasePlatformAudit";
 import type { RequestContext } from "@/features/identity/domain/Principal";
-import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
+import { employeeHasCapability } from "@/features/organisations/domain/employeeRoleTemplates";
 import { APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
 import {
   getPlatformSecurityPolicy,
@@ -22,7 +22,9 @@ import { writeUserActivity } from "@/lib/userActivity";
 import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
 import { Resend } from "resend";
 
-export const WORKBOARD_INVITE_ELIGIBLE_ROLES = ADMIN_MODERATOR_ROLES;
+export function isWorkboardInviteEligibleRole(role: string): boolean {
+  return employeeHasCapability(role, "workboard.access");
+}
 
 export type WorkboardInviteRole = "owner" | "admin" | "editor" | "viewer";
 
@@ -188,10 +190,10 @@ export async function assertEligibleWorkboardInvitee(
   }
 
   const role = String(data.role || "").toLowerCase();
-  if (!(WORKBOARD_INVITE_ELIGIBLE_ROLES as readonly string[]).includes(role)) {
+  if (!isWorkboardInviteEligibleRole(role)) {
     return fail(
       "ineligible_role",
-      `This user has platform role "${role}" and cannot join Workboard. Eligible roles: ${WORKBOARD_INVITE_ELIGIBLE_ROLES.join(", ")}.`,
+      `This user has platform role "${role}" and cannot join Workboard. Requires the workboard.access capability.`,
     );
   }
 

@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+
+import { requireCapability } from "@/lib/admin";
 import {
   fetchLatestUserActivitySignalMap,
   resolveLatestIsoTimestamp,
@@ -271,7 +271,7 @@ export async function getRiders(
   filters?: RiderFiltersSchema,
 ): Promise<{ success: boolean; data?: Rider[]; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("riders.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     let query = supabaseAdmin.from("rider").select("*");
@@ -476,7 +476,7 @@ export async function bulkUpdateRiderStatus(
   error?: string;
 }> {
   try {
-    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireCapability("riders.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const dbStatus = mapUiStatusToDb(status);
 
@@ -573,7 +573,7 @@ export async function getCommunityRideCreatorAccess(userId: string): Promise<{
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("riders.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data, error } = await supabaseAdmin
@@ -612,7 +612,7 @@ export async function setCommunityRideCreatorAccess(
   input: z.infer<typeof communityRideCreatorAccessSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireCapability("riders.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedInput = communityRideCreatorAccessSchema.parse(input);
     const now = new Date().toISOString();
@@ -673,7 +673,7 @@ export async function updateRiderProfile(
   data: z.infer<typeof updateRiderSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    const auth = await requireCapability("riders.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateRiderSchema.parse(data);
 

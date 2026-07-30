@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 
 import AuthWrapper from "@/components/auth/AuthWrapper";
 import { AdminMfaManagementPanel } from "@/components/account/AdminMfaManagementPanel";
-import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
 import { getAdminMfaManagementData } from "@/lib/adminMfa";
 
 async function AccountSecurityContent() {
@@ -35,7 +34,7 @@ async function AccountSecurityContent() {
 
 export default function AccountSecurityPage() {
   return (
-    <AuthWrapper allowedRoles={DASHBOARD_ACCESS_ROLES}>
+    <AuthWrapper capabilities={["settings.manage","settings.security","dashboard.read"]}>
       <AccountSecurityContent />
     </AuthWrapper>
   );

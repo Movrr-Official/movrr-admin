@@ -1,7 +1,6 @@
 "use server";
 
-import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { mockUsers } from "@/data/mockUsers";
@@ -28,7 +27,7 @@ export interface WaitlistCounts {
  * Server action to get all counts including waitlist
  */
 export async function getDashboardCounts(): Promise<WaitlistCounts> {
-  await requireAdminRoles(DASHBOARD_ACCESS_ROLES);
+  await requireCapability("dashboard.read");
   if (shouldUseMockData()) {
     return {
       totalWaitlist: 3,

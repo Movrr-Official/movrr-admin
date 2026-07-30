@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { NOTIFICATION_READ_ROLES, NOTIFICATION_WRITE_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+
+import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { logger } from "@/lib/logger";
 import {
@@ -76,7 +76,7 @@ export async function getNotificationHistory(
   filters: NotificationFilters = notificationFiltersFallback,
 ): Promise<{ success: boolean; data?: AdminNotification[]; error?: string }> {
   try {
-    await requireAdminRoles(NOTIFICATION_READ_ROLES);
+    await requireCapability("notifications.read");
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedFilters = notificationFiltersSchema.parse(filters);
     const limit = validatedFilters.limit ?? 200;
@@ -165,7 +165,7 @@ export async function getNotificationStats(): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdminRoles(NOTIFICATION_READ_ROLES);
+    await requireCapability("notifications.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { count: total, error: totalError } = await supabaseAdmin
@@ -237,7 +237,7 @@ export async function createNotifications(
   error?: string;
 }> {
   try {
-    await requireMutatingAdminRoles(NOTIFICATION_WRITE_ROLES);
+    await requireCapability("notifications.send", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedPayload = createNotificationSchema.parse(payload);
 

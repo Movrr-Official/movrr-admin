@@ -1,7 +1,6 @@
 "use server";
 
-import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+import { requireCapability } from "@/lib/admin";
 import {
   countOpenIncidents,
   createIncident as createIncidentRecord,
@@ -20,7 +19,7 @@ export async function getIncidents(): Promise<{
   error?: string;
 }> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("incidents.read");
     return { success: true, data: await listIncidents() };
   } catch (error) {
     return {
@@ -33,7 +32,7 @@ export async function getIncidents(): Promise<{
 
 export async function getOpenIncidentCount(): Promise<number> {
   try {
-    await requireAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("incidents.read");
     return await countOpenIncidents();
   } catch {
     return 0;
@@ -44,7 +43,7 @@ export async function createIncident(
   input: CreateIncidentInput,
 ): Promise<{ success: boolean; data?: Incident; error?: string }> {
   try {
-    const admin = await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    const admin = await requireCapability("incidents.create", { mutation: true });
     if (!input.title.trim()) {
       return { success: false, error: "Title is required" };
     }
@@ -67,7 +66,7 @@ export async function setIncidentStatus(input: {
   status: IncidentStatus;
 }): Promise<{ success: boolean; data?: Incident; error?: string }> {
   try {
-    await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+    await requireCapability("incidents.manage", { mutation: true });
     const updated = await updateIncidentStatus(input.id, input.status);
     if (!updated) {
       return { success: false, error: "Incident not found" };

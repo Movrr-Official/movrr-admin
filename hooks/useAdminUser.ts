@@ -3,6 +3,7 @@
 import { getCurrentAdminUser } from "@/app/actions/admin";
 import { useQuery } from "@tanstack/react-query";
 import useShouldHideComponent from "@/hooks/useShouldHideComponent";
+import { hasAdminPermission, hasCapability } from "@/lib/authPermissions";
 
 export const ADMIN_USER_QUERY_KEY = ["adminUser"] as const;
 
@@ -19,13 +20,21 @@ export function useAdminUser(options?: { enabled?: boolean }) {
   });
 }
 
-// Optional: Hook for specific permissions
+/** Capability-first permission hook (also accepts legacy `module:action` strings). */
 export function usePermission(permission: string) {
   const { data: adminUser } = useAdminUser();
+  if (!adminUser?.role) return false;
 
-  // Implement your permission logic here based on adminUser.role
-  const hasPermission =
-    adminUser?.role === "super_admin" || adminUser?.role === "admin";
+  if (permission.includes(".")) {
+    return hasCapability(adminUser.role, permission);
+  }
 
-  return hasPermission;
+  return hasAdminPermission(adminUser.role, permission);
+}
+
+/** Direct capability check for UI gating. */
+export function useCapability(capability: string) {
+  const { data: adminUser } = useAdminUser();
+  if (!adminUser?.role) return false;
+  return hasCapability(adminUser.role, capability);
 }

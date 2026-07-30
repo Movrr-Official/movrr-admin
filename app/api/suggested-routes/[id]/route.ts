@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { ADMIN_MODERATOR_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles } from "@/lib/admin";
+import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +42,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.read");
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -81,7 +80,7 @@ export async function PATCH(
   const { id } = await params;
 
   try {
-    await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -159,7 +158,7 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    await requireAdminRoles(ADMIN_MODERATOR_ROLES);
+    await requireCapability("routes.write", { mutation: true });
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

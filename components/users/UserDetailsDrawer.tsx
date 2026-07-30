@@ -540,15 +540,62 @@ export function UserDetailsDrawer({
                                   <SelectItem value="advertiser">
                                     Advertiser
                                   </SelectItem>
-                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="operations_manager">
+                                    Operations Manager
+                                  </SelectItem>
+                                  <SelectItem value="admin">
+                                    Admin (legacy)
+                                  </SelectItem>
                                   <SelectItem value="super_admin">
-                                    Super Admin
+                                    Super Administrator
+                                  </SelectItem>
+                                  <SelectItem value="security_admin">
+                                    Security Administrator
+                                  </SelectItem>
+                                  <SelectItem value="campaign_manager">
+                                    Campaign Manager
+                                  </SelectItem>
+                                  <SelectItem value="partner_operations_manager">
+                                    Partner Operations Manager
+                                  </SelectItem>
+                                  <SelectItem value="fraud_analyst">
+                                    Fraud Analyst
+                                  </SelectItem>
+                                  <SelectItem value="trust_safety_analyst">
+                                    Trust &amp; Safety Analyst
+                                  </SelectItem>
+                                  <SelectItem value="support_agent">
+                                    Support Agent
+                                  </SelectItem>
+                                  <SelectItem value="support_lead">
+                                    Support Lead
+                                  </SelectItem>
+                                  <SelectItem value="finance_operator">
+                                    Finance Operator
+                                  </SelectItem>
+                                  <SelectItem value="compliance_analyst">
+                                    Compliance Analyst
+                                  </SelectItem>
+                                  <SelectItem value="programme_operations_manager">
+                                    Programme Operations Manager
+                                  </SelectItem>
+                                  <SelectItem value="executive_viewer">
+                                    Executive Viewer
+                                  </SelectItem>
+                                  <SelectItem value="product_operations">
+                                    Product Operations
+                                  </SelectItem>
+                                  <SelectItem value="engineering_operations">
+                                    Engineering Operations
+                                  </SelectItem>
+                                  <SelectItem value="platform_operator">
+                                    Platform Operator
                                   </SelectItem>
                                   <SelectItem value="moderator">
-                                    Moderator
+                                    Moderator (legacy)
                                   </SelectItem>
                                   <SelectItem value="support">
-                                    Support
+                                    Support (legacy)
                                   </SelectItem>
                                 </SelectContent>
                               </Select>
