@@ -30,9 +30,15 @@ import { FaRoute } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { toggleSidebar, setSidebarOpen } from "@/redux/slices/ui";
 import { Badge } from "@/components/ui/badge";
-import { JSX, useEffect, useMemo, useState, useTransition } from "react";
+import { Fragment, JSX, useEffect, useMemo, useState, useTransition } from "react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { signOut } from "@/lib/auth";
 import { ADMIN_USER_QUERY_KEY } from "@/hooks/useAdminUser";
 import { CountDisplay, useCounts } from "@/providers/CountProvider";
@@ -402,90 +408,135 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
 
         {/* Navigation */}
         <ScrollArea className="flex-1 px-3 py-4">
-          <nav className="space-y-2">
-            {visibleNavigation.map((item, idx) => {
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`);
-              const Icon = item.icon;
+          <TooltipProvider delayDuration={0}>
+            <nav className="space-y-2">
+              {visibleNavigation.map((item, idx) => {
+                const isActive =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname === item.href ||
+                      pathname.startsWith(`${item.href}/`);
+                const Icon = item.icon;
+                const showCollapsedTooltip = !sidebarOpen && !isMobile;
 
-              return (
-                <Link
-                  key={idx}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 h-9 px-4 py-2 rounded-md text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                    !sidebarOpen && "justify-center",
-                  )}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                  <AnimatePresence mode="wait">
-                    {sidebarOpen && (
-                      <motion.span
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: "auto" }}
-                        exit={{ opacity: 0, width: 0 }}
-                        transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="flex items-center justify-between flex-1 min-w-0"
-                      >
-                        <span className="truncate">{item.name}</span>
-                        {item.badge && (
-                          <Badge
-                            variant={isActive ? "secondary" : "outline"}
-                            className="ml-2 text-xs font-medium flex-shrink-0"
-                          >
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </motion.span>
+                const link = (
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 h-9 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                      !sidebarOpen && "justify-center",
                     )}
-                  </AnimatePresence>
-                </Link>
-              );
-            })}
-          </nav>
+                    aria-current={isActive ? "page" : undefined}
+                    aria-label={showCollapsedTooltip ? item.name : undefined}
+                  >
+                    <Icon
+                      className="w-5 h-5 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <AnimatePresence mode="wait">
+                      {sidebarOpen && (
+                        <motion.span
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: "auto" }}
+                          exit={{ opacity: 0, width: 0 }}
+                          transition={{ duration: 0.15, ease: "easeOut" }}
+                          className="flex items-center justify-between flex-1 min-w-0"
+                        >
+                          <span className="truncate">{item.name}</span>
+                          {item.badge && (
+                            <Badge
+                              variant={isActive ? "secondary" : "outline"}
+                              className="ml-2 text-xs font-medium flex-shrink-0"
+                            >
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Link>
+                );
+
+                return showCollapsedTooltip ? (
+                  <Tooltip key={idx}>
+                    <TooltipTrigger asChild>{link}</TooltipTrigger>
+                    <TooltipContent side="right" align="center" sideOffset={8}>
+                      {item.name}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Fragment key={idx}>{link}</Fragment>
+                );
+              })}
+            </nav>
+          </TooltipProvider>
         </ScrollArea>
 
         {/* Footer */}
         <div className="flex h-16 shrink-0 items-center border-t border-border px-3">
-          <Button
-            variant="ghost"
-            onClick={handleSignOut}
-            disabled={isPending}
-            className={cn(
-              "w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer",
-              !sidebarOpen && "justify-center",
-            )}
-            aria-busy={isPending}
-          >
-            <LogOut className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-
-            <AnimatePresence mode="wait">
-              {sidebarOpen && (
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                >
-                  {isPending ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <ImSpinner8 className="animate-spin h-4 w-4" />
-                      Signing Out...
-                    </span>
-                  ) : (
-                    "Sign Out"
-                  )}
-                </motion.span>
+          {!sidebarOpen && !isMobile ? (
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    onClick={handleSignOut}
+                    disabled={isPending}
+                    className={cn(
+                      "w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer",
+                      !sidebarOpen && "justify-center",
+                    )}
+                    aria-busy={isPending}
+                    aria-label="Sign Out"
+                  >
+                    <LogOut
+                      className="h-5 w-5 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center" sideOffset={8}>
+                  Sign Out
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={handleSignOut}
+              disabled={isPending}
+              className={cn(
+                "w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer",
+                !sidebarOpen && "justify-center",
               )}
-            </AnimatePresence>
-          </Button>
+              aria-busy={isPending}
+            >
+              <LogOut className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+
+              <AnimatePresence mode="wait">
+                {sidebarOpen && (
+                  <motion.span
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                  >
+                    {isPending ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <ImSpinner8 className="animate-spin h-4 w-4" />
+                        Signing Out...
+                      </span>
+                    ) : (
+                      "Sign Out"
+                    )}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Button>
+          )}
         </div>
       </motion.aside>
     </>
