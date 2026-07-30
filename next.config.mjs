@@ -44,6 +44,11 @@ const nextConfig = {
         destination: "/fulfilment/organisations",
         permanent: true,
       },
+      {
+        source: "/settings/authorization",
+        destination: "/authorization",
+        permanent: true,
+      },
     ];
   },
 };

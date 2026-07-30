@@ -3,13 +3,11 @@
 import { usePathname } from "next/navigation";
 
 import { paths } from "@/constant/path";
+import { matchesAnyPathPrefix } from "@/lib/pathMatch";
 
 const useShouldHideComponent = () => {
-  // Get the current route
   const pathname = usePathname();
-
-  // Check if the current pathname matches any of the paths to hide the component
-  return paths.some((path) => pathname.startsWith(path));
+  return matchesAnyPathPrefix(pathname, paths);
 };
 
 export default useShouldHideComponent;

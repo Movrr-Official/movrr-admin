@@ -91,7 +91,7 @@ Operators should never need to understand Postgres enums or scattered allow-list
 | Global search | Only entity types the role can read |
 | Quick actions | Only destinations / exports the role can perform |
 | Fraud workbench | Analysts with resolve capability can Verify / Reject in-queue |
-| Settings → Authorization | Security / ops leads inspect role simulations (capability required) |
+| Authorization | Security / ops leads inspect role simulations (capability required) |
 
 ### Assigning access
 
@@ -167,7 +167,7 @@ Visibility is capability-driven. Examples:
 - **Campaign Manager** sees Campaigns / Advertisers — not Users admin or Security settings.
 - **Fraud Analyst** sees Fraud + Ride Sessions disposition — not platform Settings.
 
-Diagnostics: **Settings → Authorization** (requires `authz.inspect`) simulates any role’s navigation, capabilities, and SoD conflicts.
+Diagnostics: **Authorization** (`/authorization`, requires `authz.inspect`) simulates any role’s navigation, capabilities, and SoD conflicts.
 
 ---
 

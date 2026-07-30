@@ -99,7 +99,7 @@ Audit (exports, initiator records, existing admin_audit_log)
 | `AuthWrapper` | Page gate (capability-only) |
 | `proxy.ts` | Next 16 network boundary login gate (employee role set) |
 | `securityElevations` | Temp access / break-glass / delegation contracts |
-| `diagnostics` | Role simulator for Settings → Authorization |
+| `diagnostics` | Role simulator for Authorization (`/authorization`) |
 
 ---
 
@@ -163,7 +163,7 @@ No new role-name allow-lists in Sidebar, pages, or actions.
 | Workboard invites | `workboard.access` eligibility |
 | Users CRUD | Role sync to `admin_users`; privileged SoD |
 | Fraud workbench | `fraud.resolve` / `rides.verify` disposition |
-| Diagnostics UI | `/settings/authorization` |
+| Diagnostics UI | `/authorization` |
 
 ---
 

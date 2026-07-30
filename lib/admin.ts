@@ -26,6 +26,7 @@ import { EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemp
 import type { KnownCapability } from "@/features/organisations/domain/CapabilityCatalog";
 import { canAccessPage } from "@/features/authorization/dashboardRegistry";
 import { mergeTemporaryCapabilities } from "@/features/authorization/securityElevations";
+import { matchesAnyPathPrefix } from "@/lib/pathMatch";
 
 const VALID_ADMIN_ROLES: AdminRole[] = [...EMPLOYEE_ROLES];
 
@@ -143,7 +144,7 @@ export const resolveAdminAuthRedirectTarget = async (): Promise<string> => {
 
 const shouldResolveRoleForPath = (pathname?: string) => {
   if (!pathname) return true;
-  return !EXCLUDED_PATHS.some((path) => pathname.startsWith(path));
+  return !matchesAnyPathPrefix(pathname, EXCLUDED_PATHS);
 };
 
 const isWithinBootstrapGraceWindow = (lastSignInAt: number | null) => {

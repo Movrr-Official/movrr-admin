@@ -69,6 +69,13 @@ describe("page / search capability alignment", () => {
     expect(canAccessPage("/settings", caps)).toBe(false);
   });
 
+  it("gates /authorization on authz.inspect", () => {
+    const security = capabilitiesForEmployeeRole("security_admin");
+    const campaign = capabilitiesForEmployeeRole("campaign_manager");
+    expect(canAccessPage("/authorization", security)).toBe(true);
+    expect(canAccessPage("/authorization", campaign)).toBe(false);
+  });
+
   it("maps search entities to capabilities", () => {
     expect(getSearchEntityCapability("campaign")).toBe("campaigns.read");
     expect(getSearchEntityCapability("rider")).toBe("riders.read");

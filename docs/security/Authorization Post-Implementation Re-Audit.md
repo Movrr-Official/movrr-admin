@@ -35,7 +35,7 @@ Each original finding was re-checked against **code evidence** (grep + file read
 | 17 | Export governance | **Fully Resolved** | Audit + correlation ID + rate limit on `executeAuditedExport`; dialogs wired. |
 | 18 | Data scope / ABAC | **Deferred** | Foundations only (`dataScope.ts`) — per approved Phase 9 “do not change global visibility yet”. |
 | 19 | Temp access / break-glass / delegation | **Partially Resolved** | Contracts + in-memory stores; **now merged into `requireCapability`** via `mergeTemporaryCapabilities`. Persistence still deferred. |
-| 20 | Authorization diagnostics | **Fully Resolved** | `/settings/authorization` role simulator. |
+| 20 | Authorization diagnostics | **Fully Resolved** | `/authorization` role simulator (legacy `/settings/authorization` redirects). |
 | 21 | AuthWrapper capability-based | **Fully Resolved** | All pages use capability props; fallback is `dashboard.read` (no role arrays). |
 | 22 | Duplicate role constants in consumers | **Fully Resolved** | API/workboard consumers no longer import `ADMIN_ONLY_ROLES` / `ADMIN_MODERATOR_ROLES`. Constants remain deprecated shims in `authPermissions.ts` only. |
 | 23 | Platform CapabilityCatalog preserved | **Fully Resolved** | Product/org/rider bundles intact. |

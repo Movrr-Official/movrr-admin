@@ -16,7 +16,7 @@
 | Product | [product/employee-authorization.md](../product/employee-authorization.md) |
 | Architecture | [architecture/employee-authorization.md](../architecture/employee-authorization.md) |
 | Implementation | [implementation/employee-authorization.md](../implementation/employee-authorization.md) |
-| Diagnostics UI | `/settings/authorization` (requires `authz.inspect`) |
+| Diagnostics UI | `/authorization` (requires `authz.inspect`) |
 | Re-audit | [security/Authorization Post-Implementation Re-Audit.md](../security/Authorization%20Post-Implementation%20Re-Audit.md) |
 
 ## Table of contents
@@ -116,7 +116,7 @@ Prefer existing `audit_log` / `admin_audit_log` and support themes until dedicat
 
 Until dedicated dashboards ship:
 
-1. **Settings → Authorization** role simulator (compare expected nav vs complaints).
+1. **Authorization** role simulator (`/authorization` — compare expected nav vs complaints).
 2. Support macros: role string on `admin_users`, screenshot of sidebar, exact error text.
 3. Audit tables: export actions, role assignment updates, entity initiator rows (`*.create`).
 4. Deploy notes: AuthZ-related commits must mention capability/bundle changes.

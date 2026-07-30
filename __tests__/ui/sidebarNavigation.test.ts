@@ -69,6 +69,11 @@ describe("isPathActive", () => {
     expect(isPathActive("/fraud/review", "/fraud")).toBe(true);
     expect(isPathActive("/fraudulent", "/fraud")).toBe(false);
   });
+
+  it("does not treat /authorization as under /settings", () => {
+    expect(isPathActive("/authorization", "/settings")).toBe(false);
+    expect(isPathActive("/authorization", "/authorization")).toBe(true);
+  });
 });
 
 describe("filterNavigationByCapabilities", () => {

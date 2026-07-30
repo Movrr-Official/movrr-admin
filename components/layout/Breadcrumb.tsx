@@ -4,6 +4,7 @@ import { usePathname, useParams } from "next/navigation";
 import Link from "next/link";
 import { Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { matchesPathPrefix } from "@/lib/pathMatch";
 import { useMemo } from "react";
 
 interface BreadcrumbItem {
@@ -35,6 +36,8 @@ const routeLabels: Record<string, string> = {
   overview: "Overview",
   "available-riders": "Available Riders",
   workboard: "Workboard",
+  settings: "Settings",
+  authorization: "Authorization",
 };
 
 // Function to format route segment to readable label
@@ -134,8 +137,11 @@ export default function Breadcrumb() {
     [pathname, params],
   );
 
-  // Don't show breadcrumb on auth pages
-  if (pathname.startsWith("/auth") || pathname.startsWith("/unauthorized")) {
+  // Don't show breadcrumb on auth / unauthorized pages
+  if (
+    matchesPathPrefix(pathname, "/auth") ||
+    matchesPathPrefix(pathname, "/unauthorized")
+  ) {
     return null;
   }
 

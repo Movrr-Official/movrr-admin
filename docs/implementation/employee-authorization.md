@@ -62,7 +62,7 @@ Admin authorization is **capability-first**. Employee roles in `admin_users.role
 | Sidebar | `components/layout/Sidebar.tsx` + `sidebarNavigation.ts` | Capability filter |
 | Search | `lib/search/{registry,access,types}.ts` | Capability access |
 | Exports | `lib/export.ts` + `app/actions/exportAudit.ts` | Serialize → audit → download |
-| Diagnostics UI | `app/settings/authorization/` | Simulator |
+| Diagnostics UI | `app/authorization/` | Simulator |
 | Edge login | `proxy.ts` | Next 16 proxy; employee role set |
 | Schema | `schemas/user.ts`, `types/auth.ts` | Role enums include canonical + legacy |
 
