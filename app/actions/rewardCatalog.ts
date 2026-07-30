@@ -2,7 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
-import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
+import { requireMutatingAdminRoles } from "@/lib/admin";
+import { shouldUseMockData } from "@/lib/dataSource";
+import { logger } from "@/lib/logger";
+import {
+  cleanupUnreferencedRewardCatalogMedia,
+  deleteRewardCatalogImage,
+  nextRewardCatalogGallerySlot,
+  parseOwnedRewardCatalogMediaPath,
+  REWARD_CATALOG_GALLERY_MAX_ITEMS,
+  resolveRewardCatalogGalleryReplaceSlot,
+  resolveRewardCatalogUploadMime,
+  sameRewardCatalogMediaSet,
+  uploadRewardCatalogGalleryImage as putGalleryObject,
+  uploadRewardCatalogThumbnail as putThumbnailObject,
+} from "@/lib/rewardCatalogImage";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   RewardCatalogFilters,
@@ -238,6 +252,21 @@ export async function upsertRewardCatalog(
     const selectColumns =
       "id, sku, title, description, category, status, points_price, partner_id, partner_url, thumbnail_url, gallery_urls, inventory_type, inventory_count, max_per_rider, featured_rank, is_featured, visibility_rules, tags, fulfilment_type, resource_id, published_at, created_at, updated_at, partner:partner_id (id, name, website)";
 
+    let previousMediaUrls: string[] = [];
+    if (validatedData.id) {
+      const { data: existing } = await supabaseAdmin
+        .from("reward_catalog")
+        .select("thumbnail_url, gallery_urls")
+        .eq("id", validatedData.id)
+        .maybeSingle();
+      if (existing) {
+        previousMediaUrls = [
+          existing.thumbnail_url ? String(existing.thumbnail_url) : "",
+          ...(((existing.gallery_urls ?? []) as string[]) ?? []),
+        ].filter(Boolean);
+      }
+    }
+
     const response = validatedData.id
       ? await supabaseAdmin
           .from("reward_catalog")
@@ -258,8 +287,21 @@ export async function upsertRewardCatalog(
       return { success: false, error: response.error.message };
     }
 
+    const saved = mapCatalogRow(response.data);
+    if (validatedData.id && previousMediaUrls.length > 0) {
+      const nextMediaUrls = [
+        saved.thumbnailUrl ?? "",
+        ...(saved.galleryUrls ?? []),
+      ].filter(Boolean);
+      await cleanupUnreferencedRewardCatalogMedia(
+        validatedData.id,
+        previousMediaUrls,
+        nextMediaUrls,
+      );
+    }
+
     revalidatePath("/rewards");
-    return { success: true, data: mapCatalogRow(response.data) };
+    return { success: true, data: saved };
   } catch (error) {
     return {
       success: false,
@@ -336,6 +378,372 @@ export async function toggleRewardFeatured(
         error instanceof Error
           ? error.message
           : "Failed to update featured status",
+    };
+  }
+}
+
+const CATALOG_MEDIA_SELECT = "id, thumbnail_url, gallery_urls, title";
+
+/**
+ * Upload or replace the product thumbnail via service-role Storage.
+ * Persists the durable public URL into `thumbnail_url`.
+ */
+export async function uploadRewardCatalogThumbnail(
+  rewardId: string,
+  formData: FormData,
+): Promise<{ success: boolean; error?: string; thumbnailUrl?: string }> {
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+
+  if (shouldUseMockData()) {
+    revalidatePath("/rewards");
+    return { success: true, thumbnailUrl: "https://example.com/mock-thumb.jpg" };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { success: false, error: "No image was provided." };
+  }
+
+  const bytes = await file.arrayBuffer();
+  const validation = resolveRewardCatalogUploadMime(file.type, bytes);
+  if (!validation.valid) {
+    return { success: false, error: validation.error };
+  }
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data: row, error: loadError } = await supabase
+      .from("reward_catalog")
+      .select(CATALOG_MEDIA_SELECT)
+      .eq("id", rewardId)
+      .maybeSingle();
+
+    if (loadError) throw loadError;
+    if (!row) return { success: false, error: "Reward product not found." };
+
+    const previousUrl = row.thumbnail_url
+      ? String(row.thumbnail_url)
+      : null;
+    const previousPath = previousUrl
+      ? parseOwnedRewardCatalogMediaPath(previousUrl)
+      : null;
+
+    const { path, publicUrl } = await putThumbnailObject(
+      bytes,
+      validation.mimeType,
+      rewardId,
+    );
+
+    const { error: updateError } = await supabase
+      .from("reward_catalog")
+      .update({
+        thumbnail_url: publicUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", rewardId);
+
+    if (updateError) {
+      await deleteRewardCatalogImage(path);
+      throw updateError;
+    }
+
+    if (previousPath && previousPath !== path) {
+      await deleteRewardCatalogImage(previousPath);
+    }
+
+    revalidatePath("/rewards");
+    return { success: true, thumbnailUrl: publicUrl };
+  } catch (err) {
+    logger.error("Failed to upload reward catalog thumbnail", err, {
+      rewardId,
+    });
+    return {
+      success: false,
+      error:
+        err instanceof Error ? err.message : "Failed to upload thumbnail",
+    };
+  }
+}
+
+/**
+ * Clear thumbnail_url, then delete owned Storage object if applicable.
+ * Record is cleared first so a failed Storage delete cannot break the product page.
+ */
+export async function removeRewardCatalogThumbnail(
+  rewardId: string,
+): Promise<{ success: boolean; error?: string }> {
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+
+  if (shouldUseMockData()) {
+    revalidatePath("/rewards");
+    return { success: true };
+  }
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data: row, error: loadError } = await supabase
+      .from("reward_catalog")
+      .select(CATALOG_MEDIA_SELECT)
+      .eq("id", rewardId)
+      .maybeSingle();
+
+    if (loadError) throw loadError;
+    if (!row) return { success: false, error: "Reward product not found." };
+
+    const previousUrl = row.thumbnail_url
+      ? String(row.thumbnail_url)
+      : null;
+    const previousPath = previousUrl
+      ? parseOwnedRewardCatalogMediaPath(previousUrl)
+      : null;
+
+    const { error: updateError } = await supabase
+      .from("reward_catalog")
+      .update({
+        thumbnail_url: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", rewardId);
+
+    if (updateError) throw updateError;
+
+    if (previousPath) await deleteRewardCatalogImage(previousPath);
+
+    revalidatePath("/rewards");
+    return { success: true };
+  } catch (err) {
+    logger.error("Failed to remove reward catalog thumbnail", err, {
+      rewardId,
+    });
+    return {
+      success: false,
+      error:
+        err instanceof Error ? err.message : "Failed to remove thumbnail",
+    };
+  }
+}
+
+/**
+ * Append a gallery image, or replace the image at `replaceIndex` (0-based).
+ * Slot paths are 1-based (`gallery/1.webp`) matching the audit contract.
+ */
+export async function uploadRewardCatalogGalleryImage(
+  rewardId: string,
+  formData: FormData,
+  replaceIndex?: number,
+): Promise<{ success: boolean; error?: string; galleryUrls?: string[] }> {
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+
+  if (shouldUseMockData()) {
+    revalidatePath("/rewards");
+    return { success: true, galleryUrls: [] };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { success: false, error: "No image was provided." };
+  }
+
+  const bytes = await file.arrayBuffer();
+  const validation = resolveRewardCatalogUploadMime(file.type, bytes);
+  if (!validation.valid) {
+    return { success: false, error: validation.error };
+  }
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data: row, error: loadError } = await supabase
+      .from("reward_catalog")
+      .select(CATALOG_MEDIA_SELECT)
+      .eq("id", rewardId)
+      .maybeSingle();
+
+    if (loadError) throw loadError;
+    if (!row) return { success: false, error: "Reward product not found." };
+
+    const currentGallery = [...((row.gallery_urls ?? []) as string[])];
+    const isReplace =
+      typeof replaceIndex === "number" &&
+      replaceIndex >= 0 &&
+      replaceIndex < currentGallery.length;
+
+    if (!isReplace && currentGallery.length >= REWARD_CATALOG_GALLERY_MAX_ITEMS) {
+      return {
+        success: false,
+        error: `Gallery is limited to ${REWARD_CATALOG_GALLERY_MAX_ITEMS} images.`,
+      };
+    }
+
+    // Slot must come from the object's owned path (or max+1) — never visual index.
+    const slot = isReplace
+      ? resolveRewardCatalogGalleryReplaceSlot(currentGallery, replaceIndex)
+      : nextRewardCatalogGallerySlot(currentGallery);
+    const previousUrl = isReplace ? currentGallery[replaceIndex] : null;
+    const previousPath = previousUrl
+      ? parseOwnedRewardCatalogMediaPath(previousUrl)
+      : null;
+
+    const { path, publicUrl } = await putGalleryObject(
+      bytes,
+      validation.mimeType,
+      rewardId,
+      slot,
+    );
+
+    const nextGallery = isReplace
+      ? currentGallery.map((url, index) =>
+          index === replaceIndex ? publicUrl : url,
+        )
+      : [...currentGallery, publicUrl];
+
+    const { error: updateError } = await supabase
+      .from("reward_catalog")
+      .update({
+        gallery_urls: nextGallery,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", rewardId);
+
+    if (updateError) {
+      await deleteRewardCatalogImage(path);
+      throw updateError;
+    }
+
+    if (previousPath && previousPath !== path) {
+      await deleteRewardCatalogImage(previousPath);
+    }
+
+    revalidatePath("/rewards");
+    return { success: true, galleryUrls: nextGallery };
+  } catch (err) {
+    logger.error("Failed to upload reward catalog gallery image", err, {
+      rewardId,
+      replaceIndex,
+    });
+    return {
+      success: false,
+      error:
+        err instanceof Error
+          ? err.message
+          : "Failed to upload gallery image",
+    };
+  }
+}
+
+export async function removeRewardCatalogGalleryImage(
+  rewardId: string,
+  index: number,
+): Promise<{ success: boolean; error?: string; galleryUrls?: string[] }> {
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+
+  if (shouldUseMockData()) {
+    revalidatePath("/rewards");
+    return { success: true, galleryUrls: [] };
+  }
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data: row, error: loadError } = await supabase
+      .from("reward_catalog")
+      .select(CATALOG_MEDIA_SELECT)
+      .eq("id", rewardId)
+      .maybeSingle();
+
+    if (loadError) throw loadError;
+    if (!row) return { success: false, error: "Reward product not found." };
+
+    const currentGallery = [...((row.gallery_urls ?? []) as string[])];
+    if (index < 0 || index >= currentGallery.length) {
+      return { success: false, error: "Gallery image not found." };
+    }
+
+    const removedUrl = currentGallery[index];
+    const removedPath = parseOwnedRewardCatalogMediaPath(removedUrl);
+    const nextGallery = currentGallery.filter((_, i) => i !== index);
+
+    const { error: updateError } = await supabase
+      .from("reward_catalog")
+      .update({
+        gallery_urls: nextGallery,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", rewardId);
+
+    if (updateError) throw updateError;
+
+    if (removedPath) await deleteRewardCatalogImage(removedPath);
+
+    revalidatePath("/rewards");
+    return { success: true, galleryUrls: nextGallery };
+  } catch (err) {
+    logger.error("Failed to remove reward catalog gallery image", err, {
+      rewardId,
+      index,
+    });
+    return {
+      success: false,
+      error:
+        err instanceof Error
+          ? err.message
+          : "Failed to remove gallery image",
+    };
+  }
+}
+
+/**
+ * Persist gallery order only (no Storage moves). Object slots stay stable;
+ * `gallery_urls` order is the consumer contract.
+ */
+export async function reorderRewardCatalogGallery(
+  rewardId: string,
+  orderedUrls: string[],
+): Promise<{ success: boolean; error?: string; galleryUrls?: string[] }> {
+  await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
+
+  if (shouldUseMockData()) {
+    revalidatePath("/rewards");
+    return { success: true, galleryUrls: orderedUrls };
+  }
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data: row, error: loadError } = await supabase
+      .from("reward_catalog")
+      .select(CATALOG_MEDIA_SELECT)
+      .eq("id", rewardId)
+      .maybeSingle();
+
+    if (loadError) throw loadError;
+    if (!row) return { success: false, error: "Reward product not found." };
+
+    const current = [...((row.gallery_urls ?? []) as string[])];
+    if (!sameRewardCatalogMediaSet(orderedUrls, current)) {
+      return {
+        success: false,
+        error: "Gallery reorder must include the same set of images.",
+      };
+    }
+
+    const { error: updateError } = await supabase
+      .from("reward_catalog")
+      .update({
+        gallery_urls: orderedUrls,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", rewardId);
+
+    if (updateError) throw updateError;
+
+    revalidatePath("/rewards");
+    return { success: true, galleryUrls: orderedUrls };
+  } catch (err) {
+    logger.error("Failed to reorder reward catalog gallery", err, {
+      rewardId,
+    });
+    return {
+      success: false,
+      error:
+        err instanceof Error ? err.message : "Failed to reorder gallery",
     };
   }
 }

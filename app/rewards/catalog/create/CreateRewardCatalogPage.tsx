@@ -31,6 +31,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/useToast";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { upsertRewardCatalog } from "@/app/actions/rewardCatalog";
+import {
+  flushStagedRewardCatalogMedia,
+  RewardCatalogMediaFields,
+  type StagedRewardCatalogMedia,
+} from "@/components/rewards/RewardCatalogMediaFields";
 import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
 import { SUPPORTED_REDEEM_FULFILMENT_TYPES } from "@/features/rewards/application/contracts/RedeemRewardCommand";
 import { formatFulfilmentType } from "@/features/fulfilment/presentation";
@@ -115,6 +120,11 @@ export default function CreateRewardCatalogPage() {
   const { toast } = useToast();
   const useMockData = shouldUseMockData();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [stagedMedia, setStagedMedia] = useState<StagedRewardCatalogMedia>({
+    thumbnailFile: null,
+    galleryFiles: [],
+    thumbnailCleared: false,
+  });
 
   const form = useForm<RewardCatalogFormValues>({
     resolver: zodResolver(rewardCatalogFormSchema),
@@ -139,6 +149,14 @@ export default function CreateRewardCatalogPage() {
       resourceId: undefined,
     },
   });
+
+  const mediaValue = {
+    thumbnailUrl: form.watch("thumbnailUrl") ?? "",
+    galleryUrls: (form.watch("galleryUrls") ?? "")
+      .split(",")
+      .map((url) => url.trim())
+      .filter(Boolean),
+  };
 
   const onSubmit = async (values: RewardCatalogFormValues) => {
     if (useMockData) {
@@ -187,15 +205,43 @@ export default function CreateRewardCatalogPage() {
       resourceId: values.resourceId?.trim() || null,
     });
 
-    setIsSubmitting(false);
-
-    if (!result.success) {
+    if (!result.success || !result.data?.id) {
+      setIsSubmitting(false);
       toast({
         title: "Save failed",
         description: result.error ?? "Please try again.",
         variant: "destructive",
       });
       return;
+    }
+
+    const hasStagedUploads =
+      Boolean(stagedMedia.thumbnailFile) ||
+      stagedMedia.galleryFiles.length > 0 ||
+      stagedMedia.thumbnailCleared;
+
+    if (hasStagedUploads) {
+      const mediaResult = await flushStagedRewardCatalogMedia(
+        result.data.id,
+        stagedMedia,
+      );
+      setIsSubmitting(false);
+
+      if (!mediaResult.success) {
+        toast({
+          title: "Product created, but media did not upload",
+          description:
+            (mediaResult.error ??
+              "Successful uploads were rolled back where possible. Retry from the product drawer.") +
+            "",
+          variant: "destructive",
+        });
+        router.push("/rewards");
+        router.refresh();
+        return;
+      }
+    } else {
+      setIsSubmitting(false);
     }
 
     toast({
@@ -441,37 +487,20 @@ export default function CreateRewardCatalogPage() {
                   />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="thumbnailUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Thumbnail URL</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="https://..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="galleryUrls"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Gallery URLs (comma separated)</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="https://..., https://..."
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <RewardCatalogMediaFields
+                  staged
+                  disabled={isSubmitting}
+                  value={mediaValue}
+                  onChange={(next) => {
+                    form.setValue("thumbnailUrl", next.thumbnailUrl, {
+                      shouldDirty: true,
+                    });
+                    form.setValue("galleryUrls", next.galleryUrls.join(", "), {
+                      shouldDirty: true,
+                    });
+                  }}
+                  onStagedChange={setStagedMedia}
+                />
               </CardContent>
             </Card>
 

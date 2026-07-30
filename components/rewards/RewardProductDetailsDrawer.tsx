@@ -36,6 +36,7 @@ import { useToast } from "@/hooks/useToast";
 import { RewardCatalogItem } from "@/schemas";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { upsertRewardCatalog } from "@/app/actions/rewardCatalog";
+import { RewardCatalogMediaFields } from "@/components/rewards/RewardCatalogMediaFields";
 import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
 import { SUPPORTED_REDEEM_FULFILMENT_TYPES } from "@/features/rewards/application/contracts/RedeemRewardCommand";
 import {
@@ -282,7 +283,6 @@ export function RewardProductDetailsDrawer({
       ].filter(Boolean),
     ),
   );
-  const showGalleryStrip = galleryPreviewUrls.length > 1;
   const previewUrl =
     formState.thumbnailUrl.trim() || galleryPreviewUrls[0] || null;
   const initials = item.title
@@ -352,71 +352,27 @@ export function RewardProductDetailsDrawer({
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {showGalleryStrip ? (
-                    <div className="flex gap-2 overflow-x-auto pb-1">
-                      {galleryPreviewUrls.map((url, index) => {
-                        const isThumbnail =
-                          formState.thumbnailUrl.trim() === url ||
-                          (!formState.thumbnailUrl.trim() && index === 0);
-                        return (
-                          <a
-                            key={`${url}-${index}`}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={
-                              isThumbnail
-                                ? "Thumbnail — open full image"
-                                : "Open full image"
-                            }
-                            className={
-                              isThumbnail
-                                ? "relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-md border-2 border-primary bg-muted ring-2 ring-primary/20"
-                                : "relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-md border border-border bg-muted"
-                            }
-                          >
-                            <Image
-                              src={url}
-                              alt={`${item.title} gallery ${index + 1}`}
-                              fill
-                              className="object-cover"
-                              sizes="56px"
-                            />
-                          </a>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="reward-thumbnail-url">Thumbnail URL</Label>
-                      <Input
-                        id="reward-thumbnail-url"
-                        value={formState.thumbnailUrl}
-                        onChange={(event) =>
-                          setFormState((prev) => ({
-                            ...prev,
-                            thumbnailUrl: event.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="reward-gallery-urls">Gallery URLs</Label>
-                      <Input
-                        id="reward-gallery-urls"
-                        value={formState.galleryUrls}
-                        onChange={(event) =>
-                          setFormState((prev) => ({
-                            ...prev,
-                            galleryUrls: event.target.value,
-                          }))
-                        }
-                        placeholder="Comma-separated image URLs"
-                      />
-                    </div>
-                  </div>
+                  <RewardCatalogMediaFields
+                    rewardId={item.id}
+                    disabled={isSaving}
+                    onPersisted={onSaved}
+                    value={{
+                      thumbnailUrl: formState.thumbnailUrl,
+                      galleryUrls: formState.galleryUrls
+                        ? formState.galleryUrls
+                            .split(",")
+                            .map((url) => url.trim())
+                            .filter(Boolean)
+                        : [],
+                    }}
+                    onChange={(next) =>
+                      setFormState((prev) => ({
+                        ...prev,
+                        thumbnailUrl: next.thumbnailUrl,
+                        galleryUrls: next.galleryUrls.join(","),
+                      }))
+                    }
+                  />
                 </CardContent>
               </Card>
 
