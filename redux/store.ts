@@ -3,7 +3,6 @@ import { configureStore } from "@reduxjs/toolkit";
 import advertiserFilterReducer from "./slices/advertiserFilter";
 import filtersSlice from "./slices/filters";
 import imageUploadReducer from "./slices/imageUpload";
-import searchReducer from "./slices/search";
 import uiSlice from "./slices/ui";
 import usersFilterReducer from "./slices/usersFilter";
 import routeFilterReducer from "./slices/routeFilter";
@@ -21,7 +20,6 @@ export const store = configureStore({
     imageUpload: imageUploadReducer,
     maintenance: maintenanceReducer,
     notifications: notificationReducer,
-    search: searchReducer,
     routeFilter: routeFilterReducer,
     ui: uiSlice,
     usersFilter: usersFilterReducer,

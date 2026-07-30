@@ -1,17 +1,42 @@
+"use client";
+
+import { useModKeyLabel } from "@/hooks/useModKeyLabel";
+
 export function SearchDialogFooter() {
+  const modKey = useModKeyLabel();
+
   return (
-    <div className="px-6 py-3 border-t bg-muted/20">
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Press Esc to close</span>
-        <div className="flex items-center gap-1">
-          <kbd className="px-2 py-1 rounded border bg-background font-mono">
-            ⌘
+    <div className="px-4 py-2.5 border-t bg-muted/30 shrink-0">
+      <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="inline-flex items-center gap-1">
+            <kbd className="rounded border bg-background px-1.5 py-0.5 font-mono text-[10px]">
+              ↑↓
+            </kbd>
+            <span>navigate</span>
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <kbd className="rounded border bg-background px-1.5 py-0.5 font-mono text-[10px]">
+              ↵
+            </kbd>
+            <span>open</span>
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <kbd className="rounded border bg-background px-1.5 py-0.5 font-mono text-[10px]">
+              esc
+            </kbd>
+            <span>close</span>
+          </span>
+        </div>
+        <span className="inline-flex items-center gap-1 shrink-0">
+          <kbd className="rounded border bg-background px-1.5 py-0.5 font-mono text-[10px]">
+            {modKey}
           </kbd>
           <span>+</span>
-          <kbd className="px-2 py-1 rounded border bg-background font-mono">
+          <kbd className="rounded border bg-background px-1.5 py-0.5 font-mono text-[10px]">
             K
           </kbd>
-        </div>
+        </span>
       </div>
     </div>
   );

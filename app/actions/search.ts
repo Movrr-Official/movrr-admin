@@ -3,123 +3,68 @@
 import { DASHBOARD_ACCESS_ROLES } from "@/lib/authPermissions";
 import { requireAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { canAccessSearchableEntity } from "@/lib/search/access";
+import { listActiveSearchableEntities } from "@/lib/search/registry";
+import { SEARCH_PROVIDERS } from "@/lib/search/providers";
+import type { SearchResult } from "@/lib/search/types";
 
-export interface SearchResult {
-  id: string;
-  type: "rider" | "campaign" | "city" | "user";
-  name: string;
-  email?: string;
-  description?: string;
-  route?: string;
-  avatarUrl?: string;
-  status?: string;
-  relevance?: number; // For sorting by relevance
-}
+export type { SearchResult } from "@/lib/search/types";
 
+const GLOBAL_RESULT_LIMIT = 12;
+
+/**
+ * Cross-entity Admin search.
+ * Providers + destinations come from the Searchable Entity Registry.
+ * This action must not hardcode module routes.
+ */
 export async function globalSearch(query: string): Promise<SearchResult[]> {
   if (!query.trim() || query.length < 2) {
     return [];
   }
 
   try {
-    await requireAdminRoles(DASHBOARD_ACCESS_ROLES);
+    const user = await requireAdminRoles(DASHBOARD_ACCESS_ROLES);
+    const role = user.adminUser.role;
     const supabase = createSupabaseAdminClient();
-    const searchTerm = `%${query.trim()}%`;
+    const q = query.trim();
 
-    // Search across multiple tables with better relevance scoring
-    const [ridersResult, campaignsResult, usersResult] = await Promise.all([
-      supabase
-        .from("rider")
-        .select("id, status, city, user:user_id (name, email, avatar_url)")
-        .or(`city.ilike.${searchTerm}`)
-        .limit(8),
+    const allowedEntities = listActiveSearchableEntities().filter((entity) =>
+      canAccessSearchableEntity(entity, role),
+    );
 
-      supabase
-        .from("campaign")
-        .select("id, name, description, lifecycle_status")
-        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm}`)
-        .limit(8),
-
-      supabase
-        .from("user")
-        .select("id, name, email, avatar_url, role")
-        .or(`name.ilike.${searchTerm},email.ilike.${searchTerm}`)
-        .limit(8),
-    ]);
-
-    const results: SearchResult[] = [];
-
-    // Process riders with relevance scoring
-    if (ridersResult.data) {
-      ridersResult.data.forEach((rider) => {
-        const riderUser = Array.isArray(rider.user) ? rider.user[0] : rider.user;
-        let relevance = 0;
-        const riderName = riderUser?.name ?? "";
-        const riderEmail = riderUser?.email ?? "";
-        if (riderName.toLowerCase().includes(query.toLowerCase()))
-          relevance += 3;
-        if (riderEmail.toLowerCase().includes(query.toLowerCase()))
-          relevance += 2;
-        if (rider.city?.toLowerCase().includes(query.toLowerCase()))
-          relevance += 1;
-
-        results.push({
-          id: rider.id,
-          type: "rider",
-          name: riderName || "Rider",
-          email: riderEmail,
-          route: rider.city,
-          avatarUrl: riderUser?.avatar_url,
-          status: rider.status,
-          relevance,
-        });
-      });
+    if (allowedEntities.length === 0) {
+      return [];
     }
 
-    // Process campaigns
-    if (campaignsResult.data) {
-      campaignsResult.data.forEach((campaign) => {
-        let relevance = 0;
-        if (campaign.name?.toLowerCase().includes(query.toLowerCase()))
-          relevance += 3;
-        if (campaign.description?.toLowerCase().includes(query.toLowerCase()))
-          relevance += 2;
+    const settled = await Promise.all(
+      allowedEntities.map(async (entity) => {
+        const provider = SEARCH_PROVIDERS[entity.type];
+        if (!provider) return [] as SearchResult[];
 
-        results.push({
-          id: campaign.id,
-          type: "campaign",
-          name: campaign.name,
-          description: campaign.description,
-          status: campaign.lifecycle_status,
-          relevance,
-        });
-      });
-    }
+        const hits = await provider(supabase, q, entity.searchLimit);
+        return hits.map(
+          (hit): SearchResult => ({
+            id: hit.id,
+            type: entity.type,
+            title: hit.title,
+            subtitle: hit.subtitle,
+            status: hit.status,
+            avatarUrl: hit.avatarUrl,
+            relevance: hit.relevance,
+            href: entity.navigation.href(hit.id),
+            navigationStrategy: entity.navigation.strategy,
+            label: entity.label,
+            icon: entity.icon,
+            badgeClassName: entity.badgeClassName,
+          }),
+        );
+      }),
+    );
 
-    // Process users
-    if (usersResult.data) {
-      usersResult.data.forEach((user) => {
-        let relevance = 0;
-        if (user.name?.toLowerCase().includes(query.toLowerCase()))
-          relevance += 3;
-        if (user.email?.toLowerCase().includes(query.toLowerCase()))
-          relevance += 2;
-
-        results.push({
-          id: user.id,
-          type: "user",
-          name: user.name,
-          email: user.email,
-          avatarUrl: user.avatar_url,
-          relevance,
-        });
-      });
-    }
-
-    // Sort by relevance and limit results
-    return results
-      .sort((a, b) => (b.relevance || 0) - (a.relevance || 0))
-      .slice(0, 12);
+    return settled
+      .flat()
+      .sort((a, b) => b.relevance - a.relevance)
+      .slice(0, GLOBAL_RESULT_LIMIT);
   } catch (error) {
     console.error("Global search error:", error);
     return [];
