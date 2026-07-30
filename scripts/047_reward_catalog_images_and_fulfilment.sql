@@ -207,7 +207,7 @@ INSERT INTO tmp_catalog_fulfilment_seed (
   ),
   (
     'MOVRR-MAINT-TIREKIT-017',
-    'https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1673870861517-3580d11c2244?auto=format&fit=crop&w=800&q=80',
     'physical_collection', 'physical_stock',
     'a0470001-0000-4000-8000-00000000001e'
   );

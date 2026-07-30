@@ -1,243 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/useToast";
+import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
 import RewardCatalogTableContent from "@/components/rewards/RewardCatalogTableContent";
+import { RewardProductDetailsDrawer } from "@/components/rewards/RewardProductDetailsDrawer";
 import { RewardCatalogItem } from "@/schemas";
 import { useRewardCatalogData } from "@/hooks/useRewardCatalogData";
-import { shouldUseMockData } from "@/lib/dataSource";
 import { DataTableContainer } from "@/context/DataTableContext";
 import {
   toggleRewardFeatured,
   updateRewardCatalogStatus,
-  upsertRewardCatalog,
 } from "@/app/actions/rewardCatalog";
-import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
-import { SUPPORTED_REDEEM_FULFILMENT_TYPES } from "@/features/rewards/application/contracts/RedeemRewardCommand";
-import { formatFulfilmentType, humanizeEnumToken } from "@/features/fulfilment/presentation";
-
-const inventoryOptions = ["unlimited", "limited"] as const;
-const statusOptions = ["draft", "active", "paused", "archived"] as const;
-const NONE = "__none__";
 
 export function RewardCatalogPanel() {
   const router = useRouter();
   const { toast } = useToast();
-  const useMock = shouldUseMockData();
   const { data: catalog, isLoading, refetch } = useRewardCatalogData();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<RewardCatalogItem | null>(
+  const { selectedId, setSelectedId } = useDrawerQueryId();
+  const [selectedItem, setSelectedItem] = useState<RewardCatalogItem | null>(
     null,
   );
-  const [isSaving, setIsSaving] = useState(false);
-  const [formState, setFormState] = useState({
-    sku: "",
-    title: "",
-    description: "",
-    category: "",
-    status: "draft",
-    pointsPrice: "",
-    partnerName: "",
-    partnerUrl: "",
-    thumbnailUrl: "",
-    galleryUrls: "",
-    inventoryType: "unlimited",
-    inventoryCount: "",
-    maxPerRider: "",
-    featuredRank: "",
-    isFeatured: false,
-    tags: "",
-    fulfilmentType: "",
-    resourceId: "",
-  });
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const items = catalog ?? [];
 
-  const resetForm = (item?: RewardCatalogItem | null) => {
-    if (!item) {
-      setFormState({
-        sku: "",
-        title: "",
-        description: "",
-        category: "",
-        status: "draft",
-        pointsPrice: "",
-        partnerName: "",
-        partnerUrl: "",
-        thumbnailUrl: "",
-        galleryUrls: "",
-        inventoryType: "unlimited",
-        inventoryCount: "",
-        maxPerRider: "",
-        featuredRank: "",
-        isFeatured: false,
-        tags: "",
-        fulfilmentType: "",
-        resourceId: "",
-      });
+  useEffect(() => {
+    if (!selectedId) {
+      if (isDrawerOpen) {
+        setIsDrawerOpen(false);
+        setSelectedItem(null);
+      }
+      return;
+    }
+    const found = items.find((item) => item.id === selectedId) ?? null;
+    setSelectedItem(found);
+    setIsDrawerOpen(Boolean(found));
+  }, [selectedId, items]);
+
+  useEffect(() => {
+    if (!selectedItem || !isDrawerOpen) return;
+
+    const latest = items.find((item) => item.id === selectedItem.id);
+    if (!latest) {
+      setIsDrawerOpen(false);
+      setSelectedItem(null);
+      setSelectedId(null);
       return;
     }
 
-    setFormState({
-      sku: item.sku,
-      title: item.title,
-      description: item.description ?? "",
-      category: item.category,
-      status: item.status,
-      pointsPrice: String(item.pointsPrice),
-      partnerName: item.partnerName ?? "",
-      partnerUrl: item.partnerUrl ?? "",
-      thumbnailUrl: item.thumbnailUrl ?? "",
-      galleryUrls: (item.galleryUrls ?? []).join(","),
-      inventoryType: item.inventoryType,
-      inventoryCount: item.inventoryCount?.toString() ?? "",
-      maxPerRider: item.maxPerRider?.toString() ?? "",
-      featuredRank: item.featuredRank?.toString() ?? "",
-      isFeatured: item.isFeatured ?? false,
-      tags: (item.tags ?? []).join(","),
-      fulfilmentType: item.fulfilmentType ?? "",
-      resourceId: item.resourceId ?? "",
-    });
+    if (
+      latest.updatedAt !== selectedItem.updatedAt ||
+      latest.title !== selectedItem.title ||
+      latest.status !== selectedItem.status ||
+      latest.sku !== selectedItem.sku ||
+      latest.pointsPrice !== selectedItem.pointsPrice ||
+      latest.thumbnailUrl !== selectedItem.thumbnailUrl ||
+      latest.fulfilmentType !== selectedItem.fulfilmentType ||
+      latest.resourceId !== selectedItem.resourceId
+    ) {
+      setSelectedItem(latest);
+    }
+  }, [items, selectedItem, isDrawerOpen, setSelectedId]);
+
+  const openProductDrawer = (item: RewardCatalogItem) => {
+    setSelectedItem(item);
+    setIsDrawerOpen(true);
+    setSelectedId(item.id);
+  };
+
+  const handleDrawerOpenChange = (open: boolean) => {
+    setIsDrawerOpen(open);
+    if (!open) {
+      setSelectedItem(null);
+      setSelectedId(null);
+    }
   };
 
   const handleCreate = () => {
     router.push("/rewards/catalog/create");
-  };
-
-  const handleEdit = (item: RewardCatalogItem) => {
-    setEditingItem(item);
-    resetForm(item);
-    setIsDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (useMock) {
-      toast({
-        title: "Mock mode",
-        description: "Catalog editing is disabled while mock data is enabled.",
-      });
-      return;
-    }
-
-    if (!formState.title.trim() || !formState.sku.trim()) {
-      toast({
-        title: "Missing required fields",
-        description: "SKU and title are required.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (formState.status === "active") {
-      if (!formState.fulfilmentType) {
-        toast({
-          title: "Fulfilment type required",
-          description: "Active catalog items require a fulfilment_type.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (
-        !SUPPORTED_REDEEM_FULFILMENT_TYPES.includes(
-          formState.fulfilmentType as (typeof SUPPORTED_REDEEM_FULFILMENT_TYPES)[number],
-        )
-      ) {
-        toast({
-          title: "Unsupported fulfilment type",
-          description:
-            "This fulfilment type is not supported for redeem yet. Choose Instant Digital or QR / Barcode, or keep the item as draft.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (!formState.resourceId.trim()) {
-        toast({
-          title: "Resource binding required",
-          description: "Active catalog items require a resource ID.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    setIsSaving(true);
-    const result = await upsertRewardCatalog({
-      id: editingItem?.id,
-      sku: formState.sku.trim(),
-      title: formState.title.trim(),
-      description: formState.description.trim() || undefined,
-      category: formState.category.trim() || "general",
-      status: formState.status as RewardCatalogItem["status"],
-      pointsPrice: Number(formState.pointsPrice || 0),
-      partnerName: formState.partnerName.trim() || undefined,
-      partnerUrl: formState.partnerUrl.trim() || undefined,
-      thumbnailUrl: formState.thumbnailUrl.trim() || undefined,
-      galleryUrls: formState.galleryUrls
-        ? formState.galleryUrls
-            .split(",")
-            .map((url) => url.trim())
-            .filter(Boolean)
-        : undefined,
-      inventoryType:
-        formState.inventoryType as RewardCatalogItem["inventoryType"],
-      inventoryCount:
-        formState.inventoryType === "limited"
-          ? Number(formState.inventoryCount || 0)
-          : undefined,
-      maxPerRider: formState.maxPerRider
-        ? Number(formState.maxPerRider)
-        : undefined,
-      featuredRank: formState.featuredRank
-        ? Number(formState.featuredRank)
-        : undefined,
-      isFeatured: formState.isFeatured,
-      tags: formState.tags
-        ? formState.tags
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter(Boolean)
-        : undefined,
-      fulfilmentType: formState.fulfilmentType
-        ? (formState.fulfilmentType as NonNullable<
-            RewardCatalogItem["fulfilmentType"]
-          >)
-        : null,
-      resourceId: formState.resourceId.trim() || null,
-    });
-    setIsSaving(false);
-
-    if (!result.success) {
-      toast({
-        title: "Save failed",
-        description: result.error ?? "Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsDialogOpen(false);
-    await refetch();
-    toast({
-      title: "Catalog updated",
-      description: "Reward catalog item saved successfully.",
-    });
   };
 
   const handlePublish = async (item: RewardCatalogItem) => {
@@ -305,18 +146,15 @@ export function RewardCatalogPanel() {
     await refetch();
   };
 
-  const dialogTitle = "Edit reward product";
-  const dialogDescription =
-    "Update catalog details that appear in the rider rewards shop.";
-
   return (
     <>
-      <DataTableContainer data={catalog ?? []} persistToUrl={true}>
+      <DataTableContainer data={items} persistToUrl={true}>
         <RewardCatalogTableContent
-          items={catalog ?? []}
+          items={items}
           isLoading={isLoading}
           onCreate={handleCreate}
-          onEdit={handleEdit}
+          onEdit={openProductDrawer}
+          onRowClick={openProductDrawer}
           onPublish={handlePublish}
           onPause={handlePause}
           onArchive={handleArchive}
@@ -327,324 +165,12 @@ export function RewardCatalogPanel() {
         />
       </DataTableContainer>
 
-      <Dialog
-        open={isDialogOpen && Boolean(editingItem)}
-        onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingItem(null);
-          }
-        }}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{dialogTitle}</DialogTitle>
-            <DialogDescription>{dialogDescription}</DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>SKU</Label>
-                <Input
-                  value={formState.sku}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      sku: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Title</Label>
-                <Input
-                  value={formState.title}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      title: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                value={formState.description}
-                onChange={(event) =>
-                  setFormState((prev) => ({
-                    ...prev,
-                    description: event.target.value,
-                  }))
-                }
-              />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Category</Label>
-                <Input
-                  value={formState.category}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      category: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select
-                  value={formState.status}
-                  onValueChange={(value) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      status: value,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {humanizeEnumToken(status)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Points</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={formState.pointsPrice}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      pointsPrice: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Partner name</Label>
-                <Input
-                  value={formState.partnerName}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      partnerName: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Partner URL</Label>
-                <Input
-                  value={formState.partnerUrl}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      partnerUrl: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Fulfilment type</Label>
-                <Select
-                  value={formState.fulfilmentType || NONE}
-                  onValueChange={(value) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      fulfilmentType: value === NONE ? "" : value,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select fulfilment type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>Not set</SelectItem>
-                    {FULFILMENT_TYPES.map((type) => {
-                      const supported =
-                        SUPPORTED_REDEEM_FULFILMENT_TYPES.includes(
-                          type as (typeof SUPPORTED_REDEEM_FULFILMENT_TYPES)[number],
-                        );
-                      return (
-                        <SelectItem key={type} value={type}>
-                          {formatFulfilmentType(type)}
-                          {supported ? "" : " (unsupported for redeem)"}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Active items require a redeem-supported type and resource
-                  binding.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label>Resource ID</Label>
-                <Input
-                  value={formState.resourceId}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      resourceId: event.target.value,
-                    }))
-                  }
-                  placeholder="fulfilment resource uuid"
-                  className="font-mono text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Thumbnail URL</Label>
-                <Input
-                  value={formState.thumbnailUrl}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      thumbnailUrl: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Gallery URLs (comma separated)</Label>
-                <Input
-                  value={formState.galleryUrls}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      galleryUrls: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Inventory type</Label>
-                <Select
-                  value={formState.inventoryType}
-                  onValueChange={(value) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      inventoryType: value,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select inventory" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {inventoryOptions.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {humanizeEnumToken(option)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Inventory count</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={formState.inventoryCount}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      inventoryCount: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Max per rider</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={formState.maxPerRider}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      maxPerRider: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Featured rank</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={formState.featuredRank}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      featuredRank: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Tags (comma separated)</Label>
-                <Input
-                  value={formState.tags}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      tags: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formState.isFeatured}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      isFeatured: event.target.checked,
-                    }))
-                  }
-                />
-                <span className="text-sm">Mark as featured</span>
-              </div>
-              <Button onClick={handleSave} disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save product"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <RewardProductDetailsDrawer
+        item={selectedItem}
+        open={isDrawerOpen && Boolean(selectedItem)}
+        onOpenChange={handleDrawerOpenChange}
+        onSaved={refetch}
+      />
     </>
   );
 }

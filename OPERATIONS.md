@@ -147,6 +147,7 @@ Production Platform API (`getProductionPlatformApi` + `getSharedFulfilmentModule
 | `044` | Catalog fulfilment type / resource link |
 | `046` | Atomic `platform_rate_limit_hit` RPC |
 | `047` | Catalog thumbnails + fulfilment_type + resource bind (seed/ops) |
+| `048` | Missed catalog SKUs from live export + tire-kit thumbnail fix |
 
 In-memory adapters remain **tests only** (`createPlatformApiForTests({ seed })` / Vitest).
 

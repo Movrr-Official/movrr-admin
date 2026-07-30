@@ -16,6 +16,7 @@ interface RewardCatalogTableContentProps {
   searchBar?: boolean;
   onCreate: () => void;
   onEdit: (item: RewardCatalogItem) => void;
+  onRowClick?: (item: RewardCatalogItem) => void;
   onPublish: (item: RewardCatalogItem) => void;
   onPause: (item: RewardCatalogItem) => void;
   onArchive: (item: RewardCatalogItem) => void;
@@ -31,6 +32,7 @@ export default function RewardCatalogTableContent({
   searchBar = true,
   onCreate,
   onEdit,
+  onRowClick,
   onPublish,
   onPause,
   onArchive,
@@ -93,6 +95,7 @@ export default function RewardCatalogTableContent({
         emptyStateDescription="Create your first reward product to publish it to riders."
         emptyStateIcon={Gift}
         searchBar={searchBar}
+        onRowClick={onRowClick}
       />
     </div>
   );

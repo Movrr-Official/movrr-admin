@@ -141,40 +141,42 @@ export function getRewardCatalogTableColumns({
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(item)}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onToggleFeatured(item)}>
-                <Star className="h-4 w-4 mr-2" />
-                {item.isFeatured ? "Remove featured" : "Mark featured"}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {item.status !== "active" && (
-                <DropdownMenuItem onClick={() => onPublish(item)}>
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Publish
+          <div onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(item)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  View details
                 </DropdownMenuItem>
-              )}
-              {item.status === "active" && (
-                <DropdownMenuItem onClick={() => onPause(item)}>
-                  <PauseCircle className="h-4 w-4 mr-2" />
-                  Pause
+                <DropdownMenuItem onClick={() => onToggleFeatured(item)}>
+                  <Star className="h-4 w-4 mr-2" />
+                  {item.isFeatured ? "Remove featured" : "Mark featured"}
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => onArchive(item)}>
-                <Archive className="h-4 w-4 mr-2" />
-                Archive
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuSeparator />
+                {item.status !== "active" && (
+                  <DropdownMenuItem onClick={() => onPublish(item)}>
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Publish
+                  </DropdownMenuItem>
+                )}
+                {item.status === "active" && (
+                  <DropdownMenuItem onClick={() => onPause(item)}>
+                    <PauseCircle className="h-4 w-4 mr-2" />
+                    Pause
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => onArchive(item)}>
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archive
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         );
       },
     },
