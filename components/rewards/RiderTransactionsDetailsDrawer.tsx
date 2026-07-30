@@ -26,6 +26,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
 } from "@/components/ui/drawer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -91,6 +92,9 @@ export function RiderTransactionsDetailsDrawer({
               <DrawerTitle className="text-2xl font-bold mb-2">
                 Transaction Details
               </DrawerTitle>
+              <DrawerDescription className="sr-only">
+                View rider wallet transaction details.
+              </DrawerDescription>
               <div className="flex flex-wrap items-center gap-2">
                 {getTransactionTypeBadge(transaction.type)}
                 <Badge variant="outline" className="font-medium">

@@ -48,6 +48,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
 } from "@/components/ui/drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
@@ -203,6 +204,9 @@ export function RideSessionDetailsDrawer({
             <DrawerTitle className="text-xl font-bold">
               Ride Session Details
             </DrawerTitle>
+            <DrawerDescription className="sr-only">
+              View ride session metadata and reconstruction details.
+            </DrawerDescription>
             <p className="text-xs text-muted-foreground font-mono mt-1">
               {session.id}
             </p>

@@ -41,6 +41,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -488,6 +489,9 @@ export function CampaignDetailsDrawer({
                 <DrawerTitle className="text-2xl font-bold">
                   Campaign Details
                 </DrawerTitle>
+                <DrawerDescription className="sr-only">
+                  View and manage campaign details.
+                </DrawerDescription>
                 <DrawerClose className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-muted transition-colors">
                   <X className="h-4 w-4" />
                   <span className="sr-only">Close</span>

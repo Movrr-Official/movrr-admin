@@ -36,6 +36,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -407,6 +408,9 @@ export function UserDetailsDrawer({
               <DrawerTitle className="text-2xl font-bold">
                 User Details
               </DrawerTitle>
+              <DrawerDescription className="sr-only">
+                View and manage user account details.
+              </DrawerDescription>
               <DrawerClose className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-muted transition-colors">
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>

@@ -82,6 +82,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
 } from "@/components/ui/drawer";
 import {
   Form,
@@ -457,6 +458,9 @@ export function RiderDetailsDrawer({
                 <DrawerTitle className="text-2xl font-bold">
                   Rider Details
                 </DrawerTitle>
+                <DrawerDescription className="sr-only">
+                  View and manage rider profile details.
+                </DrawerDescription>
                 <DrawerClose className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-muted transition-colors">
                   <X className="h-4 w-4" />
                   <span className="sr-only">Close</span>

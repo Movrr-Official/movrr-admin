@@ -36,6 +36,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
@@ -971,6 +972,9 @@ export function RouteDetailsDrawer({
                 <DrawerTitle className="text-2xl font-bold mb-2">
                   {route.name}
                 </DrawerTitle>
+                <DrawerDescription className="sr-only">
+                  View and manage route details for {route.name}.
+                </DrawerDescription>
                 <div className="flex items-center gap-2 flex-wrap">
                   {getStatusBadge(route.status)}
                   {getPerformanceBadge(route.performance)}

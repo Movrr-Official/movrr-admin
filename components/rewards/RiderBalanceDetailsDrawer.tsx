@@ -27,6 +27,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
@@ -188,6 +189,10 @@ export function RiderBalanceDetailsDrawer({
                 <DrawerTitle className="text-2xl font-bold mb-2">
                   {balance.riderName}
                 </DrawerTitle>
+                <DrawerDescription className="sr-only">
+                  Rider wallet balance and transaction summary for{" "}
+                  {balance.riderName}.
+                </DrawerDescription>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline" className="font-medium">
                     <User className="h-3 w-3 mr-1" />

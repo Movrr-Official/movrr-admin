@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -589,6 +590,11 @@ function RouteFormDialog({
           <DialogTitle>
             {editing ? "Edit Route" : "Create Suggested Route"}
           </DialogTitle>
+          <DialogDescription>
+            {editing
+              ? "Update the suggested route details shown to riders."
+              : "Define a suggested route riders can discover and ride."}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
