@@ -146,6 +146,7 @@ Production Platform API (`getProductionPlatformApi` + `getSharedFulfilmentModule
 | `043` | Fulfilment aggregates, tokens, resources, allocations |
 | `044` | Catalog fulfilment type / resource link |
 | `046` | Atomic `platform_rate_limit_hit` RPC |
+| `047` | Catalog thumbnails + fulfilment_type + resource bind (seed/ops) |
 
 In-memory adapters remain **tests only** (`createPlatformApiForTests({ seed })` / Vitest).
 
