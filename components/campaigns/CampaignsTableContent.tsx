@@ -45,14 +45,15 @@ export default function CampaignsTableContent({
   );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Persist view mode to localStorage
-  const [viewMode, setViewMode] = useState<"table" | "grid">(() => {
-    if (typeof window !== "undefined" && enableGridView) {
-      const saved = localStorage.getItem("campaigns-view-mode");
-      return saved === "table" || saved === "grid" ? saved : "table";
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+
+  useEffect(() => {
+    if (!enableGridView) return;
+    const saved = localStorage.getItem("campaigns-view-mode");
+    if (saved === "table" || saved === "grid") {
+      setViewMode(saved);
     }
-    return "table";
-  });
+  }, [enableGridView]);
 
   // Save view mode to localStorage when it changes
   useEffect(() => {
