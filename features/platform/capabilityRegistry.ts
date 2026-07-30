@@ -193,7 +193,7 @@ export const PLATFORM_CAPABILITY_REGISTRY: CapabilityRegistryEntry[] = [
     id: "incidents.ops",
     name: "Incident management",
     backendModule: "features/incidents",
-    apiRoutes: ["/api/v1/internal/incidents"],
+    apiRoutes: [],
     adminConsumer: "full",
     webConsumer: "none",
     mobileConsumer: "none",

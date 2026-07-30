@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { ADMIN_ONLY_ROLES } from "@/lib/authPermissions";
 import { requireAdminRoles, requireMutatingAdminRoles } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -11,7 +12,10 @@ import {
   updateCampaignSchema,
   campaignStatusSchema,
 } from "@/schemas";
-import { z } from "zod";
+import {
+  insertCampaignRecord,
+  updateCampaignRecord,
+} from "@/features/campaigns/application/campaignRepository";
 
 const normalizeCampaignType = (value?: string | null) => {
   if (!value) return "destination_ride";
@@ -353,47 +357,25 @@ export async function createCampaign(
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = createCampaignSchema.parse(data);
 
-    const campaignData: Record<string, any> = {
-      advertiser_id: data.advertiserId,
+    const { data: campaign, error } = await insertCampaignRecord({
+      advertiserId: data.advertiserId,
       name: validatedData.name,
-      description: validatedData.description || "",
+      description: validatedData.description,
       budget: validatedData.budget,
-      start_date: validatedData.startDate,
-      end_date: validatedData.endDate,
-      visibility_target:
-        data.impressionGoal !== undefined ? String(data.impressionGoal) : null,
-      impressions: 0,
-      qr_scans: 0,
-      conversions: 0,
-      campaign_type: mapUiCampaignTypeToDb(data.campaignType),
-      target_zones: data.targetZones || [],
-      vehicle_type_required: data.vehicleTypeRequired || "bike",
-      requirements: data.deliveryMode
-        ? { deliveryMode: data.deliveryMode }
-        : undefined,
-      creative_assets: [],
-      lifecycle_status: "draft",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    const { data: campaign, error } = await supabaseAdmin
-      .from("campaign")
-      .insert(campaignData)
-      .select()
-      .single();
+      startDate: validatedData.startDate,
+      endDate: validatedData.endDate,
+      routeIds: validatedData.routeIds,
+      campaignType: data.campaignType,
+      targetZones: data.targetZones,
+      vehicleTypeRequired: data.vehicleTypeRequired,
+      deliveryMode: data.deliveryMode,
+      impressionGoal: data.impressionGoal,
+      status: "draft",
+    });
 
     if (error) {
       console.error("Create campaign error:", error);
-      return { success: false, error: error.message };
-    }
-
-    // Assign routes if provided
-    if (validatedData.routeIds && validatedData.routeIds.length > 0) {
-      await supabaseAdmin
-        .from("route")
-        .update({ campaign_id: campaign.id })
-        .in("id", validatedData.routeIds);
+      return { success: false, error };
     }
 
     revalidatePath("/campaigns");
@@ -416,64 +398,27 @@ export async function updateCampaign(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
-    const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateCampaignSchema.parse(data);
 
-    const updateData: Record<string, any> = {
-      updated_at: new Date().toISOString(),
-    };
-
-    // Only include fields that are provided
-    if (validatedData.name !== undefined) updateData.name = validatedData.name;
-    if (validatedData.description !== undefined)
-      updateData.description = validatedData.description;
-    if (validatedData.budget !== undefined)
-      updateData.budget = validatedData.budget;
-    if (validatedData.startDate !== undefined)
-      updateData.start_date = validatedData.startDate;
-    if (validatedData.endDate !== undefined)
-      updateData.end_date = validatedData.endDate;
-    if (validatedData.impressionGoal !== undefined)
-      updateData.visibility_target = String(validatedData.impressionGoal);
-    if (validatedData.advertiserId !== undefined)
-      updateData.advertiser_id = validatedData.advertiserId;
-    if (validatedData.campaignType !== undefined)
-      updateData.campaign_type = mapUiCampaignTypeToDb(
-        validatedData.campaignType,
-      );
-    if (validatedData.targetZones !== undefined)
-      updateData.target_zones = validatedData.targetZones;
-    if (validatedData.vehicleTypeRequired !== undefined)
-      updateData.vehicle_type_required = validatedData.vehicleTypeRequired;
-    if (validatedData.status !== undefined)
-      updateData.lifecycle_status = validatedData.status;
-    if (validatedData.deliveryMode !== undefined) {
-      const { data: existingCampaign } = await supabaseAdmin
-        .from("campaign")
-        .select("requirements")
-        .eq("id", validatedData.id)
-        .maybeSingle();
-
-      const existingRequirements =
-        existingCampaign?.requirements &&
-        typeof existingCampaign.requirements === "object"
-          ? (existingCampaign.requirements as Record<string, unknown>)
-          : {};
-
-      updateData.requirements = {
-        ...existingRequirements,
-        deliveryMode: validatedData.deliveryMode,
-      };
-    }
-
-    const { error } = await supabaseAdmin
-      .from("campaign")
-      .update(updateData)
-      .eq("id", validatedData.id);
+    const { error } = await updateCampaignRecord({
+      id: validatedData.id,
+      name: validatedData.name,
+      description: validatedData.description,
+      budget: validatedData.budget,
+      startDate: validatedData.startDate,
+      endDate: validatedData.endDate,
+      impressionGoal: validatedData.impressionGoal,
+      advertiserId: validatedData.advertiserId,
+      campaignType: validatedData.campaignType,
+      targetZones: validatedData.targetZones,
+      vehicleTypeRequired: validatedData.vehicleTypeRequired,
+      deliveryMode: validatedData.deliveryMode,
+      status: validatedData.status,
+    });
 
     if (error) {
       console.error("Update campaign error:", error);
-      return { success: false, error: error.message };
+      return { success: false, error };
     }
 
     revalidatePath("/campaigns");

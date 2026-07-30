@@ -5,6 +5,7 @@ import ProgrammesOverview from "./ProgrammesOverview";
 const PROGRAMMES_READ_ROLES = [
   ...ADMIN_ONLY_ROLES,
   "compliance_officer",
+  "government",
 ] as const;
 
 export default function ProgrammesPage() {

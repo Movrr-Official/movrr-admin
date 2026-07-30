@@ -7,7 +7,7 @@ import {
   createIncident as createIncidentRecord,
   listIncidents,
   updateIncidentStatus,
-} from "@/features/incidents/inMemoryIncidentStore";
+} from "@/features/incidents/supabaseIncidentStore";
 import type {
   CreateIncidentInput,
   Incident,
@@ -21,7 +21,7 @@ export async function getIncidents(): Promise<{
 }> {
   try {
     await requireAdminRoles(ADMIN_ONLY_ROLES);
-    return { success: true, data: listIncidents() };
+    return { success: true, data: await listIncidents() };
   } catch (error) {
     return {
       success: false,
@@ -34,7 +34,7 @@ export async function getIncidents(): Promise<{
 export async function getOpenIncidentCount(): Promise<number> {
   try {
     await requireAdminRoles(ADMIN_ONLY_ROLES);
-    return countOpenIncidents();
+    return await countOpenIncidents();
   } catch {
     return 0;
   }
@@ -48,7 +48,7 @@ export async function createIncident(
     if (!input.title.trim()) {
       return { success: false, error: "Title is required" };
     }
-    const incident = createIncidentRecord(
+    const incident = await createIncidentRecord(
       input,
       admin.authUser.email ?? undefined,
     );
@@ -68,7 +68,7 @@ export async function setIncidentStatus(input: {
 }): Promise<{ success: boolean; data?: Incident; error?: string }> {
   try {
     await requireMutatingAdminRoles(ADMIN_ONLY_ROLES);
-    const updated = updateIncidentStatus(input.id, input.status);
+    const updated = await updateIncidentStatus(input.id, input.status);
     if (!updated) {
       return { success: false, error: "Incident not found" };
     }

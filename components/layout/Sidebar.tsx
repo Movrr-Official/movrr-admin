@@ -148,6 +148,7 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
   const PROGRAMMES_READ_ROLES: UserRole[] = [
     ...OPS_WRITE_ROLES,
     "compliance_officer",
+    "government",
   ];
 
   const navigation: NavEntry[] = useMemo(
