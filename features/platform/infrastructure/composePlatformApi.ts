@@ -96,6 +96,14 @@ export type PlatformApiHandlers = {
 };
 
 export type PlatformApiHooks = {
+  onStaffAccessChanged?: (input: {
+    change: "access_granted" | "role_changed";
+    organisationId: string;
+    userId: string;
+    membershipId: string;
+    role: import("@/features/organisations/domain/CapabilityCatalog").MembershipRole;
+    version: string;
+  }) => Promise<void>;
   onFulfilmentCancel?: (
     ctx: RequestContext,
     input: { id: string; reason: string },
@@ -795,11 +803,29 @@ export async function createPlatformApiForTests(
           if (!isMembershipRole(role)) {
             return fail("validation", "Valid membership role is required");
           }
-          return organisationCommands.addStaff(ctx, {
+          const result = await organisationCommands.addStaff(ctx, {
             organisationId: params.id,
             userId,
             role,
           });
+          if (result.ok && options.hooks?.onStaffAccessChanged) {
+            try {
+              await options.hooks.onStaffAccessChanged({
+                change: "access_granted",
+                organisationId: params.id,
+                userId: result.value.userId,
+                membershipId: result.value.id,
+                role: result.value.role,
+                version: result.value.updatedAt,
+              });
+            } catch (error) {
+              console.error("Staff access notification hook failed", {
+                membershipId: result.value.id,
+                error: error instanceof Error ? error.message : "Unknown error",
+              });
+            }
+          }
+          return result;
         }),
       updateStaff: (request, params) =>
         route(request, "staff.manage", async (ctx, req) => {
@@ -810,11 +836,29 @@ export async function createPlatformApiForTests(
           if (!isMembershipRole(role)) {
             return fail("validation", "Valid membership role is required");
           }
-          return organisationCommands.updateStaffRole(ctx, {
+          const result = await organisationCommands.updateStaffRole(ctx, {
             organisationId: params.id,
             membershipId,
             role,
           });
+          if (result.ok && options.hooks?.onStaffAccessChanged) {
+            try {
+              await options.hooks.onStaffAccessChanged({
+                change: "role_changed",
+                organisationId: params.id,
+                userId: result.value.userId,
+                membershipId: result.value.id,
+                role: result.value.role,
+                version: result.value.updatedAt,
+              });
+            } catch (error) {
+              console.error("Staff access notification hook failed", {
+                membershipId: result.value.id,
+                error: error instanceof Error ? error.message : "Unknown error",
+              });
+            }
+          }
+          return result;
         }),
     },
   };

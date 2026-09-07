@@ -10,6 +10,7 @@ import {
   listCampaignRecords,
   updateCampaignRecord,
 } from "@/features/campaigns/application/campaignRepository";
+import { sendCampaignLifecycleEmail } from "@/features/notifications/infrastructure/campaignLifecycleEmail";
 
 export type CampaignWriteInput = {
   name: string;
@@ -154,6 +155,7 @@ export async function updateCampaignForPrincipal(
 ): Promise<ApplicationResult<unknown>> {
   const existing = await getCampaignById(ctx, input.id);
   if (!existing.ok) return existing;
+  const existingRecord = existing.value as Record<string, unknown>;
 
   const { data, error } = await updateCampaignRecord({
     id: input.id,
@@ -171,6 +173,21 @@ export async function updateCampaignForPrincipal(
   });
 
   if (error) return fail("BusinessFailure", error);
+  if (
+    data &&
+    input.status &&
+    existingRecord.lifecycle_status !== input.status &&
+    typeof data.id === "string" &&
+    typeof data.advertiser_id === "string"
+  ) {
+    await sendCampaignLifecycleEmail({
+      campaignId: data.id,
+      advertiserId: data.advertiser_id,
+      campaignName: typeof data.name === "string" ? data.name : "MOVRR campaign",
+      status: input.status,
+      version: typeof data.updated_at === "string" ? data.updated_at : input.status,
+    });
+  }
   return ok(data);
 }
 

@@ -11,6 +11,7 @@ import {
   type PlatformApiHandlers,
 } from "@/features/platform/infrastructure/composePlatformApi";
 import { getSharedFulfilmentModule } from "@/features/fulfilment/infrastructure/composeFulfilmentModule";
+import { sendWorkspaceAccessEmail } from "@/features/notifications/infrastructure/workspaceAccessEmail";
 
 /**
  * Production AuthN ports — JWT verify + real Supabase principal lookups
@@ -33,6 +34,9 @@ export function getProductionPlatformApi(): Promise<PlatformApiHandlers> {
       authDeps: productionAuthDeps,
       fulfilmentModule,
       organisationStore: createSupabaseOrganisationOpsStore(),
+      hooks: {
+        onStaffAccessChanged: sendWorkspaceAccessEmail,
+      },
     });
   }
   return cached;

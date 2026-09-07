@@ -21,6 +21,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { writeUserActivity } from "@/lib/userActivity";
 import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
 import { Resend } from "resend";
+import WorkboardInviteEmail, {
+  workboardInviteText,
+} from "@/emails/workboard-invite";
 
 export function isWorkboardInviteEligibleRole(role: string): boolean {
   return employeeHasCapability(role, "workboard.access");
@@ -136,17 +139,12 @@ async function sendWorkboardInviteEmail(input: {
   }
 
   const resend = new Resend(RESEND_API_KEY);
-  const expiresLabel = new Date(input.expiresAt).toUTCString();
   const { error } = await resend.emails.send({
     from: FROM_EMAIL ? `MOVRR <${FROM_EMAIL}>` : "MOVRR <no-reply@movrr.nl>",
     to: input.email,
     subject: "You have been invited to the MOVRR Workboard",
-    html: `
-      <p>You have been invited to join the MOVRR Workboard as <strong>${input.role}</strong>.</p>
-      <p>This invitation is for existing MOVRR admin platform users (admin, super admin, or moderator) and expires on <strong>${expiresLabel}</strong>.</p>
-      <p><a href="${input.inviteUrl}">Accept invite</a></p>
-      <p>If you are signed in with a different account, sign out and use the invited email address.</p>
-    `,
+    react: WorkboardInviteEmail(input),
+    text: workboardInviteText(input),
   });
 
   if (error) {

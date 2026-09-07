@@ -30,6 +30,8 @@ export function enqueueFulfilmentTransitionEvents(
     riderId: input.fulfilment.riderId,
     redemptionId: input.fulfilment.redemptionId,
     fulfilmentType: input.fulfilment.fulfilmentType,
+    catalogItemId: input.fulfilment.catalogItemId,
+    expiresAt: input.fulfilment.expiresAt,
     fromState: input.fromState,
     toState: input.toState,
     reason: input.reason,

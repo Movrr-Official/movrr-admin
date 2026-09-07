@@ -35,6 +35,10 @@ import { createInMemoryFulfilmentMetricsSink } from "@/features/analytics/infras
 import type { FulfilmentMetricsSink } from "@/features/analytics/application/contracts/FulfilmentMetricsSink";
 import type { NotificationInsertPort } from "@/features/notifications/application/contracts/NotificationInsertPort";
 import {
+  noopTransactionalEmailPort,
+  type TransactionalEmailPort,
+} from "@/features/notifications/application/contracts/TransactionalEmailPort";
+import {
   createFulfilmentMetrics,
   type FulfilmentMetrics,
 } from "@/lib/observability/fulfilmentMetrics";
@@ -66,6 +70,7 @@ export type FulfilmentModule = {
   metrics: FulfilmentMetrics;
   notifications: NotificationInsertPort;
   analytics: FulfilmentMetricsSink;
+  email: TransactionalEmailPort;
 };
 
 export type ComposeFulfilmentModuleOptions = {
@@ -73,6 +78,7 @@ export type ComposeFulfilmentModuleOptions = {
   ledger?: LedgerRepository;
   notifications?: NotificationInsertPort;
   analytics?: FulfilmentMetricsSink;
+  email?: TransactionalEmailPort;
   metrics?: FulfilmentMetrics;
   /** Defaults to in-memory; production injects Supabase store. */
   fulfilmentStore?: FulfilmentAggregateStore;
@@ -99,6 +105,7 @@ export function composeFulfilmentModule(
     options.notifications ?? createInMemoryNotificationInsertPort();
   const analytics =
     options.analytics ?? createInMemoryFulfilmentMetricsSink();
+  const email = options.email ?? noopTransactionalEmailPort;
   const metrics = options.metrics ?? createFulfilmentMetrics();
 
   const settlement = createImmediateDebitCompensatingRefundStrategy({
@@ -146,6 +153,7 @@ export function composeFulfilmentModule(
     subscribeFulfilmentSideEffects(bus, {
       notifications: notifications as NotificationInsertPort,
       analytics,
+      email,
     });
   }
 
@@ -162,6 +170,7 @@ export function composeFulfilmentModule(
     metrics,
     notifications,
     analytics,
+    email,
   };
 }
 
@@ -200,6 +209,9 @@ export function getSharedFulfilmentModule(): FulfilmentModule {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { createSupabaseNotificationInsertPort } =
         require("@/features/notifications/infrastructure/supabaseNotificationInsertPort") as typeof import("@/features/notifications/infrastructure/supabaseNotificationInsertPort");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createResendTransactionalEmailPort } =
+        require("@/features/notifications/infrastructure/resendTransactionalEmailPort") as typeof import("@/features/notifications/infrastructure/resendTransactionalEmailPort");
       sharedModule = composeFulfilmentModule({
         fulfilmentStore: createSupabaseFulfilmentAggregateStore(),
         tokenStore: createSupabaseTokenStore(),
@@ -207,6 +219,7 @@ export function getSharedFulfilmentModule(): FulfilmentModule {
         pool: createSupabaseVoucherPoolResourceProvider(),
         generated: createSupabaseGeneratedDigitalResourceProvider(),
         notifications: createSupabaseNotificationInsertPort(),
+        email: createResendTransactionalEmailPort(),
       });
     }
   }

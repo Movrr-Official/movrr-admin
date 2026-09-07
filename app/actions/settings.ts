@@ -2,6 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
+import OperationalAlertEmail, {
+  operationalAlertText,
+} from "@/emails/operational-alert";
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { logger } from "@/lib/logger";
@@ -587,7 +590,8 @@ const sendOperationalEmailAlert = async (subject: string, message: string) => {
       : "MOVRR <no-reply@movrr.nl>",
     to: recipients,
     subject,
-    html: `<p>${message}</p>`,
+    react: OperationalAlertEmail({ subject, message }),
+    text: operationalAlertText({ subject, message }),
   });
 };
 

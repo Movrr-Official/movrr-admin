@@ -1,6 +1,10 @@
 import { Resend } from "resend";
-import UserConfirmationEmail from "@/emails/user-confirmation";
-import AdminNotificationEmail from "@/emails/admin-notification";
+import UserConfirmationEmail, {
+  userConfirmationText,
+} from "@/emails/user-confirmation";
+import AdminNotificationEmail, {
+  adminNotificationText,
+} from "@/emails/admin-notification";
 import {
   ADMIN_EMAIL as ADMIN_EMAIL_ENV,
   ADMIN_EMAILS as ADMIN_EMAILS_ENV,
@@ -38,8 +42,9 @@ export async function sendUserConfirmationEmail(
     const { data, error } = await resend.emails.send({
       from: `MOVRR <${WELCOME_EMAIL}>`,
       to: [email],
-      subject: "Welcome to MOVRR - Transform Your Ride! 🚴‍♂️",
+      subject: "You’re on the MOVRR waitlist",
       react: UserConfirmationEmail({ name, city, bikeOwnership }),
+      text: userConfirmationText({ name, city, bikeOwnership }),
     });
 
     if (error) {
@@ -60,14 +65,21 @@ export async function sendAdminNotificationEmail(
   city: string,
   bikeOwnership: string,
 ) {
-  const timestamp = new Date().toLocaleString();
+  const timestamp = new Date().toISOString();
 
   try {
     const { data, error } = await resend.emails.send({
       from: `MOVRR System <${SYSTEM_EMAIL}>`,
       to: ADMIN_NOTIFICATION_RECIPIENTS,
-      subject: `New Waitlist Registration - ${name} from ${city}`,
+      subject: `New waitlist registration · ${name} · ${city}`,
       react: AdminNotificationEmail({
+        name,
+        email,
+        city,
+        bikeOwnership,
+        timestamp,
+      }),
+      text: adminNotificationText({
         name,
         email,
         city,

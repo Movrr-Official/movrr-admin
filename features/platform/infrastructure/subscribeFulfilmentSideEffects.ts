@@ -3,10 +3,14 @@ import type { NotificationInsertPort } from "@/features/notifications/applicatio
 import type { FulfilmentMetricsSink } from "@/features/analytics/application/contracts/FulfilmentMetricsSink";
 import { registerFulfilmentNotificationHandlers } from "@/features/notifications/application/handlers/onFulfilmentEvents";
 import { registerFulfilmentMetricsHandlers } from "@/features/analytics/application/handlers/onFulfilmentMetrics";
+import type { TransactionalEmailPort } from "@/features/notifications/application/contracts/TransactionalEmailPort";
+import { noopTransactionalEmailPort } from "@/features/notifications/application/contracts/TransactionalEmailPort";
+import { registerRewardEmailHandlers } from "@/features/notifications/application/handlers/onRewardEmailEvents";
 
 export type FulfilmentSideEffectDeps = {
   notifications: NotificationInsertPort;
   analytics: FulfilmentMetricsSink;
+  email?: TransactionalEmailPort;
 };
 
 /**
@@ -19,4 +23,5 @@ export function subscribeFulfilmentSideEffects(
 ): void {
   registerFulfilmentNotificationHandlers(bus, deps.notifications);
   registerFulfilmentMetricsHandlers(bus, deps.analytics);
+  registerRewardEmailHandlers(bus, deps.email ?? noopTransactionalEmailPort);
 }

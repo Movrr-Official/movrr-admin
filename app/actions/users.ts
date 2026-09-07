@@ -25,8 +25,8 @@ import {
 } from "@/lib/rewardConstants";
 import { z } from "zod";
 import { Resend } from "resend";
-import AccountSetupEmail from "@/emails/account-setup";
-import PasswordResetEmail from "@/emails/password-reset";
+import AccountSetupEmail, { accountSetupText } from "@/emails/account-setup";
+import PasswordResetEmail, { passwordResetText } from "@/emails/password-reset";
 import { APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
 import {
   getPlatformOperationalPolicies,
@@ -743,6 +743,13 @@ export async function createUser(
                 "recovery",
               ),
             }),
+            text: accountSetupText({
+              name: validatedData.name,
+              setupUrl: buildConfirmUrl(
+                recoveryData.properties.hashed_token,
+                "recovery",
+              ),
+            }),
           });
         }
       } catch (emailError) {
@@ -1138,6 +1145,10 @@ export async function sendPasswordResetEmail(
       to: email,
       subject: "Reset your MOVRR Admin password",
       react: PasswordResetEmail({
+        name: profileRow?.name || "there",
+        resetUrl: resetLink,
+      }),
+      text: passwordResetText({
         name: profileRow?.name || "there",
         resetUrl: resetLink,
       }),

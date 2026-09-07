@@ -86,6 +86,7 @@
   },
   "devDependencies": {
     "@react-email/preview-server": "^5.2.5",
+    "@react-email/render": "1.2.1",
     "@tailwindcss/postcss": "^4.1.9",
     "@types/node": "^22",
     "@types/qrcode": "^1.5.6",

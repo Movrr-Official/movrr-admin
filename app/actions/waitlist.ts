@@ -6,7 +6,7 @@ import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseServerClient } from "@/supabase/server";
 import { WaitlistEntry } from "@/types/types";
-import AccountSetupEmail from "@/emails/account-setup";
+import AccountSetupEmail, { accountSetupText } from "@/emails/account-setup";
 import { APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
 import { getPlatformOperationalPolicies } from "@/lib/platformSettings";
 import { writeUserActivity } from "@/lib/userActivity";
@@ -263,6 +263,13 @@ async function updateWaitlistStatusInternal(
         to: waitlist.email,
         subject: "Set up your MOVRR account",
         react: AccountSetupEmail({
+          name: waitlist.name,
+          setupUrl: buildConfirmUrl(
+            recoveryData.properties.hashed_token,
+            "recovery",
+          ),
+        }),
+        text: accountSetupText({
           name: waitlist.name,
           setupUrl: buildConfirmUrl(
             recoveryData.properties.hashed_token,
