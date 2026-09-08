@@ -78,7 +78,12 @@ export function rewardLifecycleText(props: RewardLifecycleEmailProps): string {
   return `${copy.title}\n\n${props.name ? `Hi ${props.name},\n\n` : ""}${copy.intro}\n\n${rows.join("\n")}\n\n${copy.action}: ${props.actionUrl}\n\nMOVRR · Movement that earns.`;
 }
 
-export default function RewardLifecycleEmail(props: RewardLifecycleEmailProps) {
+export default function RewardLifecycleEmail(props: RewardLifecycleEmailProps = {
+  kind: "ready", name: "Ada", rewardName: "MOVRR bottle", pointsSpent: 1200,
+  occurredAt: "2026-09-07T12:00:00.000Z", expiresAt: "2026-09-14T12:00:00.000Z",
+  actionUrl: "https://app.movrr.nl/dashboard/rewards/orders/preview",
+}) {
+  props = { ...RewardLifecycleEmail.PreviewProps, ...props };
   const copy = COPY[props.kind];
   return (
     <BaseEmail
@@ -106,3 +111,13 @@ export default function RewardLifecycleEmail(props: RewardLifecycleEmailProps) {
     </BaseEmail>
   );
 }
+
+RewardLifecycleEmail.PreviewProps = {
+  kind: "ready",
+  name: "Ada",
+  rewardName: "MOVRR bottle",
+  pointsSpent: 1200,
+  occurredAt: "2026-09-07T12:00:00.000Z",
+  expiresAt: "2026-09-14T12:00:00.000Z",
+  actionUrl: "https://app.movrr.nl/dashboard/rewards/orders/preview",
+} satisfies RewardLifecycleEmailProps;

@@ -11,10 +11,10 @@ interface PasswordResetEmailProps {
 }
 
 export default function PasswordResetEmail({
-  name,
-  resetUrl,
+  name = "Ada",
+  resetUrl = "https://admin.movrr.nl/reset?token=preview",
   locale = "en-US",
-}: PasswordResetEmailProps) {
+}: PasswordResetEmailProps = { name: "Ada", resetUrl: "https://admin.movrr.nl/reset?token=preview" }) {
   return (
     <BaseEmail
       locale={locale}
@@ -37,6 +37,11 @@ export default function PasswordResetEmail({
     </BaseEmail>
   );
 }
+
+PasswordResetEmail.PreviewProps = {
+  name: "Ada",
+  resetUrl: "https://admin.movrr.nl/reset?token=preview",
+} satisfies PasswordResetEmailProps;
 
 export function passwordResetText({ name, resetUrl }: PasswordResetEmailProps) {
   return [

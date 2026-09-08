@@ -28,17 +28,17 @@ const bikeStatusText: Record<string, string> = {
 };
 
 export default function AdminNotificationEmail({
-  name,
-  email,
-  city,
-  bikeOwnership,
-  timestamp,
+  name = "Ada",
+  email = "ada@example.com",
+  city = "Rotterdam",
+  bikeOwnership = "own",
+  timestamp = "2026-09-07T12:00:00.000Z",
   id,
   source,
-  adminUrl,
+  adminUrl = "https://admin.movrr.nl/waitlist",
   locale = "en-US",
   timeZone = "UTC",
-}: AdminNotificationEmailProps) {
+}: AdminNotificationEmailProps = { name: "Ada", email: "ada@example.com", city: "Rotterdam", bikeOwnership: "own", timestamp: "2026-09-07T12:00:00.000Z", adminUrl: "https://admin.movrr.nl/waitlist" }) {
   const registeredAt = formatTimestamp(timestamp, locale, timeZone);
 
   return (
@@ -79,6 +79,15 @@ export default function AdminNotificationEmail({
     </BaseEmail>
   );
 }
+
+AdminNotificationEmail.PreviewProps = {
+  name: "Ada",
+  email: "ada@example.com",
+  city: "Rotterdam",
+  bikeOwnership: "own",
+  timestamp: "2026-09-07T12:00:00.000Z",
+  adminUrl: "https://admin.movrr.nl/waitlist",
+} satisfies AdminNotificationEmailProps;
 
 function formatTimestamp(ts: string, locale = "en-US", timeZone = "UTC") {
   try {

@@ -19,7 +19,11 @@ export function campaignLifecycleText(props: CampaignLifecycleEmailProps): strin
   return `Campaign status updated\n\n${props.name ? `Hi ${props.name},\n\n` : ""}${props.campaignName} is now ${campaignLifecycleLabel(props.status).toLowerCase()}.\n\nReview campaign: ${props.actionUrl}\n\nYou receive campaign updates because they are enabled in your MOVRR advertiser preferences.\n\nMOVRR · Movement that earns.`;
 }
 
-export default function CampaignLifecycleEmail(props: CampaignLifecycleEmailProps) {
+export default function CampaignLifecycleEmail(props: CampaignLifecycleEmailProps = {
+  name: "Ada", campaignName: "City Centre launch", status: "active",
+  actionUrl: "https://app.movrr.nl/dashboard/campaigns/preview",
+}) {
+  props = { ...CampaignLifecycleEmail.PreviewProps, ...props };
   const label = campaignLifecycleLabel(props.status);
   return (
     <BaseEmail
@@ -38,3 +42,10 @@ export default function CampaignLifecycleEmail(props: CampaignLifecycleEmailProp
     </BaseEmail>
   );
 }
+
+CampaignLifecycleEmail.PreviewProps = {
+  name: "Ada",
+  campaignName: "City Centre launch",
+  status: "active",
+  actionUrl: "https://app.movrr.nl/dashboard/campaigns/preview",
+} satisfies CampaignLifecycleEmailProps;

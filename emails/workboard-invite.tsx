@@ -29,11 +29,11 @@ function formatExpiry(expiresAt: string) {
 }
 
 export default function WorkboardInviteEmail({
-  inviteUrl,
-  role,
-  expiresAt,
+  inviteUrl = "https://admin.movrr.nl/workboard/invite?token=preview",
+  role = "editor",
+  expiresAt = "2026-09-14T12:00:00.000Z",
   locale = "en-US",
-}: WorkboardInviteEmailProps) {
+}: WorkboardInviteEmailProps = { inviteUrl: "https://admin.movrr.nl/workboard/invite?token=preview", role: "editor", expiresAt: "2026-09-14T12:00:00.000Z" }) {
   const expiresLabel = formatExpiry(expiresAt);
 
   return (
@@ -67,6 +67,12 @@ export default function WorkboardInviteEmail({
     </BaseEmail>
   );
 }
+
+WorkboardInviteEmail.PreviewProps = {
+  inviteUrl: "https://admin.movrr.nl/workboard/invite?token=preview",
+  role: "editor",
+  expiresAt: "2026-09-14T12:00:00.000Z",
+} satisfies WorkboardInviteEmailProps;
 
 export function workboardInviteText({
   inviteUrl,

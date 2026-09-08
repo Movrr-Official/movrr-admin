@@ -11,10 +11,10 @@ interface AccountSetupEmailProps {
 }
 
 export default function AccountSetupEmail({
-  name,
-  setupUrl,
+  name = "Ada",
+  setupUrl = "https://admin.movrr.nl/setup?token=preview",
   locale = "en-US",
-}: AccountSetupEmailProps) {
+}: AccountSetupEmailProps = { name: "Ada", setupUrl: "https://admin.movrr.nl/setup?token=preview" }) {
   return (
     <BaseEmail
       locale={locale}
@@ -37,6 +37,11 @@ export default function AccountSetupEmail({
     </BaseEmail>
   );
 }
+
+AccountSetupEmail.PreviewProps = {
+  name: "Ada",
+  setupUrl: "https://admin.movrr.nl/setup?token=preview",
+} satisfies AccountSetupEmailProps;
 
 export function accountSetupText({ name, setupUrl }: AccountSetupEmailProps) {
   return [

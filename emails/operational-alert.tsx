@@ -7,10 +7,10 @@ interface OperationalAlertEmailProps {
 }
 
 export default function OperationalAlertEmail({
-  subject,
-  message,
+  subject = "Queue warning",
+  message = "Three fulfilments need attention.",
   locale = "en-US",
-}: OperationalAlertEmailProps) {
+}: OperationalAlertEmailProps = { subject: "Queue warning", message: "Three fulfilments need attention." }) {
   return (
     <BaseEmail
       locale={locale}
@@ -24,6 +24,11 @@ export default function OperationalAlertEmail({
     </BaseEmail>
   );
 }
+
+OperationalAlertEmail.PreviewProps = {
+  subject: "Queue warning",
+  message: "Three fulfilments need attention.",
+} satisfies OperationalAlertEmailProps;
 
 export function operationalAlertText({
   subject,

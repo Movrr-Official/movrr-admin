@@ -26,13 +26,13 @@ const bikeStatusText: Record<string, string> = {
 };
 
 export default function UserConfirmationEmail({
-  name,
-  city,
-  bikeOwnership,
+  name = "Ada",
+  city = "Rotterdam",
+  bikeOwnership = "own",
   id,
   ctaUrl = "https://movrr.nl",
   locale = "en-US",
-}: UserConfirmationEmailProps) {
+}: UserConfirmationEmailProps = { name: "Ada", city: "Rotterdam", bikeOwnership: "own", ctaUrl: "https://movrr.nl" }) {
   const bikeStatus = bikeStatusText[bikeOwnership] ?? bikeOwnership;
 
   return (
@@ -78,6 +78,13 @@ export default function UserConfirmationEmail({
     </BaseEmail>
   );
 }
+
+UserConfirmationEmail.PreviewProps = {
+  name: "Ada",
+  city: "Rotterdam",
+  bikeOwnership: "own",
+  ctaUrl: "https://movrr.nl",
+} satisfies UserConfirmationEmailProps;
 
 export function userConfirmationText({
   name,

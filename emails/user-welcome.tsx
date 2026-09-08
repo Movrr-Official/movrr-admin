@@ -14,12 +14,12 @@ interface UserWelcomeEmailProps {
 }
 
 export default function UserWelcomeEmail({
-  name,
-  role,
-  dashboardUrl,
-  id,
+  name = "Ada",
+  role = "admin",
+  dashboardUrl = "https://admin.movrr.nl",
+  id = "preview-invite",
   locale = "en-US",
-}: UserWelcomeEmailProps) {
+}: UserWelcomeEmailProps = { name: "Ada", role: "admin", dashboardUrl: "https://admin.movrr.nl", id: "preview-invite" }) {
   return (
     <BaseEmail
       locale={locale}
@@ -41,6 +41,13 @@ export default function UserWelcomeEmail({
     </BaseEmail>
   );
 }
+
+UserWelcomeEmail.PreviewProps = {
+  name: "Ada",
+  role: "admin",
+  dashboardUrl: "https://admin.movrr.nl",
+  id: "preview-invite",
+} satisfies UserWelcomeEmailProps;
 
 export function userWelcomeText({
   name,

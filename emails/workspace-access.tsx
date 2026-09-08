@@ -21,7 +21,11 @@ export function workspaceAccessText(props: WorkspaceAccessEmailProps): string {
   return `${workspaceAccessSubject(props)}\n\n${props.name ? `Hi ${props.name},\n\n` : ""}${update}\n\nOrganisation: ${props.organisationName}\nRole: ${props.role}\n\nOpen workspace: ${props.actionUrl}\n\nIf you do not recognise this change, contact MOVRR support.\n\nMOVRR · Movement that earns.`;
 }
 
-export default function WorkspaceAccessEmail(props: WorkspaceAccessEmailProps) {
+export default function WorkspaceAccessEmail(props: WorkspaceAccessEmailProps = {
+  change: "access_granted", name: "Ada", organisationName: "MOVRR Partner",
+  role: "Manager", actionUrl: "https://app.movrr.nl/dashboard",
+}) {
+  props = { ...WorkspaceAccessEmail.PreviewProps, ...props };
   const granted = props.change === "access_granted";
   return (
     <BaseEmail
@@ -40,3 +44,11 @@ export default function WorkspaceAccessEmail(props: WorkspaceAccessEmailProps) {
     </BaseEmail>
   );
 }
+
+WorkspaceAccessEmail.PreviewProps = {
+  change: "access_granted",
+  name: "Ada",
+  organisationName: "MOVRR Partner",
+  role: "Manager",
+  actionUrl: "https://app.movrr.nl/dashboard",
+} satisfies WorkspaceAccessEmailProps;
