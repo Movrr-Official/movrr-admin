@@ -82,8 +82,8 @@ describe.each(fixtures)("$name email", ({ element, text, url }) => {
     expect(html).toContain("prefers-color-scheme: dark");
     expect(html).toContain("max-width:640px");
     if (url) expect(html).toContain("mso-padding-alt");
-    expect(html).toContain("alt=\"MOVRR\"");
-    expect(html.match(/alt=\"MOVRR\"/g)).toHaveLength(1);
+    expect(html).toContain("icon-no-bg-white.png");
+    expect(html).toContain(">MOVRR<");
     expect(html).not.toContain("email-wordmark");
     expect(html).not.toContain("undefined");
     expect(html).not.toMatch(/<script|onerror=|onclick=/i);

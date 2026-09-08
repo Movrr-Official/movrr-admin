@@ -12,8 +12,8 @@ import {
 } from "@react-email/components";
 import type { ReactNode } from "react";
 
-export const MOVRR_LOGO_URL =
-  "https://res.cloudinary.com/dgy9bf37b/image/upload/f_png,q_auto:good,w_420/v1769860718/movrr_logo_icon_green_no_bg_pycuih.png";
+export const MOVRR_ICON_URL =
+  "https://cdn.jsdelivr.net/gh/Movrr-Official/movrr-new-@main/public/logo/icon-no-bg-white.png";
 
 const FONT =
   "Manrope,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
@@ -95,15 +95,40 @@ export function BaseEmail({
       <Body className="email-bg" style={styles.body}>
         <Container className="email-card" style={styles.card}>
           <Section className="email-header" style={styles.header}>
-            <Link href="https://movrr.nl" style={styles.logoLink}>
-                <Img
-                  src={MOVRR_LOGO_URL}
-                  width="140"
-                  height="50"
-                  alt="MOVRR"
-                  style={styles.logo}
-                />
-            </Link>
+            <table role="presentation" cellPadding={0} cellSpacing={0} border={0} width="100%">
+              <tbody>
+                <tr>
+                  <td style={styles.logoWrap}>
+                    <Link href="https://movrr.nl" style={styles.logoLink}>
+                      <table
+                        role="presentation"
+                        cellPadding={0}
+                        cellSpacing={0}
+                        border={0}
+                        style={styles.logoTable}
+                      >
+                        <tbody>
+                          <tr>
+                            <td style={styles.logoIconCell}>
+                              <Img
+                                src={MOVRR_ICON_URL}
+                                width="30"
+                                height="30"
+                                alt=""
+                                style={styles.logoIcon}
+                              />
+                            </td>
+                            <td style={styles.logoWordmarkCell}>
+                              <span style={styles.logoWordmark}>MOVRR</span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </Link>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             {contextLabel ? <Text style={styles.contextLabel}>{contextLabel}</Text> : null}
             <Text className="email-title" style={styles.heroTitle}>{title}</Text>
             <Text style={styles.heroIntro}>{intro}</Text>
@@ -240,16 +265,28 @@ const styles = {
     overflow: "hidden" as const,
   },
   header: { padding: "42px 48px 52px", backgroundColor: colors.accentDark },
+  logoWrap: { padding: "0 0 48px" },
   logoLink: { display: "inline-block", textDecoration: "none" },
-  logo: {
+  logoTable: { borderCollapse: "collapse" as const },
+  logoIconCell: { padding: "0 12px 0 0", verticalAlign: "middle" },
+  logoIcon: {
     display: "block",
-    width: "140px",
-    height: "50px",
+    width: "30px",
+    height: "30px",
     border: "0",
     outline: "none",
   },
+  logoWordmarkCell: { verticalAlign: "middle" },
+  logoWordmark: {
+    color: "#fcfcfc",
+    fontFamily: FONT,
+    fontSize: "18px",
+    fontWeight: "600",
+    letterSpacing: "-0.025em",
+    lineHeight: "30px",
+  },
   contextLabel: {
-    margin: "44px 0 16px",
+    margin: "0 0 16px",
     color: colors.accent,
     fontFamily: FONT,
     fontSize: "11px",
