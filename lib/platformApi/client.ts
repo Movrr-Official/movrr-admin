@@ -71,6 +71,7 @@ async function platformRequest<T>(
   const response = await fetchImpl(path, {
     method,
     credentials: "same-origin",
+    signal: options.signal,
     headers,
     body:
       (method === "POST" || method === "PATCH") && options.body !== undefined

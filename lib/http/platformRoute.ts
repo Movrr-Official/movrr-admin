@@ -27,6 +27,8 @@ export function applicationResultToHttpStatus(kind: string): number {
     case "unauthenticated":
     case "unrecognised_principal":
       return 401;
+    case "rate_limited":
+      return 429;
     case "permission_denied":
       return 403;
     case "ConcurrencyConflict":
@@ -60,6 +62,7 @@ function errorResponse(
 ): NextResponse {
   const status = applicationResultToHttpStatus(result.kind);
   const headers: Record<string, string> = { "cache-control": "no-store" };
+  if (result.kind === "rate_limited") headers["retry-after"] = "60";
   if (correlationId) {
     headers["x-correlation-id"] = correlationId;
   }

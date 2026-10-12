@@ -20,6 +20,7 @@ export type PlatformApiFailure = {
 export type PlatformApiResult<T> = PlatformApiSuccess<T> | PlatformApiFailure;
 
 export type PlatformRequestOptions = {
+  signal?: AbortSignal;
   /** Propagated as `X-Correlation-Id`; generated when omitted. */
   correlationId?: string;
   /** Extra request headers (e.g. Idempotency-Key, Authorization). */

@@ -59,6 +59,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PartnerLocationsPanel } from "@/components/rewards/partners/PartnerLocationsPanel";
 import { PartnerStaffPanel } from "@/components/rewards/partners/PartnerStaffPanel";
 import {
   useOrganisation,
@@ -659,6 +660,9 @@ export function OrganisationDetailsDrawer({
                   </Card>
                 ) : null}
 
+                {mode === "partner" && isRewardPartner && (
+                  <PartnerLocationsPanel organisationId={org.id} />
+                )}
                 <Card className="border-border shadow-none">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base">

@@ -14,6 +14,8 @@ function throwOnError(error: { message: string } | null, action: string): void {
 export function createSupabaseRateLimitStore(options?: {
   max?: number;
   windowMs?: number;
+  /** New public discovery requires migration 046; never fall back to non-atomic writes. */
+  requireAtomic?: boolean;
 }): RateLimitStore {
   const max = options?.max ?? 60;
   const windowMs = options?.windowMs ?? 60_000;
@@ -35,6 +37,8 @@ export function createSupabaseRateLimitStore(options?: {
       if (!error) {
         return Boolean(data);
       }
+
+      if (options?.requireAtomic) throw new Error("Atomic rate limiter unavailable");
 
       // Fallback for environments that have not applied 046 yet.
       if (error.code === "PGRST202" || /platform_rate_limit_hit/i.test(error.message)) {

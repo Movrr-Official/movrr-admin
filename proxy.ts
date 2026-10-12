@@ -45,7 +45,9 @@ function isPublicPath(pathname: string): boolean {
 }
 
 function isRiderApiPath(pathname: string): boolean {
-  return pathname.startsWith(RIDER_API_PREFIX);
+  // This exact read-only endpoint authenticates rider JWTs in platformRoute.
+  // Keep dashboard cookie protection on every other Platform API path.
+  return pathname.startsWith(RIDER_API_PREFIX) || pathname === "/api/v1/partners/locations";
 }
 
 function isInternalApiPath(pathname: string): boolean {
