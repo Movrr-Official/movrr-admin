@@ -55,13 +55,19 @@ describe("Searchable Entity Registry navigation contracts", () => {
     }
   });
 
-  it("gates Users to admin/super_admin with users:read", () => {
+  it("gates Users by users.read, including the approved legacy Support role", () => {
     const userEntity = SEARCHABLE_ENTITY_REGISTRY.user;
 
     expect(canAccessSearchableEntity(userEntity, "admin")).toBe(true);
     expect(canAccessSearchableEntity(userEntity, "super_admin")).toBe(true);
     expect(canAccessSearchableEntity(userEntity, "moderator")).toBe(false);
-    expect(canAccessSearchableEntity(userEntity, "support")).toBe(false);
+    expect(canAccessSearchableEntity(userEntity, "support")).toBe(true);
+    expect(canAccessSearchableEntity(userEntity, "support_agent")).toBe(true);
+    expect(canAccessSearchableEntity(userEntity, "support_lead")).toBe(true);
+    expect(canAccessSearchableEntity(userEntity, "executive_viewer")).toBe(false);
+    expect(canAccessSearchableEntity(userEntity, "rider")).toBe(false);
+    expect(canAccessSearchableEntity(userEntity, "unknown")).toBe(false);
+    expect(canAccessSearchableEntity(userEntity, null)).toBe(false);
   });
 
   it("allows moderators to access routes when searchable is enabled later", () => {

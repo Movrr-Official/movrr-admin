@@ -3,7 +3,7 @@ import CreateUserPage from "./CreateUserPage";
 
 export default function NewUserPage() {
   return (
-    <AuthWrapper capabilities={["users.read","users.manage"]}>
+    <AuthWrapper capability="users.manage">
       <CreateUserPage />
     </AuthWrapper>
   );

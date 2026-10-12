@@ -175,7 +175,7 @@ describe("globalSearch result contract", () => {
     expect(userHit?.href).not.toMatch(/^\/users\/[^?]+$/);
   });
 
-  it("returns empty when role cannot access any searchable entity", async () => {
+  it("returns no hits when permitted providers have no matches", async () => {
     requireCapability.mockResolvedValue({
       adminUser: { role: "government" },
     });
@@ -183,10 +183,45 @@ describe("globalSearch result contract", () => {
       from: vi.fn(() => createThenableBuilder({ data: [], error: null })),
     });
 
-    // government has users:read in ROLE_PERMISSIONS but not sidebar roles for users
-    // Registry gates users to admin/super_admin only — government should get no active entities
-    // Actually government has users:read but access.roles is admin/super_admin only
+    // Empty provider results are not evidence of denied entity authorization.
     const results = await globalSearch("Ada");
     expect(results).toEqual([]);
+  });
+});
+
+describe("Support search security contract", () => {
+  beforeEach(() => vi.clearAllMocks());
+  it.each(["support", "support_agent"])("%s receives bounded identity hits and authorized drawer destinations only", async (role) => {
+    requireCapability.mockResolvedValue({ adminUser: { role } });
+    const row = { id: "11111111-1111-1111-1111-111111111111", name: "Ada", email: "ada@example.com", avatar_url: null, status: "active", password_hash: "private", account_notes: "private", mfa_secret: "private" };
+    const users = createThenableBuilder({ data: [row], error: null });
+    const riders = createThenableBuilder({ data: [{ id: "22222222-2222-2222-2222-222222222222", user_id: row.id, city: "Utrecht", status: "active", user: row, emergency_phone: "private" }], error: null });
+    const empty = createThenableBuilder({ data: [], error: null });
+    createSupabaseAdminClient.mockReturnValue({ from: vi.fn((table: string) => table === "user" ? users : table === "rider" ? riders : empty) });
+    const results = await globalSearch("Ada");
+    expect(requireCapability).toHaveBeenCalledWith("dashboard.read");
+    expect(users.select).toHaveBeenCalledWith("id, name, email, avatar_url, role, status");
+    expect(users.limit).toHaveBeenCalledWith(8);
+    expect(results.find(hit => hit.type === "user")?.href).toBe("/users?id=" + row.id);
+    expect(results.find(hit => hit.type === "rider")?.href).toBe("/riders?id=22222222-2222-2222-2222-222222222222");
+    expect(JSON.stringify(results)).not.toContain("private");
+    expect(JSON.stringify(results)).not.toContain("password_hash");
+    expect(JSON.stringify(results)).not.toContain("emergency_phone");
+    expect(results).toHaveLength(2);
+  });
+  it("a role without Users/Riders read never queries either protected entity", async () => {
+    requireCapability.mockResolvedValue({ adminUser: { role: "executive_viewer" } });
+    const from = vi.fn(); createSupabaseAdminClient.mockReturnValue({ from });
+    expect(await globalSearch("Ada")).toEqual([]);
+    expect(from).not.toHaveBeenCalledWith("user");
+    expect(from).not.toHaveBeenCalledWith("rider");
+  });
+  it("unauthenticated direct search fails before acquiring the data client", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      requireCapability.mockRejectedValue(new Error("Unauthenticated"));
+      expect(await globalSearch("Ada")).toEqual([]);
+      expect(createSupabaseAdminClient).not.toHaveBeenCalled();
+    } finally { error.mockRestore(); }
   });
 });

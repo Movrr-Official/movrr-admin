@@ -176,3 +176,36 @@ describe("role simulator coverage", () => {
     }
   });
 });
+
+describe("approved Support Users/Riders boundaries", () => {
+  it.each(["support", "support_agent"])("%s has entity read access without account administration", (role) => {
+    expect(resolveCanonicalEmployeeRole(role)).toBe("support_agent");
+    const caps = capabilitiesForEmployeeRole(role);
+    expect(mapAdminRoleToCapabilities(role)).toEqual(caps);
+    for (const capability of ["users.read", "riders.read", "rides.read"]) expect(employeeHasCapability(role, capability)).toBe(true);
+    expect(canAccessPage("/users", caps)).toBe(true);
+    expect(canAccessPage("/riders", caps)).toBe(true);
+    expect(canAccessPage("/users/create", caps)).toBe(false);
+    for (const capability of ["users.manage", "riders.manage", "users.role.assign", "users.role.approve", "exports.execute", "privacy.erase", "authz.manage", "settings.security"]) {
+      expect(employeeHasCapability(role, capability)).toBe(false);
+    }
+  });
+  it("preserves Support Lead's separately approved rider-management and export grants", () => {
+    expect(employeeHasCapability("support_lead", "riders.manage")).toBe(true);
+    expect(employeeHasCapability("support_lead", "exports.execute")).toBe(true);
+    expect(employeeHasCapability("support_lead", "users.manage")).toBe(false);
+    expect(employeeHasCapability("support_lead", "users.role.assign")).toBe(false);
+    expect(employeeHasCapability("support_lead", "users.role.approve")).toBe(false);
+  });
+});
+
+describe("specific Users page authorization", () => {
+  it("does not inherit list read permission for create pages or their nested paths", () => {
+    const readOnly = capabilitiesForEmployeeRole("support");
+    for (const pathname of ["/users/create", "/users/create/", "/users/create/nested"]) expect(canAccessPage(pathname, readOnly)).toBe(false);
+    expect(canAccessPage("/users", readOnly)).toBe(true);
+    expect(canAccessPage("/users/details", readOnly)).toBe(true);
+    expect(canAccessPage("/users/create", capabilitiesForEmployeeRole("admin"))).toBe(true);
+    expect(canAccessPage("/users/create", capabilitiesForEmployeeRole("super_admin"))).toBe(true);
+  });
+});

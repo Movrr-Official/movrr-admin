@@ -599,16 +599,18 @@ export function getPageRequiredCapabilities(pathname: string): KnownCapability[]
       ? pathname.slice(0, -1)
       : pathname;
 
-  const caps: KnownCapability[] = [];
+  // The most specific registered page owns its rule. A parent read grant
+  // must not bypass an explicitly registered child management page.
+  let specificity = -1;
+  let caps: KnownCapability[] = [];
   for (const surface of DASHBOARD_CAPABILITY_SURFACES) {
-    if (!surface.pages) continue;
-    for (const page of surface.pages) {
-      if (
-        normalized === page ||
-        (page !== "/" && normalized.startsWith(`${page}/`))
-      ) {
-        caps.push(surface.capability);
+    for (const page of surface.pages ?? []) {
+      if (normalized !== page && !(page !== "/" && normalized.startsWith(page + "/"))) continue;
+      if (page.length > specificity) {
+        specificity = page.length;
+        caps = [];
       }
+      if (page.length === specificity) caps.push(surface.capability);
     }
   }
   return [...new Set(caps)];

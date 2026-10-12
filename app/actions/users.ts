@@ -1197,6 +1197,8 @@ export async function exportUserData(
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
     await requireCapability("users.read");
+    // Operational read access does not authorize a full account-data export.
+    await requireCapability("exports.execute", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
 
     // Fetch user profile

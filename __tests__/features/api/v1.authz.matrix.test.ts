@@ -11,7 +11,7 @@ import {
 } from "@/features/platform/infrastructure/composePlatformApi";
 
 function principalFor(
-  kind: "rider" | "staff" | "manager" | "owner" | "admin",
+  kind: "rider" | "staff" | "manager" | "owner" | "admin" | "support",
 ): AuthenticatedPrincipal {
   switch (kind) {
     case "rider":
@@ -48,6 +48,8 @@ function principalFor(
         membershipId: "mem-owner",
         role: "owner",
       };
+    case "support":
+      return { type: "admin", userId: "user-support", email: "support@test", adminUserId: "support-1", role: "support" };
     case "admin":
       return {
         type: "admin",
@@ -110,7 +112,7 @@ function request(
 }
 
 async function apiFor(
-  kind: "rider" | "staff" | "manager" | "owner" | "admin",
+  kind: "rider" | "staff" | "manager" | "owner" | "admin" | "support",
 ): Promise<PlatformApiHandlers> {
   return createPlatformApiForTests({
     authDeps: authDepsFor(principalFor(kind)),
@@ -302,5 +304,17 @@ describe("Platform API /api/v1 authz matrix", () => {
     );
     expect(res.status).toBe(403);
     expect(handleCalled).toBe(false);
+  });
+});
+
+describe("Support direct Platform API permissions", () => {
+  it("allows approved reads but denies unrelated mutation commands via real handlers", async () => {
+    const api = await apiFor("support");
+    expect((await api.rewards.catalog(request("GET", "http://x/api/v1/rewards/catalog"))).status).toBe(200);
+    expect((await api.wallet.balance(request("GET", "http://x/api/v1/wallet/balance"))).status).toBe(200);
+    expect((await api.fulfilment.list(request("GET", "http://x/api/v1/fulfilment"))).status).toBe(200);
+    expect((await api.fulfilment.cancel(request("POST", "http://x/api/v1/fulfilment/f-1/cancel", { body: { reason: "x" }, idempotencyKey: "support-cancel" }), { id: "f-1" })).status).toBe(403);
+    expect((await api.fulfilment.refund(request("POST", "http://x/api/v1/fulfilment/f-1/refund", { body: { reason: "x" }, idempotencyKey: "support-refund" }), { id: "f-1" })).status).toBe(403);
+    expect((await api.partners.validate(request("POST", "http://x/api/v1/partners/validate", { body: { token: "x" }, idempotencyKey: "support-validate" }))).status).toBe(403);
   });
 });
