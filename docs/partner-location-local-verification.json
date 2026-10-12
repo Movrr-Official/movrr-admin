@@ -1,0 +1,829 @@
+{
+  "date": "2026-10-12",
+  "verdict": "GO for tested local PostgreSQL candidate; HOLD for deployed Supabase/staging acceptance",
+  "environment": {
+    "docker": "29.8.1",
+    "postgresql": "17.6 x86_64 Linux GCC 15.2",
+    "image": "public.ecr.aws/supabase/postgres:17.6.1.165",
+    "imageDigest": "sha256:28f0e16a019e648089fc1a6d333549a55548f6019c15ae4bd7cd58b989027518",
+    "connection": "docker exec / Unix socket only",
+    "networkInternal": true,
+    "publishedPorts": false,
+    "freshVolumes": true,
+    "migrationRole": "supabase_admin (actual Supabase schema owner)",
+    "authPrimitives": "actual image auth.users/auth.uid and anon/authenticated/service_role BYPASSRLS",
+    "extensionsInstalled": [
+      "pgcrypto 1.3",
+      "plpgsql 1.0",
+      "uuid-ossp 1.1",
+      "pg_stat_statements 1.11",
+      "supabase_vault 0.3.1"
+    ],
+    "newExtensionsRequired": false
+  },
+  "prerequisites": {
+    "exactDefinitionExtracts": [
+      "admin_users: scripts/schema_visualizer.sql (single referenced table, not entire context dump)",
+      "is_dashboard_admin: scripts/033_phase1_security_hardening.sql (function and grants only)",
+      "reward_partner/reward_catalog: scripts/reward-catalog.sql (two actual tables and active catalog read policy)"
+    ],
+    "fullMigrationsInOrder": [
+      "040_organisations_rbac.sql",
+      "041_platform_audit_idempotency.sql",
+      "045_reward_partner_organisation_link.sql",
+      "046_platform_rate_limit_hit.sql",
+      "051_partner_physical_locations.sql"
+    ],
+    "fixtures": "Temporary local default table ACLs include app roles to exercise migration revocations; Supabase auth schema/roles are not replaced",
+    "unrelatedMigrationsApplied": false
+  },
+  "results": {
+    "migration051": "PASS",
+    "existingIntegration": "PASS after single test-quote correction",
+    "supplementalSql": "PASS: service RPC, coordinate/publication checks, timestamp precision, stale edits, cross-org denial, composite FK, rollback, lifecycle, geographic bounds, role denial, RLS, atomic quota, fixture cleanup",
+    "cleanSetups": {
+      "requested": 2,
+      "passed": 2,
+      "resourcesReused": false
+    },
+    "negativeMigrationTests": {
+      "missing046": "Rejected on each run; no partial schema",
+      "injectedLateFailure": "Rejected on each run; no partial tables/index/functions"
+    },
+    "concurrency": {
+      "executed": true,
+      "overlapObserved": "pg_stat_activity writer A wait_event=PgSleep before starting writer B",
+      "result": "Writer A committed, writer B rejected Location version conflict; winner state and two per-location audit entries verified",
+      "sql": {
+        "seed.sql": "CREATE TABLE IF NOT EXISTS public.local_051_fixture(actor uuid,org uuid,location jsonb);\nTRUNCATE local_051_fixture;\nDO $seed$ DECLARE actor uuid:=gen_random_uuid(); result jsonb; org uuid; location jsonb; BEGIN\n INSERT INTO auth.users(id) VALUES(actor);\n result:=save_organisation_with_partner(NULL,jsonb_build_object('name','concurrent-local-'||actor::text,'type','reward_partner'));org:=(result->'organisation'->>'id')::uuid;\n location:=save_partner_location(org,jsonb_build_object('name','Original','address','Synthetic','status','draft','rewardIds','[]'::jsonb),actor,'concurrent-seed');\n INSERT INTO local_051_fixture VALUES(actor,org,location);\nEND $seed$;",
+        "writer-a.sql": "SET application_name='movrr051-edit-a';\nBEGIN;\nDO $writer$ DECLARE f local_051_fixture; BEGIN SELECT * INTO f FROM local_051_fixture;\n PERFORM save_partner_location(f.org,jsonb_build_object('id',f.location->>'id','expectedUpdatedAt',f.location->>'updated_at','name','Winner','address','Synthetic','status','draft','rewardIds','[]'::jsonb),f.actor,'writer-a');\n PERFORM pg_sleep(3);\nEND $writer$;\nCOMMIT;",
+        "writer-b.sql": "DO $contender$ DECLARE f local_051_fixture; caught boolean:=false; BEGIN SELECT * INTO f FROM local_051_fixture;\n BEGIN PERFORM save_partner_location(f.org,jsonb_build_object('id',f.location->>'id','expectedUpdatedAt',f.location->>'updated_at','name','Loser','address','Synthetic','status','draft','rewardIds','[]'::jsonb),f.actor,'writer-b');\n EXCEPTION WHEN OTHERS THEN IF SQLERRM='Location version conflict' THEN caught:=true; ELSE RAISE; END IF; END;\n IF NOT caught THEN RAISE EXCEPTION 'Concurrent stale writer accepted'; END IF;\n IF (SELECT name FROM reward_partner_location WHERE id=(f.location->>'id')::uuid)<>'Winner' OR (SELECT count(*) FROM partner_location_audit WHERE location_id=(f.location->>'id')::uuid)<>2 THEN RAISE EXCEPTION 'Concurrent lost update/audit mismatch'; END IF;\n RAISE NOTICE 'PASS two overlapping native PostgreSQL sessions: one edit committed, stale edit rejected';\nEND $contender$;"
+      }
+    },
+    "geographicPlan": "351-row fixture used partner_location_discovery index; final two executions 0.137 ms / 0.150 ms, not a production performance certification",
+    "databaseConstraints": {
+      "locationConstraintCount": 13,
+      "rlsTables": 3
+    },
+    "cleanup": "All task-labelled containers, volumes and networks removed; final inventories empty"
+  },
+  "correctionsAndFailures": [
+    {
+      "finding": "Original migration invalid dollar quoting",
+      "correction": "Previously repaired lines 3/6 and 60/99; executed unchanged in this task",
+      "status": "Verified by PostgreSQL"
+    },
+    {
+      "finding": "Existing integration line 23 missing closing quote after updated_at",
+      "correction": "Restored quote without changing assertion",
+      "status": "Resolved and rerun"
+    },
+    {
+      "finding": "Initial bootstrap used non-owner postgres role",
+      "correction": "Use actual supabase_admin schema-owner; no privilege weakening",
+      "status": "Resolved"
+    },
+    {
+      "finding": "Temporary initialization server made initial pg_isready check premature",
+      "correction": "Wait for final postgres/Supabase wrapper PID 1 before readiness probe",
+      "status": "Resolved"
+    },
+    {
+      "finding": "Intermediate readiness test did not recognize Supabase wrapper",
+      "correction": "Recognize .postgres-wrapp process used by cached image",
+      "status": "Resolved"
+    },
+    {
+      "finding": "First overlapping-session driver had unavailable Start-Process ExitCode despite passing SQL assertions",
+      "correction": "Reran with Start-Job and explicit successful native-exit check",
+      "status": "Resolved; final driver exit 0"
+    }
+  ],
+  "sourceHashes": {
+    "scripts/051_partner_physical_locations.sql": "57b5071b8b1edf48d2105704df81bb9df54877034151e196aebf545a9bf7f2b6",
+    "scripts/tests/051_partner_locations.integration.sql": "12cc6c51040099cd042f59b07c3062ba456cf34b20ec9bab62d8d01eb4d30c45",
+    "scripts/tests/051_partner_locations.local.sql": "4bc9ba416086384b6327c60ce60798df92373cce7e62e1f2623a6fb271e175db",
+    "scripts/tests/run-051-local.ps1": "17c7b2bef0ed5dfd29c7e9f7a6fb1e538ae0019738f0f5d0e59fc53c0579b3ea"
+  },
+  "filesChangedThisTask": [
+    "scripts/tests/051_partner_locations.integration.sql",
+    "scripts/tests/051_partner_locations.local.sql",
+    "scripts/tests/run-051-local.ps1",
+    "docs/partner-location-local-verification.md",
+    "docs/partner-location-local-verification.json",
+    "docs/partner-location-staging-verification.md"
+  ],
+  "limits": [
+    "Production deployment status and migration ledger unknown; no remote database accessed",
+    "Not a complete historic MOVRR schema replay or deployed schema drift validation",
+    "No authenticated PostgREST/Platform API/Admin browser staging execution",
+    "No production-density statistics, lock-load or deployed role/default ACL comparison",
+    "Staging still requires authorization, actual schema/ledger inspection, backup/recovery rehearsal and approved migration/forward strategy"
+  ],
+  "productionConnections": 0,
+  "operations": {
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "deployed": false,
+    "published": false
+  },
+  "cleanRunEvidence": {
+    "image": "public.ecr.aws/supabase/postgres:17.6.1.165",
+    "requestedRuns": 2,
+    "passedRuns": 2,
+    "commands": [
+      {
+        "command": "docker --context desktop-linux info --format {{.ServerVersion}}",
+        "exitCode": 0,
+        "output": "29.8.1"
+      },
+      {
+        "command": "docker --context desktop-linux image inspect public.ecr.aws/supabase/postgres:17.6.1.165 --format {{json .RepoDigests}}",
+        "exitCode": 0,
+        "output": "[\"public.ecr.aws/supabase/postgres@sha256:28f0e16a019e648089fc1a6d333549a55548f6019c15ae4bd7cd58b989027518\"]"
+      },
+      {
+        "command": "docker --context desktop-linux network create --internal --label movrr.task=051-local-verification movrr-051-net-5c389f1ede16",
+        "exitCode": 0,
+        "output": "de4faa23720c19e4c596d87d385685f29e860dbee8106adade683f84e3650e00"
+      },
+      {
+        "command": "docker --context desktop-linux volume create --label movrr.task=051-local-verification movrr-051-data-5c389f1ede16",
+        "exitCode": 0,
+        "output": "movrr-051-data-5c389f1ede16"
+      },
+      {
+        "command": "docker --context desktop-linux run --pull=never -d --name movrr-051-db-5c389f1ede16 --label movrr.task=051-local-verification --network movrr-051-net-5c389f1ede16 --mount source=movrr-051-data-5c389f1ede16,target=/var/lib/postgresql/data -e POSTGRES_PASSWORD=disposable-local-only -e POSTGRES_DB=movrr_051_test public.ecr.aws/supabase/postgres:17.6.1.165",
+        "exitCode": 0,
+        "output": "35899cbe96543ea17de83d107002d84f818be68e4a3158e135531ba643cdd3e4"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 cat /proc/1/comm",
+        "exitCode": 0,
+        "output": "bash"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 cat /proc/1/comm",
+        "exitCode": 0,
+        "output": "bash"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 cat /proc/1/comm",
+        "exitCode": 0,
+        "output": "bash"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 cat /proc/1/comm",
+        "exitCode": 0,
+        "output": ".postgres-wrapp"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 pg_isready -U supabase_admin",
+        "exitCode": 0,
+        "output": "/run/postgresql:5432 - accepting connections"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -c SELECT version(),current_database(); SELECT to_regclass('auth.users'),to_regprocedure('auth.uid()'),to_regprocedure('gen_random_uuid()');",
+        "exitCode": 0,
+        "output": "                                   version                                    | current_database \n------------------------------------------------------------------------------+------------------\n PostgreSQL 17.6 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit | movrr_051_test\n(1 row)\n\n to_regclass | to_regprocedure |  to_regprocedure  \n-------------+-----------------+-------------------\n users       | uid()           | gen_random_uuid()\n(1 row)\n"
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\051_partner_physical_locations.sql movrr-051-db-5c389f1ede16:/tmp/051_partner_physical_locations.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-5c389f1ede16\\guard.sql movrr-051-db-5c389f1ede16:/tmp/guard.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\040_organisations_rbac.sql movrr-051-db-5c389f1ede16:/tmp/040_organisations_rbac.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-5c389f1ede16\\authcheck.sql movrr-051-db-5c389f1ede16:/tmp/authcheck.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-5c389f1ede16\\forced.sql movrr-051-db-5c389f1ede16:/tmp/forced.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\tests\\051_partner_locations.integration.sql movrr-051-db-5c389f1ede16:/tmp/integration.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\041_platform_audit_idempotency.sql movrr-051-db-5c389f1ede16:/tmp/041_platform_audit_idempotency.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\045_reward_partner_organisation_link.sql movrr-051-db-5c389f1ede16:/tmp/045_reward_partner_organisation_link.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\046_platform_rate_limit_hit.sql movrr-051-db-5c389f1ede16:/tmp/046_platform_rate_limit_hit.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-5c389f1ede16\\bootstrap.sql movrr-051-db-5c389f1ede16:/tmp/bootstrap.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\tests\\051_partner_locations.local.sql movrr-051-db-5c389f1ede16:/tmp/local.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/authcheck.sql",
+        "exitCode": 0,
+        "output": "DO"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/bootstrap.sql",
+        "exitCode": 0,
+        "output": "GRANT\nALTER DEFAULT PRIVILEGES\nGRANT\nCREATE TABLE\nCREATE FUNCTION\nREVOKE\nGRANT\nCREATE TABLE\nCREATE TABLE\nALTER TABLE\nCREATE POLICY"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/040_organisations_rbac.sql",
+        "exitCode": 0,
+        "output": "CREATE TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE TABLE\nCREATE TABLE\nCREATE INDEX\nCREATE TABLE\nCREATE INDEX\nCREATE INDEX\nINSERT 0 5\nINSERT 0 10\nINSERT 0 9\nINSERT 0 5\nINSERT 0 3\nINSERT 0 4\nALTER TABLE\nCREATE INDEX\nINSERT 0 0\nUPDATE 0\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nDROP POLICY\npsql:/tmp/040_organisations_rbac.sql:208: NOTICE:  policy \"Dashboard admins manage organisations\" for relation \"public.organisation\" does not exist, skipping\nCREATE POLICY\nDROP POLICY\npsql:/tmp/040_organisations_rbac.sql:215: NOTICE:  policy \"Members can read own organisation\" for relation \"public.organisation\" does not exist, skipping\nCREATE POLICY\nDROP POLICY\npsql:/tmp/040_organisations_rbac.sql:229: NOTICE:  policy \"Authenticated read permission bundles\" for relation \"public.permission_bundle\" does not exist, skipping\nCREATE POLICY\npsql:/tmp/040_organisations_rbac.sql:236: NOTICE:  policy \"Dashboard admins manage permission bundles\" for relation \"public.permission_bundle\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/040_organisations_rbac.sql:243: NOTICE:  policy \"Authenticated read bundle capabilities\" for relation \"public.bundle_capability\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/040_organisations_rbac.sql:250: NOTICE:  policy \"Dashboard admins manage bundle capabilities\" for relation \"public.bundle_capability\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/040_organisations_rbac.sql:257: NOTICE:  policy \"Dashboard admins manage memberships\" for relation \"public.organisation_membership\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/040_organisations_rbac.sql:264: NOTICE:  policy \"Members can read own memberships\" for relation \"public.organisation_membership\" does not exist, skipping\nDROP POLICY\nCREATE POLICY"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/041_platform_audit_idempotency.sql",
+        "exitCode": 0,
+        "output": "CREATE TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE INDEX\nCREATE FUNCTION\npsql:/tmp/041_platform_audit_idempotency.sql:42: NOTICE:  trigger \"trg_platform_audit_no_update\" for relation \"public.platform_audit_record\" does not exist, skipping\nDROP TRIGGER\nCREATE TRIGGER\npsql:/tmp/041_platform_audit_idempotency.sql:48: NOTICE:  trigger \"trg_platform_audit_no_delete\" for relation \"public.platform_audit_record\" does not exist, skipping\nDROP TRIGGER\nCREATE TRIGGER\nCREATE TABLE\nCREATE INDEX\nCREATE TABLE\nCREATE INDEX\nCREATE TABLE\nCREATE INDEX\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nDROP POLICY\npsql:/tmp/041_platform_audit_idempotency.sql:103: NOTICE:  policy \"Dashboard admins read audit\" for relation \"public.platform_audit_record\" does not exist, skipping\nCREATE POLICY\npsql:/tmp/041_platform_audit_idempotency.sql:109: NOTICE:  policy \"Dashboard admins insert audit\" for relation \"public.platform_audit_record\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/041_platform_audit_idempotency.sql:117: NOTICE:  policy \"Dashboard admins manage idempotency\" for relation \"public.platform_idempotency_key\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/041_platform_audit_idempotency.sql:124: NOTICE:  policy \"Dashboard admins manage consumed jti\" for relation \"public.platform_consumed_jti\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/041_platform_audit_idempotency.sql:131: NOTICE:  policy \"Dashboard admins manage rate limits\" for relation \"public.platform_rate_limit_counter\" does not exist, skipping\nDROP POLICY\nCREATE POLICY"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/045_reward_partner_organisation_link.sql",
+        "exitCode": 0,
+        "output": "psql:/tmp/045_reward_partner_organisation_link.sql:17: NOTICE:  relation \"organisation\" already exists, skipping\nCREATE TABLE\npsql:/tmp/045_reward_partner_organisation_link.sql:20: NOTICE:  relation \"idx_organisation_type\" already exists, skipping\nCREATE INDEX\npsql:/tmp/045_reward_partner_organisation_link.sql:23: NOTICE:  relation \"idx_organisation_status\" already exists, skipping\nCREATE INDEX\npsql:/tmp/045_reward_partner_organisation_link.sql:34: NOTICE:  relation \"permission_bundle\" already exists, skipping\nCREATE TABLE\npsql:/tmp/045_reward_partner_organisation_link.sql:40: NOTICE:  relation \"bundle_capability\" already exists, skipping\nCREATE TABLE\npsql:/tmp/045_reward_partner_organisation_link.sql:54: NOTICE:  relation \"organisation_membership\" already exists, skipping\nCREATE TABLE\npsql:/tmp/045_reward_partner_organisation_link.sql:58: NOTICE:  relation \"idx_organisation_membership_user\" already exists, skipping\nCREATE INDEX\nCREATE INDEX\npsql:/tmp/045_reward_partner_organisation_link.sql:61: NOTICE:  relation \"idx_organisation_membership_org\" already exists, skipping\nINSERT 0 0\nINSERT 0 0\nINSERT 0 0\nINSERT 0 0\nINSERT 0 0\nINSERT 0 0\npsql:/tmp/045_reward_partner_organisation_link.sql:154: NOTICE:  column \"organisation_id\" of relation \"reward_partner\" already exists, skipping\nALTER TABLE\npsql:/tmp/045_reward_partner_organisation_link.sql:158: NOTICE:  relation \"idx_reward_partner_organisation_id\" already exists, skipping\nCREATE INDEX\nINSERT 0 0\nUPDATE 0\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nDO"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/051_partner_physical_locations.sql",
+        "exitCode": 3,
+        "output": "BEGIN\npsql:/tmp/051_partner_physical_locations.sql:6: ERROR:  Apply atomic rate limiter migration 046 first\nCONTEXT:  PL/pgSQL function inline_code_block line 3 at RAISE"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/guard.sql",
+        "exitCode": 0,
+        "output": "DO"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/046_platform_rate_limit_hit.sql",
+        "exitCode": 0,
+        "output": "CREATE FUNCTION\nREVOKE\nGRANT"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/forced.sql",
+        "exitCode": 3,
+        "output": "BEGIN\nDO\nCREATE INDEX\nCREATE TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE TABLE\nCREATE TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nREVOKE\nGRANT\nCREATE FUNCTION\nREVOKE\nGRANT\nCREATE FUNCTION\nREVOKE\nGRANT\npsql:/tmp/forced.sql:103: ERROR:  local-forced-migration-failure\nCONTEXT:  PL/pgSQL function inline_code_block line 1 at RAISE"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/guard.sql",
+        "exitCode": 0,
+        "output": "DO"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/051_partner_physical_locations.sql",
+        "exitCode": 0,
+        "output": "BEGIN\nDO\nCREATE INDEX\nCREATE TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE TABLE\nCREATE TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nREVOKE\nGRANT\nCREATE FUNCTION\nREVOKE\nGRANT\nCREATE FUNCTION\nREVOKE\nGRANT\nCOMMIT"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/integration.sql",
+        "exitCode": 0,
+        "output": "BEGIN\nDO\n                                                                                           QUERY PLAN                                                                                            \n-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n Limit  (cost=8.31..8.31 rows=1 width=16) (actual time=0.118..0.126 rows=101 loops=1)\n   Buffers: shared hit=336\n   ->  Sort  (cost=8.31..8.31 rows=1 width=16) (actual time=0.118..0.121 rows=101 loops=1)\n         Sort Key: id\n         Sort Method: top-N heapsort  Memory: 20kB\n         Buffers: shared hit=336\n         ->  Index Only Scan using partner_location_discovery on reward_partner_location  (cost=0.27..8.30 rows=1 width=16) (actual time=0.018..0.079 rows=351 loops=1)\n               Index Cond: ((latitude >= '52'::double precision) AND (latitude <= '52.1'::double precision) AND (longitude >= '4'::double precision) AND (longitude <= '4.1'::double precision))\n               Heap Fetches: 351\n               Buffers: shared hit=336\n Planning:\n   Buffers: shared hit=6\n Planning Time: 0.043 ms\n Execution Time: 0.137 ms\n(14 rows)\n\nROLLBACK"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5c389f1ede16 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/local.sql",
+        "exitCode": 0,
+        "output": "SET\nBEGIN\npsql:/tmp/local.sql:102: NOTICE:  PASS service-role RPC create and draft defaults\npsql:/tmp/local.sql:102: NOTICE:  PASS invalid latitude, longitude, NaN, one-sided coordinates and unverified publication\npsql:/tmp/local.sql:102: NOTICE:  PASS actual PostgreSQL microseconds, offset equivalent expected version and stale conflict\npsql:/tmp/local.sql:102: NOTICE:  PASS cross-organisation RPC access and composite FK\npsql:/tmp/local.sql:102: NOTICE:  PASS partial organisation/partner and location/audit transaction rollback\npsql:/tmp/local.sql:102: NOTICE:  PASS restrictive lifecycle, partner/location suspension and geographic bounds\npsql:/tmp/local.sql:102: NOTICE:  PASS actual app-role denial, independent RLS filtering and 046 quota\nDO\nROLLBACK\npsql:/tmp/local.sql:109: NOTICE:  PASS complete fixture and temporary-grant rollback\nDO"
+      },
+      {
+        "command": "docker --context desktop-linux rm -f movrr-051-db-5c389f1ede16",
+        "exitCode": 0,
+        "output": "movrr-051-db-5c389f1ede16"
+      },
+      {
+        "command": "docker --context desktop-linux volume rm movrr-051-data-5c389f1ede16",
+        "exitCode": 0,
+        "output": "movrr-051-data-5c389f1ede16"
+      },
+      {
+        "command": "docker --context desktop-linux network rm movrr-051-net-5c389f1ede16",
+        "exitCode": 0,
+        "output": "movrr-051-net-5c389f1ede16"
+      },
+      {
+        "command": "docker --context desktop-linux network create --internal --label movrr.task=051-local-verification movrr-051-net-5228e800d3a0",
+        "exitCode": 0,
+        "output": "8b5dd253a872f0dbc728098e94ca6391eda83c43dc03487b25c6d6317ce5d33a"
+      },
+      {
+        "command": "docker --context desktop-linux volume create --label movrr.task=051-local-verification movrr-051-data-5228e800d3a0",
+        "exitCode": 0,
+        "output": "movrr-051-data-5228e800d3a0"
+      },
+      {
+        "command": "docker --context desktop-linux run --pull=never -d --name movrr-051-db-5228e800d3a0 --label movrr.task=051-local-verification --network movrr-051-net-5228e800d3a0 --mount source=movrr-051-data-5228e800d3a0,target=/var/lib/postgresql/data -e POSTGRES_PASSWORD=disposable-local-only -e POSTGRES_DB=movrr_051_test public.ecr.aws/supabase/postgres:17.6.1.165",
+        "exitCode": 0,
+        "output": "860636d4e157fa1e907504a87e863151e3b055c89a609d152867f542f3425b62"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 cat /proc/1/comm",
+        "exitCode": 0,
+        "output": "bash"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 cat /proc/1/comm",
+        "exitCode": 0,
+        "output": "bash"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 cat /proc/1/comm",
+        "exitCode": 0,
+        "output": "bash"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 cat /proc/1/comm",
+        "exitCode": 0,
+        "output": ".postgres-wrapp"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 pg_isready -U supabase_admin",
+        "exitCode": 0,
+        "output": "/run/postgresql:5432 - accepting connections"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -c SELECT version(),current_database(); SELECT to_regclass('auth.users'),to_regprocedure('auth.uid()'),to_regprocedure('gen_random_uuid()');",
+        "exitCode": 0,
+        "output": "                                   version                                    | current_database \n------------------------------------------------------------------------------+------------------\n PostgreSQL 17.6 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit | movrr_051_test\n(1 row)\n\n to_regclass | to_regprocedure |  to_regprocedure  \n-------------+-----------------+-------------------\n users       | uid()           | gen_random_uuid()\n(1 row)\n"
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\051_partner_physical_locations.sql movrr-051-db-5228e800d3a0:/tmp/051_partner_physical_locations.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-5228e800d3a0\\guard.sql movrr-051-db-5228e800d3a0:/tmp/guard.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\040_organisations_rbac.sql movrr-051-db-5228e800d3a0:/tmp/040_organisations_rbac.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-5228e800d3a0\\authcheck.sql movrr-051-db-5228e800d3a0:/tmp/authcheck.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-5228e800d3a0\\forced.sql movrr-051-db-5228e800d3a0:/tmp/forced.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\tests\\051_partner_locations.integration.sql movrr-051-db-5228e800d3a0:/tmp/integration.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\041_platform_audit_idempotency.sql movrr-051-db-5228e800d3a0:/tmp/041_platform_audit_idempotency.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\045_reward_partner_organisation_link.sql movrr-051-db-5228e800d3a0:/tmp/045_reward_partner_organisation_link.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\046_platform_rate_limit_hit.sql movrr-051-db-5228e800d3a0:/tmp/046_platform_rate_limit_hit.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-5228e800d3a0\\bootstrap.sql movrr-051-db-5228e800d3a0:/tmp/bootstrap.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\tests\\051_partner_locations.local.sql movrr-051-db-5228e800d3a0:/tmp/local.sql",
+        "exitCode": 0,
+        "output": ""
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/authcheck.sql",
+        "exitCode": 0,
+        "output": "DO"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/bootstrap.sql",
+        "exitCode": 0,
+        "output": "GRANT\nALTER DEFAULT PRIVILEGES\nGRANT\nCREATE TABLE\nCREATE FUNCTION\nREVOKE\nGRANT\nCREATE TABLE\nCREATE TABLE\nALTER TABLE\nCREATE POLICY"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/040_organisations_rbac.sql",
+        "exitCode": 0,
+        "output": "CREATE TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE TABLE\nCREATE TABLE\nCREATE INDEX\nCREATE TABLE\nCREATE INDEX\nCREATE INDEX\nINSERT 0 5\nINSERT 0 10\nINSERT 0 9\nINSERT 0 5\nINSERT 0 3\nINSERT 0 4\nALTER TABLE\nCREATE INDEX\nINSERT 0 0\nUPDATE 0\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nDROP POLICY\npsql:/tmp/040_organisations_rbac.sql:208: NOTICE:  policy \"Dashboard admins manage organisations\" for relation \"public.organisation\" does not exist, skipping\nCREATE POLICY\npsql:/tmp/040_organisations_rbac.sql:215: NOTICE:  policy \"Members can read own organisation\" for relation \"public.organisation\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/040_organisations_rbac.sql:229: NOTICE:  policy \"Authenticated read permission bundles\" for relation \"public.permission_bundle\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\nDROP POLICY\npsql:/tmp/040_organisations_rbac.sql:236: NOTICE:  policy \"Dashboard admins manage permission bundles\" for relation \"public.permission_bundle\" does not exist, skipping\nCREATE POLICY\npsql:/tmp/040_organisations_rbac.sql:243: NOTICE:  policy \"Authenticated read bundle capabilities\" for relation \"public.bundle_capability\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/040_organisations_rbac.sql:250: NOTICE:  policy \"Dashboard admins manage bundle capabilities\" for relation \"public.bundle_capability\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\nDROP POLICY\npsql:/tmp/040_organisations_rbac.sql:257: NOTICE:  policy \"Dashboard admins manage memberships\" for relation \"public.organisation_membership\" does not exist, skipping\nCREATE POLICY\npsql:/tmp/040_organisations_rbac.sql:264: NOTICE:  policy \"Members can read own memberships\" for relation \"public.organisation_membership\" does not exist, skipping\nDROP POLICY\nCREATE POLICY"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/041_platform_audit_idempotency.sql",
+        "exitCode": 0,
+        "output": "CREATE TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE INDEX\nCREATE FUNCTION\npsql:/tmp/041_platform_audit_idempotency.sql:42: NOTICE:  trigger \"trg_platform_audit_no_update\" for relation \"public.platform_audit_record\" does not exist, skipping\nDROP TRIGGER\nCREATE TRIGGER\npsql:/tmp/041_platform_audit_idempotency.sql:48: NOTICE:  trigger \"trg_platform_audit_no_delete\" for relation \"public.platform_audit_record\" does not exist, skipping\nDROP TRIGGER\nCREATE TRIGGER\nCREATE TABLE\nCREATE INDEX\nCREATE TABLE\nCREATE INDEX\nCREATE TABLE\nCREATE INDEX\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\npsql:/tmp/041_platform_audit_idempotency.sql:103: NOTICE:  policy \"Dashboard admins read audit\" for relation \"public.platform_audit_record\" does not exist, skipping\nDROP POLICY\npsql:/tmp/041_platform_audit_idempotency.sql:109: NOTICE:  policy \"Dashboard admins insert audit\" for relation \"public.platform_audit_record\" does not exist, skipping\nCREATE POLICY\nDROP POLICY\nCREATE POLICY\npsql:/tmp/041_platform_audit_idempotency.sql:117: NOTICE:  policy \"Dashboard admins manage idempotency\" for relation \"public.platform_idempotency_key\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/041_platform_audit_idempotency.sql:124: NOTICE:  policy \"Dashboard admins manage consumed jti\" for relation \"public.platform_consumed_jti\" does not exist, skipping\nDROP POLICY\nCREATE POLICY\npsql:/tmp/041_platform_audit_idempotency.sql:131: NOTICE:  policy \"Dashboard admins manage rate limits\" for relation \"public.platform_rate_limit_counter\" does not exist, skipping\nDROP POLICY\nCREATE POLICY"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/045_reward_partner_organisation_link.sql",
+        "exitCode": 0,
+        "output": "psql:/tmp/045_reward_partner_organisation_link.sql:17: NOTICE:  relation \"organisation\" already exists, skipping\nCREATE TABLE\nCREATE INDEX\npsql:/tmp/045_reward_partner_organisation_link.sql:20: NOTICE:  relation \"idx_organisation_type\" already exists, skipping\npsql:/tmp/045_reward_partner_organisation_link.sql:23: NOTICE:  relation \"idx_organisation_status\" already exists, skipping\nCREATE INDEX\npsql:/tmp/045_reward_partner_organisation_link.sql:34: NOTICE:  relation \"permission_bundle\" already exists, skipping\nCREATE TABLE\nCREATE TABLE\npsql:/tmp/045_reward_partner_organisation_link.sql:40: NOTICE:  relation \"bundle_capability\" already exists, skipping\nCREATE TABLE\npsql:/tmp/045_reward_partner_organisation_link.sql:54: NOTICE:  relation \"organisation_membership\" already exists, skipping\nCREATE INDEX\npsql:/tmp/045_reward_partner_organisation_link.sql:58: NOTICE:  relation \"idx_organisation_membership_user\" already exists, skipping\nCREATE INDEX\npsql:/tmp/045_reward_partner_organisation_link.sql:61: NOTICE:  relation \"idx_organisation_membership_org\" already exists, skipping\nINSERT 0 0\nINSERT 0 0\nINSERT 0 0\nINSERT 0 0\nINSERT 0 0\nINSERT 0 0\npsql:/tmp/045_reward_partner_organisation_link.sql:154: NOTICE:  column \"organisation_id\" of relation \"reward_partner\" already exists, skipping\nALTER TABLE\npsql:/tmp/045_reward_partner_organisation_link.sql:158: NOTICE:  relation \"idx_reward_partner_organisation_id\" already exists, skipping\nCREATE INDEX\nINSERT 0 0\nUPDATE 0\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nDO"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/051_partner_physical_locations.sql",
+        "exitCode": 3,
+        "output": "BEGIN\npsql:/tmp/051_partner_physical_locations.sql:6: ERROR:  Apply atomic rate limiter migration 046 first\nCONTEXT:  PL/pgSQL function inline_code_block line 3 at RAISE"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/guard.sql",
+        "exitCode": 0,
+        "output": "DO"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/046_platform_rate_limit_hit.sql",
+        "exitCode": 0,
+        "output": "CREATE FUNCTION\nREVOKE\nGRANT"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/forced.sql",
+        "exitCode": 3,
+        "output": "BEGIN\nDO\nCREATE INDEX\nCREATE TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE TABLE\nCREATE TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nREVOKE\nGRANT\nCREATE FUNCTION\nREVOKE\nGRANT\nCREATE FUNCTION\nREVOKE\nGRANT\npsql:/tmp/forced.sql:103: ERROR:  local-forced-migration-failure\nCONTEXT:  PL/pgSQL function inline_code_block line 1 at RAISE"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/guard.sql",
+        "exitCode": 0,
+        "output": "DO"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/051_partner_physical_locations.sql",
+        "exitCode": 0,
+        "output": "BEGIN\nDO\nCREATE INDEX\nCREATE TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE TABLE\nCREATE TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nREVOKE\nGRANT\nCREATE FUNCTION\nREVOKE\nGRANT\nCREATE FUNCTION\nREVOKE\nGRANT\nCOMMIT"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/integration.sql",
+        "exitCode": 0,
+        "output": "BEGIN\nDO\n                                                                                           QUERY PLAN                                                                                            \n-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n Limit  (cost=8.31..8.31 rows=1 width=16) (actual time=0.132..0.139 rows=101 loops=1)\n   Buffers: shared hit=336\n   ->  Sort  (cost=8.31..8.31 rows=1 width=16) (actual time=0.131..0.134 rows=101 loops=1)\n         Sort Key: id\n         Sort Method: top-N heapsort  Memory: 20kB\n         Buffers: shared hit=336\n         ->  Index Only Scan using partner_location_discovery on reward_partner_location  (cost=0.27..8.30 rows=1 width=16) (actual time=0.022..0.090 rows=351 loops=1)\n               Index Cond: ((latitude >= '52'::double precision) AND (latitude <= '52.1'::double precision) AND (longitude >= '4'::double precision) AND (longitude <= '4.1'::double precision))\n               Heap Fetches: 351\n               Buffers: shared hit=336\n Planning:\n   Buffers: shared hit=6\n Planning Time: 0.052 ms\n Execution Time: 0.150 ms\n(14 rows)\n\nROLLBACK"
+      },
+      {
+        "command": "docker --context desktop-linux exec movrr-051-db-5228e800d3a0 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/local.sql",
+        "exitCode": 0,
+        "output": "SET\nBEGIN\npsql:/tmp/local.sql:102: NOTICE:  PASS service-role RPC create and draft defaults\npsql:/tmp/local.sql:102: NOTICE:  PASS invalid latitude, longitude, NaN, one-sided coordinates and unverified publication\npsql:/tmp/local.sql:102: NOTICE:  PASS actual PostgreSQL microseconds, offset equivalent expected version and stale conflict\npsql:/tmp/local.sql:102: NOTICE:  PASS cross-organisation RPC access and composite FK\npsql:/tmp/local.sql:102: NOTICE:  PASS partial organisation/partner and location/audit transaction rollback\npsql:/tmp/local.sql:102: NOTICE:  PASS restrictive lifecycle, partner/location suspension and geographic bounds\npsql:/tmp/local.sql:102: NOTICE:  PASS actual app-role denial, independent RLS filtering and 046 quota\nDO\nROLLBACK\nDO\npsql:/tmp/local.sql:109: NOTICE:  PASS complete fixture and temporary-grant rollback"
+      },
+      {
+        "command": "docker --context desktop-linux rm -f movrr-051-db-5228e800d3a0",
+        "exitCode": 0,
+        "output": "movrr-051-db-5228e800d3a0"
+      },
+      {
+        "command": "docker --context desktop-linux volume rm movrr-051-data-5228e800d3a0",
+        "exitCode": 0,
+        "output": "movrr-051-data-5228e800d3a0"
+      },
+      {
+        "command": "docker --context desktop-linux network rm movrr-051-net-5228e800d3a0",
+        "exitCode": 0,
+        "output": "movrr-051-net-5228e800d3a0"
+      }
+    ]
+  },
+  "failedSetupEvidence": [
+    {
+      "image": "public.ecr.aws/supabase/postgres:17.6.1.165",
+      "requestedRuns": 2,
+      "passedRuns": 0,
+      "commands": [
+        {
+          "command": "docker --context desktop-linux info --format {{.ServerVersion}}",
+          "exitCode": 0,
+          "output": "29.8.1"
+        },
+        {
+          "command": "docker --context desktop-linux image inspect public.ecr.aws/supabase/postgres:17.6.1.165 --format {{json .RepoDigests}}",
+          "exitCode": 0,
+          "output": "[\"public.ecr.aws/supabase/postgres@sha256:28f0e16a019e648089fc1a6d333549a55548f6019c15ae4bd7cd58b989027518\"]"
+        },
+        {
+          "command": "docker --context desktop-linux network create --internal --label movrr.task=051-local-verification movrr-051-net-1cfe9426a001",
+          "exitCode": 0,
+          "output": "02bc8bcc5e33b1093e62d4b4001c49b8ed62404c6d6961ef5f17754954fa20af"
+        },
+        {
+          "command": "docker --context desktop-linux volume create --label movrr.task=051-local-verification movrr-051-data-1cfe9426a001",
+          "exitCode": 0,
+          "output": "movrr-051-data-1cfe9426a001"
+        },
+        {
+          "command": "docker --context desktop-linux run --pull=never -d --name movrr-051-db-1cfe9426a001 --label movrr.task=051-local-verification --network movrr-051-net-1cfe9426a001 --mount source=movrr-051-data-1cfe9426a001,target=/var/lib/postgresql/data -e POSTGRES_PASSWORD=disposable-local-only -e POSTGRES_DB=movrr_051_test public.ecr.aws/supabase/postgres:17.6.1.165",
+          "exitCode": 0,
+          "output": "9457b4a0b4fda4921fddf6aca4e2f6308741fd3c1b093e7d0f720bb4fe423296"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-1cfe9426a001 pg_isready -U supabase_admin",
+          "exitCode": 2,
+          "output": "/run/postgresql:5432 - no response"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-1cfe9426a001 pg_isready -U supabase_admin",
+          "exitCode": 0,
+          "output": "/run/postgresql:5432 - accepting connections"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-1cfe9426a001 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -c SELECT version(),current_database(); SELECT to_regclass('auth.users'),to_regprocedure('auth.uid()'),to_regprocedure('gen_random_uuid()');",
+          "exitCode": 0,
+          "output": "                                   version                                    | current_database \n------------------------------------------------------------------------------+------------------\n PostgreSQL 17.6 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit | movrr_051_test\n(1 row)\n\n to_regclass | to_regprocedure |  to_regprocedure  \n-------------+-----------------+-------------------\n auth.users  | auth.uid()      | gen_random_uuid()\n(1 row)\n"
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\051_partner_physical_locations.sql movrr-051-db-1cfe9426a001:/tmp/051_partner_physical_locations.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-1cfe9426a001\\guard.sql movrr-051-db-1cfe9426a001:/tmp/guard.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\040_organisations_rbac.sql movrr-051-db-1cfe9426a001:/tmp/040_organisations_rbac.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-1cfe9426a001\\authcheck.sql movrr-051-db-1cfe9426a001:/tmp/authcheck.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-1cfe9426a001\\forced.sql movrr-051-db-1cfe9426a001:/tmp/forced.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\tests\\051_partner_locations.integration.sql movrr-051-db-1cfe9426a001:/tmp/integration.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\041_platform_audit_idempotency.sql movrr-051-db-1cfe9426a001:/tmp/041_platform_audit_idempotency.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\045_reward_partner_organisation_link.sql movrr-051-db-1cfe9426a001:/tmp/045_reward_partner_organisation_link.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\046_platform_rate_limit_hit.sql movrr-051-db-1cfe9426a001:/tmp/046_platform_rate_limit_hit.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\AppData\\Local\\Temp\\movrr-051-1cfe9426a001\\bootstrap.sql movrr-051-db-1cfe9426a001:/tmp/bootstrap.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux cp C:\\Users\\ghyor\\Projects\\movrr-admin\\scripts\\tests\\051_partner_locations.local.sql movrr-051-db-1cfe9426a001:/tmp/local.sql",
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-1cfe9426a001 psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d movrr_051_test -f /tmp/authcheck.sql",
+          "exitCode": 2,
+          "output": "psql: error: connection to server on socket \"/run/postgresql/.s.PGSQL.5432\" failed: FATAL:  the database system is shutting down"
+        },
+        {
+          "command": "docker --context desktop-linux rm -f movrr-051-db-1cfe9426a001",
+          "exitCode": 0,
+          "output": "movrr-051-db-1cfe9426a001"
+        },
+        {
+          "command": "docker --context desktop-linux volume rm movrr-051-data-1cfe9426a001",
+          "exitCode": 0,
+          "output": "movrr-051-data-1cfe9426a001"
+        },
+        {
+          "command": "docker --context desktop-linux network rm movrr-051-net-1cfe9426a001",
+          "exitCode": 0,
+          "output": "movrr-051-net-1cfe9426a001"
+        }
+      ]
+    },
+    {
+      "image": "public.ecr.aws/supabase/postgres:17.6.1.165",
+      "requestedRuns": 2,
+      "passedRuns": 0,
+      "commands": [
+        {
+          "command": "docker --context desktop-linux info --format {{.ServerVersion}}",
+          "exitCode": 0,
+          "output": "29.8.1"
+        },
+        {
+          "command": "docker --context desktop-linux image inspect public.ecr.aws/supabase/postgres:17.6.1.165 --format {{json .RepoDigests}}",
+          "exitCode": 0,
+          "output": "[\"public.ecr.aws/supabase/postgres@sha256:28f0e16a019e648089fc1a6d333549a55548f6019c15ae4bd7cd58b989027518\"]"
+        },
+        {
+          "command": "docker --context desktop-linux network create --internal --label movrr.task=051-local-verification movrr-051-net-3a97dccf5719",
+          "exitCode": 0,
+          "output": "e1ee28bc3828086a5f4055ff7e2cf32e169d911c223c0719a351053c2d5befb9"
+        },
+        {
+          "command": "docker --context desktop-linux volume create --label movrr.task=051-local-verification movrr-051-data-3a97dccf5719",
+          "exitCode": 0,
+          "output": "movrr-051-data-3a97dccf5719"
+        },
+        {
+          "command": "docker --context desktop-linux run --pull=never -d --name movrr-051-db-3a97dccf5719 --label movrr.task=051-local-verification --network movrr-051-net-3a97dccf5719 --mount source=movrr-051-data-3a97dccf5719,target=/var/lib/postgresql/data -e POSTGRES_PASSWORD=disposable-local-only -e POSTGRES_DB=movrr_051_test public.ecr.aws/supabase/postgres:17.6.1.165",
+          "exitCode": 0,
+          "output": "1b339d2c251e9aebf50eefde6a505d05cbdaa07ecae84bb29220bcc14373511a"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": "bash"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": "bash"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": "bash"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux exec movrr-051-db-3a97dccf5719 cat /proc/1/comm",
+          "exitCode": 0,
+          "output": ".postgres-wrapp"
+        },
+        {
+          "command": "docker --context desktop-linux rm -f movrr-051-db-3a97dccf5719",
+          "exitCode": 0,
+          "output": "movrr-051-db-3a97dccf5719"
+        },
+        {
+          "command": "docker --context desktop-linux volume rm movrr-051-data-3a97dccf5719",
+          "exitCode": 0,
+          "output": "movrr-051-data-3a97dccf5719"
+        },
+        {
+          "command": "docker --context desktop-linux network rm movrr-051-net-3a97dccf5719",
+          "exitCode": 0,
+          "output": "movrr-051-net-3a97dccf5719"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,258 @@
+{
+  "date": "2026-10-12",
+  "repository": "movrr-admin",
+  "branch": "main",
+  "head": "b62292fe69cf1536900c4d00ea3b52879ea7d9d6",
+  "total": 30,
+  "trackedModified": 7,
+  "untracked": 23,
+  "staged": false,
+  "files": [
+    {
+      "status": " M",
+      "file": "components/rewards/organisations/OrganisationDetailsDrawer.tsx",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": " M",
+      "file": "features/fraud/infrastructure/supabaseRateLimitStore.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": " M",
+      "file": "features/organisations/infrastructure/supabaseOrganisationOpsStore.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": " M",
+      "file": "lib/http/platformRoute.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": " M",
+      "file": "lib/platformApi/client.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": " M",
+      "file": "lib/platformApi/types.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": " M",
+      "file": "proxy.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "__tests__/features/partners/partnerDiscoveryProxy.test.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "__tests__/features/partners/partnerLocationInfrastructure.test.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "__tests__/features/partners/partnerLocationRemediation.test.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "__tests__/features/partners/partnerLocations.test.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "__tests__/ui/partnerLocationEditor.test.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "app/api/v1/organisations/[id]/locations/route.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "app/api/v1/partners/locations/route.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "components/rewards/partners/PartnerLocationsPanel.tsx",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "docs/commit-preparation-inventory.json",
+      "disposition": "include",
+      "commitGroup": "A2"
+    },
+    {
+      "status": "??",
+      "file": "docs/commit-preparation.md",
+      "disposition": "include",
+      "commitGroup": "A2"
+    },
+    {
+      "status": "??",
+      "file": "docs/partner-location-local-verification.json",
+      "disposition": "include",
+      "commitGroup": "A2"
+    },
+    {
+      "status": "??",
+      "file": "docs/partner-location-local-verification.md",
+      "disposition": "include",
+      "commitGroup": "A2"
+    },
+    {
+      "status": "??",
+      "file": "docs/partner-location-staging-verification.md",
+      "disposition": "include",
+      "commitGroup": "A2"
+    },
+    {
+      "status": "??",
+      "file": "features/partners/application/editorRequestScope.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "features/partners/application/partnerLocationService.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "features/partners/domain/PartnerLocation.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "features/partners/infrastructure/partnerLocationRoutes.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "features/partners/infrastructure/supabasePartnerLocations.ts",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "scripts/051_partner_physical_locations.sql",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "scripts/tests/051_partner_locations.integration.sql",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "scripts/tests/051_partner_locations.local.sql",
+      "disposition": "include",
+      "commitGroup": "A1"
+    },
+    {
+      "status": "??",
+      "file": "scripts/tests/run-051-arguments.tests.ps1",
+      "disposition": "include",
+      "commitGroup": "A2"
+    },
+    {
+      "status": "??",
+      "file": "scripts/tests/run-051-local.ps1",
+      "disposition": "include",
+      "commitGroup": "A2"
+    }
+  ],
+  "excludedLocalArtifacts": [],
+  "commitGroups": [
+    {
+      "id": "A1",
+      "message": "feat(partners): integrate physical locations across Platform API and Admin",
+      "dependsOn": [],
+      "files": [
+        "__tests__/features/partners/partnerDiscoveryProxy.test.ts",
+        "__tests__/features/partners/partnerLocationInfrastructure.test.ts",
+        "__tests__/features/partners/partnerLocationRemediation.test.ts",
+        "__tests__/features/partners/partnerLocations.test.ts",
+        "__tests__/ui/partnerLocationEditor.test.ts",
+        "app/api/v1/organisations/[id]/locations/route.ts",
+        "app/api/v1/partners/locations/route.ts",
+        "components/rewards/organisations/OrganisationDetailsDrawer.tsx",
+        "components/rewards/partners/PartnerLocationsPanel.tsx",
+        "features/fraud/infrastructure/supabaseRateLimitStore.ts",
+        "features/organisations/infrastructure/supabaseOrganisationOpsStore.ts",
+        "features/partners/application/editorRequestScope.ts",
+        "features/partners/application/partnerLocationService.ts",
+        "features/partners/domain/PartnerLocation.ts",
+        "features/partners/infrastructure/partnerLocationRoutes.ts",
+        "features/partners/infrastructure/supabasePartnerLocations.ts",
+        "lib/http/platformRoute.ts",
+        "lib/platformApi/client.ts",
+        "lib/platformApi/types.ts",
+        "proxy.ts",
+        "scripts/051_partner_physical_locations.sql",
+        "scripts/tests/051_partner_locations.integration.sql",
+        "scripts/tests/051_partner_locations.local.sql"
+      ]
+    },
+    {
+      "id": "A2",
+      "message": "docs(partners): record local SQL verification and deployment gates",
+      "dependsOn": [
+        "A1"
+      ],
+      "files": [
+        "docs/commit-preparation-inventory.json",
+        "docs/commit-preparation.md",
+        "docs/partner-location-local-verification.json",
+        "docs/partner-location-local-verification.md",
+        "docs/partner-location-staging-verification.md",
+        "scripts/tests/run-051-arguments.tests.ps1",
+        "scripts/tests/run-051-local.ps1"
+      ]
+    }
+  ],
+  "stagingPlan": {
+    "authorization": "NOT AUTHORIZED: do not execute until explicit staging approval",
+    "preconditions": [
+      "Verify branch/HEAD and empty index",
+      "Verify current status equals this snapshot; stop on unexpected changes",
+      "Never use git add ., git add -A, or force-add ignored artifacts"
+    ],
+    "commands": [
+      "$inventory = Get-Content -LiteralPath <inventory-json> -Raw | ConvertFrom-Json",
+      "$group = $inventory.commitGroups | Where-Object id -eq <approved-group-id>",
+      "$paths = @($group.files)",
+      "git --literal-pathspecs add -- @paths",
+      "git diff --cached --check",
+      "git diff --cached --name-only"
+    ],
+    "postcondition": "Compare staged paths exactly with the approved group.files array; inspect the staged diff. No commit without separate explicit authorization."
+  }
+}
