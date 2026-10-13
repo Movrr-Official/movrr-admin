@@ -115,3 +115,14 @@ describe("Deletion operational capability boundaries", () => {
     expect(isAccountDeletionReceipt({ requestId: id, status, policyVersion: 1, contractVersion: 2 })).toBe(false);
   });
 });
+
+it("restricts destructive case activation proposals to Security recovery capability", async () => {
+  for (const role of ["support_agent", "finance_operator", "operations_coordinator", "compliance_analyst"]) {
+    state.role = role;
+    expect((await proposeAccountDeletionReview(id, "recovery", "activate_destructive_processing", "policy:1")).success).toBe(false);
+  }
+  expect(state.client).not.toHaveBeenCalled();
+  state.role = "security_admin";
+  expect((await proposeAccountDeletionReview(id, "recovery", "activate_destructive_processing", "policy:1")).success).toBe(true);
+  expect(state.rpc).toHaveBeenCalledWith("propose_account_deletion_review", {p_job_id:id,p_actor:id,p_category:"recovery",p_action:"activate_destructive_processing",p_reference:"policy:1"});
+});

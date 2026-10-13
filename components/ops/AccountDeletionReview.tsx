@@ -16,7 +16,7 @@ type Proposal = { proposalId: string; action: string; reference: string; decisio
 type ObligationCase = { caseId: string; category: string; state: string; resolutionProposalId: string | null; operations: { operationId: string }[] };
 const actions: Record<DeletionReviewCategory, readonly string[]> = {
   finance: ["resolve_obligation"], operations: ["resolve_obligation", "transfer_ownership"],
-  compliance: ["review_hold"], recovery: ["reconcile_external", "confirm_invocation_terminated"],
+  compliance: ["review_hold"], recovery: ["reconcile_external", "confirm_invocation_terminated", "activate_destructive_processing"],
 };
 const rewardReviewReasons: Record<string, string> = {
   authorship_projection_approval_required: "A shared record requires its exact approved authorship projection. Ownership and business facts must survive; a replacement identity is not permitted.",
@@ -116,7 +116,7 @@ export function AccountDeletionReview({ requestId, category }: { requestId: stri
       {category === "recovery" && <Button size="sm" variant="outline" disabled={busy} onClick={() => void perform(() => verifyAccountDeletionRestoreQuarantine(requestId))}>Verify restored-data erasure</Button>}
       {actions[category].map(value => <Button key={value} size="sm" variant={action === value ? "default" : "outline"} onClick={() => setAction(value)}>{value.replaceAll("_", " ")}</Button>)}
     </div>
-    <Input aria-label="Internal review reference" placeholder="Internal approval or incident reference" value={reference} onChange={event => setReference(event.target.value)} maxLength={200} />
+    <Input aria-label="Internal review reference" placeholder={action === "activate_destructive_processing" ? "Exact policy reference: policy:<version>; independent Security review required" : "Internal approval or incident reference"} value={reference} onChange={event => setReference(event.target.value)} maxLength={200} />
     <Button size="sm" variant="outline" disabled={busy || !reference.trim()} onClick={() => void perform(() => proposeAccountDeletionReview(requestId, category, action, reference.trim()))}>Submit review proposal</Button>
     {message && <p role="status">{message}</p>}
   </div>;
