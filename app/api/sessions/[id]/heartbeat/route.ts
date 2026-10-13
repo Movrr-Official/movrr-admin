@@ -12,7 +12,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { triggerRewardUpdate } from "@/lib/services/rewardTrigger";
 import { logSessionEvent } from "@/lib/services/sessionLogger";
 import { authenticateRiderSessionRequest } from "@/lib/riderSessionAuth";
 import { checkDistributedRateLimit } from "@/lib/distributedRateLimit";
@@ -20,7 +19,6 @@ import { getClientIp } from "@/lib/rateLimit";
 import { applySecurityHeaders } from "@/lib/securityHeaders";
 
 const MAX_SESSION_DURATION_H = 8;
-const CHECKPOINT_INTERVAL_MIN = 30;
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -115,23 +113,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     .update({ last_heartbeat_at: now.toISOString() })
     .eq("id", sessionId);
 
-  // 30-minute reward checkpoint for long sessions
-  const lastHeartbeat = session.last_heartbeat_at
-    ? new Date(session.last_heartbeat_at)
-    : startedAt;
-  const minutesSinceCheckpoint =
-    (now.getTime() - lastHeartbeat.getTime()) / 60_000;
-
-  if (minutesSinceCheckpoint >= CHECKPOINT_INTERVAL_MIN) {
-    triggerRewardUpdate({ sessionId, supabase }).catch(() => {});
-    logSessionEvent(
-      logger,
-      "reward_calculated",
-      sessionId,
-      session.rider_id,
-      { checkpoint: true, duration_h: durationH },
-    );
-  }
+  // Heartbeats preserve evidence; reward accounting occurs at durable settlement.
 
   return applySecurityHeaders(
     NextResponse.json({

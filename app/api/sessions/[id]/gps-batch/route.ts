@@ -30,7 +30,6 @@ import {
   ZonePolygon,
   ZONE_ENTRY_CONSECUTIVE_POINTS,
 } from "@/lib/services/complianceVerifier";
-import { triggerRewardUpdate } from "@/lib/services/rewardTrigger";
 import { publishRiderPositionUpdate } from "@/lib/services/realtimePublisher";
 import { logSessionEvent } from "@/lib/services/sessionLogger";
 
@@ -417,15 +416,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     }
   }
 
-  // ── 12. Trigger incremental reward update ────────────────────────────────────
-  if (result.acceptedPoints.length > 0) {
-    triggerRewardUpdate({ sessionId, supabase }).catch((err) => {
-      logger.warn("Reward update failed non-critically", {
-        sessionId,
-        error: String(err),
-      });
-    });
-  }
+  // Rewards commit only through the durable ride-time settlement executor.
 
   // ── 13. Publish to admin realtime feed ───────────────────────────────────────
   const lastPoint =
