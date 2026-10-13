@@ -111,6 +111,8 @@ const VIEWER_BASE: KnownCapability[] = [
 ];
 
 const SUPPORT_BASE: KnownCapability[] = [
+  "privacy.deletion.monitor",
+  "privacy.deletion.escalate",
   ...VIEWER_BASE,
   "users.read",
   "riders.read",
@@ -161,6 +163,9 @@ const FRAUD_OPS: KnownCapability[] = [
 ];
 
 const PLATFORM_OPS: KnownCapability[] = [
+  "privacy.deletion.monitor",
+  "privacy.deletion.escalate",
+  "privacy.deletion.operations.review",
   "platform.health.read",
   "platform.jobs.manage",
   "featureflags.manage",
@@ -169,6 +174,8 @@ const PLATFORM_OPS: KnownCapability[] = [
 ];
 
 const COMPLIANCE_BASE: KnownCapability[] = [
+  "privacy.deletion.monitor",
+  "privacy.deletion.compliance.review",
   ...VIEWER_BASE,
   "programmes.read",
   "compliance.read",
@@ -210,6 +217,9 @@ export const EMPLOYEE_BUNDLE_CAPABILITIES: Record<
   [EMPLOYEE_BUNDLE_KEYS.super_admin]: [...CAPABILITIES],
 
   [EMPLOYEE_BUNDLE_KEYS.security_admin]: uniqueCaps(VIEWER_BASE, [
+    "privacy.deletion.monitor",
+    "privacy.deletion.escalate",
+    "privacy.deletion.recovery",
     "users.read",
     "users.role.approve",
     "settings.manage",
@@ -233,6 +243,9 @@ export const EMPLOYEE_BUNDLE_CAPABILITIES: Record<
     PARTNER_OPS,
     PARTNER_APPROVE,
     [
+      "privacy.deletion.monitor",
+      "privacy.deletion.escalate",
+      "privacy.deletion.operations.review",
       "users.read",
       "users.manage",
       "users.role.assign",
@@ -330,6 +343,8 @@ export const EMPLOYEE_BUNDLE_CAPABILITIES: Record<
   ]),
 
   [EMPLOYEE_BUNDLE_KEYS.finance_operator]: uniqueCaps(VIEWER_BASE, [
+    "privacy.deletion.monitor",
+    "privacy.deletion.finance.review",
     "billing.read",
     "billing.manage",
     "exports.execute",

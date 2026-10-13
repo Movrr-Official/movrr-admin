@@ -68,6 +68,12 @@ export type DashboardCapabilitySurface = {
  * Adding a module: register surfaces here; nav/pages/search derive automatically.
  */
 export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[] = [
+  { capability: "privacy.deletion.monitor", description: "Read minimal deletion lifecycle metadata", category: "security", actions: ["privacy.deletion.monitor"], auditRequired: true, dataScope: "global" },
+  { capability: "privacy.deletion.escalate", description: "Escalate deletion review without replaying destructive work", category: "security", actions: ["privacy.deletion.escalate"], auditRequired: true, dataScope: "global" },
+  { capability: "privacy.deletion.operations.review", description: "Review shared resources and equipment; dispositions remain gated", category: "security", auditRequired: true, dataScope: "department" },
+  { capability: "privacy.deletion.finance.review", description: "Review reward obligations; financial decisions remain gated", category: "security", auditRequired: true, dataScope: "department" },
+  { capability: "privacy.deletion.compliance.review", description: "Review legal and retention exceptions; approvals remain gated", category: "security", auditRequired: true, dataScope: "department" },
+  { capability: "privacy.deletion.recovery", description: "Reserved for fenced recovery after verified invocation termination", category: "security", auditRequired: true, dataScope: "global" },
   {
     capability: "dashboard.read",
     description: "View operations overview",

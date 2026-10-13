@@ -35,6 +35,19 @@ export type CapabilityRegistryEntry = {
 
 export const PLATFORM_CAPABILITY_REGISTRY: CapabilityRegistryEntry[] = [
   {
+    id: "privacy.account-deletion",
+    name: "Account deletion and retention review",
+    backendModule: "Supabase account_deletion_jobs and policy registry",
+    apiRoutes: ["Supabase/functions/delete-account", "Supabase/functions/process-account-deletions"],
+    adminConsumer: "partial",
+    webConsumer: "none",
+    mobileConsumer: "partial",
+    primaryActor: "rider",
+    secondaryActors: ["support", "administrator", "compliance_officer"],
+    lifecycleOwner: "platform",
+    permissions: ["privacy.deletion.monitor", "privacy.deletion.escalate", "privacy.deletion.operations.review", "privacy.deletion.finance.review", "privacy.deletion.compliance.review", "privacy.deletion.recovery"],
+  },
+  {
     id: "campaigns.crud",
     name: "Campaign management",
     backendModule: "features/campaigns",

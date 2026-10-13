@@ -66,6 +66,7 @@ import { useAdminUser, useCapability } from "@/hooks/useAdminUser";
 import { executeAuditedExport } from "@/app/actions/exportAudit";
 import { useToast } from "@/hooks/useToast";
 import { canSeeNavHref } from "@/features/authorization/navigation";
+import { AccountDeletionMonitor } from "@/components/ops/AccountDeletionMonitor";
 import { getCapabilitiesForRole } from "@/lib/authPermissions";
 
 const DASHBOARD_LOCALE = "nl-NL";
@@ -1744,6 +1745,7 @@ export default function DashboardOverview() {
             })}
           </CardContent>
         </Card>
+        <AccountDeletionMonitor />
       </div>
     </div>
   );
