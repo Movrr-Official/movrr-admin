@@ -2,9 +2,13 @@
 
 ## Production deployment status: 14 October 2026
 
-The committed 034-088 candidate is not the deployed production contract. Only 034 and the separate request-acceptance freeze are installed. Migration 035 remains blocked by owner-only ENABLE ALWAYS operations on managed Storage tables and public.spatial_ref_sys; 078 and 079 have additional managed-owner requirements. No supported privileged installer or invariant-preserving substitute is established. The new settlement RPC is absent, and deletion Edges remain version 1.
+Corrected migrations 035–088 and the managed-write principal-binding repair are installed and verified in production. Existing 033 scripts, 034 and the request freeze were retained without replay. The settlement RPC is available to authenticated clients; obsolete reward-writing RPCs are denied to application roles. All three matching deletion/provider Edge Functions are ACTIVE version 2.
 
-The [authoritative cutover record](../../../movrr-mobile/docs/implementation/prelaunch-cutover.md) documents the boundary, recovery sequence and verified safety gates. Admin's committed GPS/heartbeat implementation retires the incremental reward writer, but production application deployment and the complete matching database contract are not yet verified.
+The Admin privileged factory now coordinates advertiser-email, users/waitlist, MFA and community image mutations using durable database permits against the same account guard as deletion. In-flight or uncertain operations block deletion; expiry does not authorize takeover. Creation UUIDs and canonical Auth scopes prevent delayed principal replay. Existing capability checks remain in place.
+
+Request acceptance and destructive database execution remain disabled; no deletion/purge schedule was installed. Direct platform/third-party privileged writes and replica restores are outside application coordination. Restore quarantine remains required. SCIM-linked and multipart-abort deletion cases remain held rather than claiming unsupported protection. Verify the running Admin build uses this factory before separately approved deletion activation.
+
+The [authoritative cutover record](../../../movrr-mobile/docs/implementation/prelaunch-cutover.md) and its linked deployment evidence contain actual versions, grants, test results and limitations. Mobile/Admin committed contracts agree with the installed database; this task does not independently establish the running hosted Admin application build.
 
 ## Latest verified alignment: migrations 034-087
 
