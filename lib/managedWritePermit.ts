@@ -7,7 +7,7 @@ export function coordinatedManagedFetch(options: {
 }): typeof fetch {
   const transport = options.fetch ?? globalThis.fetch;
   return async (input, init) => {
-    const request = new Request(input, init);
+    let request = new Request(input, init);
     const url = new URL(request.url);
     const method = request.method.toUpperCase();
     const managed = url.pathname.startsWith('/auth/v1/') || url.pathname.startsWith('/storage/v1/');
@@ -23,6 +23,16 @@ export function coordinatedManagedFetch(options: {
         const body: unknown = await request.clone().json();
         if (body && typeof body === 'object' && !Array.isArray(body)) {
           const data = body as Record<string, unknown>;
+          if (path === '/auth/v1/admin/users' && method === 'POST') {
+            // Supabase Admin API supports a caller-assigned UUID. Bind it before
+            // creation so a lost acknowledgement cannot lose principal identity.
+            if (data.id === undefined) data.id = crypto.randomUUID();
+            if (typeof data.id !== 'string' || !uuid.test(data.id)) throw new Error('managed_write_scope_required');
+            const headers = new Headers(request.headers);
+            headers.delete('content-length');
+            request = new Request(request, { headers, body: JSON.stringify(data) });
+          }
+
           identity = Object.fromEntries(['id', 'email', 'phone', 'user_id'].filter(key => typeof data[key] === 'string').map(key => [key, data[key]]));
           if (typeof data.user_id === 'string' && uuid.test(data.user_id)) subjects.add(data.user_id);
           if (typeof data.id === 'string' && uuid.test(data.id)) subjects.add(data.id);
@@ -47,7 +57,14 @@ export function coordinatedManagedFetch(options: {
         subjects.add(parts[1]);
       }
     } else throw new Error('uncoordinated_managed_write_rejected');
-    const resource = path + '?subjects=' + encodeURIComponent([...subjects].sort().join(',')) + '&alias=' + encodeURIComponent(String(identity.email ?? identity.phone ?? '').toLowerCase());
+    // Updates to the same Auth resource remain conflicting even if a retry
+    // changes its email payload. Creation/link scope is its normalized email.
+    const authPath = path.startsWith('/auth/v1/admin/');
+    const targetSegment = authPath ? path.split('/users/')[1]?.split('/')[0] : undefined;
+    const canonicalPath = authPath ? path.split('/').map(part => uuid.test(part) ? part.toLowerCase() : part).join('/') : path;
+    const resource = canonicalPath + (authPath
+      ? (targetSegment && uuid.test(targetSegment) ? '' : '?alias=' + encodeURIComponent(String(identity.email ?? '').trim().toLowerCase()))
+      : '?subjects=' + encodeURIComponent([...subjects].map(subject => subject.toLowerCase()).sort().join(',')));
     const actor = await options.actor();
     if (!uuid.test(actor)) throw new Error('authenticated_managed_writer_required');
     const acquired = await options.rpc('acquire_account_managed_write', {
