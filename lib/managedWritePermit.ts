@@ -25,9 +25,12 @@ export function coordinatedManagedFetch(options: {
           const data = body as Record<string, unknown>;
           identity = Object.fromEntries(['id', 'email', 'phone', 'user_id'].filter(key => typeof data[key] === 'string').map(key => [key, data[key]]));
           if (typeof data.user_id === 'string' && uuid.test(data.user_id)) subjects.add(data.user_id);
+          if (typeof data.id === 'string' && uuid.test(data.id)) subjects.add(data.id);
         }
       }
-      if (!subjects.size && !identity.email && !identity.phone) throw new Error('managed_write_scope_required');
+      // Confirmed MOVRR creation/link writers are email-based. Reject an unbound
+      // phone creation path instead of assuming its platform normalization.
+      if ((!target && identity.phone) || (!subjects.size && !identity.email)) throw new Error('managed_write_scope_required');
     } else if (path.startsWith('/storage/v1/object/')) {
       const parts = path.slice('/storage/v1/object/'.length).split('/');
       if (method === 'DELETE' && parts.length === 1) {
