@@ -1,5 +1,11 @@
 # Account deletion alignment
 
+## Production deployment status: 14 October 2026
+
+The committed 034-088 candidate is not the deployed production contract. Only 034 and the separate request-acceptance freeze are installed. Migration 035 remains blocked by owner-only ENABLE ALWAYS operations on managed Storage tables and public.spatial_ref_sys; 078 and 079 have additional managed-owner requirements. No supported privileged installer or invariant-preserving substitute is established. The new settlement RPC is absent, and deletion Edges remain version 1.
+
+The [authoritative cutover record](../../../movrr-mobile/docs/implementation/prelaunch-cutover.md) documents the boundary, recovery sequence and verified safety gates. Admin's committed GPS/heartbeat implementation retires the incremental reward writer, but production application deployment and the complete matching database contract are not yet verified.
+
 ## Latest verified alignment: migrations 034-087
 
 13 October 2026. The existing Operations review surface now invokes consented
