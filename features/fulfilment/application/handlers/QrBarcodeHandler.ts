@@ -1,4 +1,8 @@
-import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import {
+  fail,
+  ok,
+  type ApplicationResult,
+} from "@/lib/result/ApplicationResult";
 import type { ResourceAllocationService } from "@/features/fulfilment/application/contracts/ResourceAllocationService";
 import type {
   TokenService,
@@ -58,11 +62,22 @@ export function createQrBarcodeHandler(
         allocationId: allocated.value.allocationId,
       });
 
-      const reserved = await ctx.requestTransition(
-        ctx.fulfilment,
-        "reserved",
-        "resource_reserved",
-      );
+      if (ctx.fulfilment.state === "ready") {
+        const awaiting = await ctx.requestTransition(
+          ctx.fulfilment,
+          "awaiting_collection",
+          "awaiting_partner_validation",
+        );
+        return awaiting.ok ? ok({ fulfilment: awaiting.value }) : awaiting;
+      }
+      const reserved =
+        ctx.fulfilment.state === "created"
+          ? await ctx.requestTransition(
+              ctx.fulfilment,
+              "reserved",
+              "resource_reserved",
+            )
+          : ok(ctx.fulfilment);
       if (!reserved.ok) return reserved;
 
       const issued = await deps.tokens.issue({

@@ -1,8 +1,11 @@
 import "server-only";
 
-import { randomBytes, randomUUID } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import {
+  fail,
+  ok,
+  type ApplicationResult,
+} from "@/lib/result/ApplicationResult";
 import type {
   AllocateResourceInput,
   AllocationLifecycleInput,
@@ -15,10 +18,6 @@ function throwOnError(error: { message: string } | null, action: string): void {
   if (error) throw new Error(`${action}: ${error.message}`);
 }
 
-function generateUniqueCode(): string {
-  return `MOVRR-${randomBytes(8).toString("hex").toUpperCase()}`;
-}
-
 /**
  * Durable generated-digital allocations via fulfilment_resource_allocation.
  * Codes live in allocation metadata (no pool items).
@@ -28,45 +27,19 @@ export function createSupabaseGeneratedDigitalResourceProvider(): GeneratedDigit
     async allocate(
       input: AllocateResourceInput,
     ): Promise<ApplicationResult<ResourceAllocationResult>> {
-      const supabase = createSupabaseAdminClient();
-      const code = generateUniqueCode();
-      const allocationId = randomUUID();
-      const resourceItemId = randomUUID();
-
-      const { error: upsertResourceError } = await supabase
-        .from("fulfilment_resource")
-        .upsert(
-          {
-            id: input.resourceId,
-            resource_kind: "generated_digital",
-            name: `Generated ${input.resourceId.slice(0, 8)}`,
-            status: "active",
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "id" },
-        );
-      throwOnError(upsertResourceError, "generated.allocate.resource");
-
-      const { error } = await supabase
-        .from("fulfilment_resource_allocation")
-        .insert({
-          id: allocationId,
-          fulfilment_id: input.fulfilmentId,
-          resource_id: input.resourceId,
-          resource_item_id: null,
-          status: "reserved",
-          metadata: { code, resourceItemId },
-        });
-      throwOnError(error, "generated.allocate");
-
-      return ok({
-        allocationId,
-        fulfilmentId: input.fulfilmentId,
-        resourceId: input.resourceId,
-        resourceItemId,
-        status: "reserved",
-        code,
-      });
+      const { data, error } = await createSupabaseAdminClient().rpc(
+        "allocate_reward_resource",
+        {
+          p_fulfilment_id: input.fulfilmentId,
+          p_resource_id: input.resourceId,
+        },
+      );
+      if (error) {
+        if (error.code === "22023")
+          return fail("BusinessFailure", error.message);
+        throw new Error(`Resource allocation failed: ${error.message}`);
+      }
+      return ok(data as ResourceAllocationResult);
     },
 
     async release(
@@ -119,7 +92,10 @@ export function createSupabaseGeneratedDigitalResourceProvider(): GeneratedDigit
         .eq("resource_id", input.resourceId)
         .maybeSingle();
       throwOnError(error, "generated.fulfil.lookup");
-      if (!allocation || allocation.status !== "reserved") {
+      if (
+        !allocation ||
+        !["reserved", "fulfilled"].includes(allocation.status)
+      ) {
         return fail("BusinessFailure", "Allocation not found or not reserved");
       }
 

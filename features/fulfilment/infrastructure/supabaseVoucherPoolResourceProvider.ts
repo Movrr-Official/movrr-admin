@@ -2,7 +2,11 @@ import "server-only";
 
 import { createHash, randomUUID } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import {
+  fail,
+  ok,
+  type ApplicationResult,
+} from "@/lib/result/ApplicationResult";
 import type {
   AllocateResourceInput,
   AllocationLifecycleInput,
@@ -61,62 +65,19 @@ export function createSupabaseVoucherPoolResourceProvider(): VoucherPoolResource
     async allocate(
       input: AllocateResourceInput,
     ): Promise<ApplicationResult<ResourceAllocationResult>> {
-      const supabase = createSupabaseAdminClient();
-      const { data: item, error: itemError } = await supabase
-        .from("fulfilment_resource_item")
-        .select("id, display_payload, status")
-        .eq("resource_id", input.resourceId)
-        .eq("status", "available")
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      throwOnError(itemError, "allocate.lookup");
-      if (!item) {
-        return fail("BusinessFailure", "No available items in voucher pool");
+      const { data, error } = await createSupabaseAdminClient().rpc(
+        "allocate_reward_resource",
+        {
+          p_fulfilment_id: input.fulfilmentId,
+          p_resource_id: input.resourceId,
+        },
+      );
+      if (error) {
+        if (error.code === "22023")
+          return fail("BusinessFailure", error.message);
+        throw new Error(`Resource allocation failed: ${error.message}`);
       }
-
-      const { data: reserved, error: reserveError } = await supabase
-        .from("fulfilment_resource_item")
-        .update({
-          status: "reserved",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", item.id)
-        .eq("status", "available")
-        .select("id, display_payload")
-        .maybeSingle();
-      throwOnError(reserveError, "allocate.reserve");
-      if (!reserved) {
-        return fail("BusinessFailure", "No available items in voucher pool");
-      }
-
-      const allocationId = randomUUID();
-      const code =
-        typeof (reserved.display_payload as { code?: string } | null)?.code ===
-        "string"
-          ? (reserved.display_payload as { code: string }).code
-          : null;
-
-      const { error: allocError } = await supabase
-        .from("fulfilment_resource_allocation")
-        .insert({
-          id: allocationId,
-          fulfilment_id: input.fulfilmentId,
-          resource_id: input.resourceId,
-          resource_item_id: reserved.id,
-          status: "reserved",
-          metadata: code ? { code } : {},
-        });
-      throwOnError(allocError, "allocate.insert");
-
-      return ok({
-        allocationId,
-        fulfilmentId: input.fulfilmentId,
-        resourceId: input.resourceId,
-        resourceItemId: String(reserved.id),
-        status: "reserved",
-        code,
-      });
+      return ok(data as ResourceAllocationResult);
     },
 
     async release(
@@ -125,7 +86,9 @@ export function createSupabaseVoucherPoolResourceProvider(): VoucherPoolResource
       const supabase = createSupabaseAdminClient();
       const { data: allocation, error } = await supabase
         .from("fulfilment_resource_allocation")
-        .select("id, fulfilment_id, resource_id, resource_item_id, status, metadata")
+        .select(
+          "id, fulfilment_id, resource_id, resource_item_id, status, metadata",
+        )
         .eq("id", input.allocationId)
         .eq("resource_id", input.resourceId)
         .maybeSingle();
@@ -175,12 +138,17 @@ export function createSupabaseVoucherPoolResourceProvider(): VoucherPoolResource
       const supabase = createSupabaseAdminClient();
       const { data: allocation, error } = await supabase
         .from("fulfilment_resource_allocation")
-        .select("id, fulfilment_id, resource_id, resource_item_id, status, metadata")
+        .select(
+          "id, fulfilment_id, resource_id, resource_item_id, status, metadata",
+        )
         .eq("id", input.allocationId)
         .eq("resource_id", input.resourceId)
         .maybeSingle();
       throwOnError(error, "fulfil.lookup");
-      if (!allocation || allocation.status !== "reserved") {
+      if (
+        !allocation ||
+        !["reserved", "fulfilled"].includes(allocation.status)
+      ) {
         return fail("BusinessFailure", "Allocation not found or not reserved");
       }
 
@@ -253,7 +221,9 @@ export async function importVoucherPoolCodes(input: {
   }));
 
   if (rows.length > 0) {
-    const { error } = await supabase.from("fulfilment_resource_item").insert(rows);
+    const { error } = await supabase
+      .from("fulfilment_resource_item")
+      .insert(rows);
     throwOnError(error, "import.items");
   }
 

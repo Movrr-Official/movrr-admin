@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { createInMemoryFulfilmentAggregateStore } from "@/features/fulfilment/infrastructure/inMemoryFulfilmentAggregateStore";
+import { describe, it, expect, vi } from "vitest";
 import { DomainEventBus } from "@/lib/events/DomainEventBus";
 import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
 import { createFulfilmentStateMachine } from "@/features/fulfilment/application/FulfilmentStateMachine";
@@ -27,6 +28,7 @@ function asResourceService(
 
 async function buildEngine(opts?: {
   pool?: ReturnType<typeof createVoucherPoolResourceProvider>;
+  store?: ReturnType<typeof createInMemoryFulfilmentAggregateStore>;
 }) {
   const bus = new DomainEventBus();
   const ledger = createInMemoryLedgerRepository();
@@ -36,7 +38,7 @@ async function buildEngine(opts?: {
     eventBus: bus,
   });
   // Pre-debit to simulate redeem commitment
-  await settlement.debit({
+  await ledger.debit({
     riderId: "rider-1",
     points: 25,
     redemptionId: "red-engine-1",
@@ -65,6 +67,7 @@ async function buildEngine(opts?: {
   registry.freeze();
 
   const engine = createFulfilmentEngine({
+    store: opts?.store,
     stateMachine: sm,
     registry,
     settlement,
@@ -72,7 +75,7 @@ async function buildEngine(opts?: {
     eventBus: bus,
   });
 
-  return { engine, ledger, tokens, pool, bus };
+  return { engine, ledger, tokens, pool, bus, settlement };
 }
 
 describe("FulfilmentEngine", () => {
@@ -215,6 +218,63 @@ describe("FulfilmentEngine", () => {
     if (!refunded.ok) return;
     expect(refunded.value.fulfilment.state).toBe("refunded");
     expect(refunded.value.fulfilment.outcome).toBe("refunded");
+    expect(await ledger.getBalance("rider-1")).toBe(100);
+  });
+});
+
+describe("interrupted redemption recovery", () => {
+  const input = {
+    id: "resume",
+    redemptionId: "red-engine-1",
+    riderId: "rider-1",
+    catalogItemId: "cat",
+    fulfilmentType: "instant_digital" as const,
+    idempotencyKey: "resume",
+    resourceId: "resource",
+    pointsCost: 25,
+    correlationId: "resume",
+  };
+  it("resumes after a process loses the processing transition response", async () => {
+    const store = createInMemoryFulfilmentAggregateStore();
+    const { engine, ledger } = await buildEngine({ store });
+    await engine.createFromRedemption(input);
+    const original = store.save;
+    let interrupted = false;
+    vi.spyOn(store, "save").mockImplementation(async (aggregate) => {
+      await original(aggregate);
+      if (aggregate.fulfilment.state === "processing" && !interrupted) {
+        interrupted = true;
+        throw Error("lost response");
+      }
+    });
+    await expect(engine.start(input.id)).rejects.toThrow("lost response");
+    const resumed = await engine.start(input.id);
+    expect(resumed).toMatchObject({
+      ok: true,
+      value: { fulfilment: { state: "completed" } },
+    });
+    expect(await ledger.getBalance("rider-1")).toBe(75);
+  });
+  it("never reports refunded when the settlement did not commit", async () => {
+    const { engine, settlement, ledger } = await buildEngine();
+    vi.spyOn(settlement, "refund").mockResolvedValueOnce({
+      ok: false,
+      kind: "InfrastructureFailure",
+      message: "unavailable",
+    });
+    await engine.createFromRedemption({
+      ...input,
+      fulfilmentType: "qr_barcode",
+    });
+    expect(await engine.start(input.id)).toMatchObject({
+      ok: true,
+      value: { fulfilment: { state: "failed" } },
+    });
+    expect(await ledger.getBalance("rider-1")).toBe(75);
+    expect(await engine.refund(input.id, "retry")).toMatchObject({
+      ok: true,
+      value: { fulfilment: { state: "refunded" } },
+    });
     expect(await ledger.getBalance("rider-1")).toBe(100);
   });
 });

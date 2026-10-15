@@ -1,5 +1,9 @@
 import { randomUUID } from "crypto";
-import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import {
+  fail,
+  ok,
+  type ApplicationResult,
+} from "@/lib/result/ApplicationResult";
 import type {
   AllocateResourceInput,
   AllocationLifecycleInput,
@@ -68,6 +72,12 @@ export function createVoucherPoolResourceProvider(): VoucherPoolResourceProvider
       input: AllocateResourceInput,
     ): Promise<ApplicationResult<ResourceAllocationResult>> {
       return withResourceLock(input.resourceId, async () => {
+        const existing = [...allocations.values()].find(
+          (a) =>
+            a.fulfilmentId === input.fulfilmentId &&
+            a.resourceId === input.resourceId,
+        );
+        if (existing) return ok(existing);
         const pool = pools.get(input.resourceId);
         if (!pool) {
           return fail("BusinessFailure", "Resource pool not found");
@@ -108,7 +118,9 @@ export function createVoucherPoolResourceProvider(): VoucherPoolResourceProvider
         }
 
         const pool = pools.get(input.resourceId) ?? [];
-        const item = pool.find((entry) => entry.id === allocation.resourceItemId);
+        const item = pool.find(
+          (entry) => entry.id === allocation.resourceItemId,
+        );
         if (item) {
           item.status = "available";
         }
@@ -130,6 +142,7 @@ export function createVoucherPoolResourceProvider(): VoucherPoolResourceProvider
         if (!allocation || allocation.resourceId !== input.resourceId) {
           return fail("BusinessFailure", "Allocation not found");
         }
+        if (allocation.status === "fulfilled") return ok(allocation);
         if (allocation.status !== "reserved") {
           return fail(
             "BusinessFailure",
@@ -138,7 +151,9 @@ export function createVoucherPoolResourceProvider(): VoucherPoolResourceProvider
         }
 
         const pool = pools.get(input.resourceId) ?? [];
-        const item = pool.find((entry) => entry.id === allocation.resourceItemId);
+        const item = pool.find(
+          (entry) => entry.id === allocation.resourceItemId,
+        );
         if (item) {
           item.status = "fulfilled";
         }

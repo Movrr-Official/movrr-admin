@@ -1,12 +1,5 @@
 import type { ApplicationResult } from "@/lib/result/ApplicationResult";
 
-export type DebitCommand = {
-  riderId: string;
-  points: number;
-  redemptionId: string;
-  correlationId: string;
-};
-
 export type RefundCommand = {
   riderId: string;
   points: number;
@@ -28,9 +21,6 @@ export type SettlementReceipt = {
  * Fulfilment requests settlement; Wallet owns how it occurs.
  */
 export type SettlementService = {
-  debit: (
-    input: DebitCommand,
-  ) => Promise<ApplicationResult<SettlementReceipt>>;
   refund: (
     input: RefundCommand,
   ) => Promise<ApplicationResult<SettlementReceipt>>;
@@ -76,9 +66,6 @@ export type LedgerMutationResult = {
  * Production adapter wraps atomic SQL/RPC; tests use in-memory.
  */
 export type LedgerRepository = {
-  debit: (
-    input: LedgerDebitInput,
-  ) => Promise<ApplicationResult<LedgerMutationResult>>;
   credit: (
     input: LedgerCreditInput,
   ) => Promise<ApplicationResult<LedgerMutationResult>>;

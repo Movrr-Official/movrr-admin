@@ -1,4 +1,8 @@
-import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import {
+  fail,
+  ok,
+  type ApplicationResult,
+} from "@/lib/result/ApplicationResult";
 import type { DomainEventBus } from "@/lib/events/DomainEventBus";
 import {
   createFulfilment,
@@ -162,13 +166,14 @@ export function createFulfilmentEngine(
     fulfilment: Fulfilment,
   ): Promise<void> {
     if (fulfilment.state !== "failed") return;
-    await deps.settlement.refund({
+    const settlement = await deps.settlement.refund({
       riderId: fulfilment.riderId,
       points: stored.pointsCost,
       fulfilmentId: fulfilment.id,
       reason: "fulfilment_failed",
       correlationId: stored.correlationId,
     });
+    if (!settlement.ok) return;
     const refunded = applySmTransition(
       stored,
       fulfilment,
@@ -226,9 +231,7 @@ export function createFulfilmentEngine(
       const loaded = await getStored(fulfilmentId);
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
-      const handler = deps.registry.resolve(
-        stored.fulfilment.fulfilmentType,
-      );
+      const handler = deps.registry.resolve(stored.fulfilment.fulfilmentType);
 
       const result = await handler.start({
         fulfilment: stored.fulfilment,
@@ -260,9 +263,7 @@ export function createFulfilmentEngine(
       const loaded = await getStored(input.fulfilmentId);
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
-      const handler = deps.registry.resolve(
-        stored.fulfilment.fulfilmentType,
-      );
+      const handler = deps.registry.resolve(stored.fulfilment.fulfilmentType);
 
       if (!handler.onTokenConsumed) {
         return fail(
@@ -288,9 +289,7 @@ export function createFulfilmentEngine(
       const loaded = await getStored(fulfilmentId);
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
-      const handler = deps.registry.resolve(
-        stored.fulfilment.fulfilmentType,
-      );
+      const handler = deps.registry.resolve(stored.fulfilment.fulfilmentType);
       const requestTransition = requestTransitionFor(fulfilmentId);
 
       if (handler.cancel) {
@@ -327,9 +326,7 @@ export function createFulfilmentEngine(
         return ok({ fulfilment: stored.fulfilment });
       }
 
-      const handler = deps.registry.resolve(
-        stored.fulfilment.fulfilmentType,
-      );
+      const handler = deps.registry.resolve(stored.fulfilment.fulfilmentType);
       const requestTransition = requestTransitionFor(fulfilmentId);
 
       if (handler.expire) {
@@ -361,6 +358,8 @@ export function createFulfilmentEngine(
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
 
+      if (stored.fulfilment.state === "refunded")
+        return ok({ fulfilment: stored.fulfilment });
       const refundable = ["cancelled", "failed", "expired"] as const;
       if (
         !refundable.includes(
@@ -398,9 +397,7 @@ export function createFulfilmentEngine(
       const loaded = await getStored(fulfilmentId);
       if (!loaded.ok) return loaded;
       const stored = loaded.value;
-      const handler = deps.registry.resolve(
-        stored.fulfilment.fulfilmentType,
-      );
+      const handler = deps.registry.resolve(stored.fulfilment.fulfilmentType);
 
       if (!handler.confirmCollection) {
         return fail(

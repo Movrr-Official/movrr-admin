@@ -1,3 +1,4 @@
+import { createInMemoryRedemptionListPort } from "@/features/rewards/application/queries/catalogAndRedemptions";
 import { describe, it, expect, vi } from "vitest";
 import type {
   RiderPrincipal,
@@ -26,7 +27,6 @@ import type { FulfilmentResourceProvider } from "@/features/fulfilment/applicati
 import {
   createRedeemRewardService,
   createInMemoryCatalogRepository,
-  createInMemoryRedemptionRepository,
   type CatalogItem,
 } from "@/features/rewards/application/commands/redeemReward";
 import type { RedeemRewardCommand } from "@/features/rewards/application/contracts/RedeemRewardCommand";
@@ -152,22 +152,18 @@ async function buildHarness(opts?: {
   const catalog = createInMemoryCatalogRepository(
     opts?.catalogItems ?? [activeInstant, activeQr, unsupportedCatalog],
   );
-  const redemptions = createInMemoryRedemptionRepository();
+  const redemptions = createInMemoryRedemptionListPort({
+    catalog,
+    ledger,
+    engine: fulfilmentEngine,
+  });
 
-  let redSeq = 0;
-  let fulSeq = 0;
   const redeem = createRedeemRewardService({
     authorisation: authorisationService,
     fraud,
-    catalog,
-    settlement,
     redemptions,
     fulfilmentEngine,
     eventBus: bus,
-    ids: {
-      nextRedemptionId: () => `red-${++redSeq}`,
-      nextFulfilmentId: () => `ful-${++fulSeq}`,
-    },
   });
 
   return { redeem, ledger, bus, redemptions, fraud, settlement };
@@ -191,12 +187,16 @@ describe("RedeemRewardService", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.redemption.id).toBe("red-1");
+    expect(result.value.redemption.id).toBeTruthy();
     expect(result.value.redemption.riderId).toBe("rider-1");
     expect(result.value.redemption.catalogItemId).toBe("cat-instant-1");
     expect(result.value.redemption.pointsSpent).toBe(40);
-    expect(result.value.fulfilment.id).toBe("ful-1");
-    expect(result.value.fulfilment.redemptionId).toBe("red-1");
+    expect(result.value.fulfilment.id).toBe(
+      result.value.redemption.fulfilmentId,
+    );
+    expect(result.value.fulfilment.redemptionId).toBe(
+      result.value.redemption.id,
+    );
     expect(result.value.fulfilment.fulfilmentType).toBe("instant_digital");
     expect(result.value.fulfilment.state).toBe("completed");
     expect(result.value.fulfilment.outcome).toBe("success");
@@ -273,9 +273,9 @@ describe("RedeemRewardService", () => {
       idempotencyKey: "idem-fail-1",
     });
 
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.kind).toBe("BusinessFailure");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.fulfilment.state).toBe("refunded");
     expect(await ledger.getBalance("rider-1")).toBe(100);
 
     const entries = await ledger.listEntries("rider-1");

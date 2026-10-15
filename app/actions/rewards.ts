@@ -79,7 +79,7 @@ export async function getRewardStats(dateRange?: {
 
     const { data: redemptions, error: redemptionError } = await supabaseAdmin
       .from(DB_TABLES.REWARD_REDEMPTIONS)
-      .select("id, rider_id, points_spent, status, requested_at");
+      .select("id, rider_id, points_spent, status, requested_at, metadata");
 
     if (redemptionError) {
       return { success: false, error: redemptionError.message };
@@ -136,8 +136,12 @@ export async function getRewardStats(dateRange?: {
 
     const totalAdjustmentsDebited = filteredTransactions.reduce((sum, txn) => {
       const direction = parseRewardMetadata(txn.metadata).adjustmentDirection;
-      if (direction !== "debit") return sum;
-      return sum + Number(txn.points_earned ?? 0);
+      if (
+        direction !== "debit" ||
+        String(txn.metadata?.wallet_contract) === "2"
+      )
+        return sum;
+      return sum + Math.abs(Number(txn.points_earned ?? 0));
     }, 0);
 
     const totalRedeemed = totalPointsRedeemed + totalAdjustmentsDebited;
@@ -216,7 +220,8 @@ export async function getRewardStats(dateRange?: {
       const direction = parseRewardMetadata(txn.metadata).adjustmentDirection;
       const points = Number(txn.points_earned ?? 0);
       if (direction === "debit") {
-        bucket.redeemed += points;
+        if (String(txn.metadata?.wallet_contract) !== "2")
+          bucket.redeemed += Math.abs(points);
       } else {
         bucket.awarded += points;
       }
@@ -359,7 +364,7 @@ export async function getRewardTransactions(filters?: {
 
     let redemptionQuery = supabaseAdmin
       .from(DB_TABLES.REWARD_REDEMPTIONS)
-      .select("id, rider_id, points_spent, status, requested_at")
+      .select("id, rider_id, points_spent, status, requested_at, metadata")
       .order("requested_at", { ascending: false });
 
     if (filters?.riderId) {
@@ -392,9 +397,15 @@ export async function getRewardTransactions(filters?: {
     const mappedTransactions = (transactions ?? []).map((txn) => {
       const m = parseRewardMetadata(txn.metadata);
       const isDebit = m.adjustmentDirection === "debit";
-      const points = Number(txn.points_earned ?? 0) * (isDebit ? -1 : 1);
+      const points = isDebit
+        ? -Math.abs(Number(txn.points_earned ?? 0))
+        : Number(txn.points_earned ?? 0);
       const type =
-        txn.source === REWARD_SOURCE.ADJUSTMENT ? "adjusted" : "awarded";
+        txn.metadata?.settlement_kind === "debit"
+          ? "redeemed"
+          : txn.source === REWARD_SOURCE.ADJUSTMENT
+            ? "adjusted"
+            : "awarded";
 
       return {
         id: txn.id,
@@ -424,18 +435,20 @@ export async function getRewardTransactions(filters?: {
       } as RewardTransaction;
     });
 
-    const mappedRedemptions = (redemptions ?? []).map((redemption) => ({
-      id: redemption.id,
-      riderId: redemption.rider_id,
-      campaignId: undefined,
-      routeId: undefined,
-      type: "redeemed",
-      points: -Math.abs(Number(redemption.points_spent ?? 0)),
-      description: `Redemption (${redemption.status ?? "requested"})`,
-      balanceAfter: balanceByRider.get(redemption.rider_id) ?? 0,
-      createdAt: redemption.requested_at ?? new Date().toISOString(),
-      createdBy: undefined,
-    })) as RewardTransaction[];
+    const mappedRedemptions = (redemptions ?? [])
+      .filter((row) => String(row.metadata?.wallet_contract) !== "2")
+      .map((redemption) => ({
+        id: redemption.id,
+        riderId: redemption.rider_id,
+        campaignId: undefined,
+        routeId: undefined,
+        type: "redeemed",
+        points: -Math.abs(Number(redemption.points_spent ?? 0)),
+        description: `Redemption (${redemption.status ?? "requested"})`,
+        balanceAfter: balanceByRider.get(redemption.rider_id) ?? 0,
+        createdAt: redemption.requested_at ?? new Date().toISOString(),
+        createdBy: undefined,
+      })) as RewardTransaction[];
 
     const merged = [...mappedTransactions, ...mappedRedemptions];
 
@@ -488,9 +501,15 @@ export async function getSessionRewardTransactions(
     const mapped = (txns ?? []).map((txn) => {
       const m = parseRewardMetadata(txn.metadata);
       const isDebit = m.adjustmentDirection === "debit";
-      const points = Number(txn.points_earned ?? 0) * (isDebit ? -1 : 1);
+      const points = isDebit
+        ? -Math.abs(Number(txn.points_earned ?? 0))
+        : Number(txn.points_earned ?? 0);
       const type =
-        txn.source === REWARD_SOURCE.ADJUSTMENT ? "adjusted" : "awarded";
+        txn.metadata?.settlement_kind === "debit"
+          ? "redeemed"
+          : txn.source === REWARD_SOURCE.ADJUSTMENT
+            ? "adjusted"
+            : "awarded";
 
       return {
         id: txn.id,

@@ -43,7 +43,7 @@ async function buildEngine(opts?: {
     ledger,
     eventBus: bus,
   });
-  await settlement.debit({
+  await ledger.debit({
     riderId: "rider-1",
     points: 25,
     redemptionId: "red-job-1",
@@ -211,7 +211,10 @@ describe("scheduled fulfilment jobs", () => {
   });
 
   it("job command modules never assign fulfilment.state directly", () => {
-    const root = join(process.cwd(), "features/fulfilment/application/commands");
+    const root = join(
+      process.cwd(),
+      "features/fulfilment/application/commands",
+    );
     for (const file of [
       "expireFulfilments.ts",
       "releaseStaleReservations.ts",

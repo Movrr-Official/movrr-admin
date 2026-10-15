@@ -1,6 +1,6 @@
 "use server";
 
-import { requireCapability, requireAnyCapability } from "@/lib/admin";
+import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   BikeType,
@@ -63,84 +63,7 @@ export async function getDistanceStats(): Promise<{
   }
 }
 
-export type VerificationAction = "approve" | "reject" | "escalate";
-
-const VERIFICATION_STATUS_MAP: Record<VerificationAction, string> = {
-  approve: VERIFICATION_STATUS.VERIFIED,
-  reject: VERIFICATION_STATUS.REJECTED,
-  escalate: VERIFICATION_STATUS.MANUAL_REVIEW,
-};
-
-const VALID_ACTIONS = new Set<string>(["approve", "reject", "escalate"]);
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/**
- * Update ride_verification status with audit trail.
- * Creates a new verification row if one doesn't exist yet.
- */
-export async function verifyRideSession(input: {
-  sessionId: string;
-  action: VerificationAction;
-  reason?: string;
-}): Promise<{ success: boolean; error?: string }> {
-  try {
-    // Runtime validation — TypeScript types don't survive client→server boundaries.
-    if (!UUID_RE.test(input.sessionId)) {
-      return { success: false, error: "Invalid session ID" };
-    }
-    if (!VALID_ACTIONS.has(input.action)) {
-      return { success: false, error: "Invalid verification action" };
-    }
-    const reason = input.reason?.trim().slice(0, 2000);
-
-    const admin = await requireAnyCapability(
-      ["rides.verify", "fraud.resolve"],
-      { mutation: true },
-    );
-    const supabase = createSupabaseAdminClient();
-    const newStatus = VERIFICATION_STATUS_MAP[input.action];
-
-    // Upsert: insert if absent, update if present
-    const { error: upsertError } = await supabase
-      .from(DB_TABLES.RIDE_VERIFICATION)
-      .upsert(
-        {
-          ride_session_id: input.sessionId,
-          status: newStatus,
-          reviewed_by: admin.authUser.id,
-          reviewed_at: new Date().toISOString(),
-          ...(reason ? { review_notes: reason } : {}),
-        },
-        { onConflict: "ride_session_id" },
-      );
-
-    if (upsertError) return { success: false, error: upsertError.message };
-
-    // Append audit log entry
-    await supabase.from("admin_audit_log").insert({
-      admin_id: admin.authUser.id,
-      action: `ride_session.verification.${input.action}`,
-      entity_type: "ride_session",
-      entity_id: input.sessionId,
-      metadata: reason ? { reason } : {},
-      created_at: new Date().toISOString(),
-    });
-
-    return { success: true };
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Verification action failed",
-    };
-  }
-}
-
-/**
- * Fetch ride sessions joined with ride_verification status and rider info.
- * Falls back gracefully if ride_verification table does not exist yet.
- */
+/** Read the authoritative ride verdict and committed reward ledger. */
 export async function getRideSessions(
   filters?: RideSessionFilters,
 ): Promise<{ success: boolean; data?: RideSession[]; error?: string }> {
@@ -168,7 +91,6 @@ export async function getRideSessions(
     }
 
     const rows = sessionRows ?? [];
-    const sessionIds = rows.map((r) => r.id);
     const riderIds = [...new Set(rows.map((r) => r.rider_id).filter(Boolean))];
     const campaignIds = [
       ...new Set(rows.map((r) => r.campaign_id).filter(Boolean)),
@@ -214,74 +136,49 @@ export async function getRideSessions(
       });
     });
 
-    // ── Admin verification overrides ──────────────────────────────────────────
-    // Secondary source: ride_verification table — populated only by admin manual
-    // actions (approve / reject / escalate). Layered ON TOP of machine verdict.
-    // Precedence rule: admin override > machine verdict > "pending".
-    const adminOverrideMap = new Map<
-      string,
-      { status: string; reason_codes?: string[] }
-    >();
-    if (sessionIds.length) {
-      const { data: verRows } = await supabaseAdmin
-        .from(DB_TABLES.RIDE_VERIFICATION)
-        .select("ride_session_id, status, reason_codes")
-        .in("ride_session_id", sessionIds);
-
-      (verRows ?? []).forEach((v) => {
-        if (v.ride_session_id) {
-          adminOverrideMap.set(v.ride_session_id, {
-            status: v.status ?? VERIFICATION_STATUS.PENDING,
-            reason_codes: Array.isArray(v.reason_codes) ? v.reason_codes : [],
-          });
-        }
-      });
-    }
-
-    // ── Canonical reward sourcing from reward_transactions ────────────────────
-    // Mobile awards points via award_movrr_points_for_ride_session RPC into
-    // reward_transactions — it does NOT write back to ride_session.points_awarded
-    // or ride_session.verified_minutes. Both fields must be sourced here.
+    // Points and verified minutes come from the committed ledger.
     const rewardBySession = new Map<
       string,
       { points: number; verifiedMinutes: number }
     >();
     if (rows.length && riderIds.length) {
-      const earliestStart = rows.reduce(
-        (min, r) => (r.started_at && r.started_at < min ? r.started_at : min),
-        rows[0]?.started_at ?? new Date(0).toISOString(),
-      );
-      const { data: txRows } = await supabaseAdmin
-        .from(DB_TABLES.REWARD_TRANSACTIONS)
-        .select("rider_id, points_earned, source, metadata")
-        .in("rider_id", riderIds)
-        .gte("created_at", earliestStart)
-        .in("source", [
-          REWARD_SOURCE.STANDARD_RIDE,
-          REWARD_SOURCE.BOOSTED_RIDE,
-          REWARD_SOURCE.AD_BOOST,
-        ]);
+      for (let offset = 0; ; offset += 1000) {
+        const { data: txRows, error: txError } = await supabaseAdmin
+          .from(DB_TABLES.REWARD_TRANSACTIONS)
+          .select("rider_id, points_earned, source, metadata")
+          .in("rider_id", riderIds)
+          .in(
+            "metadata->>rideSessionId",
+            rows.map((row) => row.id),
+          )
+          .neq("source", REWARD_SOURCE.REDEMPTION)
+          .order("id")
+          .range(offset, offset + 999);
 
-      (txRows ?? []).forEach((tx) => {
-        const meta = tx.metadata as Record<string, unknown> | null;
-        const sessionId = meta?.[META_KEYS.RIDE_SESSION_ID] as
-          | string
-          | undefined;
-        if (!sessionId) return;
-        const existing = rewardBySession.get(sessionId) ?? {
-          points: 0,
-          verifiedMinutes: 0,
-        };
-        existing.points += Number(tx.points_earned ?? 0);
-        // verifiedMinutes: take from first matching transaction's metadata
-        if (
-          !existing.verifiedMinutes &&
-          meta?.[META_KEYS.VERIFIED_MINUTES] != null
-        ) {
-          existing.verifiedMinutes = Number(meta[META_KEYS.VERIFIED_MINUTES]);
-        }
-        rewardBySession.set(sessionId, existing);
-      });
+        if (txError) return { success: false, error: txError.message };
+
+        (txRows ?? []).forEach((tx) => {
+          const meta = tx.metadata as Record<string, unknown> | null;
+          const sessionId = meta?.[META_KEYS.RIDE_SESSION_ID] as
+            | string
+            | undefined;
+          if (!sessionId) return;
+          const existing = rewardBySession.get(sessionId) ?? {
+            points: 0,
+            verifiedMinutes: 0,
+          };
+          existing.points += Number(tx.points_earned ?? 0);
+          // verifiedMinutes: take from first matching transaction's metadata
+          if (
+            !existing.verifiedMinutes &&
+            meta?.[META_KEYS.VERIFIED_MINUTES] != null
+          ) {
+            existing.verifiedMinutes = Number(meta[META_KEYS.VERIFIED_MINUTES]);
+          }
+          rewardBySession.set(sessionId, existing);
+        });
+        if ((txRows?.length ?? 0) < 1000) break;
+      }
     }
 
     // Fetch rider names
@@ -374,7 +271,6 @@ export async function getRideSessions(
 
     let mapped: RideSession[] = rows.map((row) => {
       const r = row as Record<string, unknown>;
-      const adminOverride = adminOverrideMap.get(row.id);
       const machineVerdict = machineVerdictMap.get(row.id);
       const sessionReward = rewardBySession.get(row.id) ?? {
         points: 0,
@@ -386,15 +282,11 @@ export async function getRideSessions(
         toSessionStatus(r.status as string | null) ??
         (r.completed_at ? "completed" : row.started_at ? "active" : "draft");
 
-      // Verification precedence: admin manual override > machine verdict > "pending".
       const effectiveVerStatus =
-        adminOverride?.status ??
-        machineVerdict?.status ??
-        VERIFICATION_STATUS.PENDING;
-      const effectiveReasonCodes =
-        adminOverride?.reason_codes ?? machineVerdict?.reasonCodes ?? [];
+        machineVerdict?.status ?? VERIFICATION_STATUS.PENDING;
+      const effectiveReasonCodes = machineVerdict?.reasonCodes ?? [];
       const verificationSource: RideSession["verificationSource"] =
-        adminOverride ? "admin" : machineVerdict ? "machine" : undefined;
+        machineVerdict ? "machine" : undefined;
 
       return {
         id: row.id,

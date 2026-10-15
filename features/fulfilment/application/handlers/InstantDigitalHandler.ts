@@ -49,11 +49,14 @@ export function createInstantDigitalHandler(
         allocationId: allocated.value.allocationId,
       });
 
-      const processing = await ctx.requestTransition(
-        ctx.fulfilment,
-        "processing",
-        "resource_allocated",
-      );
+      const processing =
+        ctx.fulfilment.state === "created"
+          ? await ctx.requestTransition(
+              ctx.fulfilment,
+              "processing",
+              "resource_allocated",
+            )
+          : ok(ctx.fulfilment);
       if (!processing.ok) return processing;
 
       const fulfilled = await deps.resources.fulfil({
@@ -71,11 +74,14 @@ export function createInstantDigitalHandler(
         return ok({ fulfilment: failed.value });
       }
 
-      const ready = await ctx.requestTransition(
-        processing.value,
-        "ready",
-        "digital_asset_delivered",
-      );
+      const ready =
+        processing.value.state === "ready"
+          ? processing
+          : await ctx.requestTransition(
+              processing.value,
+              "ready",
+              "digital_asset_delivered",
+            );
       if (!ready.ok) return ready;
 
       const completed = await ctx.requestTransition(

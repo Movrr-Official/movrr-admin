@@ -194,10 +194,9 @@ describe("sessionAnalytics.ts — column and constant usage", () => {
 describe("riderPerformance.ts — constants usage", () => {
   const src = readSource("app/actions/riderPerformance.ts");
 
-  it("uses DB_TABLES.RIDE_VERIFICATION (not bare string)", () => {
-    const bare = [...src.matchAll(/from\s*\(\s*["'`]ride_verification["'`]/g)];
-    expect(bare.length, "should use DB_TABLES.RIDE_VERIFICATION").toBe(0);
-    expect(src).toContain("DB_TABLES.RIDE_VERIFICATION");
+  it("reads the deployed ride verdict instead of an absent override table", () => {
+    expect(src).toContain("verification_result");
+    expect(src).not.toContain("DB_TABLES.RIDE_VERIFICATION");
   });
 
   it("uses VERIFICATION_STATUS constants for comparisons", () => {

@@ -13,6 +13,7 @@ export const rewardTransactionTypeSchema = z.enum([
  */
 export const rewardTransactionSourceSchema = z.enum([
   "standard_ride",
+  "campaign_ride",
   "ad_boost",
   "boosted_ride",
   "bonus",

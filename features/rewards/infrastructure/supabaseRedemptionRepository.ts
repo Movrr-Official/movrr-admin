@@ -1,3 +1,4 @@
+import { fail, ok } from "@/lib/result/ApplicationResult";
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -18,6 +19,12 @@ function mapRedemptionRow(data: {
   points_spent: number | null;
   requested_at: string;
   metadata: unknown;
+  status: string;
+  reward_title: string | null;
+  reward_catalog:
+    | { thumbnail_url: string | null }
+    | { thumbnail_url: string | null }[]
+    | null;
 }): RewardRedemption {
   const meta = (data.metadata ?? {}) as Record<string, unknown>;
   return {
@@ -26,6 +33,13 @@ function mapRedemptionRow(data: {
     catalogItemId: String(data.reward_id ?? ""),
     pointsSpent: Number(data.points_spent ?? 0),
     status: "committed",
+    redemptionStatus: data.status,
+    rewardTitle: data.reward_title,
+    thumbnailUrl:
+      (Array.isArray(data.reward_catalog)
+        ? data.reward_catalog[0]
+        : data.reward_catalog
+      )?.thumbnail_url ?? null,
     fulfilmentId: String(meta.fulfilment_id ?? ""),
     idempotencyKey: String(meta.idempotency_key ?? ""),
     ledgerTransactionId: String(meta.ledger_transaction_id ?? ""),
@@ -36,26 +50,32 @@ function mapRedemptionRow(data: {
 export function createSupabaseRedemptionRepository(): RedemptionRepository &
   RedemptionListPort {
   return {
-    async save(redemption) {
-      const supabase = createSupabaseAdminClient();
-      const { error } = await supabase.from("reward_redemptions").upsert(
+    async commit(input) {
+      const { data, error } = await createSupabaseAdminClient().rpc(
+        "wallet_settle_debit",
         {
-          id: redemption.id,
-          rider_id: redemption.riderId,
-          reward_id: redemption.catalogItemId,
-          points_spent: redemption.pointsSpent,
-          status: "requested",
-          requested_at: redemption.createdAt,
-          metadata: {
-            fulfilment_id: redemption.fulfilmentId,
-            idempotency_key: redemption.idempotencyKey,
-            ledger_transaction_id: redemption.ledgerTransactionId,
-            platform_status: redemption.status,
-          },
+          p_rider_id: input.riderId,
+          p_catalog_item_id: input.catalogItemId,
+          p_operation_id: input.operationId,
+          p_actor_id: input.actorId,
+          p_correlation_id: input.correlationId,
         },
-        { onConflict: "id" },
       );
-      throwOnError(error, "redemption.save");
+      if (error)
+        return fail(
+          error.code === "22023"
+            ? "BusinessFailure"
+            : error.code === "42501"
+              ? "permission_denied"
+              : "InfrastructureFailure",
+          error.message,
+        );
+      if (!data?.redemption?.ledgerTransactionId)
+        return fail(
+          "InfrastructureFailure",
+          "Missing committed redemption receipt",
+        );
+      return ok(data.redemption as RewardRedemption);
     },
 
     async findById(id) {
@@ -63,7 +83,7 @@ export function createSupabaseRedemptionRepository(): RedemptionRepository &
       const { data, error } = await supabase
         .from("reward_redemptions")
         .select(
-          "id, rider_id, reward_id, points_spent, status, requested_at, metadata",
+          "id, rider_id, reward_id, points_spent, status, requested_at, metadata, reward_title, reward_catalog:reward_id(thumbnail_url)",
         )
         .eq("id", id)
         .maybeSingle();
@@ -77,7 +97,7 @@ export function createSupabaseRedemptionRepository(): RedemptionRepository &
       const { data, error } = await supabase
         .from("reward_redemptions")
         .select(
-          "id, rider_id, reward_id, points_spent, status, requested_at, metadata",
+          "id, rider_id, reward_id, points_spent, status, requested_at, metadata, reward_title, reward_catalog:reward_id(thumbnail_url)",
         )
         .eq("rider_id", riderId)
         .order("requested_at", { ascending: false });

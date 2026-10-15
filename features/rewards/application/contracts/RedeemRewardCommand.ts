@@ -1,3 +1,4 @@
+import type { ApplicationResult } from "@/lib/result/ApplicationResult";
 import type { FulfilmentType } from "@/features/fulfilment/domain/Fulfilment";
 import type { Fulfilment } from "@/features/fulfilment/domain/Fulfilment";
 
@@ -10,6 +11,9 @@ export type RedeemRewardCommand = {
 };
 
 export type RewardRedemption = {
+  rewardTitle?: string | null;
+  thumbnailUrl?: string | null;
+  redemptionStatus?: string;
   id: string;
   riderId: string;
   catalogItemId: string;
@@ -42,7 +46,13 @@ export type CatalogRepository = {
 };
 
 export type RedemptionRepository = {
-  save: (redemption: RewardRedemption) => Promise<void>;
+  commit: (input: {
+    riderId: string;
+    actorId: string;
+    catalogItemId: string;
+    operationId: string;
+    correlationId: string;
+  }) => Promise<ApplicationResult<RewardRedemption>>;
   findById: (id: string) => Promise<RewardRedemption | null>;
 };
 
@@ -58,7 +68,5 @@ export type SupportedRedeemFulfilmentType =
 export function isSupportedRedeemFulfilmentType(
   type: string | null | undefined,
 ): type is SupportedRedeemFulfilmentType {
-  return (
-    type === "instant_digital" || type === "qr_barcode"
-  );
+  return type === "instant_digital" || type === "qr_barcode";
 }

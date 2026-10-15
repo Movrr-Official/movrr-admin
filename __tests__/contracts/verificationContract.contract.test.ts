@@ -3,7 +3,6 @@
  *
  * Covers:
  * - Machine verification result parsing from ride_session.verification_result
- * - Admin override precedence (admin > machine > "pending")
  * - Reason code propagation
  * - VERIFICATION_STATUS and VERIFICATION_REASON_CODES integrity
  *
@@ -122,98 +121,6 @@ describe("ride_session.verification_result JSONB structure", () => {
 });
 
 // ── Admin override precedence ────────────────────────────────────────────────
-
-describe("verification precedence: admin override > machine verdict > pending", () => {
-  // Mirrors the precedence logic in rideSessions.ts:
-  //   effectiveVerStatus = adminOverride?.status ?? machineVerdict?.status ?? VERIFICATION_STATUS.PENDING
-  function effectiveStatus(
-    adminOverride: { status: string } | null,
-    machineVerdict: { status: string } | null,
-  ): string {
-    return (
-      adminOverride?.status ??
-      machineVerdict?.status ??
-      VERIFICATION_STATUS.PENDING
-    );
-  }
-
-  it("admin override wins over machine verdict", () => {
-    const result = effectiveStatus(
-      { status: VERIFICATION_STATUS.VERIFIED },
-      { status: VERIFICATION_STATUS.REJECTED },
-    );
-    expect(result).toBe(VERIFICATION_STATUS.VERIFIED);
-  });
-
-  it("machine verdict used when no admin override", () => {
-    const result = effectiveStatus(null, {
-      status: VERIFICATION_STATUS.REJECTED,
-    });
-    expect(result).toBe(VERIFICATION_STATUS.REJECTED);
-  });
-
-  it("falls back to pending when neither override nor machine verdict", () => {
-    const result = effectiveStatus(null, null);
-    expect(result).toBe(VERIFICATION_STATUS.PENDING);
-  });
-
-  it("admin can override rejected back to verified (manual approval)", () => {
-    const result = effectiveStatus(
-      { status: VERIFICATION_STATUS.VERIFIED },
-      { status: VERIFICATION_STATUS.REJECTED },
-    );
-    expect(result).toBe(VERIFICATION_STATUS.VERIFIED);
-  });
-
-  it("admin can escalate verified to manual_review", () => {
-    const result = effectiveStatus(
-      { status: VERIFICATION_STATUS.MANUAL_REVIEW },
-      { status: VERIFICATION_STATUS.VERIFIED },
-    );
-    expect(result).toBe(VERIFICATION_STATUS.MANUAL_REVIEW);
-  });
-});
-
-// ── Reason code propagation ──────────────────────────────────────────────────
-
-describe("reason code propagation", () => {
-  // Admin merges reason codes from admin override (if present) else machine verdict
-  function effectiveReasonCodes(
-    adminOverride: { reason_codes?: string[] } | null,
-    machineVerdict: { reasonCodes?: string[] } | null,
-  ): string[] {
-    return adminOverride?.reason_codes ?? machineVerdict?.reasonCodes ?? [];
-  }
-
-  it("admin reason codes override machine reason codes", () => {
-    const codes = effectiveReasonCodes(
-      { reason_codes: ["admin_manual_rejection"] },
-      { reasonCodes: [VERIFICATION_REASON_CODES.INSUFFICIENT_MOVING_TIME] },
-    );
-    expect(codes).toEqual(["admin_manual_rejection"]);
-  });
-
-  it("machine reason codes used when no admin override", () => {
-    const codes = effectiveReasonCodes(null, {
-      reasonCodes: [VERIFICATION_REASON_CODES.AVERAGE_SPEED_TOO_HIGH],
-    });
-    expect(codes).toContain(VERIFICATION_REASON_CODES.AVERAGE_SPEED_TOO_HIGH);
-  });
-
-  it("returns empty array when neither source has reason codes", () => {
-    expect(effectiveReasonCodes(null, null)).toEqual([]);
-    expect(effectiveReasonCodes({}, {})).toEqual([]);
-  });
-
-  it("note: admin stores reason_codes (snake_case) machine uses reasonCodes (camelCase)", () => {
-    // This asymmetry is intentional — admin DB column is reason_codes, mobile JSONB is reasonCodes
-    const adminField = "reason_codes";
-    const machineField = "reasonCodes";
-    expect(adminField).not.toBe(machineField); // documents the asymmetry
-  });
-});
-
-// ── VERIFICATION_STATUS guard logic ─────────────────────────────────────────
 
 describe("VERIFICATION_STATUS guard — toVerificationStatus", () => {
   // Mirrors the guard function in rideSessions.ts

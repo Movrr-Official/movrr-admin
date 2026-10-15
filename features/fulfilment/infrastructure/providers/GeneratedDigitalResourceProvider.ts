@@ -1,5 +1,9 @@
 import { randomBytes, randomUUID } from "crypto";
-import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import {
+  fail,
+  ok,
+  type ApplicationResult,
+} from "@/lib/result/ApplicationResult";
 import type {
   AllocateResourceInput,
   AllocationLifecycleInput,
@@ -24,6 +28,12 @@ export function createGeneratedDigitalResourceProvider(): GeneratedDigitalResour
     async allocate(
       input: AllocateResourceInput,
     ): Promise<ApplicationResult<ResourceAllocationResult>> {
+      const existing = [...allocations.values()].find(
+        (a) =>
+          a.fulfilmentId === input.fulfilmentId &&
+          a.resourceId === input.resourceId,
+      );
+      if (existing) return ok(existing);
       let code = generateUniqueCode();
       while (issuedCodes.has(code)) {
         code = generateUniqueCode();
@@ -70,6 +80,7 @@ export function createGeneratedDigitalResourceProvider(): GeneratedDigitalResour
       if (!allocation || allocation.resourceId !== input.resourceId) {
         return fail("BusinessFailure", "Allocation not found");
       }
+      if (allocation.status === "fulfilled") return ok(allocation);
       if (allocation.status !== "reserved") {
         return fail(
           "BusinessFailure",

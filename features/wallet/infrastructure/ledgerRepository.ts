@@ -1,5 +1,9 @@
 import { randomUUID } from "crypto";
-import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import {
+  fail,
+  ok,
+  type ApplicationResult,
+} from "@/lib/result/ApplicationResult";
 import type {
   LedgerCreditInput,
   LedgerDebitInput,
@@ -9,6 +13,9 @@ import type {
 } from "@/features/wallet/application/contracts/SettlementService";
 
 type InMemoryLedger = LedgerRepository & {
+  debit: (
+    input: LedgerDebitInput,
+  ) => Promise<ApplicationResult<LedgerMutationResult>>;
   seedBalance: (riderId: string, points: number) => Promise<void>;
 };
 
@@ -61,10 +68,7 @@ export function createInMemoryLedgerRepository(): InMemoryLedger {
       return withRiderLock(input.riderId, async () => {
         const balance = balances.get(input.riderId) ?? 0;
         if (balance < input.points) {
-          return fail(
-            "BusinessFailure",
-            "Insufficient balance for debit",
-          );
+          return fail("BusinessFailure", "Insufficient balance for debit");
         }
 
         const entry: LedgerEntry = {

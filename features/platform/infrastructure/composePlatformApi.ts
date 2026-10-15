@@ -1,4 +1,8 @@
-import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import {
+  fail,
+  ok,
+  type ApplicationResult,
+} from "@/lib/result/ApplicationResult";
 import type { RequestContext } from "@/features/identity/domain/Principal";
 import type { AuthenticateRequestDeps } from "@/features/identity/application/contracts/AuthenticateRequest";
 import { authorisationService } from "@/features/organisations/application/commands/authorisationService";
@@ -54,7 +58,10 @@ export type PlatformApiHandlers = {
     catalogById: (request: Request, params: RouteParams) => Promise<Response>;
     redeem: (request: Request) => Promise<Response>;
     redemptions: (request: Request) => Promise<Response>;
-    redemptionById: (request: Request, params: RouteParams) => Promise<Response>;
+    redemptionById: (
+      request: Request,
+      params: RouteParams,
+    ) => Promise<Response>;
   };
   wallet: {
     balance: (request: Request) => Promise<Response>;
@@ -135,7 +142,9 @@ export type CreatePlatformApiOptions = {
   organisationStore?: OrganisationListPort;
 };
 
-async function readJsonBody(request: Request): Promise<Record<string, unknown>> {
+async function readJsonBody(
+  request: Request,
+): Promise<Record<string, unknown>> {
   try {
     const body = await request.json();
     if (body && typeof body === "object") {
@@ -163,15 +172,22 @@ export async function createPlatformApiForTests(
   }
 
   const bus = fulfilmentModule?.bus ?? new DomainEventBus();
-  const ledger =
-    fulfilmentModule?.ledger ?? createInMemoryLedgerRepository();
+  const ledger = fulfilmentModule?.ledger ?? createInMemoryLedgerRepository();
 
   const isProductionComposition = Boolean(fulfilmentModule && !options.seed);
 
   let catalogPort = createInMemoryCatalogListPort(
     options.seed?.catalog ?? [],
   ) as import("@/features/rewards/application/queries/catalogAndRedemptions").CatalogListPort;
-  let redemptionPort = createInMemoryRedemptionListPort() as import("@/features/rewards/application/queries/catalogAndRedemptions").RedemptionListPort;
+  let redemptionPort = createInMemoryRedemptionListPort(
+    options.seed && fulfilmentModule
+      ? {
+          catalog: catalogPort,
+          ledger: ledger as ReturnType<typeof createInMemoryLedgerRepository>,
+          engine: fulfilmentModule.engine,
+        }
+      : undefined,
+  ) as import("@/features/rewards/application/queries/catalogAndRedemptions").RedemptionListPort;
 
   if (isProductionComposition) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -228,9 +244,7 @@ export async function createPlatformApiForTests(
   });
 
   let listResourcesFn:
-    | ((filter: {
-        partnerOrgId?: string | null;
-      }) => Promise<
+    | ((filter: { partnerOrgId?: string | null }) => Promise<
         Array<{
           id: string;
           name: string;
@@ -290,8 +304,7 @@ export async function createPlatformApiForTests(
   let redeemService: ReturnType<typeof createRedeemRewardService> | null = null;
   let fulfilmentEngine: FulfilmentEngine | null =
     fulfilmentModule?.engine ?? null;
-  let tokenService: TokenService | null =
-    fulfilmentModule?.tokens ?? null;
+  let tokenService: TokenService | null = fulfilmentModule?.tokens ?? null;
 
   if (fulfilmentModule && options.seed) {
     const seedable = ledger as typeof ledger & {
@@ -312,8 +325,6 @@ export async function createPlatformApiForTests(
     redeemService = createRedeemRewardService({
       authorisation,
       fraud,
-      catalog: catalogPort,
-      settlement: fulfilmentModule.settlement,
       redemptions: redemptionPort,
       fulfilmentEngine: fulfilmentModule.engine,
       eventBus: bus,
@@ -338,8 +349,6 @@ export async function createPlatformApiForTests(
     redeemService = createRedeemRewardService({
       authorisation,
       fraud,
-      catalog: catalogPort,
-      settlement: fulfilmentModule.settlement,
       redemptions: redemptionPort,
       fulfilmentEngine: fulfilmentModule.engine,
       eventBus: bus,
@@ -613,9 +622,7 @@ export async function createPlatformApiForTests(
         route(request, "fulfilment.confirm", async (ctx, req) => {
           const body = await readJsonBody(req);
           const fulfilmentId =
-            typeof body.fulfilmentId === "string"
-              ? body.fulfilmentId
-              : "";
+            typeof body.fulfilmentId === "string" ? body.fulfilmentId : "";
           const result = await partnerCommands.confirmCollection(ctx, {
             fulfilmentId,
           });

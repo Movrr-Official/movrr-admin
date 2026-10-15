@@ -15,3 +15,14 @@ export function matchesAnyPathPrefix(
 ): boolean {
   return prefixes.some((prefix) => matchesPathPrefix(pathname, prefix));
 }
+
+export function isRiderApiPath(pathname: string): boolean {
+  // These rider routes enforce JWT identity and capabilities in their handlers.
+  // Match complete paths so operational mutations retain dashboard protection.
+  return (
+    pathname.startsWith("/api/sessions/") ||
+    /^\/api\/v1\/(?:partners\/locations|wallet\/(?:balance|transactions)|rewards\/(?:catalog(?:\/[^/]+)?|redeem|redemptions(?:\/[^/]+)?)|riders\/me\/campaigns(?:\/(?:opt-in|withdraw|confirm))?|community-rides(?:\/[^/]+\/join)?|fulfilment\/[^/]+(?:\/(?:timeline|token))?)$/.test(
+      pathname,
+    )
+  );
+}

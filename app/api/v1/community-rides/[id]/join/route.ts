@@ -1,3 +1,4 @@
+import { createSupabaseRequestClient } from "@/lib/supabase-request";
 import { platformRoute } from "@/lib/http/platformRoute";
 import { productionAuthDeps } from "@/features/platform/infrastructure/productionPlatformApi";
 import {
@@ -19,6 +20,8 @@ export async function POST(request: Request, context: RouteContext) {
     capability: "rewards.catalog.read",
     authDeps: productionAuthDeps,
     handle: (ctx) =>
-      action === "leave" ? leaveCommunityRide(ctx, id) : joinCommunityRide(ctx, id),
+      action === "leave"
+        ? leaveCommunityRide(ctx, id, createSupabaseRequestClient(request))
+        : joinCommunityRide(ctx, id, createSupabaseRequestClient(request)),
   });
 }

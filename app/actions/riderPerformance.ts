@@ -3,10 +3,10 @@
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { RiderPerformanceMetrics } from "@/schemas";
-import { DB_TABLES, VERIFICATION_STATUS } from "@/lib/rewardConstants";
+import { VERIFICATION_STATUS } from "@/lib/rewardConstants";
 
 /**
- * Compute rider performance metrics from ride_session and ride_verification data.
+ * Compute rider performance metrics from authoritative ride_session verdicts.
  * Mirrors the mobile app's RiderPerformanceModel — used in the admin rider details drawer.
  *
  * Sample window: last 90 days to keep computation bounded.
@@ -33,7 +33,9 @@ export async function getRiderPerformanceMetrics(riderId: string): Promise<{
           .not("total_distance_meters", "is", null),
         supabase
           .from("ride_session")
-          .select("id, ride_quality_percent, created_at")
+          .select(
+            "id, status, verification_result, ride_quality_percent, created_at",
+          )
           .eq("rider_id", riderId)
           .gte("created_at", windowStart.toISOString())
           .order("created_at", { ascending: false })
@@ -71,29 +73,19 @@ export async function getRiderPerformanceMetrics(riderId: string): Promise<{
 
     const sessionIds = rows.map((r) => r.id);
 
-    // Fetch verification results for these sessions
-    const { data: verRows } = await supabase
-      .from(DB_TABLES.RIDE_VERIFICATION)
-      .select("ride_session_id, status")
-      .in("ride_session_id", sessionIds);
-
-    const verMap = new Map<string, string>();
-    (verRows ?? []).forEach((v) => {
-      if (v.ride_session_id)
-        verMap.set(v.ride_session_id, v.status ?? VERIFICATION_STATUS.PENDING);
-    });
+    const verMap = new Map<string, string>(
+      rows.map((row) => [
+        row.id,
+        row.verification_result?.status ?? VERIFICATION_STATUS.PENDING,
+      ]),
+    );
 
     const verifiedCount = sessionIds.filter(
       (id) => verMap.get(id) === VERIFICATION_STATUS.VERIFIED,
     ).length;
-    const completedCount = sessionIds.filter((id) => {
-      const status = verMap.get(id);
-      return (
-        status === VERIFICATION_STATUS.VERIFIED ||
-        status === VERIFICATION_STATUS.REJECTED ||
-        status === VERIFICATION_STATUS.MANUAL_REVIEW
-      );
-    }).length;
+    const completedCount = rows.filter(
+      (row) => row.status === "completed" || row.status === "rejected",
+    ).length;
 
     const completionRate =
       totalSessions > 0

@@ -62,6 +62,7 @@ export const META_KEYS = {
 /** reward_transactions.source values */
 export const REWARD_SOURCE = {
   STANDARD_RIDE: "standard_ride",
+  CAMPAIGN_RIDE: "campaign_ride",
   AD_BOOST: "ad_boost",
   BOOSTED_RIDE: "boosted_ride",
   BONUS: "bonus",
@@ -243,6 +244,7 @@ export const BONUS_TYPE_LABELS: Record<string, string> = {
 
 export const REWARD_SOURCE_LABELS: Record<string, string> = {
   [REWARD_SOURCE.STANDARD_RIDE]: "Standard Ride",
+  [REWARD_SOURCE.CAMPAIGN_RIDE]: "Campaign Ride",
   [REWARD_SOURCE.AD_BOOST]: "Ad Boost",
   [REWARD_SOURCE.BOOSTED_RIDE]: "Boosted Ride",
   [REWARD_SOURCE.BONUS]: "Bonus",

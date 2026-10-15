@@ -1,5 +1,4 @@
 import type { DomainEventBus } from "@/lib/events/DomainEventBus";
-import { settleDebit } from "@/features/wallet/application/commands/settleDebit";
 import { settleRefund } from "@/features/wallet/application/commands/settleRefund";
 import type {
   LedgerRepository,
@@ -19,7 +18,6 @@ export function createImmediateDebitCompensatingRefundStrategy(
   deps: ImmediateDebitCompensatingRefundStrategyDeps,
 ): SettlementService {
   return {
-    debit: (input) => settleDebit(deps, input),
     refund: (input) => settleRefund(deps, input),
   };
 }

@@ -1,10 +1,8 @@
+import { isRiderApiPath } from "@/lib/pathMatch";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { applySecurityHeaders } from "@/lib/securityHeaders";
-import {
-  safeEqualBearerToken,
-  safeEqualString,
-} from "@/lib/secureCompare";
+import { safeEqualBearerToken, safeEqualString } from "@/lib/secureCompare";
 import {
   NEXT_PUBLIC_SUPABASE_ANON_KEY,
   NEXT_PUBLIC_SUPABASE_URL,
@@ -28,7 +26,6 @@ const PUBLIC_PATHS = [
 const PUBLIC_API_PREFIX = "/api/public/";
 
 /** Mobile rider ingest — JWT validated in route handlers, not admin cookies. */
-const RIDER_API_PREFIX = "/api/sessions/";
 
 /** Cron/maintenance jobs — bearer token validated in route handlers. */
 const INTERNAL_API_PREFIX = "/api/internal/";
@@ -42,12 +39,6 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
-}
-
-function isRiderApiPath(pathname: string): boolean {
-  // This exact read-only endpoint authenticates rider JWTs in platformRoute.
-  // Keep dashboard cookie protection on every other Platform API path.
-  return pathname.startsWith(RIDER_API_PREFIX) || pathname === "/api/v1/partners/locations";
 }
 
 function isInternalApiPath(pathname: string): boolean {
@@ -108,7 +99,10 @@ export async function proxy(request: NextRequest) {
 
     if (!expected && !previous) {
       return applySecurityHeaders(
-        NextResponse.json({ error: "optimizer_not_configured" }, { status: 503 }),
+        NextResponse.json(
+          { error: "optimizer_not_configured" },
+          { status: 503 },
+        ),
         request,
       );
     }

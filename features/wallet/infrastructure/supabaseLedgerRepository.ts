@@ -1,10 +1,13 @@
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import {
+  fail,
+  ok,
+  type ApplicationResult,
+} from "@/lib/result/ApplicationResult";
 import type {
   LedgerCreditInput,
-  LedgerDebitInput,
   LedgerEntry,
   LedgerMutationResult,
   LedgerRepository,
@@ -20,30 +23,6 @@ function throwOnError(error: { message: string } | null, action: string): void {
  */
 export function createSupabaseLedgerRepository(): LedgerRepository {
   return {
-    async debit(
-      input: LedgerDebitInput,
-    ): Promise<ApplicationResult<LedgerMutationResult>> {
-      const supabase = createSupabaseAdminClient();
-      const { data, error } = await supabase.rpc("wallet_settle_debit", {
-        p_rider_id: input.riderId,
-        p_points: input.points,
-        p_redemption_id: input.redemptionId,
-        p_correlation_id: input.correlationId,
-      });
-      throwOnError(error, "wallet_settle_debit");
-      const row = Array.isArray(data) ? data[0] : data;
-      if (!row?.success) {
-        return fail(
-          "BusinessFailure",
-          (row?.error_message as string) ?? "Debit failed",
-        );
-      }
-      return ok({
-        transactionId: String(row.transaction_id),
-        balanceAfter: Number(row.new_balance),
-      });
-    },
-
     async credit(
       input: LedgerCreditInput,
     ): Promise<ApplicationResult<LedgerMutationResult>> {
@@ -52,20 +31,19 @@ export function createSupabaseLedgerRepository(): LedgerRepository {
         p_rider_id: input.riderId,
         p_points: input.points,
         p_fulfilment_id: input.fulfilmentId,
+        p_operation_id: `refund:${input.fulfilmentId}`,
         p_reason: input.reason,
         p_correlation_id: input.correlationId,
       });
       throwOnError(error, "wallet_settle_refund");
-      const row = Array.isArray(data) ? data[0] : data;
-      if (!row?.success) {
+      if (!data?.transactionId)
         return fail(
-          "BusinessFailure",
-          (row?.error_message as string) ?? "Refund failed",
+          "InfrastructureFailure",
+          "Missing committed refund receipt",
         );
-      }
       return ok({
-        transactionId: String(row.transaction_id),
-        balanceAfter: Number(row.new_balance),
+        transactionId: String(data.transactionId),
+        balanceAfter: Number(data.balanceAfter),
       });
     },
 
@@ -98,14 +76,13 @@ export function createSupabaseLedgerRepository(): LedgerRepository {
           points: Math.abs(points),
           direction: points < 0 ? ("debit" as const) : ("credit" as const),
           referenceType:
-            meta.settlement_kind === "refund"
+            meta.settlement_kind === "compensating_refund"
               ? ("fulfilment" as const)
               : ("redemption" as const),
           referenceId: String(
             meta.fulfilment_id ?? meta.redemption_id ?? row.id,
           ),
-          reason:
-            typeof meta.reason === "string" ? meta.reason : undefined,
+          reason: typeof meta.reason === "string" ? meta.reason : undefined,
           correlationId: String(meta.correlation_id ?? ""),
           createdAt: String(row.created_at),
         };

@@ -1,19 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   AlertCircle,
   Bike,
-  Check,
   Clock,
   Coins,
   Gauge,
   Loader2,
   MapPin,
   Megaphone,
-  MessageSquare,
   Receipt,
   Route,
   ShieldCheck,
@@ -28,10 +25,6 @@ import {
   UserCheck,
 } from "lucide-react";
 
-import {
-  verifyRideSession,
-  VerificationAction,
-} from "@/app/actions/rideSessions";
 import { getSessionRewardTransactions } from "@/app/actions/rewards";
 import { BONUS_TYPE_LABELS, REWARD_SOURCE_LABELS } from "@/lib/rewardConstants";
 import {
@@ -50,8 +43,6 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from "@/components/ui/drawer";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/useToast";
 
 async function fetchRouteName(routeId: string): Promise<string | null> {
   try {
@@ -110,26 +101,7 @@ export function RideSessionDetailsDrawer({
   session,
   open,
   onOpenChange,
-  onVerified,
 }: RideSessionDetailsDrawerProps) {
-  const { toast } = useToast();
-  const [actionLoading, setActionLoading] = useState<VerificationAction | null>(
-    null,
-  );
-  const [reason, setReason] = useState("");
-  const [showReasonFor, setShowReasonFor] = useState<VerificationAction | null>(
-    null,
-  );
-
-  // Reset action state when drawer closes or the viewed session changes
-  useEffect(() => {
-    if (!open) {
-      setShowReasonFor(null);
-      setReason("");
-      setActionLoading(null);
-    }
-  }, [open, session?.id]);
-
   // Fetch suggested route name when linked — only fires when session has one
   const { data: suggestedRouteName } = useQuery({
     queryKey: ["suggestedRoute", session?.suggestedRouteId],
@@ -148,45 +120,6 @@ export function RideSessionDetailsDrawer({
   const rewardTransactions = rewardTxResult?.data ?? [];
 
   if (!session) return null;
-
-  const canApprove = session.verificationStatus !== "verified";
-  const canReject = session.verificationStatus !== "rejected";
-  const canEscalate = session.verificationStatus !== "manual_review";
-
-  const handleAction = async (action: VerificationAction) => {
-    if (action === "reject" || action === "escalate") {
-      if (showReasonFor !== action) {
-        setShowReasonFor(action);
-        return;
-      }
-    }
-    setActionLoading(action);
-    const result = await verifyRideSession({
-      sessionId: session.id,
-      action,
-      reason: reason || undefined,
-    });
-    setActionLoading(null);
-    if (result.success) {
-      toast({
-        title:
-          action === "approve"
-            ? "Session approved"
-            : action === "reject"
-              ? "Session rejected"
-              : "Escalated to manual review",
-      });
-      setShowReasonFor(null);
-      setReason("");
-      onVerified?.();
-    } else {
-      toast({
-        title: "Action failed",
-        description: result.error,
-        variant: "destructive",
-      });
-    }
-  };
 
   const duration = session.endedAt
     ? Math.round(
@@ -364,7 +297,7 @@ export function RideSessionDetailsDrawer({
                           <div className="flex items-center gap-2">
                             {hasChain && (
                               <span
-                                className={`text-xs font-medium px-1.5 py-0.5 rounded ${ clean ? "bg-success/20 text-success" : "bg-warning/10 text-warning dark:bg-warning/20" }`}
+                                className={`text-xs font-medium px-1.5 py-0.5 rounded ${clean ? "bg-success/20 text-success" : "bg-warning/10 text-warning dark:bg-warning/20"}`}
                                 title={
                                   clean
                                     ? "Payout chain verified"
@@ -404,7 +337,7 @@ export function RideSessionDetailsDrawer({
                                   )}
                                 </span>
                                 <span
-                                  className={`tabular-nums ${ step.status === "inconsistent" ? "text-warning font-medium" : step.status === "missing" ? "text-muted-foreground/50" : "" }`}
+                                  className={`tabular-nums ${step.status === "inconsistent" ? "text-warning font-medium" : step.status === "missing" ? "text-muted-foreground/50" : ""}`}
                                 >
                                   {step.value != null
                                     ? `${step.value} pts`
@@ -598,7 +531,7 @@ export function RideSessionDetailsDrawer({
                           Peak Speed Detected
                         </span>
                         <span
-                          className={`font-medium tabular-nums ${ session.machineVerification.maxAllowedSpeedKmh != null && session.machineVerification.detectedMaxSpeedKmh > session.machineVerification.maxAllowedSpeedKmh ? "text-destructive" : "" }`}
+                          className={`font-medium tabular-nums ${session.machineVerification.maxAllowedSpeedKmh != null && session.machineVerification.detectedMaxSpeedKmh > session.machineVerification.maxAllowedSpeedKmh ? "text-destructive" : ""}`}
                         >
                           {session.machineVerification.detectedMaxSpeedKmh.toFixed(
                             1,
@@ -704,128 +637,11 @@ export function RideSessionDetailsDrawer({
             </Card>
           )}
 
-          {/* Verification Actions */}
           <Card className="border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4" />
-                Verification Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex gap-2 flex-wrap">
-                {canApprove && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-success border-success/20 hover:bg-success/12 dark:hover:bg-success/20 dark:text-success dark:border-success/40"
-                    disabled={!!actionLoading}
-                    onClick={() => handleAction("approve")}
-                  >
-                    {actionLoading === "approve" ? (
-                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    ) : (
-                      <Check className="h-3.5 w-3.5 mr-1.5" />
-                    )}
-                    Approve
-                  </Button>
-                )}
-                {canReject && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-destructive border-destructive/20 hover:bg-destructive/10 dark:hover:bg-destructive dark:text-destructive dark:border-destructive/20"
-                    disabled={!!actionLoading}
-                    onClick={() => handleAction("reject")}
-                  >
-                    {actionLoading === "reject" ? (
-                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    ) : (
-                      <ShieldX className="h-3.5 w-3.5 mr-1.5" />
-                    )}
-                    Reject
-                  </Button>
-                )}
-                {canEscalate && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-warning border-warning/20 hover:bg-warning/15 dark:hover:bg-warning/15 dark:text-warning dark:border-warning/20"
-                    disabled={!!actionLoading}
-                    onClick={() => handleAction("escalate")}
-                  >
-                    {actionLoading === "escalate" ? (
-                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    ) : (
-                      <TriangleAlert className="h-3.5 w-3.5 mr-1.5" />
-                    )}
-                    Escalate
-                  </Button>
-                )}
-              </div>
-
-              {showReasonFor && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    <span>Reason for {showReasonFor} (optional)</span>
-                  </div>
-                  <Textarea
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Enter reason or notes…"
-                    rows={2}
-                    className="resize-none text-sm rounded-xl border-border/50 bg-background/60"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      disabled={!!actionLoading}
-                      onClick={async () => {
-                        setActionLoading(showReasonFor);
-                        const result = await verifyRideSession({
-                          sessionId: session.id,
-                          action: showReasonFor,
-                          reason: reason || undefined,
-                        });
-                        setActionLoading(null);
-                        if (result.success) {
-                          toast({
-                            title:
-                              showReasonFor === "reject"
-                                ? "Session rejected"
-                                : "Escalated to manual review",
-                          });
-                          setShowReasonFor(null);
-                          setReason("");
-                          onVerified?.();
-                        } else {
-                          toast({
-                            title: "Action failed",
-                            description: result.error,
-                            variant: "destructive",
-                          });
-                        }
-                      }}
-                    >
-                      {actionLoading ? (
-                        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                      ) : null}
-                      Confirm {showReasonFor}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setShowReasonFor(null);
-                        setReason("");
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
+            <CardContent className="pt-6 text-sm text-muted-foreground">
+              Verification is determined by the authoritative ride settlement
+              service. Manual verification overrides are not supported by the
+              deployed backend.
             </CardContent>
           </Card>
         </div>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isRiderApiPath,
   matchesAnyPathPrefix,
   matchesPathPrefix,
 } from "@/lib/pathMatch";
@@ -32,4 +33,29 @@ describe("chrome hide path list", () => {
     expect(matchesAnyPathPrefix("/settings", paths)).toBe(false);
     expect(matchesAnyPathPrefix("/", paths)).toBe(false);
   });
+});
+
+describe("rider API JWT boundary", () => {
+  it.each([
+    "/api/v1/wallet/balance",
+    "/api/v1/wallet/transactions",
+    "/api/v1/rewards/redeem",
+    "/api/v1/rewards/redemptions",
+    "/api/v1/rewards/catalog/item",
+    "/api/v1/fulfilment/id/token",
+    "/api/v1/riders/me/campaigns/confirm",
+    "/api/v1/community-rides/id/join",
+  ])("allows %s to reach its JWT handler", (path) =>
+    expect(isRiderApiPath(path)).toBe(true),
+  );
+  it.each([
+    "/api/v1/fulfilment/id/refund",
+    "/api/v1/fulfilment/id/cancel",
+    "/api/v1/internal/jobs",
+    "/api/v1/rewards/admin",
+    "/api/v1/wallet/balance/other",
+    "/riders",
+  ])("keeps %s behind its existing dashboard gate", (path) =>
+    expect(isRiderApiPath(path)).toBe(false),
+  );
 });

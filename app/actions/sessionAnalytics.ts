@@ -77,36 +77,29 @@ export async function getSessionAnalytics(days = 30): Promise<{
     // Fetch sessions in the window — includes bike_type, distance, and status
     const { data: sessionRows, error: sessionError } = await supabase
       .from(DB_TABLES.RIDE_SESSION)
-      .select("id, bike_type, total_distance_meters, created_at")
+      .select(
+        "id, bike_type, total_distance_meters, created_at, verification_result",
+      )
       .gte("created_at", windowStartIso);
 
     if (sessionError) return { success: false, error: sessionError.message };
 
     const rows = sessionRows ?? [];
-    const sessionIds = rows.map((r) => r.id);
-
-    // Fetch verification statuses for the window sessions
-    const verMap = new Map<string, string>();
-    if (sessionIds.length) {
-      const { data: verRows } = await supabase
-        .from(DB_TABLES.RIDE_VERIFICATION)
-        .select("ride_session_id, status")
-        .in("ride_session_id", sessionIds);
-      (verRows ?? []).forEach((v) => {
-        if (v.ride_session_id)
-          verMap.set(
-            v.ride_session_id,
-            v.status ?? VERIFICATION_STATUS.PENDING,
-          );
-      });
-    }
+    const verMap = new Map<string, string>(
+      rows.map((row) => [
+        row.id,
+        row.verification_result?.status ?? VERIFICATION_STATUS.PENDING,
+      ]),
+    );
 
     // Fetch bonus breakdown from reward_transactions metadata
-    const { data: txRows } = await supabase
+    const { data: txRows, error: txError } = await supabase
       .from(DB_TABLES.REWARD_TRANSACTIONS)
       .select("metadata, points_earned")
       .gte("created_at", windowStartIso)
       .not("metadata", "is", null);
+
+    if (txError) return { success: false, error: txError.message };
 
     // ── Verification trend ────────────────────────────────────────────────────
     const dateRange = buildDateRange(days);

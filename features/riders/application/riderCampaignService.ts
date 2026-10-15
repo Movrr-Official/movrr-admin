@@ -1,10 +1,17 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
+import {
+  fail,
+  ok,
+  type ApplicationResult,
+} from "@/lib/result/ApplicationResult";
 import type { RequestContext } from "@/features/identity/domain/Principal";
 
-function requireRider(ctx: RequestContext): ApplicationResult<{ riderId: string }> {
+function requireRider(
+  ctx: RequestContext,
+): ApplicationResult<{ riderId: string }> {
   if (ctx.principal.type !== "rider") {
     return fail("permission_denied", "Rider principal required");
   }
@@ -14,11 +21,11 @@ function requireRider(ctx: RequestContext): ApplicationResult<{ riderId: string 
 export async function optInToCampaign(
   ctx: RequestContext,
   campaignId: string,
+  supabase: SupabaseClient,
 ): Promise<ApplicationResult<unknown>> {
   const rider = requireRider(ctx);
   if (!rider.ok) return rider;
 
-  const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase.rpc("rider_campaign_opt_in", {
     p_campaign_id: campaignId,
   });
@@ -30,11 +37,11 @@ export async function optInToCampaign(
 export async function withdrawCampaignSignup(
   ctx: RequestContext,
   campaignId: string,
+  supabase: SupabaseClient,
 ): Promise<ApplicationResult<unknown>> {
   const rider = requireRider(ctx);
   if (!rider.ok) return rider;
 
-  const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase.rpc("rider_campaign_withdraw", {
     p_campaign_id: campaignId,
   });
@@ -46,11 +53,11 @@ export async function withdrawCampaignSignup(
 export async function confirmCampaignParticipation(
   ctx: RequestContext,
   campaignId: string,
+  supabase: SupabaseClient,
 ): Promise<ApplicationResult<unknown>> {
   const rider = requireRider(ctx);
   if (!rider.ok) return rider;
 
-  const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase.rpc("rider_campaign_confirm", {
     p_campaign_id: campaignId,
   });
@@ -72,15 +79,7 @@ export async function listRiderCampaigns(
     .eq("campaign_signup.rider_id", rider.value.riderId)
     .limit(100);
 
-  if (error) {
-    const { data: openCampaigns, error: openError } = await supabase
-      .from("campaign")
-      .select("*")
-      .in("lifecycle_status", ["open_for_signup", "active", "confirmed"])
-      .limit(100);
-    if (openError) return fail("BusinessFailure", openError.message);
-    return ok(openCampaigns ?? []);
-  }
+  if (error) return fail("BusinessFailure", error.message);
 
   return ok(data ?? []);
 }

@@ -124,9 +124,7 @@ function mapRow(
   };
 }
 
-async function loadEvents(
-  fulfilmentId: string,
-): Promise<FulfilmentEvent[]> {
+async function loadEvents(fulfilmentId: string): Promise<FulfilmentEvent[]> {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("fulfilment_event")
@@ -195,7 +193,7 @@ export function createSupabaseFulfilmentAggregateStore(): FulfilmentAggregateSto
 
       const { data: existing, error: existingError } = await supabase
         .from("fulfilment")
-        .select("id, version")
+        .select("id, version, state")
         .eq("id", fulfilment.id)
         .maybeSingle();
       throwOnError(existingError, "fulfilment.save.lookup");
@@ -207,12 +205,19 @@ export function createSupabaseFulfilmentAggregateStore(): FulfilmentAggregateSto
         throwOnError(insertError, "fulfilment.save.insert");
       } else {
         const dbVersion = (existing as { version: number }).version;
-        // Allow save of current version (idempotent) or next version (advance).
+        if (
+          fulfilment.version === dbVersion &&
+          fulfilment.state === existing.state
+        )
+          return;
+        if (fulfilment.version !== dbVersion + 1)
+          throw new Error("Stale fulfilment transition");
+        // Compare the version used to compute this transition, never a newer read.
         const { data: updated, error: updateError } = await supabase
           .from("fulfilment")
           .update(row)
           .eq("id", fulfilment.id)
-          .in("version", [dbVersion])
+          .eq("version", fulfilment.version - 1)
           .select("id")
           .maybeSingle();
         throwOnError(updateError, "fulfilment.save.update");

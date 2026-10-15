@@ -13,7 +13,7 @@ describe("SettlementService — ImmediateDebitCompensatingRefundStrategy", () =>
       eventBus: bus,
     });
 
-    const result = await settlement.debit({
+    const result = await ledger.debit({
       riderId: "rider-1",
       points: 40,
       redemptionId: "red-1",
@@ -42,7 +42,7 @@ describe("SettlementService — ImmediateDebitCompensatingRefundStrategy", () =>
       eventBus: bus,
     });
 
-    const debit = await settlement.debit({
+    const debit = await ledger.debit({
       riderId: "rider-1",
       points: 50,
       redemptionId: "red-2",
@@ -83,7 +83,7 @@ describe("SettlementService — ImmediateDebitCompensatingRefundStrategy", () =>
       eventBus: bus,
     });
 
-    const result = await settlement.debit({
+    const result = await ledger.debit({
       riderId: "rider-1",
       points: 50,
       redemptionId: "red-3",
@@ -107,13 +107,13 @@ describe("SettlementService — ImmediateDebitCompensatingRefundStrategy", () =>
     });
 
     const [a, b] = await Promise.all([
-      settlement.debit({
+      ledger.debit({
         riderId: "rider-1",
         points: 100,
         redemptionId: "red-a",
         correlationId: "corr-a",
       }),
-      settlement.debit({
+      ledger.debit({
         riderId: "rider-1",
         points: 100,
         redemptionId: "red-b",
@@ -134,7 +134,7 @@ describe("SettlementService — ImmediateDebitCompensatingRefundStrategy", () =>
     expect(await ledger.listEntries("rider-1")).toHaveLength(1);
   });
 
-  it("enqueues WalletDebited / WalletRefunded without flushing", async () => {
+  it("enqueues the refund notification only after settlement", async () => {
     const ledger = createInMemoryLedgerRepository();
     await ledger.seedBalance("rider-1", 80);
     const bus = new DomainEventBus();
@@ -148,7 +148,7 @@ describe("SettlementService — ImmediateDebitCompensatingRefundStrategy", () =>
       eventBus: bus,
     });
 
-    const debit = await settlement.debit({
+    const debit = await ledger.debit({
       riderId: "rider-1",
       points: 20,
       redemptionId: "red-evt",
@@ -168,9 +168,8 @@ describe("SettlementService — ImmediateDebitCompensatingRefundStrategy", () =>
     expect(refundSpy).not.toHaveBeenCalled();
 
     await bus.flushAfterCommit();
-    expect(debitSpy).toHaveBeenCalledTimes(1);
+    expect(debitSpy).not.toHaveBeenCalled();
     expect(refundSpy).toHaveBeenCalledTimes(1);
-    expect(debitSpy.mock.calls[0]?.[0]?.name).toBe("WalletDebited");
     expect(refundSpy.mock.calls[0]?.[0]?.name).toBe("WalletRefunded");
   });
 });

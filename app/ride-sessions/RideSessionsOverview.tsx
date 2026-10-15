@@ -20,7 +20,6 @@ import {
   BarChart3,
   CheckCircle2,
   AlertCircle,
-  Check,
   Leaf,
   Loader2,
   Ruler,
@@ -34,7 +33,6 @@ import {
   Clock,
 } from "lucide-react";
 
-import { verifyRideSession, VerificationAction } from "@/app/actions/rideSessions";
 import { RideSession } from "@/schemas";
 import { RideSessionsTable } from "@/components/ride-sessions/RideSessionsTable";
 import { StatsCard } from "@/components/stats/StatsCard";
@@ -44,7 +42,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/useToast";
 
 const BIKE_TYPE_COLORS = [
   "var(--chart-1)",
@@ -56,16 +53,15 @@ const BIKE_TYPE_COLORS = [
 const CHART_AXIS_FONT_SIZE = 11;
 
 export default function RideSessionsOverview() {
-  const { toast } = useToast();
   const {
     data: sessions,
     isLoading,
     isFetching,
     refetch,
   } = useRideSessionsData();
-  const [pendingAction, setPendingAction] = useState<{ id: string; action: VerificationAction } | null>(null);
   const [analyticsDays, setAnalyticsDays] = useState<7 | 30 | 90>(30);
-  const { data: analytics, isLoading: analyticsLoading } = useSessionAnalytics(analyticsDays);
+  const { data: analytics, isLoading: analyticsLoading } =
+    useSessionAnalytics(analyticsDays);
 
   const total = sessions?.length ?? 0;
 
@@ -105,18 +101,6 @@ export default function RideSessionsOverview() {
     completedSessions > 0
       ? Math.round((verified / completedSessions) * 100)
       : 0;
-
-  const handleQuickAction = async (sessionId: string, action: VerificationAction) => {
-    setPendingAction({ id: sessionId, action });
-    const result = await verifyRideSession({ sessionId, action });
-    setPendingAction(null);
-    if (result.success) {
-      toast({ title: action === "approve" ? "Session approved" : action === "reject" ? "Session rejected" : "Escalated" });
-      refetch();
-    } else {
-      toast({ title: "Action failed", description: result.error, variant: "destructive" });
-    }
-  };
 
   return (
     <div className="min-h-screen page-canvas">
@@ -167,8 +151,7 @@ export default function RideSessionsOverview() {
                 ? [
                     {
                       label: `${manualReview} review`,
-                      className:
-                        "bg-warning/15 text-warning border-warning/20",
+                      className: "bg-warning/15 text-warning border-warning/20",
                     },
                   ]
                 : []),
@@ -266,57 +249,55 @@ export default function RideSessionsOverview() {
 
           <TabsContent value="queue" className="mt-4 space-y-6">
             {/* Manual Review — highest priority triage */}
-            {(sessions ?? []).filter((s) => s.verificationStatus === "manual_review").length > 0 && (
+            {(sessions ?? []).filter(
+              (s) => s.verificationStatus === "manual_review",
+            ).length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <TriangleAlert className="h-4 w-4 text-warning" />
-                  <h3 className="text-sm font-semibold">Manual Review Required</h3>
+                  <h3 className="text-sm font-semibold">
+                    Manual Review Required
+                  </h3>
                   <Badge className="text-xs bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning">
-                    {(sessions ?? []).filter((s) => s.verificationStatus === "manual_review").length}
+                    {
+                      (sessions ?? []).filter(
+                        (s) => s.verificationStatus === "manual_review",
+                      ).length
+                    }
                   </Badge>
                 </div>
                 <div className="space-y-2">
                   {(sessions ?? [])
                     .filter((s) => s.verificationStatus === "manual_review")
                     .map((s) => (
-                      <TriageCard
-                        key={s.id}
-                        session={s}
-                        priority="high"
-                        onApprove={() => handleQuickAction(s.id, "approve")}
-                        onReject={() => handleQuickAction(s.id, "reject")}
-                        isLoading={pendingAction?.id === s.id}
-                        loadingAction={pendingAction?.id === s.id ? pendingAction.action : undefined}
-                      />
+                      <TriageCard key={s.id} session={s} priority="high" />
                     ))}
                 </div>
               </div>
             )}
 
             {/* Pending verification */}
-            {(sessions ?? []).filter((s) => s.verificationStatus === "pending").length > 0 && (
+            {(sessions ?? []).filter((s) => s.verificationStatus === "pending")
+              .length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Clock className="h-4 w-4 text-warning" />
-                  <h3 className="text-sm font-semibold">Pending Verification</h3>
+                  <h3 className="text-sm font-semibold">
+                    Pending Verification
+                  </h3>
                   <Badge variant="warning" className="text-xs">
-                    {(sessions ?? []).filter((s) => s.verificationStatus === "pending").length}
+                    {
+                      (sessions ?? []).filter(
+                        (s) => s.verificationStatus === "pending",
+                      ).length
+                    }
                   </Badge>
                 </div>
                 <div className="space-y-2">
                   {(sessions ?? [])
                     .filter((s) => s.verificationStatus === "pending")
                     .map((s) => (
-                      <TriageCard
-                        key={s.id}
-                        session={s}
-                        priority="normal"
-                        onApprove={() => handleQuickAction(s.id, "approve")}
-                        onReject={() => handleQuickAction(s.id, "reject")}
-                        onEscalate={() => handleQuickAction(s.id, "escalate")}
-                        isLoading={pendingAction?.id === s.id}
-                        loadingAction={pendingAction?.id === s.id ? pendingAction.action : undefined}
-                      />
+                      <TriageCard key={s.id} session={s} priority="normal" />
                     ))}
                 </div>
               </div>
@@ -325,13 +306,17 @@ export default function RideSessionsOverview() {
             {/* Nothing in queue */}
             {!isLoading &&
               (sessions ?? []).filter(
-                (s) => s.verificationStatus === "pending" || s.verificationStatus === "manual_review",
+                (s) =>
+                  s.verificationStatus === "pending" ||
+                  s.verificationStatus === "manual_review",
               ).length === 0 && (
                 <Card className="border-border">
                   <CardContent className="py-12 text-center text-muted-foreground">
                     <CheckCircle2 className="h-8 w-8 mx-auto mb-3 text-success opacity-70" />
                     <p className="text-sm font-medium">Queue is clear</p>
-                    <p className="text-xs mt-1">No sessions awaiting verification.</p>
+                    <p className="text-xs mt-1">
+                      No sessions awaiting verification.
+                    </p>
                   </CardContent>
                 </Card>
               )}
@@ -360,7 +345,6 @@ export default function RideSessionsOverview() {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
                 {/* Verification trend */}
                 <Card className="border-border lg:col-span-2">
                   <CardHeader className="pb-3">
@@ -376,23 +360,58 @@ export default function RideSessionsOverview() {
                           margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
                         >
                           <defs>
-                            <linearGradient id="gradVerified" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.25} />
-                              <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
+                            <linearGradient
+                              id="gradVerified"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="var(--chart-1)"
+                                stopOpacity={0.25}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="var(--chart-1)"
+                                stopOpacity={0}
+                              />
                             </linearGradient>
-                            <linearGradient id="gradRejected" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="var(--destructive)" stopOpacity={0.2} />
-                              <stop offset="95%" stopColor="var(--destructive)" stopOpacity={0} />
+                            <linearGradient
+                              id="gradRejected"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="var(--destructive)"
+                                stopOpacity={0.2}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="var(--destructive)"
+                                stopOpacity={0}
+                              />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                          <CartesianGrid
+                            vertical={false}
+                            strokeDasharray="3 3"
+                          />
                           <XAxis
                             dataKey="date"
                             tickLine={false}
                             axisLine={false}
                             fontSize={CHART_AXIS_FONT_SIZE}
                             tickFormatter={(v: string) => v.slice(5)}
-                            interval={Math.ceil((analytics?.verificationTrend.length ?? 1) / 8) - 1}
+                            interval={
+                              Math.ceil(
+                                (analytics?.verificationTrend.length ?? 1) / 8,
+                              ) - 1
+                            }
                           />
                           <YAxis
                             tickLine={false}
@@ -446,7 +465,10 @@ export default function RideSessionsOverview() {
                         { color: "hsl(38 92% 50%)", label: "Manual Review" },
                       ].map(({ color, label }) => (
                         <div key={label} className="flex items-center gap-1.5">
-                          <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
+                          <span
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ background: color }}
+                          />
                           {label}
                         </div>
                       ))}
@@ -458,7 +480,9 @@ export default function RideSessionsOverview() {
                 <Card className="border-border">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-semibold">Distance & CO₂ Saved</CardTitle>
+                      <CardTitle className="text-base font-semibold">
+                        Distance & CO₂ Saved
+                      </CardTitle>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Ruler className="h-3.5 w-3.5" />
@@ -483,19 +507,40 @@ export default function RideSessionsOverview() {
                           margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
                         >
                           <defs>
-                            <linearGradient id="gradDist" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.25} />
-                              <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0} />
+                            <linearGradient
+                              id="gradDist"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="var(--chart-2)"
+                                stopOpacity={0.25}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="var(--chart-2)"
+                                stopOpacity={0}
+                              />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                          <CartesianGrid
+                            vertical={false}
+                            strokeDasharray="3 3"
+                          />
                           <XAxis
                             dataKey="date"
                             tickLine={false}
                             axisLine={false}
                             fontSize={CHART_AXIS_FONT_SIZE}
                             tickFormatter={(v: string) => v.slice(5)}
-                            interval={Math.ceil((analytics?.distanceTrend.length ?? 1) / 6) - 1}
+                            interval={
+                              Math.ceil(
+                                (analytics?.distanceTrend.length ?? 1) / 6,
+                              ) - 1
+                            }
                           />
                           <YAxis
                             tickLine={false}
@@ -534,7 +579,9 @@ export default function RideSessionsOverview() {
                 {/* Bike-type distribution */}
                 <Card className="border-border">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-semibold">Bike-Type Distribution</CardTitle>
+                    <CardTitle className="text-base font-semibold">
+                      Bike-Type Distribution
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {analytics?.bikeTypeDistribution.length ? (
@@ -555,7 +602,11 @@ export default function RideSessionsOverview() {
                                 {analytics.bikeTypeDistribution.map((_, i) => (
                                   <Cell
                                     key={i}
-                                    fill={BIKE_TYPE_COLORS[i % BIKE_TYPE_COLORS.length]}
+                                    fill={
+                                      BIKE_TYPE_COLORS[
+                                        i % BIKE_TYPE_COLORS.length
+                                      ]
+                                    }
                                   />
                                 ))}
                               </Pie>
@@ -577,12 +628,17 @@ export default function RideSessionsOverview() {
                               0,
                             );
                             return (
-                              <div key={item.bikeType} className="flex items-center gap-2">
+                              <div
+                                key={item.bikeType}
+                                className="flex items-center gap-2"
+                              >
                                 <span
                                   className="h-2.5 w-2.5 rounded-full shrink-0"
                                   style={{
                                     background:
-                                      BIKE_TYPE_COLORS[i % BIKE_TYPE_COLORS.length],
+                                      BIKE_TYPE_COLORS[
+                                        i % BIKE_TYPE_COLORS.length
+                                      ],
                                   }}
                                 />
                                 <span className="text-xs text-foreground flex-1">
@@ -592,7 +648,10 @@ export default function RideSessionsOverview() {
                                   {item.count}
                                 </span>
                                 <span className="text-xs text-muted-foreground w-10 text-right">
-                                  {total > 0 ? Math.round((item.count / total) * 100) : 0}%
+                                  {total > 0
+                                    ? Math.round((item.count / total) * 100)
+                                    : 0}
+                                  %
                                 </span>
                               </div>
                             );
@@ -624,7 +683,10 @@ export default function RideSessionsOverview() {
                             layout="vertical"
                             margin={{ top: 0, right: 24, left: 0, bottom: 0 }}
                           >
-                            <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+                            <CartesianGrid
+                              horizontal={false}
+                              strokeDasharray="3 3"
+                            />
                             <XAxis
                               type="number"
                               tickLine={false}
@@ -646,16 +708,22 @@ export default function RideSessionsOverview() {
                                 borderRadius: 8,
                                 fontSize: 12,
                               }}
-                              formatter={(v: number) => [`${v.toLocaleString()} pts`, "Total Points"]}
+                              formatter={(v: number) => [
+                                `${v.toLocaleString()} pts`,
+                                "Total Points",
+                              ]}
                             />
-                            <Bar dataKey="totalPoints" fill="var(--chart-3)" radius={[0, 4, 4, 0]} />
+                            <Bar
+                              dataKey="totalPoints"
+                              fill="var(--chart-3)"
+                              radius={[0, 4, 4, 0]}
+                            />
                           </RechartsBarChart>
                         </ResponsiveContainer>
                       </div>
                     </CardContent>
                   </Card>
                 ) : null}
-
               </div>
             )}
           </TabsContent>
@@ -670,28 +738,17 @@ export default function RideSessionsOverview() {
 function TriageCard({
   session,
   priority,
-  onApprove,
-  onReject,
-  onEscalate,
-  isLoading,
-  loadingAction,
 }: {
   session: RideSession;
   priority: "high" | "normal";
-  onApprove: () => void;
-  onReject: () => void;
-  onEscalate?: () => void;
-  isLoading: boolean;
-  loadingAction?: VerificationAction;
 }) {
-  const duration =
-    session.endedAt
-      ? Math.round(
-          (new Date(session.endedAt).getTime() -
-            new Date(session.startedAt).getTime()) /
-            60000,
-        )
-      : null;
+  const duration = session.endedAt
+    ? Math.round(
+        (new Date(session.endedAt).getTime() -
+          new Date(session.startedAt).getTime()) /
+          60000,
+      )
+    : null;
 
   return (
     <Card
@@ -710,7 +767,11 @@ function TriageCard({
               {session.reasonCodes.length > 0 && (
                 <div className="flex gap-1 flex-wrap">
                   {session.reasonCodes.map((code) => (
-                    <Badge key={code} variant="secondary" className="text-xs font-mono">
+                    <Badge
+                      key={code}
+                      variant="secondary"
+                      className="text-xs font-mono"
+                    >
                       {code}
                     </Badge>
                   ))}
@@ -749,49 +810,9 @@ function TriageCard({
               )}
             </div>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-xs text-success border-success/20 hover:bg-success/12 dark:text-success dark:border-success/40 dark:hover:bg-success/20"
-              disabled={isLoading}
-              onClick={onApprove}
-            >
-              {isLoading && loadingAction === "approve" ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <><Check className="h-3 w-3 mr-1" />Approve</>
-              )}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-xs text-destructive border-destructive/20 hover:bg-destructive/10 dark:text-destructive dark:border-destructive/20 dark:hover:bg-destructive"
-              disabled={isLoading}
-              onClick={onReject}
-            >
-              {isLoading && loadingAction === "reject" ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <><ShieldX className="h-3 w-3 mr-1" />Reject</>
-              )}
-            </Button>
-            {onEscalate && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 px-2 text-xs text-warning border-warning/20 hover:bg-warning/15 dark:text-warning dark:border-warning/20 dark:hover:bg-warning/15"
-                disabled={isLoading}
-                onClick={onEscalate}
-              >
-                {isLoading && loadingAction === "escalate" ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <><TriangleAlert className="h-3 w-3 mr-1" />Escalate</>
-                )}
-              </Button>
-            )}
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Manual overrides unavailable
+          </p>
         </div>
       </CardContent>
     </Card>
