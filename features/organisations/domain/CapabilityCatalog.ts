@@ -50,6 +50,8 @@ export const EMPLOYEE_CAPABILITIES = [
   "riders.manage",
   "rides.read",
   "rides.verify",
+  "rides.settlement.recovery.request",
+  "rides.settlement.recovery.review",
   "routes.read",
   "routes.write",
   "routes.approve",

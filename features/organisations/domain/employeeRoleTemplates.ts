@@ -246,6 +246,7 @@ export const EMPLOYEE_BUNDLE_CAPABILITIES: Record<
       "privacy.deletion.monitor",
       "privacy.deletion.escalate",
       "privacy.deletion.operations.review",
+      "rides.settlement.recovery.review",
       "users.read",
       "users.manage",
       "users.role.assign",
@@ -343,6 +344,7 @@ export const EMPLOYEE_BUNDLE_CAPABILITIES: Record<
   ]),
 
   [EMPLOYEE_BUNDLE_KEYS.finance_operator]: uniqueCaps(VIEWER_BASE, [
+    "rides.settlement.recovery.review",
     "privacy.deletion.monitor",
     "privacy.deletion.finance.review",
     "billing.read",
@@ -392,7 +394,7 @@ export const EMPLOYEE_BUNDLE_CAPABILITIES: Record<
   [EMPLOYEE_BUNDLE_KEYS.engineering_operations]: uniqueCaps(
     VIEWER_BASE,
     PLATFORM_OPS,
-    ["workboard.access", "settings.manage", "authz.inspect", "featureflags.manage"],
+    ["workboard.access", "settings.manage", "authz.inspect", "featureflags.manage", "rides.settlement.recovery.request"],
   ),
 };
 
