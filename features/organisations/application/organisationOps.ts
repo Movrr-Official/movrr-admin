@@ -1,3 +1,4 @@
+import { isPartnerBusinessCategory, type PartnerBusinessCategory } from "@/contracts/partnerBusinessCategory";
 import { randomUUID } from "crypto";
 import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
 import type { RequestContext } from "@/features/identity/domain/Principal";
@@ -33,6 +34,7 @@ export type UpdateOrganisationInput = {
   name?: string;
   status?: Organisation["status"];
   partnerProfile?: {
+    businessCategory?: PartnerBusinessCategory | null;
     contactEmail?: string | null;
     website?: string | null;
     logoUrl?: string | null;
@@ -209,6 +211,9 @@ export function createOrganisationOpsStore(): OrganisationListPort {
                 (input.status ?? existing.status) === "active"
                   ? "active"
                   : "inactive",
+              businessCategory: input.partnerProfile?.businessCategory !== undefined
+                ? input.partnerProfile.businessCategory
+                : (existing.partnerProfile?.businessCategory ?? null),
               contactEmail:
                 input.partnerProfile?.contactEmail !== undefined
                   ? input.partnerProfile.contactEmail
@@ -285,6 +290,15 @@ export function createOrganisationOpsCommands(deps: {
         input.status !== "suspended"
       ) {
         return fail("validation_failed", "Invalid organisation status");
+      }
+      if (input.partnerProfile?.businessCategory !== undefined) {
+        // Organisation owners/managers also have rewards.manage; classification is Admin-only.
+        if (ctx.principal.type !== "admin") return fail("permission_denied", "Admin category management required");
+        const category = input.partnerProfile.businessCategory;
+        if (category !== null && !isPartnerBusinessCategory(category)) return fail("validation", "Invalid business category");
+        const existing = await deps.store.findOrganisationById(input.id);
+        if (!existing) return fail("not_found", "Organisation not found");
+        if (existing.type !== "reward_partner") return fail("validation", "Business category requires a reward partner");
       }
       const updated = await deps.store.updateOrganisation(input);
       if (!updated) return fail("not_found", "Organisation not found");

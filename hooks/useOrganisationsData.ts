@@ -6,6 +6,7 @@ import {
   platformPatch,
   platformPost,
 } from "@/lib/platformApi/client";
+import type { PartnerBusinessCategory } from "@/contracts/partnerBusinessCategory";
 import type { Organisation } from "@/features/organisations/domain/Organisation";
 import type { OrganisationMembership } from "@/features/organisations/domain/Membership";
 import type { MembershipRole } from "@/features/organisations/domain/CapabilityCatalog";
@@ -32,6 +33,7 @@ export type UpdateOrganisationInput = {
   name?: string;
   status?: Organisation["status"];
   partnerProfile?: {
+    businessCategory?: PartnerBusinessCategory | null;
     contactEmail?: string | null;
     website?: string | null;
     logoUrl?: string | null;

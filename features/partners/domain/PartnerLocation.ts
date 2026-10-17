@@ -48,6 +48,7 @@ export type PublicPartnerLocation = {
     organisationId: string;
     partnerId: string;
     partnerName: string;
+    businessCategory?: string | null;
     logoUrl?: string | null;
     name: string;
     address: string;
@@ -68,6 +69,7 @@ export type LocationPage<T> = {
 };
 export const PublicLocationSchema = z.object({
     id: z.string().uuid(), organisationId: z.string().uuid(), partnerId: z.string().uuid(),
+    businessCategory: z.string().nullable().optional(),
     partnerName: z.string().min(1), logoUrl: z.string().url().startsWith("https://").nullable().optional(),
     name: z.string().min(1), address: z.string().min(1),
     latitude: z.number().finite().min(-90).max(90), longitude: z.number().finite().min(-180).max(180),

@@ -13,6 +13,8 @@ export type RewardPartnerProfile = {
   website: string | null;
   logoUrl: string | null;
   contactEmail: string | null;
+  /** Authoritative partner classification; missing on legacy responses. */
+  businessCategory?: string | null;
   status: string;
   organisationId: string | null;
   createdAt: string;

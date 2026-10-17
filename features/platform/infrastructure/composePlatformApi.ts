@@ -1,3 +1,4 @@
+import { isPartnerBusinessCategory } from "@/contracts/partnerBusinessCategory";
 import {
   fail,
   ok,
@@ -762,8 +763,12 @@ export async function createPlatformApiForTests(
             body.partnerProfile && typeof body.partnerProfile === "object"
               ? (body.partnerProfile as Record<string, unknown>)
               : null;
+          if (partnerRaw && "businessCategory" in partnerRaw && partnerRaw.businessCategory !== null && !isPartnerBusinessCategory(partnerRaw.businessCategory)) {
+            return fail("validation", "Invalid business category");
+          }
           const partnerProfile = partnerRaw
             ? {
+                businessCategory: partnerRaw.businessCategory === null ? null : isPartnerBusinessCategory(partnerRaw.businessCategory) ? partnerRaw.businessCategory : undefined,
                 contactEmail:
                   partnerRaw.contactEmail === null
                     ? null

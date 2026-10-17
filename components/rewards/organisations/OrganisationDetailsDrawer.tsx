@@ -1,5 +1,6 @@
 "use client";
 
+import { PARTNER_BUSINESS_CATEGORIES, PARTNER_BUSINESS_CATEGORY_LABELS, isPartnerBusinessCategory } from "@/contracts/partnerBusinessCategory";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -70,6 +71,7 @@ import { CopyButton } from "@/components/CopyButton";
 import { useToast } from "@/hooks/useToast";
 
 const editOrganisationSchema = z.object({
+  businessCategory: z.union([z.literal("uncategorized"), z.literal("preserve-current"), z.enum(PARTNER_BUSINESS_CATEGORIES)]),
   name: z
     .string()
     .min(1, "Name is required")
@@ -170,6 +172,7 @@ export function OrganisationDetailsDrawer({
       contactEmail: "",
       website: "",
       logoUrl: "",
+      businessCategory: "uncategorized",
     },
   });
 
@@ -181,6 +184,7 @@ export function OrganisationDetailsDrawer({
       contactEmail: partner?.contactEmail ?? "",
       website: partner?.website ?? "",
       logoUrl: partner?.logoUrl ?? "",
+      businessCategory: isPartnerBusinessCategory(partner?.businessCategory) ? partner.businessCategory : partner?.businessCategory ? "preserve-current" : "uncategorized",
     });
   }, [org, partner, isEditMode, form]);
 
@@ -207,6 +211,10 @@ export function OrganisationDetailsDrawer({
               contactEmail: emptyToNull(data.contactEmail),
               website: emptyToNull(data.website),
               logoUrl: emptyToNull(data.logoUrl),
+              // Preserve an unknown future code when editing unrelated profile fields.
+              ...(form.getFieldState("businessCategory").isDirty && data.businessCategory !== "preserve-current" ? {
+                businessCategory: data.businessCategory === "uncategorized" ? null : data.businessCategory,
+              } : {}),
             }
           : undefined,
       });
@@ -370,6 +378,30 @@ export function OrganisationDetailsDrawer({
                               <FormControl>
                                 <Input {...field} disabled={isLoading} />
                               </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="businessCategory"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Business category</FormLabel>
+                              <Select value={field.value} onValueChange={field.onChange} disabled={isLoading}>
+                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                  {partner?.businessCategory && !isPartnerBusinessCategory(partner.businessCategory) && (
+                                    <SelectItem value="preserve-current">Current: {partner.businessCategory}</SelectItem>
+                                  )}
+                                  <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                                  {PARTNER_BUSINESS_CATEGORIES.map(category => (
+                                    <SelectItem key={category} value={category}>{PARTNER_BUSINESS_CATEGORY_LABELS[category]}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-muted-foreground">Choose the verified primary business type. Leave uncategorized when unsure.</p>
+                              {partner?.businessCategory && !isPartnerBusinessCategory(partner.businessCategory) && <p className="text-xs text-muted-foreground">Current category: {partner.businessCategory}. It is preserved unless you change this field.</p>}
                               <FormMessage />
                             </FormItem>
                           )}
@@ -615,6 +647,10 @@ export function OrganisationDetailsDrawer({
                           <DetailField
                             label="Profile Name"
                             value={partner.name}
+                          />
+                          <DetailField
+                            label="Business category"
+                            value={isPartnerBusinessCategory(partner.businessCategory) ? PARTNER_BUSINESS_CATEGORY_LABELS[partner.businessCategory] : partner.businessCategory || "Uncategorized"}
                           />
                           <DetailField
                             label="Profile Status"

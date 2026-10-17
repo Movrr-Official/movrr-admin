@@ -25,6 +25,7 @@ type RewardPartnerRow = {
   website: string | null;
   logo_url: string | null;
   contact_email: string | null;
+  business_category?: string | null;
   status: string;
   organisation_id: string | null;
   created_at: string;
@@ -60,6 +61,7 @@ function mapRewardPartnerProfile(row: RewardPartnerRow): RewardPartnerProfile {
     website: row.website,
     logoUrl: row.logo_url,
     contactEmail: row.contact_email,
+    businessCategory: row.business_category ?? null,
     status: row.status,
     organisationId: row.organisation_id,
     createdAt: row.created_at,
@@ -95,7 +97,7 @@ async function findRewardPartnerByOrganisationId(
   const { data, error } = await supabase
     .from("reward_partner")
     .select(
-      "id, name, website, logo_url, contact_email, status, organisation_id, created_at, updated_at",
+      "id, name, website, logo_url, contact_email, business_category, status, organisation_id, created_at, updated_at",
     )
     .eq("organisation_id", organisationId)
     .maybeSingle();
@@ -273,7 +275,7 @@ export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
         const { data: partnerRows, error: partnerError } = await supabase
           .from("reward_partner")
           .select(
-            "id, name, website, logo_url, contact_email, status, organisation_id, created_at, updated_at",
+            "id, name, website, logo_url, contact_email, business_category, status, organisation_id, created_at, updated_at",
           )
           .in("organisation_id", rewardPartnerIds);
         throwOnError(partnerError, "listOrganisations.partnerProfiles");

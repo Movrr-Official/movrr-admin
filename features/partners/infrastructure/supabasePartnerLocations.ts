@@ -78,7 +78,7 @@ export function createSupabasePartnerLocationPort(): PartnerLocationPort {
             let query = db
                 .from("reward_partner_location")
                 .select(fields +
-                ",partner:reward_partner!inner(id,name,logo_url,status),organisation:organisation!inner(id,type,status)")
+                ",partner:reward_partner!inner(id,name,logo_url,status,business_category),organisation:organisation!inner(id,type,status)")
                 .eq("status", "published")
                 .not("verified_at", "is", null)
                 .eq("partner.status", "active")
@@ -99,6 +99,7 @@ export function createSupabasePartnerLocationPort(): PartnerLocationPort {
                 partner: {
                     name: string;
                     logo_url: string | null;
+                    business_category: string | null;
                 };
             })[];
             if (!rows.length)
@@ -115,6 +116,7 @@ export function createSupabasePartnerLocationPort(): PartnerLocationPort {
                     partner: {
                         name: string;
                         logo_url: string | null;
+                    business_category: string | null;
                     };
                 };
                 if (row.latitude == null ||
@@ -146,6 +148,7 @@ export function createSupabasePartnerLocationPort(): PartnerLocationPort {
                         organisationId: row.organisation_id,
                         partnerId: row.partner_id,
                         partnerName: row.partner.name,
+                        businessCategory: row.partner.business_category ?? null,
                         logoUrl: publicLogoUrl(row.partner.logo_url),
                         name: row.name,
                         address: row.address,
