@@ -731,14 +731,16 @@ export async function updateCampaignAttributes(
   }
 }
 
-export async function getCampaignZones(campaignId: string) {
+export async function getCampaignZones(campaignId: string, options: { includeRetired?: boolean } = {}) {
   await requireCapability("campaigns.read");
   const supabaseAdmin = createSupabaseAdminClient();
-  return supabaseAdmin
-    .from("campaign_zone")
-    .select("id, campaign_id, name, geom, created_at")
-    .eq("campaign_id", campaignId)
-    .order("created_at", { ascending: false });
+  let query = supabaseAdmin
+    .from("campaign_zone_history_geojson")
+    .select("id, campaign_id, name, geojson, created_at, retired_at, retirement_reason, retirement_operation_id")
+    .eq("campaign_id", campaignId);
+  if (!options.includeRetired) query = query.is("retired_at", null);
+  const result = await query.order("created_at", { ascending: false });
+  return { ...result, data: result.data?.map(row => ({ ...row, geom: row.geojson })) ?? null };
 }
 
 export async function upsertCampaignZone(

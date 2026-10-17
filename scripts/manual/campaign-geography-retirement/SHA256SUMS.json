@@ -1,0 +1,8 @@
+{
+  "scripts/053_campaign_geography_retirement.sql": "8d87203ac1cda520d059cd8007aa1c9ed2aeb6736eeff82dfd037f9d580dc8d2",
+  "scripts/manual/campaign-geography-retirement/manifest.json": "3eb55e698622497e25b9ceeb038b802c83410b2341d1ad8c477839da854a1293",
+  "scripts/manual/campaign-geography-retirement/original-zones.json": "f3299804b5ff83047a088f8d249c18754053d221832d56a534f82adb72c2174f",
+  "scripts/manual/campaign-geography-retirement/preflight.sql": "dce327b4fe2676dc5d272a7ceb14688bf059d87afe1e8c80c03dd98abd4a0a35",
+  "scripts/manual/campaign-geography-retirement/retire.sql": "3520cbdb98d34a246a3fedf879f7b6f93ea212b8cb63546d677d662ec9153fc0",
+  "scripts/manual/campaign-geography-retirement/rollback.sql": "c9af9f43d88f86d3808d0340f769bbda88e12bae071e24cbc115650adce178c7"
+}

@@ -40,6 +40,7 @@ import {
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
+import { CampaignZoneRetirementNotice } from "@/components/campaigns/CampaignZoneRetirementNotice";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -124,6 +125,8 @@ type CampaignZoneEntry = {
   name: string;
   geojson: string;
   isNew?: boolean;
+  retiredAt?: string | null;
+  retirementReason?: string | null;
 };
 
 type HotZoneEntry = {
@@ -263,6 +266,7 @@ export function RouteDetailsDrawer({
   });
   const [routeStops, setRouteStops] = useState<RouteStopEntry[]>([]);
   const [campaignZones, setCampaignZones] = useState<CampaignZoneEntry[]>([]);
+  const [geographyError, setGeographyError] = useState<string | null>(null);
   const [hotZones, setHotZones] = useState<HotZoneEntry[]>([]);
   const [stopErrors, setStopErrors] = useState<Record<string, string>>({});
   const [zoneErrors, setZoneErrors] = useState<Record<string, string>>({});
@@ -359,6 +363,7 @@ export function RouteDetailsDrawer({
 
   const loadManagementData = async (currentRoute: RiderRoute) => {
     if (useMockData) return;
+    setGeographyError(null);
 
     const routeTemplateId = currentRoute.routeId ?? currentRoute.id;
 
@@ -380,11 +385,14 @@ export function RouteDetailsDrawer({
       }
 
       if (campaignId) {
-        const zonesResult = await getCampaignZones(campaignId);
+        const zonesResult = await getCampaignZones(campaignId, { includeRetired: true });
+        if (zonesResult.error) throw new Error("Campaign geography could not be confirmed. Retry before editing.");
         const zoneData = (zonesResult?.data ?? []).map((zone: any) => ({
           id: zone.id,
           name: zone.name ?? "",
           geojson: zone.geom ? JSON.stringify(zone.geom) : "",
+          retiredAt: zone.retired_at,
+          retirementReason: zone.retirement_reason,
         }));
         setCampaignZones(zoneData);
 
@@ -400,6 +408,7 @@ export function RouteDetailsDrawer({
         setHotZones(hotZoneData);
       }
     } catch (error) {
+      setGeographyError(error instanceof Error ? error.message : "Campaign geography could not be confirmed.");
       console.error("Load route management data error:", error);
     }
   };
@@ -483,6 +492,7 @@ export function RouteDetailsDrawer({
   const validateZones = () => {
     const errors: Record<string, string> = {};
     campaignZones.forEach((zone) => {
+      if (zone.retiredAt) return;
       if (!zone.name.trim()) {
         errors[zone.id] = "Zone name is required.";
         return;
@@ -573,6 +583,8 @@ export function RouteDetailsDrawer({
       return;
     }
 
+    if (geographyError) return;
+
     if (!campaignId) {
       toast({
         title: "Campaign required",
@@ -587,6 +599,7 @@ export function RouteDetailsDrawer({
     setIsSavingZones(true);
 
     for (const zone of campaignZones) {
+      if (zone.retiredAt) continue;
       const parsed = parseGeoJson(zone.geojson);
       if (!parsed.value) continue;
       const result = await upsertCampaignZone({
@@ -656,6 +669,7 @@ export function RouteDetailsDrawer({
   };
 
   const handleDeleteZone = async (zone: CampaignZoneEntry) => {
+    if (zone.retiredAt) return;
     if (zone.isNew) {
       setCampaignZones((prev) => prev.filter((item) => item.id !== zone.id));
       return;
@@ -1964,15 +1978,20 @@ export function RouteDetailsDrawer({
                       variant="outline"
                       size="sm"
                       onClick={addCampaignZone}
+                      disabled={Boolean(geographyError) || campaignZones.some(zone => Boolean(zone.retiredAt))}
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add zone
                     </Button>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {geographyError && <div role="alert" className="space-y-2 text-sm">
+                      <p>{geographyError}</p>
+                      <Button variant="outline" onClick={() => route && loadManagementData(route)}>Retry geography</Button>
+                    </div>}
                     {campaignZones.length === 0 ? (
                       <div className="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
-                        No campaign zones added yet.
+                        {geographyError ? "Geography unavailable." : "No campaign zones added yet."}
                       </div>
                     ) : (
                       campaignZones.map((zone) => (
@@ -1980,9 +1999,11 @@ export function RouteDetailsDrawer({
                           key={zone.id}
                           className="rounded-lg border border-border/40 bg-background/70 p-4 space-y-3"
                         >
+                          <CampaignZoneRetirementNotice retiredAt={zone.retiredAt} reason={zone.retirementReason} />
                           <div className="flex items-center justify-between gap-2">
                             <Input
                               value={zone.name}
+                              readOnly={Boolean(zone.retiredAt) || Boolean(geographyError)}
                               onChange={(event) =>
                                 setCampaignZones((prev) =>
                                   prev.map((item) =>
@@ -1998,12 +2019,14 @@ export function RouteDetailsDrawer({
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteZone(zone)}
+                              disabled={Boolean(zone.retiredAt) || Boolean(geographyError)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                           <Textarea
                             value={zone.geojson}
+                            readOnly={Boolean(zone.retiredAt) || Boolean(geographyError)}
                             onChange={(event) =>
                               setCampaignZones((prev) =>
                                 prev.map((item) =>
@@ -2144,7 +2167,7 @@ export function RouteDetailsDrawer({
                     <div className="flex justify-end">
                       <Button
                         onClick={handleSaveZones}
-                        disabled={isSavingZones}
+                        disabled={isSavingZones || Boolean(geographyError)}
                       >
                         {isSavingZones ? (
                           <>
