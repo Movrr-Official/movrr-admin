@@ -138,7 +138,6 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     maxPerRouteBonusTotal: 10000,
   },
   features: {
-    rewardsShopEnabled: true,
     routeTemplatesEnabled: true,
     autoAssignmentEnabled: false,
     realtimeTrackingEnabled: true,
@@ -406,7 +405,6 @@ export async function getPublicPlatformConfig() {
     },
     // Feature flags
     features: {
-      rewardsShopEnabled: f.rewardsShopEnabled,
       routeTemplatesEnabled: f.routeTemplatesEnabled,
       autoAssignmentEnabled: f.autoAssignmentEnabled,
       realtimeTrackingEnabled: f.realtimeTrackingEnabled,

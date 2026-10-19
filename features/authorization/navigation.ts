@@ -40,7 +40,7 @@ function surfaceToItem(surface: DashboardCapabilitySurface): GeneratedNavItem | 
     name: surface.navigation.label,
     href: surface.navigation.href,
     icon: surface.navigation.icon,
-    capabilities: [surface.capability],
+    capabilities: [surface.capability, ...(surface.navigation.additionalCapabilities ?? [])],
     group: surface.navigation.kind,
     order: surface.navigation.order,
   };

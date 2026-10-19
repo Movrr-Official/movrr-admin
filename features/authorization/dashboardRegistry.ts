@@ -30,7 +30,7 @@ export type CapabilityCategory =
   | "security"
   | "analytics";
 
-export type NavPlacement =
+export type NavPlacement = (
   | { kind: "root"; order: number; label: string; href: string; icon: string }
   | {
       kind: "ops";
@@ -38,7 +38,7 @@ export type NavPlacement =
       label: string;
       href: string;
       icon: string;
-    };
+    }) & { additionalCapabilities?: KnownCapability[] };
 
 export type ApprovalRequirement = {
   /** Capability required to approve (distinct from create when SoD applies). */
@@ -315,7 +315,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     capability: "rewards.catalog.read",
     description: "View rewards catalog",
     category: "rewards",
-    navigation: { kind: "root", order: 80, label: "Rewards", href: "/rewards", icon: "Coins" },
+    navigation: { kind: "root", order: 80, label: "Rewards", href: "/rewards", icon: "Coins", additionalCapabilities: ["settings.security"] },
     pages: ["/rewards"],
     searchEntities: ["reward_catalog"],
     auditRequired: false,
@@ -502,7 +502,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     capability: "settings.security",
     description: "Manage security settings and MFA recovery",
     category: "security",
-    pages: ["/settings", "/account/security"],
+    pages: ["/settings", "/account/security", "/rewards"],
     actions: ["settings.security", "adminMfa.recover"],
     auditRequired: true,
     dataScope: "global",

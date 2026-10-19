@@ -4,7 +4,7 @@ import RewardsOverview from "./RewardsOverview";
 
 export default function RewardsPage() {
   return (
-    <AuthWrapper capabilities={["rewards.catalog.read","rewards.manage"]}>
+    <AuthWrapper capabilities={["rewards.catalog.read","rewards.manage","settings.security"]}>
       <Suspense fallback={<div className="py-12 text-sm text-muted-foreground">Loading rewards…</div>}>
         <RewardsOverview />
       </Suspense>

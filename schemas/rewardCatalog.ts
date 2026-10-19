@@ -59,6 +59,7 @@ export const rewardPointsInputSchema = z.preprocess(value => {
 export const upsertRewardCatalogSchema = z
   .object({
     id: z.string().optional(),
+    expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
     sku: z.string().min(3),
     title: z.string().min(3),
     description: z.string().optional(),
@@ -80,6 +81,7 @@ export const upsertRewardCatalogSchema = z
     resourceId: z.string().uuid().nullable().optional(),
   })
   .superRefine((value, ctx) => {
+    if (value.id && !value.expectedUpdatedAt) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["expectedUpdatedAt"], message: "Refresh the reward before editing." });
     const status = value.status ?? "draft";
     if (status === "active" && !value.fulfilmentType) {
       ctx.addIssue({

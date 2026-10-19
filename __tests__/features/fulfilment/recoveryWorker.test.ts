@@ -13,7 +13,7 @@ beforeEach(() => {
 it("acknowledges delivery with a stable provider identity and no repeated financial command", async () => {
   expect(await runShopRecovery()).toMatchObject({ delivered: 1, notificationFailures: 0 });
   expect(send).toHaveBeenCalledWith(expect.objectContaining({ idempotencyKey: "shop:intent", pointsSpent: 0 }));
-  expect(rpc.mock.calls.map(([name]) => name)).toEqual(["shop_recover", "shop_claim_outbox", "shop_ack_email"]);
+  expect(rpc.mock.calls.map(([name]) => name)).toEqual(["shop_recover", "shop_claim_outbox", "shop_ack_email", "shop_finish_recovery"]);
 });
 it("persists failed delivery for retry instead of acknowledging success", async () => {
   send.mockRejectedValue(new Error("provider unavailable"));
@@ -42,6 +42,11 @@ it("leaves unprocessed leases for durable recovery when its execution budget exp
   try {
     expect(await runShopRecovery()).toMatchObject({ delivered: 0, notificationFailures: 0 });
     expect(send).not.toHaveBeenCalled();
-    expect(rpc.mock.calls.map(([name]) => name)).toEqual(["shop_recover", "shop_claim_outbox"]);
+    expect(rpc.mock.calls.map(([name]) => name)).toEqual(["shop_recover", "shop_claim_outbox", "shop_finish_recovery"]);
   } finally { now.mockRestore(); }
+});
+it("fails closed when the worker outcome cannot be persisted", async () => {
+  const normal = rpc.getMockImplementation()!;
+  rpc.mockImplementation(async (...args) => args[0] === "shop_finish_recovery" ? { error: { code: "08006" } } : normal(...args));
+  await expect(runShopRecovery()).rejects.toThrow("outcome persistence failed");
 });

@@ -9,6 +9,7 @@ import { RewardProductDetailsDrawer } from "@/components/rewards/RewardProductDe
 import { RewardCatalogItem } from "@/schemas";
 import { useRewardCatalogData } from "@/hooks/useRewardCatalogData";
 import { DataTableContainer } from "@/context/DataTableContext";
+import { ShopOperatingControl } from "@/components/rewards/ShopOperatingControl";
 import {
   toggleRewardFeatured,
   updateRewardCatalogStatus,
@@ -84,6 +85,7 @@ export function RewardCatalogPanel() {
   const handlePublish = async (item: RewardCatalogItem) => {
     const result = await updateRewardCatalogStatus({
       id: item.id,
+      expectedUpdatedAt: item.updatedAt,
       status: "active",
     });
     if (!result.success) {
@@ -100,6 +102,7 @@ export function RewardCatalogPanel() {
   const handlePause = async (item: RewardCatalogItem) => {
     const result = await updateRewardCatalogStatus({
       id: item.id,
+      expectedUpdatedAt: item.updatedAt,
       status: "paused",
     });
     if (!result.success) {
@@ -116,6 +119,7 @@ export function RewardCatalogPanel() {
   const handleArchive = async (item: RewardCatalogItem) => {
     const result = await updateRewardCatalogStatus({
       id: item.id,
+      expectedUpdatedAt: item.updatedAt,
       status: "archived",
     });
     if (!result.success) {
@@ -132,6 +136,7 @@ export function RewardCatalogPanel() {
   const handleToggleFeatured = async (item: RewardCatalogItem) => {
     const result = await toggleRewardFeatured({
       id: item.id,
+      expectedUpdatedAt: item.updatedAt,
       isFeatured: !item.isFeatured,
       featuredRank: item.featuredRank ?? 1,
     });
@@ -148,6 +153,7 @@ export function RewardCatalogPanel() {
 
   return (
     <>
+      <ShopOperatingControl />
       <DataTableContainer data={items} persistToUrl={true}>
         <RewardCatalogTableContent
           items={items}

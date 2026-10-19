@@ -143,7 +143,6 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
     maxPerRouteBonusTotal: 10000,
   },
   features: {
-    rewardsShopEnabled: true,
     routeTemplatesEnabled: true,
     autoAssignmentEnabled: false,
     realtimeTrackingEnabled: true,

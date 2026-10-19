@@ -40,20 +40,27 @@ export function extensionForRewardCatalogMime(
 export function buildRewardCatalogThumbnailPath(
   rewardId: string,
   mimeType: RewardCatalogAllowedMimeType,
+  operationId: string,
 ): string {
-  return `rewards/${rewardId}/thumbnail.${extensionForRewardCatalogMime(mimeType)}`;
+  return `rewards/${rewardId}/thumbnail-${mediaOperation(operationId)}.${extensionForRewardCatalogMime(mimeType)}`;
 }
 
-/** 1-based gallery slot — `rewards/{id}/gallery/{n}.{ext}` */
+function mediaOperation(value: string): string {
+  if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value)) throw new Error("Valid media operation required");
+  return value;
+}
+
+/** Each upload owns an immutable object; the gallery slot remains identifiable. */
 export function buildRewardCatalogGalleryPath(
   rewardId: string,
   slot: number,
   mimeType: RewardCatalogAllowedMimeType,
+  operationId: string,
 ): string {
   if (!Number.isInteger(slot) || slot < 1) {
     throw new Error("Gallery slot must be a positive integer.");
   }
-  return `rewards/${rewardId}/gallery/${slot}.${extensionForRewardCatalogMime(mimeType)}`;
+  return `rewards/${rewardId}/gallery/${slot}-${mediaOperation(operationId)}.${extensionForRewardCatalogMime(mimeType)}`;
 }
 
 /**
@@ -198,7 +205,8 @@ export function rewardCatalogMediaIdentity(url: string): string {
 
 /** Extract 1-based gallery slot from an owned path, or null. */
 export function parseRewardCatalogGallerySlot(path: string): number | null {
-  const match = path.match(/\/gallery\/(\d+)\.[^/]+$/);
+  // Unsuffixed paths are existing approved catalog assets, not alternate writers.
+  const match = path.match(/\/gallery\/(\d+)(?:-[a-f0-9-]+)?\.[^/]+$/);
   if (!match) return null;
   const slot = Number(match[1]);
   return Number.isInteger(slot) && slot >= 1 ? slot : null;

@@ -35,5 +35,8 @@ export async function runShopRecovery() {
     const { error: retryError } = await db.rpc("shop_retry_outbox", { p_id: intent.id, p_lease: intent.lease_token, p_error: deliveryError.code || "delivery_failed" });
     if (retryError) throw new Error("Shop outbox retry persistence failed");
   }
-  return { ...recovery, delivered, notificationFailures: failed };
+  const result = { ...recovery, delivered, notificationFailures: failed };
+  const { error: heartbeatError } = await db.rpc("shop_finish_recovery", { p_result: result });
+  if (heartbeatError) throw new Error("Shop worker outcome persistence failed");
+  return result;
 }

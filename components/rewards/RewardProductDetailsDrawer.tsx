@@ -217,6 +217,7 @@ export function RewardProductDetailsDrawer({
     setIsSaving(true);
     const result = await upsertRewardCatalog({
       id: item.id,
+      expectedUpdatedAt: item.updatedAt,
       sku: formState.sku.trim(),
       title: formState.title.trim(),
       description: formState.description.trim() || undefined,
@@ -361,6 +362,7 @@ export function RewardProductDetailsDrawer({
                 <CardContent className="space-y-4">
                   <RewardCatalogMediaFields
                     rewardId={item.id}
+                    expectedUpdatedAt={item.updatedAt}
                     disabled={isSaving}
                     onPersisted={onSaved}
                     value={{

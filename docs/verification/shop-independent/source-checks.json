@@ -1,0 +1,91 @@
+{
+  "verifiedAt": "2026-10-19T12:41:17.118Z",
+  "productionRedemptionEnabled": false,
+  "admin": {
+    "typecheck": "passed",
+    "lint": "passed (TypeScript)",
+    "testSuites": 54,
+    "tests": 605,
+    "productionBuild": "passed locally",
+    "deployedRevision": "ca8d226f6af71509a079707c94129afb6082ddcd",
+    "newRuntimeDeployed": false
+  },
+  "mobile": {
+    "typecheck": "passed",
+    "lintErrors": 0,
+    "existingLintWarnings": 4,
+    "testSuites": 33,
+    "tests": 366,
+    "focusedCacheOpenHandleCheck": "passed",
+    "nativeExports": "passed locally: Android and iOS Hermes, store-asset mode disabled",
+    "storeAssetMode": false,
+    "easBuild": false,
+    "otaPublished": false,
+    "storeRelease": false,
+    "nativeBundles": {
+      "ios": {
+        "file": "_expo/static/js/ios/entry-36528c205b35ebb1e1e4aab7363c7087.hbc",
+        "sha256": "2ee9befcebf577965331c8f5e511ee1904cef75a8309b8b3aa0976fcf0030450"
+      },
+      "android": {
+        "file": "_expo/static/js/android/entry-5426cbf25bac63ba3e8f34b1f3bc9f8a.hbc",
+        "sha256": "b12e09242a945ee3739963a5785a9ccab1da935e76091739220addebbf71e7bd"
+      }
+    }
+  },
+  "database": {
+    "upgrade": {
+      "at": "2026-10-19T12:35:20.377Z",
+      "assertions": 310,
+      "postgres": "17",
+      "connections": 12,
+      "production": false,
+      "operatingBaseline": false,
+      "migrationHash": "dcff5134c2fed63a8ab20d4f4282b3bc2c95fe471a813fab5c27afdbc48569ce",
+      "partnerMigrationHash": "1a9b4205fc667727958b33b8e5a87b6a6aed8b21c4108657e3e0a3aa6d9e1fb6",
+      "operatingMigrationHash": "4665141c56f912cc9fda836b04e61507b658a08ce8adee2834d4ff5ca7d88d03"
+    },
+    "operatingBaseline": {
+      "at": "2026-10-19T12:35:24.593Z",
+      "assertions": 305,
+      "postgres": "17",
+      "connections": 12,
+      "production": false,
+      "operatingBaseline": true,
+      "migrationHash": "dcff5134c2fed63a8ab20d4f4282b3bc2c95fe471a813fab5c27afdbc48569ce",
+      "partnerMigrationHash": "1a9b4205fc667727958b33b8e5a87b6a6aed8b21c4108657e3e0a3aa6d9e1fb6",
+      "operatingMigrationHash": "4665141c56f912cc9fda836b04e61507b658a08ce8adee2834d4ff5ca7d88d03"
+    },
+    "walletAssertions": 86,
+    "originalContainmentAssertions": 14,
+    "partnerContainmentAssertions": 18,
+    "schedulerAssertions": 20,
+    "privateTransportAssertions": 14
+  },
+  "doubles": [
+    "Isolated scheduler HTTP/cron extensions",
+    "External email provider in application-worker integration",
+    "Supabase transport/identity fixtures call real isolated PostgreSQL RPCs",
+    "Storage provider in immutable media concurrency test"
+  ],
+  "externalAcceptanceMissing": [
+    "Merchant-authorized usable voucher supply",
+    "Native camera/iOS/Android device journeys",
+    "Real email/provider delivery",
+    "Authenticated deployed controller/partner acceptance",
+    "Separate movrr-app web consumer disposition",
+    "Approved Mobile release",
+    "Explicit public activation"
+  ],
+  "operatingMigration": {
+    "version": "20261019140000",
+    "sha256": "4665141c56f912cc9fda836b04e61507b658a08ce8adee2834d4ff5ca7d88d03",
+    "applied": false
+  },
+  "partnerContainment": {
+    "version": "20261019135000",
+    "sha256": "1a9b4205fc667727958b33b8e5a87b6a6aed8b21c4108657e3e0a3aa6d9e1fb6",
+    "applied": true,
+    "financialFingerprintsPreserved": true
+  }
+}

@@ -13,3 +13,7 @@ it("accepts explicit zero at the authoritative Admin command schema", () => {
 it("requires a price on the Admin command rather than defaulting to zero", () => {
   expect(upsertRewardCatalogSchema.safeParse(draft).success).toBe(false);
 });
+it("requires the operator-viewed version when editing either free or paid rewards", () => {
+  expect(upsertRewardCatalogSchema.safeParse({ ...draft, id: "existing", pointsPrice: 0 }).success).toBe(false);
+  expect(upsertRewardCatalogSchema.safeParse({ ...draft, id: "existing", pointsPrice: 40, expectedUpdatedAt: "2026-10-19T10:00:00.000Z" }).success).toBe(true);
+});

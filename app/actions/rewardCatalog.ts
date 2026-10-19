@@ -29,27 +29,30 @@ import {
 } from "@/schemas";
 import { z } from "zod";
 
-async function writeCatalog(id: string | null, payload: Record<string, unknown>) {
+async function writeCatalog(id: string | null, payload: Record<string, unknown>, expected?: string) {
   const auth = await requireCapability("rewards.manage", { mutation: true });
   const supabase = createSupabaseAdminClient();
   const { data: current, error } = id ? await supabase.from("reward_catalog").select("status, updated_at").eq("id", id).single() : { data: null, error: null };
   if (error) return { data: null, error };
+  if (id && (!expected || current?.updated_at !== expected)) return { data: null, error: { message: "Catalog changed. Refresh and review before saving." } };
   if (payload.status === "active" || (current?.status === "active" && payload.status === undefined)) {
     await requireCapability("rewards.approve", { mutation: true });
     if (!id) return { data: null, error: { message: "Create a draft before approval" } };
     const blocked = await enforceApprovalSod({ supabase, workflowId: "reward_approval", entityType: "reward_catalog", entityId: id, approverUserId: auth.authUser.id });
     if (blocked) return { data: null, error: { message: blocked } };
   }
-  return supabase.rpc("shop_save_catalog", { p_actor: auth.authUser.id, p_id: id, p_payload: payload, p_expected: current?.updated_at ?? null });
+  return supabase.rpc("shop_save_catalog", { p_actor: auth.authUser.id, p_id: id, p_payload: payload, p_expected: expected ?? null });
 }
 
 const publishRewardSchema = z.object({
   id: z.string(),
+  expectedUpdatedAt: z.string().datetime({ offset: true }),
   status: z.enum(["active", "paused", "archived"]),
 });
 
 const toggleFeaturedSchema = z.object({
   id: z.string(),
+  expectedUpdatedAt: z.string().datetime({ offset: true }),
   isFeatured: z.boolean(),
   featuredRank: z.number().int().optional(),
 });
@@ -285,7 +288,7 @@ export async function upsertRewardCatalog(
       }
     }
 
-    const response = await writeCatalog(validatedData.id ?? null, payload);
+    const response = await writeCatalog(validatedData.id ?? null, payload, validatedData.expectedUpdatedAt);
 
     if (response.error) {
       return { success: false, error: response.error.message };
@@ -358,7 +361,7 @@ export async function updateRewardCatalogStatus(
       updatePayload.published_at = new Date().toISOString();
     }
 
-    const { error } = await writeCatalog(validatedData.id, updatePayload);
+    const { error } = await writeCatalog(validatedData.id, updatePayload, validatedData.expectedUpdatedAt);
 
     if (error) return { success: false, error: error.message };
 
@@ -387,7 +390,7 @@ export async function toggleRewardFeatured(
         is_featured: validatedData.isFeatured,
         featured_rank: validatedData.featuredRank ?? null,
         updated_at: new Date().toISOString(),
-      });
+      }, validatedData.expectedUpdatedAt);
 
     if (error) return { success: false, error: error.message };
 
@@ -404,7 +407,7 @@ export async function toggleRewardFeatured(
   }
 }
 
-const CATALOG_MEDIA_SELECT = "id, thumbnail_url, gallery_urls, title";
+const CATALOG_MEDIA_SELECT = "id, thumbnail_url, gallery_urls, title, updated_at";
 
 /**
  * Upload or replace the product thumbnail via service-role Storage.
@@ -413,7 +416,8 @@ const CATALOG_MEDIA_SELECT = "id, thumbnail_url, gallery_urls, title";
 export async function uploadRewardCatalogThumbnail(
   rewardId: string,
   formData: FormData,
-): Promise<{ success: boolean; error?: string; thumbnailUrl?: string }> {
+  expectedUpdatedAt?: string,
+): Promise<{ success: boolean; error?: string; updatedAt?: string; thumbnailUrl?: string }> {
   await requireCapability("rewards.manage", { mutation: true });
 
   if (shouldUseMockData()) {
@@ -442,6 +446,7 @@ export async function uploadRewardCatalogThumbnail(
 
     if (loadError) throw loadError;
     if (!row) return { success: false, error: "Reward product not found." };
+    if (!expectedUpdatedAt || row.updated_at !== expectedUpdatedAt) return { success: false, error: "Catalog changed. Refresh before editing media." };
 
     const previousUrl = row.thumbnail_url
       ? String(row.thumbnail_url)
@@ -456,10 +461,10 @@ export async function uploadRewardCatalogThumbnail(
       rewardId,
     );
 
-    const { error: updateError } = await writeCatalog(rewardId, {
+    const { data: saved, error: updateError } = await writeCatalog(rewardId, {
         thumbnail_url: publicUrl,
         updated_at: new Date().toISOString(),
-      });
+      }, expectedUpdatedAt);
 
     if (updateError) {
       await deleteRewardCatalogImage(path);
@@ -471,7 +476,7 @@ export async function uploadRewardCatalogThumbnail(
     }
 
     revalidatePath("/rewards");
-    return { success: true, thumbnailUrl: publicUrl };
+    return { success: true, thumbnailUrl: publicUrl, updatedAt: saved.updated_at };
   } catch (err) {
     logger.error("Failed to upload reward catalog thumbnail", err, {
       rewardId,
@@ -490,7 +495,8 @@ export async function uploadRewardCatalogThumbnail(
  */
 export async function removeRewardCatalogThumbnail(
   rewardId: string,
-): Promise<{ success: boolean; error?: string }> {
+  expectedUpdatedAt?: string,
+): Promise<{ success: boolean; error?: string; updatedAt?: string }> {
   await requireCapability("rewards.manage", { mutation: true });
 
   if (shouldUseMockData()) {
@@ -508,6 +514,7 @@ export async function removeRewardCatalogThumbnail(
 
     if (loadError) throw loadError;
     if (!row) return { success: false, error: "Reward product not found." };
+    if (!expectedUpdatedAt || row.updated_at !== expectedUpdatedAt) return { success: false, error: "Catalog changed. Refresh before editing media." };
 
     const previousUrl = row.thumbnail_url
       ? String(row.thumbnail_url)
@@ -516,17 +523,17 @@ export async function removeRewardCatalogThumbnail(
       ? parseOwnedRewardCatalogMediaPath(previousUrl)
       : null;
 
-    const { error: updateError } = await writeCatalog(rewardId, {
+    const { data: saved, error: updateError } = await writeCatalog(rewardId, {
         thumbnail_url: null,
         updated_at: new Date().toISOString(),
-      });
+      }, expectedUpdatedAt);
 
     if (updateError) throw updateError;
 
     if (previousPath) await deleteRewardCatalogImage(previousPath);
 
     revalidatePath("/rewards");
-    return { success: true };
+    return { success: true, updatedAt: saved.updated_at };
   } catch (err) {
     logger.error("Failed to remove reward catalog thumbnail", err, {
       rewardId,
@@ -547,7 +554,8 @@ export async function uploadRewardCatalogGalleryImage(
   rewardId: string,
   formData: FormData,
   replaceIndex?: number,
-): Promise<{ success: boolean; error?: string; galleryUrls?: string[] }> {
+  expectedUpdatedAt?: string,
+): Promise<{ success: boolean; error?: string; updatedAt?: string; galleryUrls?: string[] }> {
   await requireCapability("rewards.manage", { mutation: true });
 
   if (shouldUseMockData()) {
@@ -576,6 +584,7 @@ export async function uploadRewardCatalogGalleryImage(
 
     if (loadError) throw loadError;
     if (!row) return { success: false, error: "Reward product not found." };
+    if (!expectedUpdatedAt || row.updated_at !== expectedUpdatedAt) return { success: false, error: "Catalog changed. Refresh before editing media." };
 
     const currentGallery = [...((row.gallery_urls ?? []) as string[])];
     const isReplace =
@@ -612,10 +621,10 @@ export async function uploadRewardCatalogGalleryImage(
         )
       : [...currentGallery, publicUrl];
 
-    const { error: updateError } = await writeCatalog(rewardId, {
+    const { data: saved, error: updateError } = await writeCatalog(rewardId, {
         gallery_urls: nextGallery,
         updated_at: new Date().toISOString(),
-      });
+      }, expectedUpdatedAt);
 
     if (updateError) {
       await deleteRewardCatalogImage(path);
@@ -627,7 +636,7 @@ export async function uploadRewardCatalogGalleryImage(
     }
 
     revalidatePath("/rewards");
-    return { success: true, galleryUrls: nextGallery };
+    return { success: true, galleryUrls: nextGallery, updatedAt: saved.updated_at };
   } catch (err) {
     logger.error("Failed to upload reward catalog gallery image", err, {
       rewardId,
@@ -646,7 +655,8 @@ export async function uploadRewardCatalogGalleryImage(
 export async function removeRewardCatalogGalleryImage(
   rewardId: string,
   index: number,
-): Promise<{ success: boolean; error?: string; galleryUrls?: string[] }> {
+  expectedUpdatedAt?: string,
+): Promise<{ success: boolean; error?: string; updatedAt?: string; galleryUrls?: string[] }> {
   await requireCapability("rewards.manage", { mutation: true });
 
   if (shouldUseMockData()) {
@@ -664,6 +674,7 @@ export async function removeRewardCatalogGalleryImage(
 
     if (loadError) throw loadError;
     if (!row) return { success: false, error: "Reward product not found." };
+    if (!expectedUpdatedAt || row.updated_at !== expectedUpdatedAt) return { success: false, error: "Catalog changed. Refresh before editing media." };
 
     const currentGallery = [...((row.gallery_urls ?? []) as string[])];
     if (index < 0 || index >= currentGallery.length) {
@@ -674,17 +685,17 @@ export async function removeRewardCatalogGalleryImage(
     const removedPath = parseOwnedRewardCatalogMediaPath(removedUrl);
     const nextGallery = currentGallery.filter((_, i) => i !== index);
 
-    const { error: updateError } = await writeCatalog(rewardId, {
+    const { data: saved, error: updateError } = await writeCatalog(rewardId, {
         gallery_urls: nextGallery,
         updated_at: new Date().toISOString(),
-      });
+      }, expectedUpdatedAt);
 
     if (updateError) throw updateError;
 
     if (removedPath) await deleteRewardCatalogImage(removedPath);
 
     revalidatePath("/rewards");
-    return { success: true, galleryUrls: nextGallery };
+    return { success: true, galleryUrls: nextGallery, updatedAt: saved.updated_at };
   } catch (err) {
     logger.error("Failed to remove reward catalog gallery image", err, {
       rewardId,
@@ -707,7 +718,8 @@ export async function removeRewardCatalogGalleryImage(
 export async function reorderRewardCatalogGallery(
   rewardId: string,
   orderedUrls: string[],
-): Promise<{ success: boolean; error?: string; galleryUrls?: string[] }> {
+  expectedUpdatedAt?: string,
+): Promise<{ success: boolean; error?: string; updatedAt?: string; galleryUrls?: string[] }> {
   await requireCapability("rewards.manage", { mutation: true });
 
   if (shouldUseMockData()) {
@@ -725,6 +737,7 @@ export async function reorderRewardCatalogGallery(
 
     if (loadError) throw loadError;
     if (!row) return { success: false, error: "Reward product not found." };
+    if (!expectedUpdatedAt || row.updated_at !== expectedUpdatedAt) return { success: false, error: "Catalog changed. Refresh before editing media." };
 
     const current = [...((row.gallery_urls ?? []) as string[])];
     if (!sameRewardCatalogMediaSet(orderedUrls, current)) {
@@ -734,15 +747,15 @@ export async function reorderRewardCatalogGallery(
       };
     }
 
-    const { error: updateError } = await writeCatalog(rewardId, {
+    const { data: saved, error: updateError } = await writeCatalog(rewardId, {
         gallery_urls: orderedUrls,
         updated_at: new Date().toISOString(),
-      });
+      }, expectedUpdatedAt);
 
     if (updateError) throw updateError;
 
     revalidatePath("/rewards");
-    return { success: true, galleryUrls: orderedUrls };
+    return { success: true, galleryUrls: orderedUrls, updatedAt: saved.updated_at };
   } catch (err) {
     logger.error("Failed to reorder reward catalog gallery", err, {
       rewardId,

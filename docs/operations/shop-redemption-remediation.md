@@ -1,5 +1,7 @@
 # Shop redemption remediation — 19 October 2026
 
+Follow-up: the [independent verification report](shop-independent-verification.md) supersedes the acceptance assessment below. It identifies and corrects additional permission, resource, recovery and concurrency gaps. New P0 partner containment is applied. The tested operating/resource/recovery migration and matching runtime still require the requested rollout approval; public redemption remains disabled.
+
 Public redemption remains disabled. The containment and lifecycle migrations are applied to `kzdvunpuxaxlphqvmzxw`; existing records have unchanged before/after fingerprints. Isolated acceptance passed; physical device, merchant supply and public activation acceptance remain outstanding. This document distinguishes those gates from implemented source and database contracts.
 
 | Finding | Root cause / authority | Correction | Regression / acceptance | Dependency |

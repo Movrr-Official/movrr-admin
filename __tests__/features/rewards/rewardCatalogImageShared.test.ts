@@ -19,13 +19,15 @@ const OWNED = (path: string, v = "1") =>
   `https://abc.supabase.co/storage/v1/object/public/reward-catalog/${path}?v=${v}`;
 
 describe("rewardCatalogImageShared", () => {
-  it("builds deterministic thumbnail and gallery paths", () => {
+  it("builds operation-owned thumbnail and gallery paths", () => {
+    const operation = "00000000-0000-4000-8000-000000000001";
     expect(
-      buildRewardCatalogThumbnailPath("rid-1", "image/webp"),
-    ).toBe("rewards/rid-1/thumbnail.webp");
+      buildRewardCatalogThumbnailPath("rid-1", "image/webp", operation),
+    ).toBe(`rewards/rid-1/thumbnail-${operation}.webp`);
     expect(
-      buildRewardCatalogGalleryPath("rid-1", 3, "image/jpeg"),
-    ).toBe("rewards/rid-1/gallery/3.jpg");
+      buildRewardCatalogGalleryPath("rid-1", 3, "image/jpeg", operation),
+    ).toBe(`rewards/rid-1/gallery/3-${operation}.jpg`);
+    expect(parseRewardCatalogGallerySlot(`rewards/rid-1/gallery/3-${operation}.jpg`)).toBe(3);
   });
 
   it("parses owned paths and ignores external hotlinks", () => {

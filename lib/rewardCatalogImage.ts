@@ -3,13 +3,14 @@
  *
  * Path contract:
  *   bucket : reward-catalog
- *   thumb  : rewards/{rewardId}/thumbnail.{jpg|png|webp}
- *   gallery: rewards/{rewardId}/gallery/{n}.{jpg|png|webp}   (stable slot, not visual index)
+ *   thumb  : rewards/{rewardId}/thumbnail-{operation}.{jpg|png|webp}
+ *   gallery: rewards/{rewardId}/gallery/{n}-{operation}.{jpg|png|webp}
  *
  * Client UI must import helpers from `rewardCatalogImageShared.ts` only.
  */
 
 import "server-only";
+import { randomUUID } from "node:crypto";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { logger } from "@/lib/logger";
@@ -57,7 +58,7 @@ async function uploadRewardCatalogObject(
 
   const { error } = await supabase.storage
     .from(REWARD_CATALOG_IMAGE_BUCKET)
-    .upload(path, bytes, { contentType: mimeType, upsert: true });
+    .upload(path, bytes, { contentType: mimeType, upsert: false });
 
   if (error) {
     logger.error("Reward catalog media upload failed", error, { path });
@@ -68,8 +69,7 @@ async function uploadRewardCatalogObject(
     .from(REWARD_CATALOG_IMAGE_BUCKET)
     .getPublicUrl(path);
 
-  // Cache-bust so deterministic path upserts refresh in admin/mobile browsers.
-  const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
+  const publicUrl = data.publicUrl;
 
   return { path, publicUrl };
 }
@@ -79,7 +79,7 @@ export async function uploadRewardCatalogThumbnail(
   mimeType: RewardCatalogAllowedMimeType,
   rewardId: string,
 ): Promise<RewardCatalogImageUploadResult> {
-  const path = buildRewardCatalogThumbnailPath(rewardId, mimeType);
+  const path = buildRewardCatalogThumbnailPath(rewardId, mimeType, randomUUID());
   return uploadRewardCatalogObject(bytes, mimeType, path);
 }
 
@@ -89,7 +89,7 @@ export async function uploadRewardCatalogGalleryImage(
   rewardId: string,
   slot: number,
 ): Promise<RewardCatalogImageUploadResult> {
-  const path = buildRewardCatalogGalleryPath(rewardId, slot, mimeType);
+  const path = buildRewardCatalogGalleryPath(rewardId, slot, mimeType, randomUUID());
   return uploadRewardCatalogObject(bytes, mimeType, path);
 }
 

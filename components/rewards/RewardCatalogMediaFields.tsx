@@ -47,6 +47,7 @@ type RewardCatalogMediaFieldsProps = {
   onChange: (next: RewardCatalogMediaValue) => void;
   /** When set, uploads persist immediately via server actions. */
   rewardId?: string;
+  expectedUpdatedAt?: string;
   disabled?: boolean;
   /** Fired after a server-persisted media mutation succeeds (edit flow). */
   onPersisted?: () => void;
@@ -78,7 +79,9 @@ export async function flushStagedRewardCatalogMedia(
   rewardId: string,
   staged: StagedRewardCatalogMedia,
   onProgress?: (percent: number, label: string) => void,
+  startingVersion?: string,
 ): Promise<{ success: boolean; error?: string }> {
+  let version = startingVersion;
   const totalSteps =
     (staged.thumbnailCleared ? 1 : 0) +
     (staged.thumbnailFile ? 1 : 0) +
@@ -96,30 +99,33 @@ export async function flushStagedRewardCatalogMedia(
 
   const rollback = async () => {
     for (const index of [...uploadedGalleryIndexes].reverse()) {
-      await removeRewardCatalogGalleryImage(rewardId, index);
+      const reverted = await removeRewardCatalogGalleryImage(rewardId, index, version);
+      if (reverted.success) version = reverted.updatedAt;
     }
     if (thumbnailUploaded) {
-      await removeRewardCatalogThumbnail(rewardId);
+      await removeRewardCatalogThumbnail(rewardId, version);
     }
   };
 
   try {
     if (staged.thumbnailCleared) {
-      const cleared = await removeRewardCatalogThumbnail(rewardId);
+      const cleared = await removeRewardCatalogThumbnail(rewardId, version);
       if (!cleared.success) {
         return { success: false, error: cleared.error };
       }
+      version = cleared.updatedAt;
       tick("Cleared thumbnail");
     }
 
     if (staged.thumbnailFile) {
       const formData = new FormData();
       formData.append("file", staged.thumbnailFile);
-      const uploaded = await uploadRewardCatalogThumbnail(rewardId, formData);
+      const uploaded = await uploadRewardCatalogThumbnail(rewardId, formData, version);
       if (!uploaded.success) {
         await rollback();
         return { success: false, error: uploaded.error };
       }
+      version = uploaded.updatedAt;
       thumbnailUploaded = true;
       tick("Uploaded thumbnail");
     }
@@ -127,11 +133,12 @@ export async function flushStagedRewardCatalogMedia(
     for (const file of staged.galleryFiles) {
       const formData = new FormData();
       formData.append("file", file);
-      const uploaded = await uploadRewardCatalogGalleryImage(rewardId, formData);
+      const uploaded = await uploadRewardCatalogGalleryImage(rewardId, formData, undefined, version);
       if (!uploaded.success) {
         await rollback();
         return { success: false, error: uploaded.error };
       }
+      version = uploaded.updatedAt;
       const index = (uploaded.galleryUrls?.length ?? 1) - 1;
       uploadedGalleryIndexes.push(index);
       tick(`Uploaded gallery image ${uploadedGalleryIndexes.length}`);
@@ -152,11 +159,14 @@ export function RewardCatalogMediaFields({
   value,
   onChange,
   rewardId,
+  expectedUpdatedAt,
   disabled = false,
   onPersisted,
   staged = false,
   onStagedChange,
 }: RewardCatalogMediaFieldsProps) {
+  const mediaVersion = useRef(expectedUpdatedAt);
+  useEffect(() => { mediaVersion.current = expectedUpdatedAt; }, [expectedUpdatedAt]);
   const { toast } = useToast();
   const thumbInputId = useId();
   const galleryInputId = useId();
@@ -231,7 +241,7 @@ export function RewardCatalogMediaFields({
 
   const runImmediate = async (
     key: string,
-    action: () => Promise<{ success: boolean; error?: string }>,
+    action: () => Promise<{ success: boolean; error?: string; updatedAt?: string }>,
     onSuccess?: () => void,
   ) => {
     setBusy(key);
@@ -255,6 +265,7 @@ export function RewardCatalogMediaFields({
         });
         return;
       }
+      mediaVersion.current = result.updatedAt;
       setProgress(100);
       setProgressLabel("Done");
       onSuccess?.();
@@ -293,7 +304,7 @@ export function RewardCatalogMediaFields({
       async () => {
         const formData = new FormData();
         formData.append("file", file);
-        const result = await uploadRewardCatalogThumbnail(rewardId, formData);
+        const result = await uploadRewardCatalogThumbnail(rewardId, formData, mediaVersion.current);
         if (result.success && result.thumbnailUrl) {
           onChange({ ...value, thumbnailUrl: result.thumbnailUrl });
           toast({ title: "Thumbnail uploaded" });
@@ -317,7 +328,7 @@ export function RewardCatalogMediaFields({
     }
 
     await runImmediate("thumbnail-remove", async () => {
-      const result = await removeRewardCatalogThumbnail(rewardId);
+      const result = await removeRewardCatalogThumbnail(rewardId, mediaVersion.current);
       if (result.success) {
         onChange({ ...value, thumbnailUrl: "" });
         toast({ title: "Thumbnail removed" });
@@ -395,6 +406,8 @@ export function RewardCatalogMediaFields({
         const result = await uploadRewardCatalogGalleryImage(
           rewardId,
           formData,
+          undefined,
+          mediaVersion.current,
         );
         if (result.success && result.galleryUrls) {
           galleryUrls = result.galleryUrls;
@@ -426,6 +439,7 @@ export function RewardCatalogMediaFields({
         rewardId,
         formData,
         index,
+        mediaVersion.current,
       );
       if (result.success && result.galleryUrls) {
         onChange({ ...value, galleryUrls: result.galleryUrls });
@@ -460,7 +474,7 @@ export function RewardCatalogMediaFields({
     }
 
     await runImmediate(`gallery-remove-${index}`, async () => {
-      const result = await removeRewardCatalogGalleryImage(rewardId, index);
+      const result = await removeRewardCatalogGalleryImage(rewardId, index, mediaVersion.current);
       if (result.success && result.galleryUrls) {
         onChange({ ...value, galleryUrls: result.galleryUrls });
         toast({ title: "Gallery image removed" });
@@ -485,7 +499,7 @@ export function RewardCatalogMediaFields({
     next.splice(target, 0, item);
 
     await runImmediate(`gallery-reorder-${index}`, async () => {
-      const result = await reorderRewardCatalogGallery(rewardId, next);
+      const result = await reorderRewardCatalogGallery(rewardId, next, mediaVersion.current);
       if (result.success && result.galleryUrls) {
         onChange({ ...value, galleryUrls: result.galleryUrls });
       }

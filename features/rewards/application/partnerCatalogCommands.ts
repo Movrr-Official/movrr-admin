@@ -1,18 +1,17 @@
 import "server-only";
+import { z } from "zod";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
 import type { RequestContext } from "@/features/identity/domain/Principal";
 
-export type PartnerCatalogWriteInput = {
-  title: string;
-  description?: string;
-  pointsCost: number;
-  status?: "draft" | "active" | "paused" | "archived";
-  sku?: string;
-  category?: string;
-  stockAvailable?: number;
-};
+export const partnerCatalogCreateSchema = z.object({
+  title: z.string().trim().min(3).max(300), description: z.string().max(10000).optional(),
+  pointsCost: z.number().int().nonnegative(), status: z.enum(["draft", "active", "paused", "archived"]).optional(),
+  sku: z.string().min(3).max(200).optional(), category: z.string().min(1).max(100).optional(), stockAvailable: z.number().int().nonnegative().optional(),
+}).strict();
+export const partnerCatalogUpdateSchema = partnerCatalogCreateSchema.partial().extend({ expectedUpdatedAt: z.string().datetime({ offset: true }) }).strict();
+export type PartnerCatalogWriteInput = z.infer<typeof partnerCatalogCreateSchema>;
 
 function requirePartnerOrg(ctx: RequestContext): ApplicationResult<{ organisationId: string }> {
   if (ctx.principal.type !== "organisation") {
@@ -36,10 +35,13 @@ async function resolvePartnerId(organisationId: string): Promise<string | null> 
 
 export async function createPartnerCatalogItem(
   ctx: RequestContext,
-  input: PartnerCatalogWriteInput,
+  body: unknown,
 ): Promise<ApplicationResult<unknown>> {
   const org = requirePartnerOrg(ctx);
   if (!org.ok) return org;
+  const parsed = partnerCatalogCreateSchema.safeParse(body);
+  if (!parsed.success) return fail("validation", "An explicit nonnegative points price and valid catalog fields are required");
+  const input = parsed.data;
 
   const partnerId = await resolvePartnerId(org.value.organisationId);
   if (!partnerId) return fail("BusinessFailure", "Partner profile not found");
@@ -53,17 +55,20 @@ export async function createPartnerCatalogItem(
     inventory_count: input.stockAvailable ?? null,
   }});
 
-  if (error) return fail("BusinessFailure", error.message);
+  if (error) return fail(error.code === "40001" ? "ConcurrencyConflict" : error.code === "42501" ? "permission_denied" : "BusinessFailure", error.message);
   return ok(data);
 }
 
 export async function updatePartnerCatalogItem(
   ctx: RequestContext,
   catalogItemId: string,
-  input: Partial<PartnerCatalogWriteInput>,
+  body: unknown,
 ): Promise<ApplicationResult<unknown>> {
   const org = requirePartnerOrg(ctx);
   if (!org.ok) return org;
+  const parsed = partnerCatalogUpdateSchema.safeParse(body);
+  if (!parsed.success) return fail("validation", "Valid fields and the viewed catalog version are required");
+  const input = parsed.data;
 
   const partnerId = await resolvePartnerId(org.value.organisationId);
   if (!partnerId) return fail("BusinessFailure", "Partner profile not found");
@@ -88,8 +93,8 @@ export async function updatePartnerCatalogItem(
   if (input.category !== undefined) update.category = input.category;
   if (input.stockAvailable !== undefined) update.inventory_count = input.stockAvailable;
 
-  const { data, error } = await supabase.rpc("shop_save_catalog", { p_actor: ctx.principal.userId, p_id: catalogItemId, p_payload: update, p_expected: existing.updated_at });
+  const { data, error } = await supabase.rpc("shop_save_catalog", { p_actor: ctx.principal.userId, p_id: catalogItemId, p_payload: update, p_expected: input.expectedUpdatedAt });
 
-  if (error) return fail("BusinessFailure", error.message);
+  if (error) return fail(error.code === "40001" ? "ConcurrencyConflict" : error.code === "42501" ? "permission_denied" : "BusinessFailure", error.message);
   return ok(data);
 }

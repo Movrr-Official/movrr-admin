@@ -29,6 +29,8 @@ import { StatsCard } from "@/components/stats/StatsCard";
 import { RewardCatalogPanel } from "@/components/rewards/RewardCatalogPanel";
 import { ActiveFulfilmentsCrossLink } from "@/components/fulfilment/FulfilmentCrossLink";
 import { parseRewardsSection } from "@/lib/adminIaRoutes";
+import { useCapabilityState } from "@/hooks/useAdminUser";
+import { ShopOperatingControl } from "@/components/rewards/ShopOperatingControl";
 
 function sectionToTab(
   section: ReturnType<typeof parseRewardsSection>,
@@ -48,6 +50,14 @@ function sectionToTab(
 }
 
 export default function RewardsOverview() {
+  const { ready, allowed } = useCapabilityState("rewards.catalog.read");
+  if (!ready) return <div className="py-12 text-sm text-muted-foreground">Loading rewards…</div>;
+  // Security controllers can operate the launch gate without acquiring catalog
+  // mutation or wallet access, or starting those unrelated queries.
+  return allowed ? <RewardsOverviewContent /> : <ShopOperatingControl />;
+}
+
+function RewardsOverviewContent() {
   const searchParams = useSearchParams();
   const section = parseRewardsSection(searchParams.get("section"));
   const activeTab = sectionToTab(section);

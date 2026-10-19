@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useCapability } from "@/hooks/useAdminUser";
 import { FulfilmentActionsDialog } from "@/components/rewards/fulfilment/FulfilmentActionsDialog";
 import { useOrganisations } from "@/hooks/useOrganisationsData";
+import { ShopExceptionQueue } from "@/components/rewards/fulfilment/ShopExceptionQueue";
 
 export default function FulfilmentOpsQueuePage() {
   const searchParams = useSearchParams();
@@ -78,6 +79,7 @@ export default function FulfilmentOpsQueuePage() {
         isFetching={isFetching}
         onRefresh={() => void refetch()}
       />
+      <ShopExceptionQueue />
     </div>
   );
 }

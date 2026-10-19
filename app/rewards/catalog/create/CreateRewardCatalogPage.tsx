@@ -222,6 +222,8 @@ export default function CreateRewardCatalogPage() {
       const mediaResult = await flushStagedRewardCatalogMedia(
         result.data.id,
         stagedMedia,
+        undefined,
+        result.data.updatedAt,
       );
       setIsSubmitting(false);
 

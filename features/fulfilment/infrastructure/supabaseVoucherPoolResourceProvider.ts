@@ -27,13 +27,7 @@ export async function listFulfilmentResources(filter?: {
   const resources = data ?? [];
   const result = [];
   for (const resource of resources) {
-    const { count, error: countError } = await supabase
-      .from("fulfilment_resource_item")
-      .select("id", { count: "exact", head: true })
-      .eq("resource_id", resource.id)
-      .eq("status", "available")
-      .not("display_payload->>code", "is", null)
-      .or(`display_payload->>expiresAt.is.null,display_payload->>expiresAt.gt.${new Date().toISOString()}`);
+    const { data: count, error: countError } = await supabase.rpc("shop_resource_available_count", { p_resource: resource.id });
     throwOnError(countError, "listResources.availableCount");
     result.push({
       id: String(resource.id),

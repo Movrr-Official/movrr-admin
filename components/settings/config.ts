@@ -396,11 +396,6 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
     ],
     features: [
       {
-        name: "rewardsShopEnabled",
-        label: "Rewards Shop Enabled",
-        type: "switch",
-      },
-      {
         name: "routeTemplatesEnabled",
         label: "Route Templates Enabled",
         type: "switch",

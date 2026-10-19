@@ -158,7 +158,6 @@ export const campaignSettingsSchema = z.object({
 });
 
 export const featureSettingsSchema = z.object({
-  rewardsShopEnabled: z.boolean().default(true),
   routeTemplatesEnabled: z.boolean().default(true),
   autoAssignmentEnabled: z.boolean().default(false),
   realtimeTrackingEnabled: z.boolean().default(true),
