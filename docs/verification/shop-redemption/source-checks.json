@@ -1,12 +1,17 @@
 {
-  "at": "2026-10-19T10:10:24.169Z",
+  "at": "2026-10-19T10:26:30.774196+00:00",
   "typescript": "passed",
   "lint": "passed (repository lint delegates to tsc)",
   "tests": {
-    "suites": 43,
-    "tests": 522
+    "suites": 44,
+    "tests": 526
   },
   "nextProductionBuild": "passed",
   "productionFinancialTests": false,
-  "deviceAcceptance": false
+  "deviceAcceptance": false,
+  "schedulerTransportContracts": {
+    "scheduler": 20,
+    "privateHttp": 14,
+    "localTransportDoubles": true
+  }
 }

@@ -1,13 +1,13 @@
 {
-  "git": { "deploymentEnabled": { "main": false } },
+  "git": {
+    "deploymentEnabled": {
+      "main": false
+    }
+  },
   "crons": [
     {
       "path": "/api/internal/privacy-retention",
       "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/v1/internal/jobs/fulfilment-retry",
-      "schedule": "*/5 * * * *"
     }
   ]
 }

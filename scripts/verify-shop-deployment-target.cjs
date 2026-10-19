@@ -10,7 +10,7 @@ assert(process.env.SUPABASE_SERVICE_ROLE_KEY,'Service binding missing');
 // project metadata instead of downgrading a secret to a readable Config value.
 const listed=spawnSync('cmd.exe',['/d','/s','/c','vercel.cmd env ls production --scope movrrops-projects'],{encoding:'utf8',windowsHide:true});
 assert.equal(listed.status,0,'Production environment metadata unavailable');
-assert(/CRON_SECRET[^\r\n]*(Hidden|Secret)[^\r\n]*Production/.test(listed.stdout+listed.stderr),'Authenticated recovery cron not configured');
+assert(/SHOP_RECOVERY_SECRET[^\r\n]*(Hidden|Secret)[^\r\n]*Production/.test(listed.stdout+listed.stderr),'Authenticated recovery worker not configured');
 assert(process.env.RESEND_API_KEY,'Reward email delivery not configured');
 assert(!['true','1'].includes(String(process.env.NEXT_PUBLIC_USE_MOCK_DATA).toLowerCase()),'Production mock data must be disabled');
 const result={verifiedAt:new Date().toISOString(),projectId:linked.projectId,productionDatabase:expected,

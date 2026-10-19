@@ -12,7 +12,7 @@ import { safeEqualBearerToken, safeEqualString } from "@/lib/secureCompare";
 export async function isAuthorizedInternalJobRequest(
   request: Request,
 ): Promise<boolean> {
-  const expectedSecrets = [process.env.INTERNAL_JOB_SECRET, process.env.CRON_SECRET, process.env.MAINTENANCE_JOB_TOKEN].filter((value): value is string => !!value);
+  const expectedSecrets = [process.env.SHOP_RECOVERY_SECRET, process.env.INTERNAL_JOB_SECRET, process.env.CRON_SECRET, process.env.MAINTENANCE_JOB_TOKEN].filter((value): value is string => !!value);
   for (const expected of expectedSecrets) {
     const headerSecret = request.headers.get("x-internal-job-secret") ?? "";
     if (safeEqualString(headerSecret, expected)) {

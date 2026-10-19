@@ -61,6 +61,7 @@ export default function FulfilmentOpsQueuePage() {
       {health.isError && <Alert variant="destructive"><AlertDescription>Recovery monitoring is unavailable. Refresh before relying on queue completeness.</AlertDescription></Alert>}
       {health.data && <Alert variant={health.data.recoveryFailures + health.data.deliveryFailures + (health.data.walletMismatches ?? 0) + (health.data.unpairedPaidClaims ?? 0) + (health.data.freeFinancialEntries ?? 0) > 0 ? "destructive" : "default"}><AlertDescription>
         Recovery: {health.data.recoveryFailures} failures · Delivery: {health.data.deliveryFailures} failures, {health.data.pendingDelivery} pending · Overdue: {health.data.overdue} · Ledger discrepancies: {(health.data.walletMismatches ?? 0) + (health.data.unpairedPaidClaims ?? 0) + (health.data.freeFinancialEntries ?? 0)}
+        {health.data.scheduler && <span className="ml-3">Scheduler: {health.data.scheduler.active ? "Active" : "Inactive"}; {health.data.scheduler.transportError ?? (health.data.scheduler.httpStatus === 200 ? "Last run accepted" : "Awaiting accepted run")}; {health.data.scheduler.lastDispatchAt ? new Date(health.data.scheduler.lastDispatchAt).toLocaleString() : "Not run yet"}</span>}
         {health.data.recoveryCases.map(row => <Link key={row.id} className="ml-3 underline" href={`/fulfilment/queue/${row.id}`}>{row.id.slice(0,8)} · {row.attempts} attempts</Link>)}
       </AlertDescription></Alert>}
       {!!health.data?.legacyReservations?.length && <Alert><AlertDescription>

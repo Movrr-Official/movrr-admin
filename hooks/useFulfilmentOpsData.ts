@@ -19,7 +19,7 @@ export type FulfilmentActionInput = {
 
 export function useShopHealth() {
   return useQuery({ queryKey: ["shop-health"], refetchInterval: 60_000, queryFn: async () => {
-    const result = await platformGet<{ recoveryFailures: number; deliveryFailures: number; pendingDelivery: number; overdue: number; walletMismatches?: number; unpairedPaidClaims?: number; freeFinancialEntries?: number; legacyReservations?: Array<{id: string; title: string; status: "requested" | "approved"; pointsReserved: number}>; recoveryCases: Array<{id: string; attempts: number; last_error: string | null}> }>("/api/v1/fulfilment/health");
+    const result = await platformGet<{ scheduler?: { active: boolean; lastDispatchAt: string | null; httpStatus: number | null; transportError: string | null }; recoveryFailures: number; deliveryFailures: number; pendingDelivery: number; overdue: number; walletMismatches?: number; unpairedPaidClaims?: number; freeFinancialEntries?: number; legacyReservations?: Array<{id: string; title: string; status: "requested" | "approved"; pointsReserved: number}>; recoveryCases: Array<{id: string; attempts: number; last_error: string | null}> }>("/api/v1/fulfilment/health");
     if (!result.ok) throw new Error(result.message || "Recovery health unavailable");
     return result.value;
   }});

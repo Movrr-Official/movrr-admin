@@ -5,6 +5,7 @@ import { REWARD_EMAIL_KINDS, type RewardEmailKind } from "@/features/notificatio
 
 /** Database locks/receipts own retries. A worker never repeats a financial effect. */
 export async function runShopRecovery() {
+  const startedAt = Date.now();
   const db = createSupabaseAdminClient();
   const { data: recovery, error } = await db.rpc("shop_recover", { p_limit: 50 });
   if (error) throw new Error("Shop recovery unavailable");
@@ -13,6 +14,7 @@ export async function runShopRecovery() {
   let delivered = 0;
   let failed = 0;
   for (const intent of intents ?? []) {
+    if (Date.now() - startedAt > 40_000) break; // Unprocessed leases expire safely.
     let deliveryError: { code?: string } | null = null;
     try {
       if (intent.kind === "email") {

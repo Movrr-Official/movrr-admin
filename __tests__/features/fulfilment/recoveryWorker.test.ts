@@ -37,3 +37,11 @@ it("surfaces a retry-persistence failure; the durable lease remains recoverable"
   rpc.mockImplementation(async (...args) => args[0] === "shop_retry_outbox" ? { error: { code: "08006" } } : normal(...args));
   await expect(runShopRecovery()).rejects.toThrow("retry persistence failed");
 });
+it("leaves unprocessed leases for durable recovery when its execution budget expires", async () => {
+  const now = vi.spyOn(Date, "now").mockReturnValueOnce(0).mockReturnValue(40001);
+  try {
+    expect(await runShopRecovery()).toMatchObject({ delivered: 0, notificationFailures: 0 });
+    expect(send).not.toHaveBeenCalled();
+    expect(rpc.mock.calls.map(([name]) => name)).toEqual(["shop_recover", "shop_claim_outbox"]);
+  } finally { now.mockRestore(); }
+});
