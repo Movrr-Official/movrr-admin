@@ -34,7 +34,7 @@ Digital: only genuine imported voucher-pool codes are eligible. Claiming reserve
 
 QR: a durable, unpredictable bearer token is bound to one fulfillment and imported resource. Owner display returns the actual value. Authorized target-organisation validation atomically consumes the token and reaches `validated`; partner collection confirmation fulfills the allocation and reaches `completed`. Concurrent scans cannot both consume it. Replay of the same authorized command returns its receipt. Collection is a separate explicit action; validation alone is not proof of delivery.
 
-Free: `points_price=0` follows precisely the same command, locks, allocation, limits and delivery. No debit, credit, refund or zero-value ledger entry is created. The ledger reference is nullable and receipts/history explicitly expose `isFree`. A rider without a balance row can claim an eligible free reward; the authoritative balance remains zero. Mobile and Admin display **Free**.
+Free: `points_price=0` follows precisely the same command, locks, allocation, limits and delivery. No debit, credit, refund or zero-value ledger entry is created. The ledger reference is nullable and receipts/history explicitly expose `isFree`. A rider without a balance row can claim an eligible free reward; the authoritative balance remains zero. Mobile and Admin display **Free**. Admin creation and editing require an explicit price; clearing a field does not silently configure a free product.
 
 ## Cancellation, refund and recovery policy
 
@@ -81,7 +81,7 @@ The table records implemented and tested corrections; it is not certification th
 
 - Isolated PostgreSQL 17: 206 lifecycle assertions, 12 simultaneous connections; 86 existing wallet exactly-once assertions; 14 isolated containment assertions. Fixtures are explicitly synthetic and not merchant credentials. Included free digital/QR success, concurrent distinct free requests, zero balances, no ledger rows, stock exhaustion, limits, expiry, cross-org denial, cancellation, recovery and reconciliation.
 - The kill test terminates a child application while its transaction remains uncommitted. PostgreSQL rolls the entire claim back. A separate client commits, is disposed, and a new client replays the persisted receipt. Trigger-injected failures cover intermediate writes; these are not claims that physical device termination and every external provider interruption were tested.
-- Admin: TypeScript/lint (repository lint delegates to TypeScript), production Next build, 44 suites / 526 relevant tests. Tests cover API capabilities, exact middleware paths, deletion barriers, financial read contracts and delivery worker behavior. Existing diagnostic-fixture warnings do not represent production test mutations.
+- Admin: TypeScript/lint (repository lint delegates to TypeScript), production Next build, 45 suites / 539 relevant tests. Tests cover API capabilities, exact middleware paths, deletion barriers, financial read contracts and delivery worker behavior. Existing diagnostic-fixture warnings do not represent production test mutations.
 - Mobile: TypeScript, lint (zero errors, four existing warnings outside this change), 28 suites / 335 relevant Jest tests and local Android/iOS Hermes exports. Web export was unavailable because the checkout lacks `react-native-web`; no unrelated dependency was added. Local bundles are not native-device, EAS or release acceptance.
 - Production: all five migrations applied to the exact verified project; locked before/after data fingerprints match for 12 financial/catalog/inventory tables. Independent post-verification was read-only. Two owner history probes match expected counts, anonymous/cross-rider reads return zero, canonical RPCs are service-only and private credential tables remain denied. No production test claim, credit, debit, refund, token consumption, inventory movement or legacy cancellation was executed.
 - Evidence: mobile `docs/verification/shop-{containment,inventory,lifecycle}/`; Admin `docs/verification/shop-redemption/`. Safe evidence stores hashes/counts/permissions and revisions, not bearer tokens, customer rows or environment secrets.
@@ -114,3 +114,25 @@ The dispatcher has a 55-second HTTP timeout, records safe status/SQLSTATE and di
 Twenty isolated scheduler SQL/privilege checks and fourteen final private-transport checks passed. Their HTTP/cron transport is explicitly doubled because the local PostgreSQL image lacks those extensions. Hosted effective permissions, migration fingerprints and a real scheduled HTTP outcome are recorded separately. The configuration helper never executes a redemption or synthetic financial transaction.
 
 Primary references: [Supabase scheduling](https://supabase.com/docs/guides/functions/schedule-functions), [PostgreSQL HTTP extension](https://github.com/pramsey/pgsql-http). The final design uses synchronous private transport rather than persisting authentication headers in the hosted pg_net queue.
+
+
+## Reproduce isolated checks
+
+From `movrr-mobile`, with both repositories checked out as siblings and existing dependencies installed, start a disposable PostgreSQL instance on localhost only:
+
+```powershell
+docker run --name movrr-shop-regression -e POSTGRES_PASSWORD=isolated-local-test-only -p 127.0.0.1:55439:5432 -d postgres:17-alpine
+node scripts/test-wallet-exactly-once.cjs
+node scripts/test-shop-containment.cjs
+node scripts/test-shop-lifecycle.cjs
+node scripts/test-shop-scheduler.cjs
+```
+
+The runners create/drop only their task databases. The scheduler runner explicitly doubles extension transport; its output must not be represented as a hosted HTTP pass. Stop/remove only this disposable container after running the checks. Do not point these mutation tests at production.
+
+
+## Observed production acceptance
+
+Backend revision `73bb010273f3c939a5b6541148b2b394dfb22b62` reached READY and the `admin.movrr.nl` alias. Twelve unauthenticated probes verified application JSON denials, including catalog, wallet, credential, partner and mutation boundaries; they did not merely hit Vercel deployment protection. Supabase's first scheduled private recovery call completed at **2026-10-19 10:35 UTC** with HTTP 200 and no transport error. Queues were empty. No synthetic redemption, ledger effect or notification was created to test it.
+
+Read-only production health reports zero wallet mismatches, unpaired paid claims and free financial entries, zero pending/failed delivery, and two unchanged historical reservations. Final free-price input validation is covered separately: blank values are missing; an explicit zero is accepted by both create/edit controls and the Admin command schema. Final deployment revision and safe live probes are in `docs/verification/shop-redemption/deployment.json` and `live-boundaries.json`; recovery activation, observed run and financial fingerprints are in Mobile `docs/verification/shop-recovery/`.

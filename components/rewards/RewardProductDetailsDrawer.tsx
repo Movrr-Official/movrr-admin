@@ -34,6 +34,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/useToast";
 import { RewardCatalogItem } from "@/schemas";
+import { rewardPointsInputSchema } from "@/schemas/rewardCatalog";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { upsertRewardCatalog } from "@/app/actions/rewardCatalog";
 import { RewardCatalogMediaFields } from "@/components/rewards/RewardCatalogMediaFields";
@@ -175,6 +176,12 @@ export function RewardProductDetailsDrawer({
       return;
     }
 
+    const confirmedPrice = rewardPointsInputSchema.safeParse(formState.pointsPrice);
+    if (!confirmedPrice.success) {
+      toast({ title: "Price required", description: "Enter a whole points amount. Enter 0 for a free reward.", variant: "destructive" });
+      return;
+    }
+
     if (formState.status === "active") {
       if (!formState.fulfilmentType) {
         toast({
@@ -215,7 +222,7 @@ export function RewardProductDetailsDrawer({
       description: formState.description.trim() || undefined,
       category: formState.category.trim() || "general",
       status: formState.status as RewardCatalogItem["status"],
-      pointsPrice: Number(formState.pointsPrice || 0),
+      pointsPrice: confirmedPrice.data,
       partnerName: formState.partnerName.trim() || undefined,
       partnerUrl: formState.partnerUrl.trim() || undefined,
       thumbnailUrl: formState.thumbnailUrl.trim() || undefined,

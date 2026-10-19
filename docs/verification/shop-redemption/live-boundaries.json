@@ -1,0 +1,80 @@
+{
+  "at": "2026-10-19T10:30:21.474Z",
+  "base": "https://admin.movrr.nl",
+  "unauthenticatedOnly": true,
+  "financialMutations": false,
+  "probes": [
+    {
+      "method": "GET",
+      "path": "/api/v1/rewards/catalog",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/rewards/redemptions",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/wallet/balance",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/fulfilment/health",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/fulfilment/00000000-0000-4000-8000-000000000000/token",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/partners/resources",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/partners/validate",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/rewards/redeem",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/fulfilment/tokens/consume",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/fulfilment/00000000-0000-4000-8000-000000000000/cancel",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/fulfilment/00000000-0000-4000-8000-000000000000/refund",
+      "status": 401,
+      "applicationAuthVerified": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/internal/jobs/fulfilment-retry",
+      "status": 401,
+      "applicationAuthVerified": true
+    }
+  ]
+}

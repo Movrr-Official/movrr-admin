@@ -1,0 +1,15 @@
+{
+  "verifiedAt": "2026-10-19T10:30:30.125Z",
+  "id": "dpl_AiKxE39bKN2qthSpHaycbMdCLkBN",
+  "projectId": "prj_VdWMMAnBPo7u5G9RPmlA6t9hMgCT",
+  "readyState": "READY",
+  "target": "production",
+  "url": "https://movrr-admin-9bq9cr7hl-movrrops-projects.vercel.app",
+  "aliases": [
+    "admin.movrr.nl",
+    "movrr-admin-movrrops-projects.vercel.app"
+  ],
+  "sourceSha": "73bb010273f3c939a5b6541148b2b394dfb22b62",
+  "redemptionEnabled": false,
+  "cronSource": "Supabase pg_cron, private HTTP transport"
+}

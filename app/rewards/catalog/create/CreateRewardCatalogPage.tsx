@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
+import { rewardPointsInputSchema } from "@/schemas/rewardCatalog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { ArrowLeft } from "lucide-react";
@@ -40,9 +41,6 @@ import { FULFILMENT_TYPES } from "@/features/fulfilment/domain/Fulfilment";
 import { SUPPORTED_REDEEM_FULFILMENT_TYPES } from "@/features/rewards/application/contracts/RedeemRewardCommand";
 import { formatFulfilmentType } from "@/features/fulfilment/presentation";
 
-const requiredNumber = (schema: z.ZodNumber) =>
-  z.preprocess((value) => Number(value), schema);
-
 const optionalNumber = (schema: z.ZodNumber) =>
   z.preprocess((value) => {
     if (value === "" || value === null || value === undefined) {
@@ -68,7 +66,7 @@ const rewardCatalogFormSchema = z
     description: z.string().optional(),
     category: z.string().min(1, "Category is required."),
     status: z.enum(["draft", "active", "paused", "archived"]),
-    pointsPrice: requiredNumber(z.number().int().min(0)),
+    pointsPrice: rewardPointsInputSchema,
     partnerName: z.string().optional(),
     partnerUrl: optionalString(z.string().url()),
     thumbnailUrl: optionalString(z.string().url()),
@@ -134,7 +132,7 @@ export default function CreateRewardCatalogPage() {
       description: "",
       category: "",
       status: "draft",
-      pointsPrice: 0,
+      pointsPrice: undefined,
       partnerName: "",
       partnerUrl: "",
       thumbnailUrl: "",

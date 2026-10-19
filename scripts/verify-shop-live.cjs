@@ -17,8 +17,10 @@ const probes = [
   for (const [method, path] of probes) {
     const response = await fetch(base + path, { method, redirect: 'manual', signal: AbortSignal.timeout(20000), headers: method === 'POST' ? { 'content-type': 'application/json' } : {}, ...(method === 'POST' ? { body: '{}' } : {}) });
     assert.equal(response.status, 401, `${method} ${path}: expected unauthenticated denial`);
-    results.push({ method, path, status: response.status });
-    await response.arrayBuffer();
+    assert(response.headers.get('content-type')?.includes('application/json'), `${path}: must reach the application, not deployment protection`);
+    const payload=await response.json();
+    assert(path.includes('/internal/jobs/') ? payload.error==='unauthorized' : payload.error?.kind==='unauthenticated', `${path}: unexpected auth boundary`);
+    results.push({ method, path, status: response.status, applicationAuthVerified:true });
   }
   const result = { at: new Date().toISOString(), base, unauthenticatedOnly: true, financialMutations: false, probes: results };
   fs.mkdirSync('docs/verification/shop-redemption', { recursive: true });

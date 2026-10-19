@@ -50,6 +50,12 @@ export const rewardCatalogFiltersSchema = z.object({
   featured: z.boolean().optional(),
 });
 
+/** Blank input is missing, while an explicit zero is a valid Free price. */
+export const rewardPointsInputSchema = z.preprocess(value => {
+  if (typeof value === "string") return value.trim() === "" ? undefined : Number(value);
+  return value;
+}, z.number().int().nonnegative());
+
 export const upsertRewardCatalogSchema = z
   .object({
     id: z.string().optional(),
