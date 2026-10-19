@@ -1,5 +1,7 @@
 # Independent Shop verification — 19 October 2026
 
+Subsequent isolated end-to-end technical acceptance for F5/F8/F10/F13 is recorded in [Shop redemption acceptance](shop-redemption-acceptance.md). Its passing technical results do not certify the outstanding merchant, provider, physical-device or release gates.
+
 ## Initial audit (before new remediation)
 
 Fresh remote baselines: Admin `ad0f33f4105863e9406a01a1644eeb2967b5633a`, Mobile `a0f19d3192c148fa39b1f7fad4901e67826971db`. Production alias resolves to READY deployment `dpl_GakDBgGdBgzDfP78sZv8tdpJQY28`. Read-only PostgreSQL inspection confirms five remediation migrations through 20261019133000, exact 051 function-body matches, gate false and active five-minute scheduler (last observed HTTP 200). Empty production fulfillment queues do not demonstrate recovery execution.
