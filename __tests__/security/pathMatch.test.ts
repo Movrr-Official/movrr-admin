@@ -43,14 +43,20 @@ describe("rider API JWT boundary", () => {
     "/api/v1/rewards/redemptions",
     "/api/v1/rewards/catalog/item",
     "/api/v1/fulfilment/id/token",
+    "/api/v1/fulfilment/id/refund",
+    "/api/v1/fulfilment/id/cancel",
+    "/api/v1/fulfilment/tokens/consume",
+    "/api/v1/partners/validate",
+    "/api/v1/partners/collections/confirm",
+    "/api/v1/partners/resources",
     "/api/v1/riders/me/campaigns/confirm",
     "/api/v1/community-rides/id/join",
   ])("allows %s to reach its JWT handler", (path) =>
     expect(isRiderApiPath(path)).toBe(true),
   );
   it.each([
-    "/api/v1/fulfilment/id/refund",
-    "/api/v1/fulfilment/id/cancel",
+    "/api/v1/fulfilment/id/unsafe",
+    "/api/v1/partners/resources/unsafe",
     "/api/v1/internal/jobs",
     "/api/v1/rewards/admin",
     "/api/v1/wallet/balance/other",

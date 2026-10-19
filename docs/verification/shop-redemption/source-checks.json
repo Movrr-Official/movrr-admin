@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-19T10:10:24.169Z",
+  "typescript": "passed",
+  "lint": "passed (repository lint delegates to tsc)",
+  "tests": {
+    "suites": 43,
+    "tests": 522
+  },
+  "nextProductionBuild": "passed",
+  "productionFinancialTests": false,
+  "deviceAcceptance": false
+}

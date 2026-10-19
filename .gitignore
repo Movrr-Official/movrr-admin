@@ -33,3 +33,6 @@ next-env.d.ts
 # Agent SDD scratch (local only)
 .superpowers/
 
+
+# Disposable task diagnostics
+.tmp/

@@ -1,9 +1,6 @@
 import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
 import type { RequestContext } from "@/features/identity/domain/Principal";
 import type { AuthorisationService } from "@/features/organisations/application/contracts/AuthorisationService";
-import type { FulfilmentEngine } from "@/features/fulfilment/application/FulfilmentEngine";
-import type { TokenService } from "@/features/fulfilment/application/commands/tokenService";
-import type { FulfilmentHandlerResult } from "@/features/fulfilment/application/contracts/FulfilmentHandler";
 import type { Fulfilment } from "@/features/fulfilment/domain/Fulfilment";
 import type { FulfilmentState } from "@/features/fulfilment/domain/states";
 import type { CatalogItem } from "@/features/rewards/application/contracts/RedeemRewardCommand";
@@ -53,11 +50,11 @@ export type PartnerCommands = {
   validate: (
     ctx: RequestContext,
     input: { token: string },
-  ) => Promise<ApplicationResult<FulfilmentHandlerResult | { validated: true }>>;
+  ) => Promise<ApplicationResult<unknown>>;
   confirmCollection: (
     ctx: RequestContext,
     input: { fulfilmentId: string },
-  ) => Promise<ApplicationResult<FulfilmentHandlerResult | { confirmed: true }>>;
+  ) => Promise<ApplicationResult<unknown>>;
 };
 
 /** Partner-actionable fulfilment states for pending queue. */
@@ -210,73 +207,6 @@ export function createPartnerQueries(deps: {
         type: org.type,
         status: org.status,
       });
-    },
-  };
-}
-
-export function createPartnerCommands(deps: {
-  authorisation: AuthorisationService;
-  tokens?: TokenService;
-  engine?: FulfilmentEngine;
-  /** When true, missing tokens/engine fails instead of stub success (production). */
-  requireEngine?: boolean;
-}): PartnerCommands {
-  return {
-    async validate(ctx, input) {
-      const authz = deps.authorisation.assertCapability(
-        ctx,
-        "fulfilment.validate",
-      );
-      if (!authz.ok) return authz;
-      const org = requireOrg(ctx);
-      if (!org.ok) return org;
-
-      if (!deps.tokens || !deps.engine) {
-        if (deps.requireEngine) {
-          return fail(
-            "unavailable",
-            "Partner validate requires fulfilment engine",
-          );
-        }
-        return ok({ validated: true });
-      }
-      if (!input.token) {
-        return fail("validation", "token is required");
-      }
-      const consumed = await deps.tokens.consume({
-        plaintext: input.token,
-        correlationId: ctx.correlationId,
-      });
-      if (!consumed.ok) return consumed;
-      return deps.engine.onTokenConsumed({
-        fulfilmentId: consumed.value.fulfilmentId,
-        token: consumed.value,
-        correlationId: ctx.correlationId,
-      });
-    },
-
-    async confirmCollection(ctx, input) {
-      const authz = deps.authorisation.assertCapability(
-        ctx,
-        "fulfilment.confirm",
-      );
-      if (!authz.ok) return authz;
-      const org = requireOrg(ctx);
-      if (!org.ok) return org;
-
-      if (!deps.engine) {
-        if (deps.requireEngine) {
-          return fail(
-            "unavailable",
-            "Partner confirm requires fulfilment engine",
-          );
-        }
-        return ok({ confirmed: true });
-      }
-      if (!input.fulfilmentId) {
-        return fail("validation", "fulfilmentId is required");
-      }
-      return deps.engine.confirmCollection(input.fulfilmentId);
     },
   };
 }

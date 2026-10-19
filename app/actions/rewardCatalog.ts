@@ -29,6 +29,20 @@ import {
 } from "@/schemas";
 import { z } from "zod";
 
+async function writeCatalog(id: string | null, payload: Record<string, unknown>) {
+  const auth = await requireCapability("rewards.manage", { mutation: true });
+  const supabase = createSupabaseAdminClient();
+  const { data: current, error } = id ? await supabase.from("reward_catalog").select("status, updated_at").eq("id", id).single() : { data: null, error: null };
+  if (error) return { data: null, error };
+  if (payload.status === "active" || (current?.status === "active" && payload.status === undefined)) {
+    await requireCapability("rewards.approve", { mutation: true });
+    if (!id) return { data: null, error: { message: "Create a draft before approval" } };
+    const blocked = await enforceApprovalSod({ supabase, workflowId: "reward_approval", entityType: "reward_catalog", entityId: id, approverUserId: auth.authUser.id });
+    if (blocked) return { data: null, error: { message: blocked } };
+  }
+  return supabase.rpc("shop_save_catalog", { p_actor: auth.authUser.id, p_id: id, p_payload: payload, p_expected: current?.updated_at ?? null });
+}
+
 const publishRewardSchema = z.object({
   id: z.string(),
   status: z.enum(["active", "paused", "archived"]),
@@ -271,21 +285,7 @@ export async function upsertRewardCatalog(
       }
     }
 
-    const response = validatedData.id
-      ? await supabaseAdmin
-          .from("reward_catalog")
-          .update(payload)
-          .eq("id", validatedData.id)
-          .select(selectColumns)
-          .single()
-      : await supabaseAdmin
-          .from("reward_catalog")
-          .insert({
-            ...payload,
-            created_at: new Date().toISOString(),
-          })
-          .select(selectColumns)
-          .single();
+    const response = await writeCatalog(validatedData.id ?? null, payload);
 
     if (response.error) {
       return { success: false, error: response.error.message };
@@ -358,10 +358,7 @@ export async function updateRewardCatalogStatus(
       updatePayload.published_at = new Date().toISOString();
     }
 
-    const { error } = await supabaseAdmin
-      .from("reward_catalog")
-      .update(updatePayload)
-      .eq("id", validatedData.id);
+    const { error } = await writeCatalog(validatedData.id, updatePayload);
 
     if (error) return { success: false, error: error.message };
 
@@ -386,14 +383,11 @@ export async function toggleRewardFeatured(
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = toggleFeaturedSchema.parse(data);
 
-    const { error } = await supabaseAdmin
-      .from("reward_catalog")
-      .update({
+    const { error } = await writeCatalog(validatedData.id, {
         is_featured: validatedData.isFeatured,
         featured_rank: validatedData.featuredRank ?? null,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", validatedData.id);
+      });
 
     if (error) return { success: false, error: error.message };
 
@@ -462,13 +456,10 @@ export async function uploadRewardCatalogThumbnail(
       rewardId,
     );
 
-    const { error: updateError } = await supabase
-      .from("reward_catalog")
-      .update({
+    const { error: updateError } = await writeCatalog(rewardId, {
         thumbnail_url: publicUrl,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", rewardId);
+      });
 
     if (updateError) {
       await deleteRewardCatalogImage(path);
@@ -525,13 +516,10 @@ export async function removeRewardCatalogThumbnail(
       ? parseOwnedRewardCatalogMediaPath(previousUrl)
       : null;
 
-    const { error: updateError } = await supabase
-      .from("reward_catalog")
-      .update({
+    const { error: updateError } = await writeCatalog(rewardId, {
         thumbnail_url: null,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", rewardId);
+      });
 
     if (updateError) throw updateError;
 
@@ -624,13 +612,10 @@ export async function uploadRewardCatalogGalleryImage(
         )
       : [...currentGallery, publicUrl];
 
-    const { error: updateError } = await supabase
-      .from("reward_catalog")
-      .update({
+    const { error: updateError } = await writeCatalog(rewardId, {
         gallery_urls: nextGallery,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", rewardId);
+      });
 
     if (updateError) {
       await deleteRewardCatalogImage(path);
@@ -689,13 +674,10 @@ export async function removeRewardCatalogGalleryImage(
     const removedPath = parseOwnedRewardCatalogMediaPath(removedUrl);
     const nextGallery = currentGallery.filter((_, i) => i !== index);
 
-    const { error: updateError } = await supabase
-      .from("reward_catalog")
-      .update({
+    const { error: updateError } = await writeCatalog(rewardId, {
         gallery_urls: nextGallery,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", rewardId);
+      });
 
     if (updateError) throw updateError;
 
@@ -752,13 +734,10 @@ export async function reorderRewardCatalogGallery(
       };
     }
 
-    const { error: updateError } = await supabase
-      .from("reward_catalog")
-      .update({
+    const { error: updateError } = await writeCatalog(rewardId, {
         gallery_urls: orderedUrls,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", rewardId);
+      });
 
     if (updateError) throw updateError;
 

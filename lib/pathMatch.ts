@@ -17,11 +17,11 @@ export function matchesAnyPathPrefix(
 }
 
 export function isRiderApiPath(pathname: string): boolean {
-  // These rider routes enforce JWT identity and capabilities in their handlers.
-  // Match complete paths so operational mutations retain dashboard protection.
+  // These exact Platform paths enforce bearer identity and capabilities in their
+  // handlers. Partner commands additionally authorize the actual target in SQL.
   return (
     pathname.startsWith("/api/sessions/") ||
-    /^\/api\/v1\/(?:partners\/locations|wallet\/(?:balance|transactions)|rewards\/(?:catalog(?:\/[^/]+)?|redeem|redemptions(?:\/[^/]+)?)|riders\/me\/campaigns(?:\/(?:opt-in|withdraw|confirm))?|community-rides(?:\/[^/]+\/join)?|fulfilment\/[^/]+(?:\/(?:timeline|token))?)$/.test(
+    /^\/api\/v1\/(?:partners\/(?:locations|me|resources|validate|collections\/confirm|fulfilments\/pending|rewards(?:\/[^/]+)?|settings|staff)|wallet\/(?:balance|transactions)|rewards\/(?:catalog(?:\/[^/]+)?|redeem|redemptions(?:\/[^/]+)?)|riders\/me\/campaigns(?:\/(?:opt-in|withdraw|confirm))?|community-rides(?:\/[^/]+\/join)?|fulfilment(?:\/tokens\/consume|\/[^/]+(?:\/(?:timeline|token|cancel|refund|confirm-collection|retry))?)?)$/.test(
       pathname,
     )
   );

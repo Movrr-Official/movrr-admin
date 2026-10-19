@@ -196,7 +196,7 @@ export function getRewardsTableColumns({
           <div className="flex items-center gap-2">
             <Coins className="h-4 w-4 text-warning" />
             <span className="text-sm font-medium">
-              {balance.toLocaleString()}
+              {(balance?.toLocaleString() ?? "?")}
             </span>
           </div>
         );

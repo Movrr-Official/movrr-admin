@@ -19,6 +19,7 @@ import { z } from "zod";
 import { writeUserActivity } from "@/lib/userActivity";
 
 const adjustPointsSchema = z.object({
+  operationId: z.string().uuid(),
   riderId: z.string(),
   points: z
     .number()
@@ -26,7 +27,7 @@ const adjustPointsSchema = z.object({
     .refine((value) => value !== 0, {
       message: "Points adjustment must be non-zero",
     }),
-  description: z.string().optional(),
+  description: z.string().trim().min(1).max(1000),
   type: rewardTransactionTypeSchema,
 });
 
@@ -288,7 +289,7 @@ export async function getRewardStats(dateRange?: {
         totalPointsRedeemed: totalRedeemed,
         totalPointsOutstanding,
         totalTransactions:
-          filteredTransactions.length + filteredRedemptions.length,
+          filteredTransactions.length + filteredRedemptions.filter(row => String(row.metadata?.wallet_contract) !== "2").length,
         standardRidePoints,
         suggestedRouteBonusPoints,
         boostedRidePoints,
@@ -330,7 +331,7 @@ export async function getRewardTransactions(filters?: {
   endDate?: string;
 }): Promise<{ success: boolean; data?: RewardTransaction[]; error?: string }> {
   try {
-    await requireCapability("rewards.catalog.read");
+    const auth = await requireCapability("rewards.catalog.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
     let txnQuery = supabaseAdmin
@@ -385,14 +386,9 @@ export async function getRewardTransactions(filters?: {
       return { success: false, error: redemptionError.message };
     }
 
-    const balanceByRider = new Map<string, number>();
-    const { data: balances } = await supabaseAdmin
-      .from(DB_TABLES.RIDER_REWARD_BALANCE)
-      .select("rider_id, points_balance");
-
-    (balances ?? []).forEach((balance) => {
-      balanceByRider.set(balance.rider_id, Number(balance.points_balance ?? 0));
-    });
+    const { data: receipts, error: receiptError } = await supabaseAdmin.rpc("shop_financial_receipts", { p_actor: auth.authUser.id });
+    if (receiptError) return { success: false, error: "Transaction receipts unavailable" };
+    const balancesAfter = new Map<string, number>((receipts ?? []).map((row: { transaction_id: string; balance_after: number }) => [row.transaction_id, row.balance_after]));
 
     const mappedTransactions = (transactions ?? []).map((txn) => {
       const m = parseRewardMetadata(txn.metadata);
@@ -418,7 +414,7 @@ export async function getRewardTransactions(filters?: {
         earningMode: m.earningMode,
         points,
         description: m.description,
-        balanceAfter: balanceByRider.get(txn.rider_id) ?? 0,
+        balanceAfter: balancesAfter.get(txn.id) ?? null,
         createdAt: txn.created_at ?? new Date().toISOString(),
         createdBy: m.createdBy,
         basePoints: m.basePoints,
@@ -445,7 +441,7 @@ export async function getRewardTransactions(filters?: {
         type: "redeemed",
         points: -Math.abs(Number(redemption.points_spent ?? 0)),
         description: `Redemption (${redemption.status ?? "requested"})`,
-        balanceAfter: balanceByRider.get(redemption.rider_id) ?? 0,
+        balanceAfter: null,
         createdAt: redemption.requested_at ?? new Date().toISOString(),
         createdBy: undefined,
       })) as RewardTransaction[];
@@ -522,7 +518,7 @@ export async function getSessionRewardTransactions(
         earningMode: m.earningMode,
         points,
         description: m.description,
-        balanceAfter: 0,
+        balanceAfter: null,
         createdAt: txn.created_at ?? new Date().toISOString(),
         createdBy: m.createdBy,
         basePoints: m.basePoints,
@@ -697,12 +693,14 @@ export async function adjustRiderPoints(
     // returned success flag, since business errors surface in the row not as
     // a PostgREST error.
     const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc(
-      "adjust_rider_points_atomic",
+      "shop_adjust_points",
       {
-        p_rider_id: validatedData.riderId,
+        p_actor: auth.authUser.id,
+        p_rider: validatedData.riderId,
         p_points: validatedData.points,
-        p_description: validatedData.description ?? null,
-        p_type: validatedData.type,
+        p_reason: validatedData.description?.trim() || "Support points adjustment",
+        p_operation: validatedData.operationId,
+        p_correlation: crypto.randomUUID(),
       },
     );
 
@@ -711,7 +709,7 @@ export async function adjustRiderPoints(
     }
 
     const rpcResult = Array.isArray(rpcData) ? rpcData[0] : rpcData;
-    if (!rpcResult?.success) {
+    if (!rpcResult?.transactionId) {
       return {
         success: false,
         error: rpcResult?.error_message ?? "Adjustment failed",

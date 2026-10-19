@@ -45,20 +45,13 @@ export async function createPartnerCatalogItem(
   if (!partnerId) return fail("BusinessFailure", "Partner profile not found");
 
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("reward_catalog")
-    .insert({
-      title: input.title,
-      description: input.description ?? "",
-      points_cost: input.pointsCost,
-      status: input.status ?? "draft",
-      sku: input.sku ?? null,
-      category: input.category ?? null,
-      partner_id: partnerId,
-      stock_available: input.stockAvailable ?? null,
-    })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc("shop_save_catalog", { p_actor: ctx.principal.userId, p_id: null, p_payload: {
+    title: input.title, description: input.description ?? "", points_price: input.pointsCost,
+    status: input.status ?? "draft", sku: input.sku ?? `PARTNER-${crypto.randomUUID()}`,
+    category: input.category ?? "voucher", partner_id: partnerId,
+    inventory_type: input.stockAvailable === undefined ? "unlimited" : "limited",
+    inventory_count: input.stockAvailable ?? null,
+  }});
 
   if (error) return fail("BusinessFailure", error.message);
   return ok(data);
@@ -78,7 +71,7 @@ export async function updatePartnerCatalogItem(
   const supabase = createSupabaseAdminClient();
   const { data: existing } = await supabase
     .from("reward_catalog")
-    .select("partner_id")
+    .select("partner_id, updated_at")
     .eq("id", catalogItemId)
     .maybeSingle();
 
@@ -89,18 +82,13 @@ export async function updatePartnerCatalogItem(
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (input.title !== undefined) update.title = input.title;
   if (input.description !== undefined) update.description = input.description;
-  if (input.pointsCost !== undefined) update.points_cost = input.pointsCost;
+  if (input.pointsCost !== undefined) update.points_price = input.pointsCost;
   if (input.status !== undefined) update.status = input.status;
   if (input.sku !== undefined) update.sku = input.sku;
   if (input.category !== undefined) update.category = input.category;
-  if (input.stockAvailable !== undefined) update.stock_available = input.stockAvailable;
+  if (input.stockAvailable !== undefined) update.inventory_count = input.stockAvailable;
 
-  const { data, error } = await supabase
-    .from("reward_catalog")
-    .update(update)
-    .eq("id", catalogItemId)
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc("shop_save_catalog", { p_actor: ctx.principal.userId, p_id: catalogItemId, p_payload: update, p_expected: existing.updated_at });
 
   if (error) return fail("BusinessFailure", error.message);
   return ok(data);

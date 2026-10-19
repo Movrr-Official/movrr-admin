@@ -1,6 +1,7 @@
 export const REWARD_EMAIL_KINDS = [
   "redemption_received",
   "ready",
+  "validated",
   "completed",
   "cancelled",
   "failed",
@@ -27,8 +28,4 @@ export type RewardLifecycleEmailInput = {
 
 export type TransactionalEmailPort = {
   sendRewardLifecycle(input: RewardLifecycleEmailInput): Promise<void>;
-};
-
-export const noopTransactionalEmailPort: TransactionalEmailPort = {
-  async sendRewardLifecycle() {},
 };

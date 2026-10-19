@@ -64,6 +64,7 @@ export function getFulfilmentQueueTableColumns({
               {item.id.slice(0, 8)}…
             </Link>
             <p className="text-xs font-mono text-muted-foreground">{item.id}</p>
+            {item.isFree && <span className="text-xs text-muted-foreground">Free reward</span>}
           </div>
         );
       },

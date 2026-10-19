@@ -116,6 +116,8 @@ async function apiFor(
 ): Promise<PlatformApiHandlers> {
   return createPlatformApiForTests({
     authDeps: authDepsFor(principalFor(kind)),
+    ledger: { getBalance: async () => 100, listEntries: async () => [] },
+    seed: { fulfilments: [{ id: "f-1", redemptionId: "r-1", riderId: "rider-1", catalogItemId: "cat-1", fulfilmentType: "instant_digital", state: "ready", outcome: null, version: 1, partnerOrgId: "org-1", idempotencyKey: "k", expiresAt: null, completedAt: null, metadata: {}, events: [] }] },
   });
 }
 
@@ -175,7 +177,7 @@ describe("Platform API /api/v1 authz matrix", () => {
           }),
         )
       ).status,
-    ).toBe(200);
+    ).toBe(503);
     expect(
       (
         await api.fulfilment.confirmCollection(
@@ -186,7 +188,7 @@ describe("Platform API /api/v1 authz matrix", () => {
           { id: "f-1" },
         )
       ).status,
-    ).toBe(200);
+    ).toBe(503);
     expect(
       (
         await api.rewards.redeem(
@@ -235,7 +237,7 @@ describe("Platform API /api/v1 authz matrix", () => {
             { id: "f-1" },
           )
         ).status,
-      ).toBe(200);
+      ).toBe(503);
       expect(
         (
           await api.fulfilment.refund(
@@ -246,7 +248,7 @@ describe("Platform API /api/v1 authz matrix", () => {
             { id: "f-1" },
           )
         ).status,
-      ).toBe(200);
+      ).toBe(503);
       expect(
         (
           await api.rewards.redeem(
@@ -265,7 +267,7 @@ describe("Platform API /api/v1 authz matrix", () => {
     expect(
       (await api.fulfilment.list(request("GET", "http://x/api/v1/fulfilment?status=ready"))).status,
     ).toBe(200);
-    expect((await api.wallet.balance(request("GET", "http://x/api/v1/wallet/balance"))).status).toBe(200);
+    expect((await api.wallet.balance(request("GET", "http://x/api/v1/wallet/balance?riderId=11111111-1111-4111-8111-111111111111"))).status).toBe(200);
     expect((await api.rewards.catalog(request("GET", "http://x/api/v1/rewards/catalog"))).status).toBe(200);
   });
 
@@ -279,7 +281,7 @@ describe("Platform API /api/v1 authz matrix", () => {
       },
     });
     const res = await api.wallet.balance(
-      new Request("http://x/api/v1/wallet/balance", { method: "GET" }),
+      new Request("http://x/api/v1/wallet/balance?riderId=11111111-1111-4111-8111-111111111111", { method: "GET" }),
     );
     expect(res.status).toBe(401);
   });
@@ -311,7 +313,7 @@ describe("Support direct Platform API permissions", () => {
   it("allows approved reads but denies unrelated mutation commands via real handlers", async () => {
     const api = await apiFor("support");
     expect((await api.rewards.catalog(request("GET", "http://x/api/v1/rewards/catalog"))).status).toBe(200);
-    expect((await api.wallet.balance(request("GET", "http://x/api/v1/wallet/balance"))).status).toBe(200);
+    expect((await api.wallet.balance(request("GET", "http://x/api/v1/wallet/balance?riderId=11111111-1111-4111-8111-111111111111"))).status).toBe(200);
     expect((await api.fulfilment.list(request("GET", "http://x/api/v1/fulfilment"))).status).toBe(200);
     expect((await api.fulfilment.cancel(request("POST", "http://x/api/v1/fulfilment/f-1/cancel", { body: { reason: "x" }, idempotencyKey: "support-cancel" }), { id: "f-1" })).status).toBe(403);
     expect((await api.fulfilment.refund(request("POST", "http://x/api/v1/fulfilment/f-1/refund", { body: { reason: "x" }, idempotencyKey: "support-refund" }), { id: "f-1" })).status).toBe(403);

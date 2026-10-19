@@ -3,9 +3,9 @@ const { from, queries } = vi.hoisted(() => ({
   from: vi.fn(),
   queries: [] as Array<{ table: string; calls: Array<[string, unknown[]]> }>,
 }));
-vi.mock("@/lib/admin", () => ({ requireCapability: vi.fn() }));
+vi.mock("@/lib/admin", () => ({ requireCapability: vi.fn(async () => ({ authUser: { id: "admin" } })) }));
 vi.mock("@/lib/supabase-admin", () => ({
-  createSupabaseAdminClient: () => ({ from }),
+  createSupabaseAdminClient: () => ({ from, rpc: vi.fn(async () => ({ data: [], error: null })) }),
 }));
 import { getRewardTransactions } from "@/app/actions/rewards";
 import { getRideSessions } from "@/app/actions/rideSessions";

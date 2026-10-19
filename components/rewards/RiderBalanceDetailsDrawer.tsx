@@ -48,6 +48,7 @@ import { RiderBalance } from "@/schemas";
 import { CopyButton } from "@/components/CopyButton";
 import { useToast } from "@/hooks/useToast";
 import { adjustRiderPoints } from "@/app/actions/rewards";
+import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { useRewardTransactions } from "@/hooks/useRewardsData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { shouldUseMockData } from "@/lib/dataSource";
@@ -129,7 +130,13 @@ export function RiderBalanceDetailsDrawer({
 
     setIsLoading(true);
     try {
+      const { data: { session } } = await createSupabaseBrowserClient().auth.getSession();
+      if (!session?.user.id) throw new Error("Sign in again before adjusting points");
+      const operationKey = `shop.adjust:${session.user.id}:${balance.riderId}`;
+      const operationId = sessionStorage.getItem(operationKey) ?? crypto.randomUUID();
+      sessionStorage.setItem(operationKey, operationId);
       const result = await adjustRiderPoints({
+        operationId,
         riderId: balance.riderId,
         points: pendingAdjustment.points,
         description: pendingAdjustment.description,
@@ -139,6 +146,7 @@ export function RiderBalanceDetailsDrawer({
       if (!result.success) {
         throw new Error(result.error || "Failed to adjust points");
       }
+      sessionStorage.removeItem(operationKey);
 
       toast({
         title: "Points Adjusted",
@@ -528,7 +536,7 @@ export function RiderBalanceDetailsDrawer({
                                   </p>
                                   <p className="text-xs text-muted-foreground">
                                     Balance:{" "}
-                                    {transaction.balanceAfter.toLocaleString()}
+                                    {(transaction.balanceAfter?.toLocaleString() ?? "?")}
                                   </p>
                                 </div>
                               </div>

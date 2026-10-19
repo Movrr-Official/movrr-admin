@@ -33,6 +33,8 @@ export function applicationResultToHttpStatus(kind: string): number {
       return 403;
     case "ConcurrencyConflict":
       return 409;
+    case "unavailable":
+      return 503;
     case "validation":
     case "validation_failed":
       return 400;

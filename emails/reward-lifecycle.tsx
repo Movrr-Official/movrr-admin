@@ -1,7 +1,7 @@
 import { BaseEmail, DataRow, DataTable, Paragraph } from "./_components/base-email";
 
 export type RewardLifecycleEmailProps = {
-  kind: "redemption_received" | "ready" | "completed" | "cancelled" | "failed" | "expired" | "refunded";
+  kind: "redemption_received" | "ready" | "validated" | "completed" | "cancelled" | "failed" | "expired" | "refunded";
   name?: string;
   rewardName: string;
   pointsSpent?: number;
@@ -14,13 +14,19 @@ const COPY = {
   redemption_received: {
     subject: "We received your MOVRR reward order",
     title: "Reward order received",
-    intro: "Your points were redeemed and we have started preparing your reward.",
+    intro: "We received your reward claim and have started preparing it.",
     action: "Track reward",
   },
   ready: {
     subject: "Your MOVRR reward is ready",
     title: "Your reward is ready",
     intro: "Your reward is ready for the next step. Open MOVRR for the collection or access details.",
+    action: "View reward",
+  },
+  validated: {
+    subject: "Your MOVRR reward was validated",
+    title: "Reward validated",
+    intro: "Your reward code has been accepted. The partner will confirm collection when you receive the reward.",
     action: "View reward",
   },
   completed: {
@@ -71,7 +77,7 @@ export function rewardLifecycleText(props: RewardLifecycleEmailProps): string {
   const copy = COPY[props.kind];
   const rows = [
     `Reward: ${props.rewardName}`,
-    props.pointsSpent === undefined ? null : `Points: ${props.pointsSpent.toLocaleString("en")}`,
+    props.pointsSpent === undefined ? null : props.pointsSpent === 0 ? "Price: Free" : `Points: ${props.pointsSpent.toLocaleString("en")}`,
     `Updated: ${formatDate(props.occurredAt)} UTC`,
     props.expiresAt ? `Use by: ${formatDate(props.expiresAt)} UTC` : null,
   ].filter(Boolean);
@@ -98,7 +104,7 @@ export default function RewardLifecycleEmail(props: RewardLifecycleEmailProps = 
       <DataTable>
         <DataRow label="Reward" value={props.rewardName} />
         {props.pointsSpent !== undefined ? (
-          <DataRow label="Points" value={props.pointsSpent.toLocaleString("en")} />
+          <DataRow label="Points" value={props.pointsSpent === 0 ? "Free" : props.pointsSpent.toLocaleString("en")} />
         ) : null}
         <DataRow label="Updated" value={`${formatDate(props.occurredAt)} UTC`} />
         {props.expiresAt ? (

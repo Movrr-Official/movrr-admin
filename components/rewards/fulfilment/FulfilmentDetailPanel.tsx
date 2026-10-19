@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useCapability } from "@/hooks/useAdminUser";
 import type { FulfilmentReadModel } from "@/features/fulfilment/application/queries/fulfilmentQueries";
 import type { FulfilmentEvent } from "@/features/fulfilment/domain/Fulfilment";
 import { FULFILMENT_ROUTES } from "@/lib/adminIaRoutes";
@@ -54,6 +55,10 @@ export function FulfilmentDetailPanel({
   onRefetch,
 }: FulfilmentDetailPanelProps) {
   const [action, setAction] = useState<FulfilmentActionKind | null>(null);
+  const canCancel = useCapability("fulfilment.cancel");
+  const canRefund = useCapability("fulfilment.refund");
+  const canValidate = useCapability("fulfilment.validate");
+  const canCollect = useCapability("fulfilment.confirm");
 
   if (isLoadingDetail) {
     return (
@@ -91,23 +96,26 @@ export function FulfilmentDetailPanel({
         </Button>
         <div className="flex flex-wrap items-center gap-2">
           <FulfilmentStateBadge state={fulfilment.state} />
+          {canCancel && (["failed", "cancelled", "expired", "created", "processing", "reserved"].includes(fulfilment.state) || fulfilment.recovery?.lastError) && <Button variant="outline" size="sm" onClick={() => setAction("retry")}>Retry recovery</Button>}
           <Badge variant="outline">v{fulfilment.version}</Badge>
-          <Button
+          {canValidate && fulfilment.state === "awaiting_collection" && <Button variant="outline" size="sm" onClick={() => setAction("validate")}>Validate QR</Button>}
+          {canCollect && fulfilment.state === "validated" && <Button variant="outline" size="sm" onClick={() => setAction("collect")}>Confirm collection</Button>}
+          {canCancel && !["completed", "refunded", "reversed"].includes(fulfilment.state) && <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => setAction("cancel")}
           >
             Cancel
-          </Button>
-          <Button
+          </Button>}
+          {canRefund && ["failed", "expired", "cancelled"].includes(fulfilment.state) && <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => setAction("refund")}
           >
             Refund
-          </Button>
+          </Button>}
         </div>
       </div>
 
@@ -130,7 +138,9 @@ export function FulfilmentDetailPanel({
             label="Type"
             value={formatFulfilmentType(fulfilment.fulfilmentType)}
           />
+          <Field label="Recovery" value={fulfilment.recovery ? `${fulfilment.recovery.attempts} attempts; ${fulfilment.recovery.lastError ?? "Queued"}; ${fulfilment.recovery.availableAt}` : "No pending recovery"} />
           <Field label="Version" value={fulfilment.version} />
+          <Field label="Price" value={fulfilment.isFree ? "Free" : fulfilment.pointsSpent === undefined ? "Unavailable" : `${fulfilment.pointsSpent} points`} />
           <Field label="Partner Org" value={fulfilment.partnerOrgId ?? "—"} />
           <Field label="Rider" value={fulfilment.riderId} />
           <Field label="Redemption" value={fulfilment.redemptionId} />

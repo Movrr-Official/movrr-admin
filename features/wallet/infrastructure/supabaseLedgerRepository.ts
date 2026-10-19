@@ -7,46 +7,19 @@ import {
   type ApplicationResult,
 } from "@/lib/result/ApplicationResult";
 import type {
-  LedgerCreditInput,
   LedgerEntry,
-  LedgerMutationResult,
   LedgerRepository,
-} from "@/features/wallet/application/contracts/SettlementService";
+} from "@/features/wallet/application/contracts/WalletReadPort";
 
 function throwOnError(error: { message: string } | null, action: string): void {
   if (error) throw new Error(`${action}: ${error.message}`);
 }
 
 /**
- * Production ledger via wallet_settle_debit / wallet_settle_refund (042)
- * and rider_reward_balance / reward_transactions reads.
+ * Read-only projection of rider_reward_balance and reward_transactions.
  */
 export function createSupabaseLedgerRepository(): LedgerRepository {
   return {
-    async credit(
-      input: LedgerCreditInput,
-    ): Promise<ApplicationResult<LedgerMutationResult>> {
-      const supabase = createSupabaseAdminClient();
-      const { data, error } = await supabase.rpc("wallet_settle_refund", {
-        p_rider_id: input.riderId,
-        p_points: input.points,
-        p_fulfilment_id: input.fulfilmentId,
-        p_operation_id: `refund:${input.fulfilmentId}`,
-        p_reason: input.reason,
-        p_correlation_id: input.correlationId,
-      });
-      throwOnError(error, "wallet_settle_refund");
-      if (!data?.transactionId)
-        return fail(
-          "InfrastructureFailure",
-          "Missing committed refund receipt",
-        );
-      return ok({
-        transactionId: String(data.transactionId),
-        balanceAfter: Number(data.balanceAfter),
-      });
-    },
-
     async getBalance(riderId: string): Promise<number> {
       const supabase = createSupabaseAdminClient();
       const { data, error } = await supabase

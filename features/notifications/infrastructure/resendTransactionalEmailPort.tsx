@@ -2,7 +2,7 @@ import "server-only";
 
 import { Resend } from "resend";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { CUSTOMER_APP_URL, RESEND_API_KEY, SYSTEM_EMAIL } from "@/lib/env";
+import { RESEND_API_KEY, SYSTEM_EMAIL } from "@/lib/env";
 import RewardLifecycleEmail, {
   rewardLifecycleSubject,
   rewardLifecycleText,
@@ -59,8 +59,8 @@ export function createResendTransactionalEmailPort(): TransactionalEmailPort {
   return {
     async sendRewardLifecycle(input) {
       const recipient = await resolveRecipient(input);
-      if (!recipient) return;
-      const actionUrl = `${CUSTOMER_APP_URL.replace(/\/$/, "")}/dashboard/rewards/orders/${encodeURIComponent(input.fulfilmentId)}`;
+      if (!recipient) throw new Error("Reward email recipient unavailable");
+      const actionUrl = `movrrapp://wallet/order-detail?id=${encodeURIComponent(input.fulfilmentId)}`;
       const props = {
         kind: input.kind,
         name: recipient.name,

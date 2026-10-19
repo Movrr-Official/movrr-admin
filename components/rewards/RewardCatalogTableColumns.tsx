@@ -108,7 +108,7 @@ export function getRewardCatalogTableColumns({
       header: "Points",
       cell: ({ row }) => (
         <span className="text-sm font-semibold">
-          {row.original.pointsPrice.toLocaleString()}
+          {row.original.pointsPrice === 0 ? "Free" : row.original.pointsPrice.toLocaleString()}
         </span>
       ),
     },

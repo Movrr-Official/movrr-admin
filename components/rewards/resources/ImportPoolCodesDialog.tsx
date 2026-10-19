@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
 import { useImportPoolCodes } from "@/hooks/useResourcePoolsData";
+import { useOrganisations } from "@/hooks/useOrganisationsData";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ImportPoolCodesDialogProps = {
   open: boolean;
@@ -39,15 +41,20 @@ export function ImportPoolCodesDialog({
   const importMutation = useImportPoolCodes();
   const [resourceId, setResourceId] = useState("");
   const [codesText, setCodesText] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [partnerOrgId, setPartnerOrgId] = useState("");
+  const organisations = useOrganisations("reward_partner");
 
   const reset = () => {
     setResourceId("");
     setCodesText("");
+    setExpiresAt("");
+    setPartnerOrgId("");
   };
 
   useEffect(() => {
     if (!open) return;
-    setResourceId(defaultResourceId?.trim() ?? "");
+    setResourceId(defaultResourceId?.trim() || crypto.randomUUID());
   }, [open, defaultResourceId]);
 
   const handleSubmit = async () => {
@@ -74,6 +81,8 @@ export function ImportPoolCodesDialog({
       const result = await importMutation.mutateAsync({
         resourceId: id,
         codes,
+        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined,
+        partnerOrgId: partnerOrgId || undefined,
       });
       toast({
         title: "Import accepted",
@@ -132,6 +141,8 @@ export function ImportPoolCodesDialog({
           </div>
         </div>
 
+        <div className="space-y-2"><Label htmlFor="pool-code-expiry">Voucher expiry (optional)</Label><Input id="pool-code-expiry" type="datetime-local" value={expiresAt} onChange={event => setExpiresAt(event.target.value)} /></div>
+        {!defaultResourceId && <div className="space-y-2"><Label>Partner organisation (optional for MOVRR digital rewards)</Label><Select value={partnerOrgId} onValueChange={setPartnerOrgId}><SelectTrigger><SelectValue placeholder="MOVRR pool" /></SelectTrigger><SelectContent>{(organisations.data ?? []).map(org => <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>)}</SelectContent></Select></div>}
         <DialogFooter className="gap-2">
           <Button
             type="button"

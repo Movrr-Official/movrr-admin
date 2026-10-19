@@ -9,7 +9,7 @@ import {
 } from "@/features/fulfilment/domain/Fulfilment";
 import type { FulfilmentState } from "@/features/fulfilment/domain/states";
 import type { FulfilmentOutcome } from "@/features/fulfilment/domain/outcome";
-import type { TokenType } from "@/features/fulfilment/application/commands/tokenService";
+type TokenType = string;
 import type {
   FulfilmentAggregateStore,
   StoredFulfilmentAggregate,
@@ -66,20 +66,10 @@ function splitMetadata(metadata: Record<string, unknown> | null | undefined): {
     publicMeta: raw,
     engine: {
       resourceId: String(engineRaw.resourceId ?? ""),
-      pointsCost: Number(engineRaw.pointsCost ?? 0),
+      pointsCost: Number(engineRaw.pointsCost ?? NaN),
       correlationId: String(engineRaw.correlationId ?? ""),
       tokenType: (engineRaw.tokenType ?? "qr") as TokenType,
     },
-  };
-}
-
-function mergeMetadata(
-  publicMeta: Record<string, unknown>,
-  engine: EngineMeta,
-): Record<string, unknown> {
-  return {
-    ...publicMeta,
-    [ENGINE_META_KEY]: engine,
   };
 }
 
@@ -97,6 +87,7 @@ function mapEvent(row: EventRow): FulfilmentEvent {
 function mapRow(
   row: FulfilmentRow,
   events: FulfilmentEvent[],
+  recovery: Record<string, unknown> | null = null,
 ): StoredFulfilmentAggregate {
   const { publicMeta, engine } = splitMetadata(row.metadata);
   const fulfilment = createFulfilment({
@@ -112,7 +103,7 @@ function mapRow(
     idempotencyKey: row.idempotency_key,
     expiresAt: row.expires_at,
     completedAt: row.completed_at,
-    metadata: publicMeta,
+    metadata: { ...publicMeta, pointsSpent: engine.pointsCost, recovery },
     events,
   });
   return {
@@ -135,7 +126,7 @@ async function loadEvents(fulfilmentId: string): Promise<FulfilmentEvent[]> {
   return ((data ?? []) as EventRow[]).map(mapEvent);
 }
 
-/** Durable FulfilmentAggregateStore backed by public.fulfilment + fulfilment_event. */
+/** Read-only projection. Lifecycle writes belong exclusively to shop_* SQL commands. */
 export function createSupabaseFulfilmentAggregateStore(): FulfilmentAggregateStore {
   return {
     async get(id) {
@@ -150,7 +141,9 @@ export function createSupabaseFulfilmentAggregateStore(): FulfilmentAggregateSto
       if (error) throwOnError(error, "fulfilment.get");
       if (!data) return null;
       const events = await loadEvents(id);
-      return mapRow(data as FulfilmentRow, events);
+      const { data: recovery, error: recoveryError } = await supabase.from("shop_recovery").select("attempts, available_at, last_error").eq("fulfilment_id", id).maybeSingle();
+      throwOnError(recoveryError, "fulfilment.recovery");
+      return mapRow(data as FulfilmentRow, events, recovery ? { attempts: recovery.attempts, availableAt: recovery.available_at, lastError: recovery.last_error } : null);
     },
 
     async exists(id) {
@@ -164,108 +157,17 @@ export function createSupabaseFulfilmentAggregateStore(): FulfilmentAggregateSto
       return Boolean(data);
     },
 
-    async save(aggregate) {
-      const supabase = createSupabaseAdminClient();
-      const { fulfilment } = aggregate;
-      const metadata = mergeMetadata(fulfilment.metadata, {
-        resourceId: aggregate.resourceId,
-        pointsCost: aggregate.pointsCost,
-        correlationId: aggregate.correlationId,
-        tokenType: aggregate.tokenType,
-      });
-
-      const row = {
-        id: fulfilment.id,
-        redemption_id: fulfilment.redemptionId,
-        rider_id: fulfilment.riderId,
-        catalog_item_id: fulfilment.catalogItemId,
-        fulfilment_type: fulfilment.fulfilmentType,
-        state: fulfilment.state,
-        outcome: fulfilment.outcome,
-        version: fulfilment.version,
-        partner_org_id: fulfilment.partnerOrgId,
-        idempotency_key: fulfilment.idempotencyKey,
-        expires_at: fulfilment.expiresAt,
-        completed_at: fulfilment.completedAt,
-        metadata,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { data: existing, error: existingError } = await supabase
-        .from("fulfilment")
-        .select("id, version, state")
-        .eq("id", fulfilment.id)
-        .maybeSingle();
-      throwOnError(existingError, "fulfilment.save.lookup");
-
-      if (!existing) {
-        const { error: insertError } = await supabase
-          .from("fulfilment")
-          .insert(row);
-        throwOnError(insertError, "fulfilment.save.insert");
-      } else {
-        const dbVersion = (existing as { version: number }).version;
-        if (
-          fulfilment.version === dbVersion &&
-          fulfilment.state === existing.state
-        )
-          return;
-        if (fulfilment.version !== dbVersion + 1)
-          throw new Error("Stale fulfilment transition");
-        // Compare the version used to compute this transition, never a newer read.
-        const { data: updated, error: updateError } = await supabase
-          .from("fulfilment")
-          .update(row)
-          .eq("id", fulfilment.id)
-          .eq("version", fulfilment.version - 1)
-          .select("id")
-          .maybeSingle();
-        throwOnError(updateError, "fulfilment.save.update");
-        if (!updated) {
-          throw new Error(
-            `fulfilment.save concurrency conflict for ${fulfilment.id} (db v${dbVersion}, agg v${fulfilment.version})`,
-          );
-        }
-      }
-
-      const existingEvents = await loadEvents(fulfilment.id);
-      const known = new Set(existingEvents.map((e) => e.id));
-      const toInsert = fulfilment.events.filter((e) => !known.has(e.id));
-      if (toInsert.length > 0) {
-        const { error: eventError } = await supabase
-          .from("fulfilment_event")
-          .insert(
-            toInsert.map((e) => ({
-              id: e.id,
-              fulfilment_id: e.fulfilmentId,
-              from_state: e.fromState,
-              to_state: e.toState,
-              reason: e.reason,
-              correlation_id: aggregate.correlationId,
-              payload: {},
-              occurred_at: e.occurredAt,
-            })),
-          );
-        throwOnError(eventError, "fulfilment.save.events");
-      }
-    },
-
     async list() {
       const supabase = createSupabaseAdminClient();
-      const { data, error } = await supabase
-        .from("fulfilment")
-        .select(
-          "id, redemption_id, rider_id, catalog_item_id, fulfilment_type, state, outcome, version, partner_org_id, idempotency_key, expires_at, completed_at, metadata",
-        )
-        .order("created_at", { ascending: false })
-        .limit(500);
-      throwOnError(error, "fulfilment.list");
-      const rows = (data ?? []) as FulfilmentRow[];
-      const aggregates: StoredFulfilmentAggregate[] = [];
-      for (const row of rows) {
-        const events = await loadEvents(row.id);
-        aggregates.push(mapRow(row, events));
+      const rows: FulfilmentRow[] = [];
+      for (let offset = 0; ; offset += 1000) {
+        const { data, error } = await supabase.from("fulfilment").select("id, redemption_id, rider_id, catalog_item_id, fulfilment_type, state, outcome, version, partner_org_id, idempotency_key, expires_at, completed_at, metadata").order("created_at", { ascending: false }).order("id").range(offset, offset + 999);
+        throwOnError(error, "fulfilment.list");
+        rows.push(...(data ?? []) as FulfilmentRow[]);
+        if ((data?.length ?? 0) < 1000) break;
       }
+      const aggregates: StoredFulfilmentAggregate[] = [];
+      for (const row of rows) aggregates.push(mapRow(row, await loadEvents(row.id)));
       return aggregates;
     },
   };

@@ -1,5 +1,5 @@
 import type { Fulfilment } from "@/features/fulfilment/domain/Fulfilment";
-import type { TokenType } from "@/features/fulfilment/application/commands/tokenService";
+type TokenType = string;
 
 /** Engine-owned aggregate fields beyond the Fulfilment entity. */
 export type StoredFulfilmentAggregate = {
@@ -11,12 +11,11 @@ export type StoredFulfilmentAggregate = {
 };
 
 /**
- * Persistence port for FulfilmentEngine.
- * In-memory for tests; Supabase-backed in production (Phase 4.5).
+ * Read port for authoritative PostgreSQL fulfillment records.
+ * No state-transition writer is exposed.
  */
 export type FulfilmentAggregateStore = {
   get(id: string): Promise<StoredFulfilmentAggregate | null>;
   exists(id: string): Promise<boolean>;
-  save(aggregate: StoredFulfilmentAggregate): Promise<void>;
   list(): Promise<StoredFulfilmentAggregate[]>;
 };

@@ -3,7 +3,6 @@
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createFulfilment } from "@/features/fulfilment/domain/Fulfilment";
-import { createFulfilmentStateMachine } from "@/features/fulfilment/application/FulfilmentStateMachine";
 
 const validId=(v:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 export async function executeAccountDeletionFinancialResolution(caseId:string,proposalId:string,action:string){
@@ -19,10 +18,9 @@ export async function executeAccountDeletionFinancialResolution(caseId:string,pr
    const timeline=await db.rpc("get_account_deletion_refund_timeline",args);
    if(timeline.error||!timeline.data?.id)return{success:false as const,error:"Refund committed; canonical timeline requires review. Do not issue another refund."};
    const current=createFulfilment(timeline.data);
-   const next=createFulfilmentStateMachine().requestTransition(current,"refunded","approved_account_deletion_refund",current.version);
-   if(!next.ok)return{success:false as const,error:"Refund committed; the canonical fulfilment engine requires manual review."};
-   const event=next.value.events.at(-1)!;
-   const committed=await db.rpc("commit_account_deletion_refund_timeline",{...args,p_from:current.state,p_version:current.version,p_event:event.id});
+   if(!["instant_digital","qr_barcode"].includes(current.fulfilmentType))return{success:false as const,error:"Unsupported fulfilment requires approved Finance review."};
+   // The database validates the legal refund edge and its existing proof/approval.
+   const committed=await db.rpc("commit_account_deletion_refund_timeline",{...args,p_from:current.state,p_version:current.version,p_event:crypto.randomUUID()});
    if(committed.error||committed.data?.obligationResolved!==true)return{success:false as const,error:"Refund committed; timeline result requires reconciliation."};
   }
   return{success:true as const};

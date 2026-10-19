@@ -21,7 +21,8 @@ export type RewardRedemption = {
   status: "committed";
   fulfilmentId: string;
   idempotencyKey: string;
-  ledgerTransactionId: string;
+  ledgerTransactionId: string | null;
+  isFree?: boolean;
   createdAt: string;
 };
 
@@ -46,13 +47,6 @@ export type CatalogRepository = {
 };
 
 export type RedemptionRepository = {
-  commit: (input: {
-    riderId: string;
-    actorId: string;
-    catalogItemId: string;
-    operationId: string;
-    correlationId: string;
-  }) => Promise<ApplicationResult<RewardRedemption>>;
   findById: (id: string) => Promise<RewardRedemption | null>;
 };
 

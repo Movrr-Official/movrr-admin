@@ -65,7 +65,7 @@ export const rewardTransactionSchema = z.object({
     .enum(["pending", "verified", "rejected", "manual_review"])
     .optional(),
   description: z.string().optional(),
-  balanceAfter: z.number(),
+  balanceAfter: z.number().nullable(),
   createdAt: z.string().datetime(),
   createdBy: z.string().optional(), // Admin who created adjustment
   // --- Bonus + cap detail sourced from metadata ---

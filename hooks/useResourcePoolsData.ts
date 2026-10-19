@@ -20,6 +20,8 @@ export type ResourcePoolReadModel = {
 export type ImportPoolCodesInput = {
   resourceId: string;
   codes: string[];
+  expiresAt?: string;
+  partnerOrgId?: string;
 };
 
 export function useResourcePools() {
@@ -52,6 +54,8 @@ export function useImportPoolCodes() {
         body: {
           resourceId: input.resourceId,
           codes: input.codes,
+          expiresAt: input.expiresAt,
+          partnerOrgId: input.partnerOrgId,
         },
       });
       if (!result.ok) {

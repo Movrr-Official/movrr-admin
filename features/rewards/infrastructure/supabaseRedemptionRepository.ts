@@ -42,7 +42,8 @@ function mapRedemptionRow(data: {
       )?.thumbnail_url ?? null,
     fulfilmentId: String(meta.fulfilment_id ?? ""),
     idempotencyKey: String(meta.idempotency_key ?? ""),
-    ledgerTransactionId: String(meta.ledger_transaction_id ?? ""),
+    ledgerTransactionId: meta.ledger_transaction_id ? String(meta.ledger_transaction_id) : null,
+    isFree: Number(data.points_spent ?? 0) === 0,
     createdAt: String(data.requested_at),
   };
 }
@@ -50,34 +51,6 @@ function mapRedemptionRow(data: {
 export function createSupabaseRedemptionRepository(): RedemptionRepository &
   RedemptionListPort {
   return {
-    async commit(input) {
-      const { data, error } = await createSupabaseAdminClient().rpc(
-        "wallet_settle_debit",
-        {
-          p_rider_id: input.riderId,
-          p_catalog_item_id: input.catalogItemId,
-          p_operation_id: input.operationId,
-          p_actor_id: input.actorId,
-          p_correlation_id: input.correlationId,
-        },
-      );
-      if (error)
-        return fail(
-          error.code === "22023"
-            ? "BusinessFailure"
-            : error.code === "42501"
-              ? "permission_denied"
-              : "InfrastructureFailure",
-          error.message,
-        );
-      if (!data?.redemption?.ledgerTransactionId)
-        return fail(
-          "InfrastructureFailure",
-          "Missing committed redemption receipt",
-        );
-      return ok(data.redemption as RewardRedemption);
-    },
-
     async findById(id) {
       const supabase = createSupabaseAdminClient();
       const { data, error } = await supabase

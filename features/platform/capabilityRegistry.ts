@@ -221,8 +221,6 @@ export const PLATFORM_CAPABILITY_REGISTRY: CapabilityRegistryEntry[] = [
     name: "Background jobs and schedulers",
     backendModule: "app/api/v1/internal/jobs",
     apiRoutes: [
-      "/api/v1/internal/jobs/fulfilment-expire",
-      "/api/v1/internal/jobs/fulfilment-release",
       "/api/v1/internal/jobs/fulfilment-retry",
       "/api/internal/privacy-retention",
     ],

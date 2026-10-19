@@ -112,8 +112,8 @@ export const mockRiderBalances: RiderBalance[] = mockUsers
     const totalPointsRedeemed = transactions
       .filter((txn) => txn.type === "redeemed")
       .reduce((sum, txn) => sum + Math.abs(txn.points), 0);
-    const currentBalance = transactions.length > 0 
-      ? transactions[transactions.length - 1].balanceAfter 
+    const currentBalance = transactions.length > 0
+      ? (transactions[transactions.length - 1].balanceAfter ?? 0)
       : 0;
     const lastTransaction = transactions.length > 0
       ? transactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]

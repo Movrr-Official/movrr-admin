@@ -154,7 +154,7 @@ export function RiderTransactionsDetailsDrawer({
                   <div className="flex items-center gap-2">
                     <Coins className="h-4 w-4 text-warning" />
                     <span className="text-sm font-semibold">
-                      {transaction.balanceAfter.toLocaleString()}
+                      {(transaction.balanceAfter?.toLocaleString() ?? "?")}
                     </span>
                   </div>
                 </div>

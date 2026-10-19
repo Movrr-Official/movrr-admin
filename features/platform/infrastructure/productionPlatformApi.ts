@@ -10,8 +10,8 @@ import {
   createPlatformApiForTests,
   type PlatformApiHandlers,
 } from "@/features/platform/infrastructure/composePlatformApi";
-import { getSharedFulfilmentModule } from "@/features/fulfilment/infrastructure/composeFulfilmentModule";
 import { sendWorkspaceAccessEmail } from "@/features/notifications/infrastructure/workspaceAccessEmail";
+import { attachShopLifecycle } from "@/features/fulfilment/infrastructure/shopLifecycleApi";
 
 /**
  * Production AuthN ports — JWT verify + real Supabase principal lookups
@@ -29,15 +29,14 @@ let cached: Promise<PlatformApiHandlers> | null = null;
 /** Lazy singleton Platform API handlers for Next.js route modules. */
 export function getProductionPlatformApi(): Promise<PlatformApiHandlers> {
   if (!cached) {
-    const fulfilmentModule = getSharedFulfilmentModule();
     cached = createPlatformApiForTests({
       authDeps: productionAuthDeps,
-      fulfilmentModule,
+      production: true,
       organisationStore: createSupabaseOrganisationOpsStore(),
       hooks: {
         onStaffAccessChanged: sendWorkspaceAccessEmail,
       },
-    });
+    }).then(api => attachShopLifecycle(api, productionAuthDeps));
   }
   return cached;
 }
