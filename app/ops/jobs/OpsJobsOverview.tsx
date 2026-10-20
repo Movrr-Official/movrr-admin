@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OpsKpiGrid } from "@/components/ops/OpsKpiGrid";
-import { AccountDeletionMonitor } from "@/components/ops/AccountDeletionMonitor";
 import { useSettingsData } from "@/hooks/useSettingsData";
 import { OPS_JOB_DEFINITIONS } from "@/lib/ops/jobsConfig";
 
@@ -69,7 +68,6 @@ export default function OpsJobsOverview() {
           ]}
         />
 
-        <AccountDeletionMonitor />
         <Card className="border-border">
           <CardHeader>
             <CardTitle className="text-xl font-bold">Job endpoints</CardTitle>

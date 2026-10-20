@@ -70,7 +70,16 @@ export type DashboardCapabilitySurface = {
 export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[] = [
   { capability: "rides.settlement.recovery.request", description: "Request one bounded recovery for the specifically approved held ride", category: "rewards", actions: ["rides.settlement.recovery.request"], auditRequired: true, approval: { initiateCapability: "rides.settlement.recovery.request", approveCapability: "rides.settlement.recovery.review", sodStrict: true }, dataScope: "assignment" },
   { capability: "rides.settlement.recovery.review", description: "Independently review the specifically approved held ride recovery; cannot issue points", category: "rewards", actions: ["rides.settlement.recovery.review"], auditRequired: true, dataScope: "assignment" },
-  { capability: "privacy.deletion.monitor", description: "Read minimal deletion lifecycle metadata", category: "security", actions: ["privacy.deletion.monitor"], auditRequired: true, dataScope: "global" },
+  {
+    capability: "privacy.deletion.monitor",
+    description: "Read minimal deletion lifecycle metadata",
+    category: "security",
+    navigation: { kind: "ops", order: 35, label: "Account deletion", href: "/ops/account-deletion", icon: "Shield" },
+    pages: ["/ops/account-deletion"],
+    actions: ["privacy.deletion.monitor"],
+    auditRequired: true,
+    dataScope: "global",
+  },
   { capability: "privacy.deletion.escalate", description: "Escalate deletion review without replaying destructive work", category: "security", actions: ["privacy.deletion.escalate"], auditRequired: true, dataScope: "global" },
   { capability: "privacy.deletion.operations.review", description: "Review shared resources and equipment; dispositions remain gated", category: "security", auditRequired: true, dataScope: "department" },
   { capability: "privacy.deletion.finance.review", description: "Review reward obligations; financial decisions remain gated", category: "security", auditRequired: true, dataScope: "department" },

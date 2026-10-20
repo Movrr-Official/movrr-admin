@@ -1,8 +1,11 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { EditorRequestScope } from "@/features/partners/application/editorRequestScope";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { platformGet, platformPost } from "@/lib/platformApi/client";
 import type { PartnerLocation, LocationPage } from "@/features/partners/domain/PartnerLocation";
@@ -15,6 +18,7 @@ function PartnerLocationEditor({ organisationId, }: {
     organisationId: string;
 }) {
     const scope = useRef(new EditorRequestScope());
+    const fieldId = useId();
     const [cursor, setCursor] = useState<string | null>(null);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
     const [rows, setRows] = useState<PartnerLocation[]>([]);
@@ -132,48 +136,51 @@ function PartnerLocationEditor({ organisationId, }: {
         <Button variant="outline" onClick={() => select(null)}>
           New location
         </Button>
-        <label className="block">
-          Location name
-          <Input value={name} onChange={(e) => setName(e.target.value)}/>
-        </label>
-        <label className="block">
-          Public address
-          <Input value={address} onChange={(e) => setAddress(e.target.value)}/>
-        </label>
+        <div className="space-y-2">
+          <Label htmlFor={`${fieldId}-name`}>Location name</Label>
+          <Input id={`${fieldId}-name`} value={name} onChange={(e) => setName(e.target.value)}/>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`${fieldId}-address`}>Public address</Label>
+          <Input id={`${fieldId}-address`} value={address} onChange={(e) => setAddress(e.target.value)}/>
+        </div>
         <div className="grid grid-cols-2 gap-2">
-          <label>
-            Latitude
-            <Input type="number" step="any" value={lat} onChange={(e) => {
+          <div className="space-y-2">
+            <Label htmlFor={`${fieldId}-latitude`}>Latitude</Label>
+            <Input id={`${fieldId}-latitude`} type="number" step="any" value={lat} onChange={(e) => {
             setLat(e.target.value);
             setVerified(false);
             setStatus("draft");
         }}/>
-          </label>
-          <label>
-            Longitude
-            <Input type="number" step="any" value={lon} onChange={(e) => {
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={`${fieldId}-longitude`}>Longitude</Label>
+            <Input id={`${fieldId}-longitude`} type="number" step="any" value={lon} onChange={(e) => {
             setLon(e.target.value);
             setVerified(false);
             setStatus("draft");
         }}/>
-          </label>
+          </div>
         </div>
-        <label className="block">
-          Associated catalog item IDs (optional, comma separated)
-          <Input value={rewardIds} onChange={(e) => setRewardIds(e.target.value)}/>
-        </label>
-        <label className="flex gap-2">
-          <input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)}/>
-          I reviewed this physical address and coordinates
-        </label>
-        <label className="block">
-          Publication{" "}
-          <select value={status} onChange={(e) => setStatus(e.target.value as PartnerLocation["status"])}>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="suspended">Suspended</option>
-          </select>
-        </label>
+        <div className="space-y-2">
+          <Label htmlFor={`${fieldId}-rewards`}>Associated catalog item IDs (optional, comma separated)</Label>
+          <Input id={`${fieldId}-rewards`} value={rewardIds} onChange={(e) => setRewardIds(e.target.value)}/>
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox id={`${fieldId}-verified`} checked={verified} disabled={busy || loading} onCheckedChange={value => setVerified(value === true)}/>
+          <Label htmlFor={`${fieldId}-verified`}>I reviewed this physical address and coordinates</Label>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`${fieldId}-status`}>Publication</Label>
+          <Select value={status} disabled={busy || loading} onValueChange={value => setStatus(value as PartnerLocation["status"])}>
+            <SelectTrigger id={`${fieldId}-status`} className="w-full"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <Button disabled={busy || !name.trim() || !address.trim()} onClick={() => void save()}>
           {busy ? "Saving…" : "Save location"}
         </Button>

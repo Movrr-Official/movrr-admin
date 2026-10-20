@@ -4,7 +4,6 @@ import { useState } from "react";
 import { DataTable } from "@/components/table/DataTable";
 import { DataTableSkeleton } from "@/components/skeletons/DataTableSkeleton";
 import { DataTableToolbar } from "@/components/table/DataTableToolbar";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,19 +96,13 @@ export default function ProTipsTableContent({
   return (
     <>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <DataTableToolbar
-            refresh={{
-              enabled: true,
-              onRefresh: refetchData,
-              isLoading: isRefetching,
-            }}
-          />
-          <Button onClick={handleCreate} size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" />
-            New Tip
-          </Button>
-        </div>
+        <DataTableToolbar
+          search={{ enabled: true, placeholder: "Search pro tips...", paramKey: "search" }}
+          export={{ enabled: true, data: filteredData, filename: "pro_tips_export", formats: ["csv", "xlsx", "json"] }}
+          refresh={{ enabled: true, onRefresh: refetchData, isLoading: isRefetching }}
+          additionalActionsRight={{ enabled: true, onClick: handleCreate, label: "New Tip", icon: Plus }}
+          filterEntityName="tips"
+        />
 
         <DataTable columns={columns} data={filteredData as ProTip[]} />
       </div>

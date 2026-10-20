@@ -1,6 +1,7 @@
 "use client";
 
-import { Lightbulb, Eye, EyeOff, TrendingUp } from "lucide-react";
+import { Lightbulb, Eye, EyeOff } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { ProTipsTable } from "@/components/pro-tips/ProTipsTable";
 import { useProTipsData } from "@/hooks/useProTipsData";
 import { StatsCard } from "@/components/stats/StatsCard";
@@ -30,13 +31,10 @@ export default function ProTipsOverview() {
     <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Pro Tips</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage tips shown to riders on the Home screen. Active tips rotate
-            every 30 seconds.
-          </p>
-        </div>
+        <PageHeader
+          title="Pro Tips"
+          description="Manage tips shown to riders on the Home screen. Active tips rotate every 30 seconds."
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">

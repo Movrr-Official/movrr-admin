@@ -6,6 +6,8 @@ import { dashboardRead } from "@/lib/dashboard/readTransport";
 import { useAdminUser, useCapability } from "@/hooks/useAdminUser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function AccountDeletionIntakeControl() {
   const { data: actor } = useAdminUser();
@@ -44,12 +46,21 @@ function IntakeForAccount({ accountId, role }: { accountId: string; role: string
       } catch { setMessage("Change unconfirmed. Retry the same operation or refresh state."); }
       finally { setBusy(false); }
     }}>
-      <label htmlFor="deletion-intake-state">New intake state</label>
-      <select id="deletion-intake-state" className="block rounded border bg-background p-2" value={state} disabled={busy || !!pending.current} onChange={event => setState(event.target.value as typeof state)}>
-        <option value="disabled">Disabled</option><option value="hold">Hold</option><option value="enabled">Enabled (intake and receipt checks)</option>
-      </select>
-      <label htmlFor="deletion-intake-reason">Reason and approval reference</label>
-      <Input id="deletion-intake-reason" value={reason} required minLength={10} maxLength={1000} disabled={busy || !!pending.current} onChange={event => setReason(event.target.value)} aria-describedby="deletion-intake-help" />
+      <div className="space-y-2">
+        <Label htmlFor="deletion-intake-state">New intake state</Label>
+        <Select value={state} disabled={busy || !!pending.current} onValueChange={value => setState(value as typeof state)}>
+          <SelectTrigger id="deletion-intake-state" className="w-full"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="disabled">Disabled</SelectItem>
+            <SelectItem value="hold">Hold</SelectItem>
+            <SelectItem value="enabled">Enabled (intake and receipt checks)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="deletion-intake-reason">Reason and approval reference</Label>
+        <Input id="deletion-intake-reason" value={reason} required minLength={10} maxLength={1000} disabled={busy || !!pending.current} onChange={event => setReason(event.target.value)} aria-describedby="deletion-intake-help" />
+      </div>
       <p id="deletion-intake-help" className="text-sm text-muted-foreground">Security administrators only. Refresh after a version conflict. Production activation requires explicit approval.</p>
       <Button type="submit" disabled={busy || !query.data || reason.trim().length < 10}>{busy ? "Recording" : pending.current ? "Retry same change" : "Record intake state"}</Button>
     </form>}

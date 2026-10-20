@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function AuditPage() {
   const [limit, setLimit] = useState<number>(50);
@@ -32,23 +34,28 @@ export default function AuditPage() {
     <div className="page-canvas">
       <h1 className="text-2xl font-semibold mb-4">Optimizer Audit</h1>
 
-      <div className="flex items-center gap-2 mb-4">
-        <label className="text-sm">Limit</label>
-        <input
-          type="number"
-          value={limit}
-          onChange={(e) => setLimit(Number(e.target.value || 10))}
-          className="border px-2 py-1 rounded w-24"
-        />
-
-        <label className="text-sm">Filter (substring)</label>
-        <input
-          type="text"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          className="border px-2 py-1 rounded w-64"
-          placeholder="search in entries"
-        />
+      <div className="flex flex-wrap items-end gap-3 mb-4">
+        <div className="space-y-2">
+          <Label htmlFor="audit-limit">Limit</Label>
+          <Input
+            id="audit-limit"
+            type="number"
+            value={limit}
+            onChange={(e) => setLimit(Number(e.target.value || 10))}
+            className="w-24"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="audit-filter">Filter (substring)</Label>
+          <Input
+            id="audit-filter"
+            type="text"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="w-64 max-w-full"
+            placeholder="search in entries"
+          />
+        </div>
 
         <Button onClick={fetchAudit} disabled={loading}>
           {loading ? "Loading..." : "Refresh"}

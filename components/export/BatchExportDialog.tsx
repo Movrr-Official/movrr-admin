@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -535,17 +536,18 @@ export function BatchExportDialog({
                     >
                       Export Format
                     </Label>
-                    <select
-                      id="format"
+                    <Select
                       value={selectedFormat}
-                      onChange={(e) => setSelectedFormat(e.target.value as any)}
-                      className="w-full rounded-xl border border-border/50 bg-background/60 px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
+                      onValueChange={(value) => setSelectedFormat(value as typeof selectedFormat)}
                     >
-                      <option value="csv">CSV Format</option>
-                      <option value="xlsx">Excel Format</option>
-                      <option value="pdf">PDF Format</option>
-                      <option value="json">JSON Format</option>
-                    </select>
+                      <SelectTrigger id="format" className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="csv">CSV Format</SelectItem>
+                        <SelectItem value="xlsx">Excel Format</SelectItem>
+                        <SelectItem value="pdf">PDF Format</SelectItem>
+                        <SelectItem value="json">JSON Format</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-3">
@@ -560,7 +562,6 @@ export function BatchExportDialog({
                       value={filenamePrefix}
                       onChange={(e) => setFilenamePrefix(e.target.value)}
                       placeholder="batch_export"
-                      className="rounded-xl border-border/50 bg-background/60 font-medium"
                     />
                   </div>
 

@@ -35,6 +35,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { RideSession } from "@/schemas";
 import { RideSessionsTable } from "@/components/ride-sessions/RideSessionsTable";
 import { StatsCard } from "@/components/stats/StatsCard";
@@ -109,7 +110,10 @@ export default function RideSessionsOverview() {
   return (
     <div className="min-h-screen page-canvas">
       <div className="flex flex-wrap items-center gap-3 p-4">
-        <label htmlFor="ride-search">Search all rides</label><Input id="ride-search" className="max-w-md" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} placeholder="Session ID, rider, campaign or city" />
+        <div className="space-y-2">
+          <Label htmlFor="ride-search">Search all rides</Label>
+          <Input id="ride-search" className="max-w-md" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} placeholder="Session ID, rider, campaign or city" />
+        </div>
         <Button variant="outline" disabled={!page || isFetching} onClick={() => setPage(p => p - 1)}>Previous</Button><span>Page {page + 1}</span><Button variant="outline" disabled={isFetching || (sessions?.length ?? 0) < 100} onClick={() => setPage(p => p + 1)}>Next</Button>
       </div>
       <div className="space-y-6 md:space-y-8">

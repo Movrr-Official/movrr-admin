@@ -5,6 +5,7 @@ import { Bell, BellRing, CheckCircle, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -228,8 +229,8 @@ export default function NotificationsOverview() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Title</label>
-                <Input
+                <Label htmlFor="notification-title">Title</Label>
+                <Input id="notification-title"
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="Short headline"
@@ -237,8 +238,8 @@ export default function NotificationsOverview() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Message</label>
-                <Textarea
+                <Label htmlFor="notification-message">Message</Label>
+                <Textarea id="notification-message"
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
                   placeholder="Write the notification message"
@@ -248,14 +249,14 @@ export default function NotificationsOverview() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Type</label>
+                  <Label htmlFor="notification-type">Type</Label>
                   <Select
                     value={type}
                     onValueChange={(value) =>
                       setType(value as NotificationType)
                     }
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id="notification-type" className="w-full">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -268,14 +269,14 @@ export default function NotificationsOverview() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Target</label>
+                  <Label htmlFor="notification-target">Target</Label>
                   <Select
                     value={target}
                     onValueChange={(value) =>
                       setTarget(value as NotificationTarget)
                     }
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id="notification-target" className="w-full">
                       <SelectValue placeholder="Select target" />
                     </SelectTrigger>
                     <SelectContent>
@@ -291,12 +292,12 @@ export default function NotificationsOverview() {
 
               {target === "role" && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Role</label>
+                  <Label htmlFor="notification-role">Role</Label>
                   <Select
                     value={role}
                     onValueChange={(value) => setRole(value as UserRole)}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger id="notification-role" className="w-full">
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -312,8 +313,8 @@ export default function NotificationsOverview() {
 
               {target === "userIds" && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">User IDs</label>
-                  <Textarea
+                  <Label htmlFor="notification-users">User IDs</Label>
+                  <Textarea id="notification-users"
                     value={userIdsInput}
                     onChange={(event) => setUserIdsInput(event.target.value)}
                     placeholder="Paste UUIDs separated by commas or new lines"
@@ -323,8 +324,8 @@ export default function NotificationsOverview() {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Metadata (JSON)</label>
-                <Textarea
+                <Label htmlFor="notification-metadata">Metadata (JSON)</Label>
+                <Textarea id="notification-metadata"
                   value={metadataInput}
                   onChange={(event) => setMetadataInput(event.target.value)}
                   placeholder='{"campaign_id": "..."}'

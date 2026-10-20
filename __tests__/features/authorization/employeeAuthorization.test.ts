@@ -4,6 +4,7 @@ import {
   canApproveWorkflow,
 } from "@/features/authorization/sod";
 import { simulateAllEmployeeRoles } from "@/features/authorization/diagnostics";
+import { canSeeNavHref } from "@/features/authorization/navigation";
 import { assertCapability } from "@/features/organisations/application/commands/authorisationService";
 import { describe, expect, it } from "vitest";
 import {
@@ -63,6 +64,18 @@ describe("employee role templates", () => {
 });
 
 describe("page / search capability alignment", () => {
+  it("keeps deletion review reachable only for existing privacy monitors, independently of job management", () => {
+    expect(canAccessPage("/ops/account-deletion", ["privacy.deletion.monitor"])).toBe(true);
+    expect(canSeeNavHref("/ops/account-deletion", ["privacy.deletion.monitor"])).toBe(true);
+    expect(canAccessPage("/ops/account-deletion", ["platform.jobs.manage", "dashboard.read"])).toBe(false);
+    expect(canSeeNavHref("/ops/account-deletion", ["platform.jobs.manage", "dashboard.read"])).toBe(false);
+    for (const role of CANONICAL_EMPLOYEE_ROLES) {
+      const caps = capabilitiesForEmployeeRole(role);
+      const allowed = caps.includes("privacy.deletion.monitor");
+      expect(canAccessPage("/ops/account-deletion", caps)).toBe(allowed);
+      expect(canSeeNavHref("/ops/account-deletion", caps)).toBe(allowed);
+    }
+  });
   it("allows compliance_analyst on programmes but not settings", () => {
     const caps = capabilitiesForEmployeeRole("compliance_analyst");
     expect(canAccessPage("/programmes", caps)).toBe(true);
