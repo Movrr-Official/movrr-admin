@@ -11,7 +11,7 @@ vi.mock("@/lib/supabase-admin", () => ({
   createSupabaseAdminClient: () => ({ from, rpc }),
 }));
 import { getRewardTransactions } from "@/app/actions/rewards";
-import { getRideSessions } from "@/app/actions/rideSessions";
+import { getDistanceStats, getRideSessions } from "@/app/actions/rideSessions";
 import { getRiderPerformanceMetrics } from "@/app/actions/riderPerformance";
 import { getSessionAnalytics } from "@/app/actions/sessionAnalytics";
 const ride = {
@@ -31,7 +31,7 @@ beforeEach(() => {
       name === "ops_ride_session_page"
         ? [{ ...ride, _settlement: { status: "pending", completeness: "unresolved" } }]
         : name === "get_impact_summary"
-          ? [{ total_rides: 1, total_distance_km: 1, co2_saved_kg: 0.18 }]
+          ? [{ total_rides: 1, total_distance_km: 1, co2_saved_kg: 0.19 }]
           : [],
     error: null,
   }));
@@ -100,6 +100,12 @@ beforeEach(() => {
     };
     return q;
   });
+});
+it("preserves the authoritative impact aggregate above the default row limit", async () => {
+  rpc.mockResolvedValueOnce({ data: [{ total_rides: "1502", total_distance_km: "1505", co2_saved_kg: "285.95" }], error: null });
+  expect(await getDistanceStats()).toEqual({ success: true, data: { totalDistanceKm: 1505, co2SavedKg: 285.95, sessionCount: 1502 } });
+  expect(rpc).toHaveBeenCalledWith("get_impact_summary", { p_rider: null });
+  expect(from).not.toHaveBeenCalled();
 });
 it("matches the summary ledger contract, including bonuses and linked adjustments", async () => {
   const result = await getRideSessions();

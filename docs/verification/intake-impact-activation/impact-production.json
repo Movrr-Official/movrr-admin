@@ -1,0 +1,128 @@
+{
+  "checkedAt": "2026-10-20T16:27:35.538Z",
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "readOnly": "on",
+  "method": {
+    "scope": "WTW",
+    "sourceUrl": "https://co2emissiefactoren.nl/factoren/2026/38/147/personenvervoer-auto-gemiddelde-auto-brandstofsoort-onbekend/",
+    "eligibility": "Completed session with backend verification_result.status=verified, positive finite authoritative total_distance_meters and a nonfuture completion timestamp. One session once, independent of reward, ledger or settlement receipts. Historical verified sessions remain eligible; unverified or invalid evidence is excluded.",
+    "installedAt": "2026-10-20T11:35:56.142042+00:00",
+    "approvalDate": "2026-10-20",
+    "factorEdition": 2026,
+    "methodologyId": "MOVRR-NL-CAR-COMPARISON-2026-v2",
+    "comparisonLabel": "Average car emissions for the same distance",
+    "actualAvoidedEmissions": false,
+    "emissionsReferenceYear": 2025,
+    "factorKgCo2ePerVehicleKm": 0.19
+  },
+  "reported": {
+    "total_rides": "21",
+    "total_distance_km": "42.86987000000000000000",
+    "co2_saved_kg": "8.15"
+  },
+  "expected": {
+    "total_rides": "21",
+    "total_distance_km": "42.8698700000000000",
+    "co2_saved_kg": "8.15"
+  },
+  "period": {
+    "distance_km": "7.32810000000000000000",
+    "comparison_kg_co2e": "1.39"
+  },
+  "expectedPeriod": {
+    "distance_km": "7.3281000000000000",
+    "comparison_kg_co2e": "1.39"
+  },
+  "migrations": [
+    {
+      "version": "20261020112306",
+      "name": "059_alignment_impact",
+      "digest": "d8b6a3cf8d27c8967286b7fc41b357a6059ea84ad7afee3ce6a102b109284a37",
+      "sourceSha256": "d8b6a3cf8d27c8967286b7fc41b357a6059ea84ad7afee3ce6a102b109284a37"
+    },
+    {
+      "version": "20261020113201",
+      "name": "061_approved_impact_methodology",
+      "digest": "a31db3be23feb7067c5a77c950a71dcc998dab6a7331fcb6b6395d2fa03f3599",
+      "sourceSha256": "a31db3be23feb7067c5a77c950a71dcc998dab6a7331fcb6b6395d2fa03f3599"
+    },
+    {
+      "version": "20261020113501",
+      "name": "062_impact_verified_history_coverage",
+      "digest": "5f98df235fb3bd8e070af61849edf0268933b6b4aa40e7a67683b376425d48fe",
+      "sourceSha256": "5f98df235fb3bd8e070af61849edf0268933b6b4aa40e7a67683b376425d48fe"
+    },
+    {
+      "version": "20261020113901",
+      "name": "063_impact_daily_precision",
+      "digest": "c3ae69a9fa8c7625a0948f55af0f20a9dcbe157db0cff9ce2a2965268c504b94",
+      "sourceSha256": "c3ae69a9fa8c7625a0948f55af0f20a9dcbe157db0cff9ce2a2965268c504b94"
+    }
+  ],
+  "functions": [
+    {
+      "proname": "get_impact_daily",
+      "sha256": "b42fe7c3543be2383c48ede2b6a21d237240df1e97f2f9eddec2a338a61649cc"
+    },
+    {
+      "proname": "get_impact_methodology",
+      "sha256": "9ee0e51e3f442ad8b131e74bf902353d631252119c93955408a38558b52356f7"
+    },
+    {
+      "proname": "get_impact_ride_evidence",
+      "sha256": "f7e3d42db5029e4a47047eccfd37484380d388d78f0f8e05a11921217d4a6db8"
+    },
+    {
+      "proname": "get_impact_summary",
+      "sha256": "b1602f3e1ee38b93629023e6e5bb82cb9c67886c2ba1334017f500f5534ba55c"
+    },
+    {
+      "proname": "get_lifetime_impact_summary",
+      "sha256": "b78c6ebc35f6f03c6f97f580e8c7fd7ac54fc6c9abacd8f01f556ceec3eb4a74"
+    }
+  ],
+  "badge": {
+    "code": "co2_50",
+    "is_active": true,
+    "rule_type": null,
+    "unlock_rule": {
+      "dependency": "impact_methodology",
+      "availability": "upcoming"
+    }
+  },
+  "awardRuleExcluded": true,
+  "states": {
+    "deletion": {
+      "policyVersion": 1,
+      "contractVersion": 1,
+      "requestsEnabled": false
+    },
+    "shop": [
+      false
+    ]
+  },
+  "api": {
+    "method": {
+      "scope": "WTW",
+      "sourceUrl": "https://co2emissiefactoren.nl/factoren/2026/38/147/personenvervoer-auto-gemiddelde-auto-brandstofsoort-onbekend/",
+      "eligibility": "Completed session with backend verification_result.status=verified, positive finite authoritative total_distance_meters and a nonfuture completion timestamp. One session once, independent of reward, ledger or settlement receipts. Historical verified sessions remain eligible; unverified or invalid evidence is excluded.",
+      "installedAt": "2026-10-20T11:35:56.142042+00:00",
+      "approvalDate": "2026-10-20",
+      "factorEdition": 2026,
+      "methodologyId": "MOVRR-NL-CAR-COMPARISON-2026-v2",
+      "comparisonLabel": "Average car emissions for the same distance",
+      "actualAvoidedEmissions": false,
+      "emissionsReferenceYear": 2025,
+      "factorKgCo2ePerVehicleKm": 0.19
+    },
+    "summary": [
+      {
+        "total_rides": 21,
+        "total_distance_km": 42.86987,
+        "co2_saved_kg": 8.15
+      }
+    ]
+  },
+  "assertions": 35,
+  "productionMutations": false
+}

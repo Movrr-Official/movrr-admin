@@ -62,7 +62,7 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
     title: "Impact & Reporting",
     icon: Leaf,
     description:
-      "Distance unit and CO\u2082 savings factor for rider impact calculations.",
+      "Distance display settings. Car-emissions comparisons use the approved, versioned backend methodology.",
   },
   {
     id: "campaigns",

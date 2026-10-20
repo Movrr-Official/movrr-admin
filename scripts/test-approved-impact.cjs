@@ -46,6 +46,16 @@ async function main(){
  const method=(await db`SELECT get_impact_methodology() m`)[0].m;equal(method.methodologyId,'MOVRR-NL-CAR-COMPARISON-2026-v2');equal(method.factorKgCo2ePerVehicleKm,0.190);equal(method.actualAvoidedEmissions,false);
  equal(Number((await db`SELECT count(*) n FROM reward_transactions`)[0].n),3);equal(Number((await db`SELECT count(*) n FROM rider_badge_award`)[0].n),0);
  equal(Number((await db`SELECT total_distance_meters FROM ride_session WHERE id=${standard}`)[0].total_distance_meters),10000);
+ // Aggregation stays in SQL above PostgREST's default 1,000-row page limit.
+ // These are separate completed sessions of the same route, with no reward receipts.
+ const repeatedRoute=id();await db`INSERT INTO rider_route(id,rider_id) VALUES(${repeatedRoute},${foreign})`;
+ await db`INSERT INTO ride_session(id,rider_id,rider_route_id,status,verification_result,total_distance_meters,completed_at,earning_mode)
+ SELECT gen_random_uuid(),${foreign},${repeatedRoute},'completed','{"status":"verified"}'::jsonb,1000,'2026-03-28T23:30:00Z','standard_ride'
+ FROM generate_series(1,1501)`;
+ const bulk=(await get(foreign))[0];
+ equal(Number(bulk.total_rides),1502);equal(Number(bulk.total_distance_km),1505);equal(Number(bulk.co2_saved_kg),285.95);
+ equal(await auth(other,async tx=>(await tx`SELECT * FROM get_lifetime_impact_summary()`)[0]),bulk);
+ equal(Number((await db`SELECT count(*) n FROM reward_transactions`)[0].n),3);
  console.log(JSON.stringify({assertions:n,database:'isolated PostgreSQL 17',productionMutations:false}));
 }
 main().catch(e=>{console.error(e.stack,e.where||'');process.exitCode=1}).finally(async()=>{await db.end();await root.unsafe('DROP DATABASE IF EXISTS '+name+' WITH (FORCE)');await root.end()});
