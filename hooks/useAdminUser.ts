@@ -1,6 +1,6 @@
 "use client";
 
-import { getCurrentAdminUser } from "@/app/actions/admin";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 import { useQuery } from "@tanstack/react-query";
 import useShouldHideComponent from "@/hooks/useShouldHideComponent";
 import { hasAdminPermission, hasCapability } from "@/lib/authPermissions";
@@ -12,7 +12,7 @@ export function useAdminUser(options?: { enabled?: boolean }) {
 
   return useQuery({
     queryKey: ADMIN_USER_QUERY_KEY,
-    queryFn: getCurrentAdminUser,
+    queryFn: () => dashboardRead("adminUser"),
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1,
     refetchOnWindowFocus: false,

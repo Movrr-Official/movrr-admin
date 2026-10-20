@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
 import useShouldHideComponent from "@/hooks/useShouldHideComponent";
-import { getDashboardCounts } from "@/app/actions/count";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 
 export const DASHBOARD_COUNTS_QUERY_KEY = ["dashboardCounts"] as const;
 
@@ -38,7 +38,7 @@ export const CountProvider = ({ children }: { children: ReactNode }) => {
     queryKey: DASHBOARD_COUNTS_QUERY_KEY,
     queryFn: async () => {
       try {
-        const counts = await getDashboardCounts();
+        const counts = await dashboardRead("counts");
         return counts;
       } catch (err) {
         toast({

@@ -2,7 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { getAccountDeletionMonitor, escalateAccountDeletion } from "@/app/actions/accountDeletion";
+import { escalateAccountDeletion } from "@/app/actions/accountDeletion";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 import { isAccountDeletionReceipt, type AccountDeletionReceipt } from "@/lib/accountDeletionContract";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ export function AccountDeletionMonitor() {
     retry: false,
     enabled: canMonitor,
     queryFn: async (): Promise<MonitorRow[]> => {
-      const result = await getAccountDeletionMonitor();
+      const result = await dashboardRead("deletionMonitor");
       if (!result.success) throw new Error(result.error);
       if (!Array.isArray(result.data) || !result.data.every(isAccountDeletionReceipt))
         throw new Error("Unsupported deletion contract");

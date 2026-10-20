@@ -7,6 +7,14 @@ import { getRoutes } from "@/app/actions/routes";
 import { getRewardStats } from "@/app/actions/rewards";
 import { getDistanceStats, getRideSessions } from "@/app/actions/rideSessions";
 import { getSessionAnalytics } from "@/app/actions/sessionAnalytics";
+import { getDashboardCounts } from "@/app/actions/count";
+import { getCurrentAdminUser } from "@/app/actions/admin";
+import { getAdminSettings } from "@/app/actions/settings";
+import { getOpenIncidentCount } from "@/app/actions/incidents";
+import { getAccountDeletionMonitor } from "@/app/actions/accountDeletion";
+import { getDeletionIntakeControl } from "@/app/actions/accountDeletionIntake";
+import { requireCapability } from "@/lib/admin";
+import { loadSettingsRows, mergeSettingsRows } from "@/lib/platformSettings";
 import { userFiltersSchema, riderFiltersSchema, campaignFiltersSchema, rideSessionFiltersSchema } from "@/schemas";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +40,19 @@ export async function GET(request: Request, context: { params: Promise<{ resourc
     // suspension checks. No service-role data is accessed before those checks.
     let result: unknown;
     switch (resource) {
+      case "counts": result = await getDashboardCounts(); break;
+      case "adminUser": result = await getCurrentAdminUser(); break;
+      case "settings": result = await getAdminSettings(); break;
+      case "openIncidents": result = await getOpenIncidentCount(); break;
+      case "deletionMonitor": result = await getAccountDeletionMonitor(); break;
+      case "deletionIntake": result = await getDeletionIntakeControl(); break;
+      case "maintenance": {
+        // Same permission as settings; no audits, provider probes or metadata.
+        await requireCapability("settings.manage");
+        const { maintenanceMode, maintenanceScope, maintenanceMessage } = mergeSettingsRows(await loadSettingsRows()).general;
+        result = { maintenanceMode, maintenanceScope, maintenanceMessage };
+        break;
+      }
       case "users": result = await getUsers(userFiltersSchema.optional().parse(args[0]), ids.parse(args[1])); break;
       case "riders": result = await getRiders(riderFiltersSchema.optional().parse(args[0])); break;
       case "campaigns": result = await getCampaigns(campaignFiltersSchema.optional().parse(args[0]), ids.parse(args[1])); break;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getAdminSettings } from "@/app/actions/settings";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 import {
   type AdminSettingsResponse,
   type AdminSettingsValues,
@@ -192,7 +192,7 @@ export const useSettingsData = (options?: {
         return fallbackSettings;
       }
 
-      const result = await getAdminSettings();
+      const result = await dashboardRead("settings");
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to load admin settings");
       }

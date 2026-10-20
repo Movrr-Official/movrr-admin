@@ -4,10 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createIncident,
   getIncidents,
-  getOpenIncidentCount,
   setIncidentStatus,
 } from "@/app/actions/incidents";
 import type { CreateIncidentInput, IncidentStatus } from "@/features/incidents/types";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 
 export const INCIDENTS_QUERY_KEY = ["incidents"] as const;
 export const OPEN_INCIDENTS_COUNT_QUERY_KEY = ["openIncidentsCount"] as const;
@@ -29,7 +29,7 @@ export function useIncidentsData() {
 export function useOpenIncidentCount(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: OPEN_INCIDENTS_COUNT_QUERY_KEY,
-    queryFn: () => getOpenIncidentCount(),
+    queryFn: () => dashboardRead("openIncidents"),
     staleTime: 1000 * 60,
     enabled: options?.enabled ?? true,
   });

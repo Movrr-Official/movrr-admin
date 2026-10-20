@@ -1,20 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSettingsData } from "@/hooks/useSettingsData";
+import { useQuery } from "@tanstack/react-query";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 import useShouldHideComponent from "@/hooks/useShouldHideComponent";
 
 const MaintenanceBanner = () => {
   const shouldHide = useShouldHideComponent();
-  const { data } = useSettingsData({
+  const { data } = useQuery({
+    queryKey: ["adminSettings", "maintenance"],
+    queryFn: () => dashboardRead("maintenance"),
+    staleTime: 1000 * 60,
     refetchInterval: 1000 * 60,
     enabled: !shouldHide,
   });
   const [dismissed, setDismissed] = useState(false);
 
-  const maintenanceMode = data?.values?.general?.maintenanceMode;
-  const maintenanceScope = data?.values?.general?.maintenanceScope ?? "global";
-  const maintenanceMessage = data?.values?.general?.maintenanceMessage?.trim();
+  const maintenanceMode = data?.maintenanceMode;
+  const maintenanceScope = data?.maintenanceScope ?? "global";
+  const maintenanceMessage = data?.maintenanceMessage?.trim();
 
   // Global scope is non-dismissible — it means the entire platform is blocked.
   const canDismiss = maintenanceScope !== "global";

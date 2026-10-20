@@ -1,11 +1,11 @@
 import "server-only";
 
 import { cache } from "react";
+import type { User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "./supabase-server";
 import { createSupabaseAdminClient } from "./supabase-admin";
 import { headers } from "next/headers";
 import {
-  normalizeAdminRole,
   isReadOnlyAdminRole,
   hasAdminPermission,
   getCapabilitiesForRole,
@@ -255,14 +255,15 @@ const resolveAdminDisplayName = (authUser: {
   return authUser.email?.trim() || "Admin User";
 };
 
-const enforceSecurityPolicy = async (authUser: {
-  id: string;
-  last_sign_in_at?: string | null;
-}, assuranceLevel?: string | null) => {
-  const policy = await getPlatformSecurityPolicy();
-  const trustedSession = await resolveTrustedAdminSession(authUser);
+const enforceSecurityPolicy = async (authUser: User) => {
+  // Independent authoritative checks still run on every request, concurrently.
+  const [policy, trustedSession, assurance] = await Promise.all([
+    getPlatformSecurityPolicy(),
+    resolveTrustedAdminSession(authUser),
+    getServerAdminAuthenticatorAssurance(authUser),
+  ]);
   const lastSignInAt = parseTimestamp(authUser.last_sign_in_at);
-  const aal = typeof assuranceLevel === "string" ? assuranceLevel : null;
+  const aal = assurance.currentLevel;
 
   if (policy.enforceAdminMfa && aal !== "aal2") {
     logger.warn("Admin MFA requirement not satisfied", {
@@ -525,11 +526,7 @@ export const getAuthenticatedUser = cache(async (): Promise<AuthenticatedUser | 
         role,
       } as AdminUser,
     };
-    const assuranceData = await getServerAdminAuthenticatorAssurance(authUser);
-    const enforcement = await enforceSecurityPolicy(
-      authUser,
-      assuranceData.currentLevel,
-    );
+    const enforcement = await enforceSecurityPolicy(authUser);
     await persistAdminDashboardSession(
       authenticatedUser,
       enforcement.policy,
@@ -681,42 +678,17 @@ export async function requirePageAccess(
 
 export async function getAdminRoleForLayout(): Promise<AdminRole | undefined> {
   const pathname = await resolvePathnameFromHeaders();
-  const shouldResolveRole = shouldResolveRoleForPath(pathname);
-
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    logger.warn("Supabase getUser failed in RootLayout", {
-      message: userError.message,
-    });
+  if (!shouldResolveRoleForPath(pathname)) return undefined;
+  try {
+    // The guarded page consumes the same request-scoped result. Do not perform
+    // a second getUser/admin_users lookup solely to populate navigation.
+    return (await getAuthenticatedUser())?.adminUser.role;
+  } catch (error) {
+    // This only hides privileged navigation; AuthWrapper/reader guards retain
+    // responsibility for the redirect or error, including MFA and expiry.
+    if (isAdminAuthError(error)) return undefined;
+    throw error;
   }
-
-  if (!user || !shouldResolveRole) {
-    return undefined;
-  }
-
-  const { data: adminUser, error: adminUserError } = await supabase
-    .from("admin_users")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
-
-  if (adminUserError) {
-    logger.warn("Admin role lookup failed in RootLayout", {
-      message: adminUserError.message,
-      userId: user.id,
-    });
-  }
-
-  const rawRole =
-    typeof adminUser?.role === "string" ? adminUser.role : undefined;
-  const normalizedRole = normalizeAdminRole(rawRole);
-
-  return normalizedRole as AdminRole | undefined;
 }
 
 /** Remove server-side admin session tracking on logout. */

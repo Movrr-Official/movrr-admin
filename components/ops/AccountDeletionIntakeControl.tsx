@@ -1,7 +1,8 @@
 "use client";
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getDeletionIntakeControl, changeDeletionIntake } from "@/app/actions/accountDeletionIntake";
+import { changeDeletionIntake } from "@/app/actions/accountDeletionIntake";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 import { useAdminUser, useCapability } from "@/hooks/useAdminUser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,7 @@ function IntakeForAccount({ accountId, role }: { accountId: string; role: string
   const [busy, setBusy] = useState(false);
   const pending = useRef<Parameters<typeof changeDeletionIntake>[0] | null>(null);
   const query = useQuery({ queryKey: ["deletion-intake-control", accountId], enabled: canRead, retry: false, queryFn: async () => {
-    const result = await getDeletionIntakeControl();
+    const result = await dashboardRead("deletionIntake");
     if (!result.data) throw new Error(result.error);
     return result.data;
   }});

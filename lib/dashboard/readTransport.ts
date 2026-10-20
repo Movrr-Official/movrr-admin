@@ -5,8 +5,22 @@ import type { getRoutes } from "@/app/actions/routes";
 import type { getRewardStats } from "@/app/actions/rewards";
 import type { getDistanceStats, getRideSessions } from "@/app/actions/rideSessions";
 import type { getSessionAnalytics } from "@/app/actions/sessionAnalytics";
+import type { getDashboardCounts } from "@/app/actions/count";
+import type { getCurrentAdminUser } from "@/app/actions/admin";
+import type { getAdminSettings } from "@/app/actions/settings";
+import type { getOpenIncidentCount } from "@/app/actions/incidents";
+import type { getAccountDeletionMonitor } from "@/app/actions/accountDeletion";
+import type { getDeletionIntakeControl } from "@/app/actions/accountDeletionIntake";
+import type { AdminSettingsValues } from "@/schemas/settings";
 
 type Readers = {
+  counts: typeof getDashboardCounts;
+  adminUser: typeof getCurrentAdminUser;
+  settings: typeof getAdminSettings;
+  openIncidents: typeof getOpenIncidentCount;
+  deletionMonitor: typeof getAccountDeletionMonitor;
+  deletionIntake: typeof getDeletionIntakeControl;
+  maintenance: () => Promise<Pick<AdminSettingsValues["general"], "maintenanceMode" | "maintenanceScope" | "maintenanceMessage">>;
   users: typeof getUsers;
   riders: typeof getRiders;
   campaigns: typeof getCampaigns;

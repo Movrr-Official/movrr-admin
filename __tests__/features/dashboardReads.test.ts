@@ -1,5 +1,13 @@
 import { beforeEach, expect, it, vi } from "vitest";
-const readers = vi.hoisted(() => ({ users: vi.fn(), riders: vi.fn(), campaigns: vi.fn(), routes: vi.fn(), rewards: vi.fn(), distance: vi.fn(), rides: vi.fn(), analytics: vi.fn() }));
+const readers = vi.hoisted(() => ({ users: vi.fn(), riders: vi.fn(), campaigns: vi.fn(), routes: vi.fn(), rewards: vi.fn(), distance: vi.fn(), rides: vi.fn(), analytics: vi.fn(), counts: vi.fn(), adminUser: vi.fn(), settings: vi.fn(), incidents: vi.fn(), monitor: vi.fn(), intake: vi.fn(), permission: vi.fn(), settingsRows: vi.fn() }));
+vi.mock("@/app/actions/count", () => ({getDashboardCounts: readers.counts}));
+vi.mock("@/app/actions/admin", () => ({getCurrentAdminUser: readers.adminUser}));
+vi.mock("@/app/actions/settings", () => ({getAdminSettings: readers.settings}));
+vi.mock("@/app/actions/incidents", () => ({getOpenIncidentCount: readers.incidents}));
+vi.mock("@/app/actions/accountDeletion", () => ({getAccountDeletionMonitor: readers.monitor}));
+vi.mock("@/app/actions/accountDeletionIntake", () => ({getDeletionIntakeControl: readers.intake}));
+vi.mock("@/lib/admin", () => ({requireCapability: readers.permission}));
+vi.mock("@/lib/platformSettings", () => ({loadSettingsRows: readers.settingsRows, mergeSettingsRows: (rows: unknown) => rows}));
 vi.mock("@/app/actions/users", () => ({ getUsers: readers.users }));
 vi.mock("@/app/actions/riders", () => ({ getRiders: readers.riders }));
 vi.mock("@/app/actions/campaigns", () => ({ getCampaigns: readers.campaigns }));
@@ -44,4 +52,19 @@ it("does not fabricate data on unexpected backend failure", async () => {
   const response = await read("rewardStats");
   expect(response.status).toBe(503);
   expect(await response.json()).toEqual({error:"Dashboard data unavailable"});
+});
+it.each([['counts','counts'],['adminUser','adminUser'],['settings','settings'],['openIncidents','incidents'],['deletionMonitor','monitor'],['deletionIntake','intake']] as const)("dispatches %s to its existing guarded reader without a Server Action", async (resource, reader) => {
+  expect((await read(resource)).status).toBe(200);
+  expect(readers[reader]).toHaveBeenCalledOnce();
+});
+it("loads only maintenance fields, preserves the settings permission, and avoids external probes", async () => {
+  readers.settingsRows.mockResolvedValue({general:{maintenanceMode:true,maintenanceScope:'global',maintenanceMessage:'Scheduled work',supportEmail:'private'}});
+  const result = await read('maintenance');
+  expect(await result.json()).toEqual({maintenanceMode:true,maintenanceScope:'global',maintenanceMessage:'Scheduled work'});
+  expect(readers.permission).toHaveBeenCalledWith('settings.manage');
+  expect(readers.settings).not.toHaveBeenCalled();
+  readers.permission.mockRejectedValue(new Error('restricted'));
+  readers.settingsRows.mockClear();
+  expect((await read('maintenance')).status).toBe(503);
+  expect(readers.settingsRows).not.toHaveBeenCalled();
 });
