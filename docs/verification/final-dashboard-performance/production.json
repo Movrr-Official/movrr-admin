@@ -1,0 +1,846 @@
+{
+  "date": "2026-10-20",
+  "recordedAt": "2026-10-20T14:33:01.472Z",
+  "scope": [
+    "movrr-admin",
+    "movrr-app"
+  ],
+  "baselineEvidence": "docs/verification/p1-render-performance/production.json",
+  "baseline": {
+    "adminDocumentMs": 3276,
+    "adminServerWaitMs": 2047,
+    "adminFinalInitialDataMs": 15686,
+    "adminSerializedActions": 6,
+    "riderDocumentMs": 4228,
+    "riderRoutesNavigationLcpMs": 5390
+  },
+  "rootCauses": [
+    {
+      "rank": 1,
+      "cause": "Six remaining independent Admin reads still used the serial Server Action dispatcher.",
+      "measuredImpact": "Today's baseline action sequence spanned 1.783s through 11.907s; initial data ended at 11.907s (previous capture 15.686s).",
+      "fix": "Counts, current employee, maintenance, incident count, deletion monitor and intake-status reads use private no-store GET handlers and their original guarded readers. Mutation actions remain Server Actions."
+    },
+    {
+      "rank": 2,
+      "cause": "Application functions ran in iad1 while the configured Supabase database pooler is in eu-central-1.",
+      "fix": "Both vercel.json files select fra1. Deployment function metadata verifies the change. No database or privilege changes.",
+      "reference": "https://vercel.com/docs/functions/configuring-functions/region"
+    },
+    {
+      "rank": 3,
+      "cause": "The global maintenance banner and footer loaded settings audit history, updater metadata, email-provider and route-optimizer health checks.",
+      "fix": "Only maintenanceMode, maintenanceScope, maintenanceMessage and appVersion are read under the existing settings.manage permission. Existing adminSettings prefix invalidation includes this query."
+    },
+    {
+      "rank": 4,
+      "cause": "Admin layout repeated identity/role queries, and MFA, policy and trusted-session checks were sequential.",
+      "fix": "Layout reuses the existing React request-scoped guarded identity. Independent security checks overlap but all must finish successfully before access or session persistence. Next control-flow signals pass through unchanged."
+    },
+    {
+      "rank": 5,
+      "cause": "Rider Rewards and CSV export loaded unrelated campaigns, assignments, rides, notifications and preferences; overview loaded unused notifications/preferences.",
+      "fix": "Financial views use the same complete authoritative Wallet statement and unchanged signed category calculations. Overview drops only unused reads. No private cross-request cache added."
+    }
+  ],
+  "source": {
+    "adminRevision": "16a5951c55e3394f705f48ecc0d4cd7fc46685c7",
+    "webRevision": "3a43ec275273aeec0f03a27c7d0699a81d1cbdaf",
+    "adminCommits": [
+      "16a5951c55e3394f705f48ecc0d4cd7fc46685c7 Share narrow shell settings between footer and maintenance banner",
+      "3232cb2ce562ce5204cc8698173ada1f9916596f Preserve Next rendering control flow during shared admin authentication",
+      "b5d50bba920b9c605ee2424f50d74db762933dda Remove remaining dashboard read queues and colocate backend rendering"
+    ],
+    "webCommits": [
+      "3a43ec275273aeec0f03a27c7d0699a81d1cbdaf Limit rider page dependencies and render near the authoritative backend"
+    ],
+    "adminFiles": [
+      "__tests__/features/adminReadConcurrency.test.ts",
+      "__tests__/features/dashboardReads.test.ts",
+      "__tests__/features/dashboardShellReads.test.ts",
+      "app/api/dashboard/reads/[resource]/route.ts",
+      "components/layout/Footer.tsx",
+      "components/layout/MaintenanceBanner.tsx",
+      "components/ops/AccountDeletionIntakeControl.tsx",
+      "components/ops/AccountDeletionMonitor.tsx",
+      "hooks/useAdminUser.ts",
+      "hooks/useIncidentsData.ts",
+      "hooks/useSettingsData.tsx",
+      "lib/admin.ts",
+      "lib/dashboard/readTransport.ts",
+      "providers/CountProvider.tsx",
+      "vercel.json"
+    ],
+    "webFiles": [
+      "__tests__/riderDashboardStatement.test.ts",
+      "__tests__/walletExport.test.ts",
+      "app/api/dashboard/rewards/export/route.ts",
+      "app/dashboard/rewards/page.tsx",
+      "components/rider/Overview.tsx",
+      "services/rider.ts",
+      "vercel.json"
+    ]
+  },
+  "deployments": {
+    "admin": {
+      "id": "dpl_2JPKh1PTkvHjPwDVVPGcMKhn2V3U",
+      "url": "movrr-admin-qw2fut1ou-movrrops-projects.vercel.app",
+      "revision": "16a5951c55e3394f705f48ecc0d4cd7fc46685c7",
+      "state": "READY",
+      "functions": [
+        {
+          "path": "index",
+          "regions": [
+            "fra1"
+          ]
+        },
+        {
+          "path": "api/dashboard/reads/[resource]",
+          "regions": [
+            "fra1"
+          ]
+        },
+        {
+          "path": "api/v1/wallet/statement",
+          "regions": [
+            "fra1"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "id": "dpl_5r7524aSdgXhYYHG3LuMNx67r4Vm",
+      "url": "movrr-kkpbw2fnz-movrrops-projects.vercel.app",
+      "revision": "3a43ec275273aeec0f03a27c7d0699a81d1cbdaf",
+      "state": "READY",
+      "functions": [
+        {
+          "path": "index",
+          "regions": [
+            "fra1"
+          ]
+        },
+        {
+          "path": "dashboard",
+          "regions": [
+            "fra1"
+          ]
+        }
+      ]
+    },
+    "archiveOnly": true,
+    "stagedFilesReviewed": true,
+    "unrelatedSourcesIncluded": false,
+    "gitAutomaticDeploymentRemainsDisabled": true
+  },
+  "measurements": {
+    "conditions": "Same authorized rider and MFA staff Chrome sessions; native DevTools; no CPU/network throttling; cache enabled. Comparisons are individual session observations, not population percentiles. Desktop viewport changed slightly after unlock (1920 to 1843 pixels), retaining the same dashboard layout breakpoint.",
+    "adminBefore": {
+      "at": "2026-10-20T13:46:38.409Z",
+      "document": {
+        "path": "/",
+        "method": "GET",
+        "type": "document",
+        "startMs": -2,
+        "durationMs": 1983,
+        "serverWaitMs": 1426,
+        "status": 200,
+        "action": false
+      },
+      "domContentLoadedMs": 2019,
+      "loadMs": 2099,
+      "initialDataRequests": 15,
+      "serializedActions": 6,
+      "lastInitialDataResponseMs": 11907,
+      "apiRequests": [
+        {
+          "path": "/api/health",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1766,
+          "durationMs": 1773,
+          "serverWaitMs": 1765,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 1783,
+          "durationMs": 1760,
+          "serverWaitMs": 1748,
+          "status": 200,
+          "action": true
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 3543,
+          "durationMs": 2220,
+          "serverWaitMs": 2217,
+          "status": 200,
+          "action": true
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 5764,
+          "durationMs": 1776,
+          "serverWaitMs": 1774,
+          "status": 200,
+          "action": true
+        },
+        {
+          "path": "/api/dashboard/reads/users",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 7581,
+          "durationMs": 2068,
+          "serverWaitMs": 2061,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/campaigns",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 7582,
+          "durationMs": 1618,
+          "serverWaitMs": 1611,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/riders",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 7582,
+          "durationMs": 2948,
+          "serverWaitMs": 2941,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/routes",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 7583,
+          "durationMs": 1609,
+          "serverWaitMs": 1603,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/campaigns",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 7584,
+          "durationMs": 1837,
+          "serverWaitMs": 1831,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/rewardStats",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 7584,
+          "durationMs": 2133,
+          "serverWaitMs": 2129,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/audit-logs",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 7585,
+          "durationMs": 1784,
+          "serverWaitMs": 1688,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/distanceStats",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 7585,
+          "durationMs": 1704,
+          "serverWaitMs": 1677,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/sessionAnalytics",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 7586,
+          "durationMs": 3172,
+          "serverWaitMs": 3162,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/rideSessions",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 7586,
+          "durationMs": 2811,
+          "serverWaitMs": 2807,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 7614,
+          "durationMs": 1407,
+          "serverWaitMs": 1370,
+          "status": 200,
+          "action": true
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 9022,
+          "durationMs": 1656,
+          "serverWaitMs": 1627,
+          "status": 200,
+          "action": true
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 10679,
+          "durationMs": 1228,
+          "serverWaitMs": 1225,
+          "status": 200,
+          "action": true
+        }
+      ]
+    },
+    "adminAfter": {
+      "at": "2026-10-20T14:30:48.178Z",
+      "document": {
+        "path": "/",
+        "method": "GET",
+        "type": "document",
+        "startMs": -2,
+        "durationMs": 714,
+        "serverWaitMs": 687,
+        "status": 200,
+        "action": false
+      },
+      "domContentLoadedMs": 1053,
+      "loadMs": 1231,
+      "initialDataRequests": 15,
+      "serializedActions": 0,
+      "lastInitialDataResponseMs": 2374,
+      "apiRequests": [
+        {
+          "path": "/api/dashboard/reads/adminUser",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1308,
+          "durationMs": 410,
+          "serverWaitMs": 362,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/maintenance",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1311,
+          "durationMs": 491,
+          "serverWaitMs": 434,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/health",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1313,
+          "durationMs": 552,
+          "serverWaitMs": 494,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/counts",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1315,
+          "durationMs": 486,
+          "serverWaitMs": 429,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/users",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1572,
+          "durationMs": 527,
+          "serverWaitMs": 472,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/campaigns",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1573,
+          "durationMs": 597,
+          "serverWaitMs": 530,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/riders",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1575,
+          "durationMs": 741,
+          "serverWaitMs": 659,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/routes",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1577,
+          "durationMs": 622,
+          "serverWaitMs": 537,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/campaigns",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1578,
+          "durationMs": 519,
+          "serverWaitMs": 435,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/rewardStats",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1580,
+          "durationMs": 623,
+          "serverWaitMs": 542,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/audit-logs",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1585,
+          "durationMs": 526,
+          "serverWaitMs": 441,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/distanceStats",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1587,
+          "durationMs": 583,
+          "serverWaitMs": 509,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/sessionAnalytics",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1589,
+          "durationMs": 555,
+          "serverWaitMs": 481,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/deletionIntake",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1751,
+          "durationMs": 551,
+          "serverWaitMs": 438,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/deletionMonitor",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1753,
+          "durationMs": 486,
+          "serverWaitMs": 362,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/rideSessions",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1756,
+          "durationMs": 594,
+          "serverWaitMs": 472,
+          "status": 200,
+          "action": false
+        },
+        {
+          "path": "/api/dashboard/reads/openIncidents",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 1758,
+          "durationMs": 616,
+          "serverWaitMs": 492,
+          "status": 200,
+          "action": false
+        }
+      ]
+    },
+    "riderBefore": {
+      "at": "2026-10-20T13:52:03.801Z",
+      "document": {
+        "path": "/dashboard",
+        "method": "GET",
+        "type": "document",
+        "startMs": -2,
+        "durationMs": 5314,
+        "serverWaitMs": 3394,
+        "status": 200,
+        "action": false
+      },
+      "domContentLoadedMs": 5325,
+      "loadMs": 5446,
+      "initialDataRequests": 0,
+      "serializedActions": 0,
+      "lastInitialDataResponseMs": null,
+      "apiRequests": []
+    },
+    "riderAfter": {
+      "at": "2026-10-20T14:12:48.613Z",
+      "document": {
+        "path": "/dashboard",
+        "method": "GET",
+        "type": "document",
+        "startMs": -2,
+        "durationMs": 1469,
+        "serverWaitMs": 1115,
+        "status": 200,
+        "action": false
+      },
+      "domContentLoadedMs": 1498,
+      "loadMs": 1651,
+      "initialDataRequests": 0,
+      "serializedActions": 0,
+      "lastInitialDataResponseMs": null,
+      "apiRequests": []
+    },
+    "browser": {
+      "source": "Observed native Chrome DevTools live metrics; actual content checked after each navigation",
+      "riderBefore": {
+        "dashboardReloadLcpMs": 5370,
+        "routesSoftNavigationLcpMs": 9390
+      },
+      "riderAfter": {
+        "firstRoutesReloadLcpMs": 4100,
+        "routesWarmNavigationLcpMs": [
+          1420
+        ],
+        "dashboardSoftNavigationLcpMs": [
+          2370,
+          2500
+        ],
+        "cls": 0
+      },
+      "note": "The initial skeleton produced 40-50ms early soft-navigation metrics; those are excluded. These are session samples, not field p75 or controlled CPU benchmarks."
+    },
+    "database": {
+      "schemaIndexAndGrantChanges": false,
+      "previousRepresentativePlans": {
+        "populatedRiderLookupMs": 11.714,
+        "operationalPageMs": 39.219
+      },
+      "interpretation": "Existing representative database execution was tens of milliseconds, versus multi-second authenticated API and action round trips. No new database speed-up is claimed."
+    },
+    "structuralQueryChanges": {
+      "riderOverviewServiceReads": "6 to 4 (notifications/preferences removed)",
+      "riderRewardsAndExportServiceReads": "6 to 1 (Wallet statement only)",
+      "adminLayoutDuplicateIdentityAndRoleReads": "2 removed within each render",
+      "adminShellSettings": "No external health probes or audit/updater metadata reads on global navigation"
+    }
+  },
+  "verification": {
+    "admin": {
+      "testFiles": 63,
+      "tests": 677,
+      "typecheck": "passed",
+      "lint": "passed (repository script is TypeScript)",
+      "productionBuild": "passed locally and in final Vercel candidate"
+    },
+    "rider": {
+      "testFiles": 12,
+      "tests": 85,
+      "typecheck": "passed",
+      "changedFileEslint": "passed",
+      "productionBuild": "passed locally and on Vercel",
+      "fullLint": "18 existing explicit-any errors in untouched services/advertiser.ts; two existing unused-parameter warnings"
+    },
+    "focus": "Concurrent security checks wait for every guard, MFA denial, auth storage failures, framework control flow, existing reader authorization, no-store responses, narrow maintenance data, Wallet signed reconciliation, unavailable unrelated services, denial before financial reads, private cache clearing on account switching/logout.",
+    "publicBefore": {
+      "at": "2026-10-20T14:02:21.808Z",
+      "rows": [
+        {
+          "url": "https://admin.movrr.nl/",
+          "status": 307,
+          "ms": 211,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://admin.movrr.nl/api/dashboard/reads/adminUser",
+          "status": 307,
+          "ms": 148,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://admin.movrr.nl/api/dashboard/reads/maintenance",
+          "status": 307,
+          "ms": 41,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://admin.movrr.nl/api/dashboard/reads/counts",
+          "status": 307,
+          "ms": 43,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://admin.movrr.nl/api/dashboard/reads/deletionIntake",
+          "status": 307,
+          "ms": 44,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/wallet/statement",
+          "status": 401,
+          "ms": 202,
+          "cacheControl": "private, no-store, max-age=0",
+          "redirectPath": null
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/government/me",
+          "status": 401,
+          "ms": 235,
+          "cacheControl": "no-store",
+          "redirectPath": null
+        },
+        {
+          "url": "https://app.movrr.nl/dashboard",
+          "status": 307,
+          "ms": 149,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://app.movrr.nl/dashboard/rewards",
+          "status": 307,
+          "ms": 77,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://app.movrr.nl/dashboard/routes",
+          "status": 307,
+          "ms": 36,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        }
+      ]
+    },
+    "publicAfter": {
+      "at": "2026-10-20T14:26:02.690Z",
+      "rows": [
+        {
+          "url": "https://admin.movrr.nl/",
+          "status": 307,
+          "ms": 341,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://admin.movrr.nl/api/dashboard/reads/adminUser",
+          "status": 307,
+          "ms": 69,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://admin.movrr.nl/api/dashboard/reads/maintenance",
+          "status": 307,
+          "ms": 36,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://admin.movrr.nl/api/dashboard/reads/counts",
+          "status": 307,
+          "ms": 36,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://admin.movrr.nl/api/dashboard/reads/deletionIntake",
+          "status": 307,
+          "ms": 48,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/wallet/statement",
+          "status": 401,
+          "ms": 61,
+          "cacheControl": "private, no-store, max-age=0",
+          "redirectPath": null
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/government/me",
+          "status": 401,
+          "ms": 77,
+          "cacheControl": "no-store",
+          "redirectPath": null
+        },
+        {
+          "url": "https://app.movrr.nl/dashboard",
+          "status": 307,
+          "ms": 105,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://app.movrr.nl/dashboard/rewards",
+          "status": 307,
+          "ms": 82,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        },
+        {
+          "url": "https://app.movrr.nl/dashboard/routes",
+          "status": 307,
+          "ms": 43,
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "redirectPath": "/auth/signin"
+        }
+      ]
+    },
+    "runtime": {
+      "admin": {
+        "window": {
+          "start": "2026-10-20T14:27:07.320Z",
+          "end": "2026-10-20T14:32:07.320Z"
+        },
+        "errorRecords": []
+      },
+      "rider": {
+        "window": {
+          "start": "2026-10-20T14:02:20.750Z",
+          "end": "2026-10-20T14:32:20.750Z"
+        },
+        "errorRecords": []
+      }
+    },
+    "browserAcceptance": {
+      "method": "Actual existing authenticated Chrome sessions, read-only navigation and search; no credentials or tokens extracted",
+      "rider": [
+        {
+          "path": "/dashboard",
+          "result": "Real 44-point balance and actual empty workload state"
+        },
+        {
+          "path": "/dashboard/routes",
+          "result": "Real zero assignments, unavailable compliance and last recorded mobile sync"
+        },
+        {
+          "path": "/dashboard/rewards",
+          "result": "44 available, lifetime and awarded points; two real 22-point ledger entries; signed breakdown unchanged"
+        },
+        {
+          "path": "/dashboard/notifications",
+          "result": "Two stored 22-point reward notices and enabled stored preference"
+        },
+        {
+          "path": "/dashboard/settings",
+          "result": "Real profile, city, English preference, Europe/Amsterdam reporting timezone and enabled product notifications; no saves performed"
+        },
+        {
+          "path": "/dashboard/rides",
+          "result": "Real historical completed/verified rides, 3km and 22 committed points each; unknown settlement/historical configuration and unavailable cancelled-ride evidence preserved"
+        },
+        {
+          "path": "/dashboard/campaigns",
+          "result": "Canonical no campaigns assigned state"
+        },
+        {
+          "path": "/dashboard/rewards/shop",
+          "result": "Web purchasing unavailable; existing real catalog entries remain currently unavailable; no redemption action"
+        }
+      ],
+      "admin": [
+        {
+          "path": "/",
+          "result": "Real 22 users, 18 active riders, 25881 awarded points, 42.87km and 8.15kg comparison, unchanged"
+        },
+        {
+          "path": "/ride-sessions",
+          "result": "66 real records; rider search yields 51 records and HTTP 200; verification/settlement records retained"
+        },
+        {
+          "path": "/rewards",
+          "result": "25881 awarded, 920 redeemed, 24961 outstanding, 36 transactions unchanged; no transactions executed"
+        }
+      ],
+      "security": "Supplied rider and MFA super-administrator sessions exercised. Anonymous route/API boundaries checked separately. Alternate roles/accounts, live account switching and logout were not performed; focused regression suites cover those boundaries.",
+      "errors": "No page render error encountered on the verified routes. Missing evidence continues to display unavailable/unknown rather than fabricated values. Backend failure paths tested without causing a production outage.",
+      "adminFinalRelease": "Overview, ride sessions and rewards rechecked after final 16a5951 deployment; deletion intake remains Disabled, no deletion requests; narrow shell settings single read confirmed in final HAR. Earlier searched rider result also checked on previous performance candidate."
+    }
+  },
+  "restrictions": {
+    "mobileModified": false,
+    "uiRedesign": false,
+    "newDependencies": false,
+    "migrations": false,
+    "privilegeChanges": false,
+    "financialTransactions": false,
+    "shopActivated": false,
+    "deletionOperatingStateChanged": false,
+    "easOrOta": false
+  },
+  "limitations": [
+    "Observed first-load cold latency remains above the targets. These samples do not establish p75 below 800ms or navigation below one second.",
+    "Existing authoritative authentication, MFA/session policy and financial consistency checks remain on the request path; no financial or authorization results are shared across accounts.",
+    "Only the supplied rider and super-administrator sessions were exercised live; other roles and live logout/account switching remain covered by regression tests rather than additional production identities.",
+    "No complete CPU/hydration trace or low-end-device benchmark; no client CPU or bundle reduction claim.",
+    "Full rider lint retains existing unrelated advertiser errors."
+  ]
+}

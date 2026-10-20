@@ -1,0 +1,52 @@
+{
+  "updatedAt": "2026-10-20",
+  "scope": "MOVRR web and Admin launch follow-up; existing Mobile work is unchanged",
+  "evidence": "../verification/final-dashboard-performance/production.json",
+  "milestones": [
+    {
+      "name": "P1 authenticated rendering remediation",
+      "status": "deployed and previously verified",
+      "followUp": "No render failures encountered during the current authenticated route checks."
+    },
+    {
+      "name": "Targeted final dashboard performance corrections",
+      "status": "deployed and verified in the supplied production sessions",
+      "results": {
+        "adminDocumentMs": 714,
+        "adminFinalInitialDataMs": 2374,
+        "adminSerializedReadActions": 0,
+        "riderDocumentMs": 1469,
+        "riderWarmRoutesNavigationLcpMs": 1420,
+        "riderFirstRoutesReloadLcpMs": 4100
+      },
+      "limits": "Individual session observations establish a material improvement, not consistent population p75 performance. Cold loads and some navigation remain above the engineering targets."
+    },
+    {
+      "name": "Remaining launch acceptance",
+      "status": "open",
+      "work": [
+        "Exercise additional authorized rider, employee-role and organisation identities for live isolation acceptance; focused regression tests already pass.",
+        "Exercise live account switching and logout using authorized test accounts; private cache cancellation and clearing tests already pass.",
+        "Collect repeated cold and warm production observations across representative sessions before claiming p75 below 800ms or primary navigation below one second.",
+        "Resolve existing untouched rider advertiser lint errors through a separately scoped correction."
+      ]
+    },
+    {
+      "name": "Separate UI/UX improvement phase",
+      "status": "next planned review",
+      "work": "Review the approved design systems separately; this release made no redesign."
+    },
+    {
+      "name": "Launch decision",
+      "status": "pending owner review of production evidence and remaining acceptance",
+      "work": "Retain established release safeguards and existing approved backend contracts. No additional staging prerequisite or repeat of completed X01-X17/F1-F13 audits is introduced."
+    }
+  ],
+  "operatingStates": {
+    "publicShopRedemption": "unchanged; not activated",
+    "selfServiceDeletionIntake": "disabled; unchanged",
+    "financialTestTransactions": "none executed",
+    "databaseSchemaAndPrivileges": "unchanged",
+    "mobileRuntimeAndReleases": "unchanged; no EAS or OTA work"
+  }
+}
