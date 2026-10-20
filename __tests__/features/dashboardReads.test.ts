@@ -58,9 +58,9 @@ it.each([['counts','counts'],['adminUser','adminUser'],['settings','settings'],[
   expect(readers[reader]).toHaveBeenCalledOnce();
 });
 it("loads only maintenance fields, preserves the settings permission, and avoids external probes", async () => {
-  readers.settingsRows.mockResolvedValue({general:{maintenanceMode:true,maintenanceScope:'global',maintenanceMessage:'Scheduled work',supportEmail:'private'}});
+  readers.settingsRows.mockResolvedValue({general:{maintenanceMode:true,maintenanceScope:'global',maintenanceMessage:'Scheduled work',appVersion:'0.1.0',supportEmail:'private'}});
   const result = await read('maintenance');
-  expect(await result.json()).toEqual({maintenanceMode:true,maintenanceScope:'global',maintenanceMessage:'Scheduled work'});
+  expect(await result.json()).toEqual({maintenanceMode:true,maintenanceScope:'global',maintenanceMessage:'Scheduled work',appVersion:'0.1.0'});
   expect(readers.permission).toHaveBeenCalledWith('settings.manage');
   expect(readers.settings).not.toHaveBeenCalled();
   readers.permission.mockRejectedValue(new Error('restricted'));

@@ -1,0 +1,28 @@
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { QueryClient } from "@tanstack/react-query";
+import { expect, it, vi } from "vitest";
+const state=vi.hoisted(()=>({queries:[] as Array<{queryKey:readonly unknown[],queryFn:()=>Promise<unknown>,staleTime:number}>,read:vi.fn()}));
+vi.mock("@tanstack/react-query",async original=>({...await original<typeof import('@tanstack/react-query')>(),useQuery:(options:typeof state.queries[number])=>{state.queries.push(options);return {data:undefined,isLoading:true,isError:false};}}));
+vi.mock("@/hooks/useShouldHideComponent",()=>({default:()=>false}));
+vi.mock("@/lib/dashboard/readTransport",()=>({dashboardRead:state.read}));
+import Footer from "@/components/layout/Footer";
+import MaintenanceBanner from "@/components/layout/MaintenanceBanner";
+it('deduplicates footer and banner reads, and refreshes both when settings are invalidated',async()=>{
+  renderToStaticMarkup(React.createElement(React.Fragment,null,React.createElement(MaintenanceBanner),React.createElement(Footer)));
+  const shell=state.queries.filter(q=>q.queryKey[0]==='adminSettings');
+  expect(shell).toHaveLength(2);
+  const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
+  let release!: (value:unknown)=>void;
+  state.read.mockImplementation(()=>new Promise(resolve=>{release=resolve;}));
+  const first=client.fetchQuery(shell[0]);
+  const second=client.fetchQuery(shell[1]);
+  expect(state.read).toHaveBeenCalledTimes(1);
+  expect(state.read).toHaveBeenCalledWith('maintenance');
+  release({appVersion:'0.1.0',maintenanceMode:false});
+  await Promise.all([first,second]);
+  await client.invalidateQueries({queryKey:['adminSettings']});
+  expect(client.getQueryState(shell[0].queryKey)?.isInvalidated).toBe(true);
+  expect(client.getQueryState(shell[1].queryKey)?.isInvalidated).toBe(true);
+  client.clear();
+});

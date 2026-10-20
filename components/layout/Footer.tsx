@@ -5,11 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
 import useShouldHideComponent from "@/hooks/useShouldHideComponent";
-import { useSettingsData } from "@/hooks/useSettingsData";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 
 const DashboardFooter = () => {
   const shouldHideFooter = useShouldHideComponent();
-  const { data: settingsData } = useSettingsData({
+  const { data: settingsData } = useQuery({
+    queryKey: ["adminSettings", "maintenance"],
+    queryFn: () => dashboardRead("maintenance"),
+    staleTime: 1000 * 60,
     enabled: !shouldHideFooter,
   });
   const { data, isLoading, isError } = useQuery({
@@ -54,7 +57,7 @@ const DashboardFooter = () => {
 
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="text-xs font-mono">
-            v{settingsData?.values?.general?.appVersion ?? "0.1.0"}
+            v{settingsData?.appVersion ?? "0.1.0"}
           </Badge>
           <div className="flex items-center gap-2">
             <div className="relative flex h-2 w-2 shrink-0 items-center justify-center">

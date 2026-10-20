@@ -20,7 +20,7 @@ type Readers = {
   openIncidents: typeof getOpenIncidentCount;
   deletionMonitor: typeof getAccountDeletionMonitor;
   deletionIntake: typeof getDeletionIntakeControl;
-  maintenance: () => Promise<Pick<AdminSettingsValues["general"], "maintenanceMode" | "maintenanceScope" | "maintenanceMessage">>;
+  maintenance: () => Promise<Pick<AdminSettingsValues["general"], "maintenanceMode" | "maintenanceScope" | "maintenanceMessage" | "appVersion">>;
   users: typeof getUsers;
   riders: typeof getRiders;
   campaigns: typeof getCampaigns;

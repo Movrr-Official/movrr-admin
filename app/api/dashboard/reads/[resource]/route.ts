@@ -49,8 +49,8 @@ export async function GET(request: Request, context: { params: Promise<{ resourc
       case "maintenance": {
         // Same permission as settings; no audits, provider probes or metadata.
         await requireCapability("settings.manage");
-        const { maintenanceMode, maintenanceScope, maintenanceMessage } = mergeSettingsRows(await loadSettingsRows()).general;
-        result = { maintenanceMode, maintenanceScope, maintenanceMessage };
+        const { maintenanceMode, maintenanceScope, maintenanceMessage, appVersion } = mergeSettingsRows(await loadSettingsRows()).general;
+        result = { maintenanceMode, maintenanceScope, maintenanceMessage, appVersion };
         break;
       }
       case "users": result = await getUsers(userFiltersSchema.optional().parse(args[0]), ids.parse(args[1])); break;
