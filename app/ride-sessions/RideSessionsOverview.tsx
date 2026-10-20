@@ -508,7 +508,7 @@ export default function RideSessionsOverview() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="mb-2 text-xs text-muted-foreground">Equivalent car journey WTW estimate; not actual emissions avoided. Verified completed sessions with settlement evidence only.</p>
+                    <p className="mb-2 text-xs text-muted-foreground">Equivalent car journey WTW estimate; not actual emissions avoided. Completed sessions with backend-verified recorded distance, including verified history.</p>
                     <div className="h-48">
                       <ResponsiveContainer width="100%" height="100%">
                         <RechartsAreaChart

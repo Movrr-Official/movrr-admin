@@ -19,14 +19,16 @@ async function main(){
  // Multiple bonus rows and incorrect legacy metadata cannot duplicate or supply distance.
  for(const source of ['standard_ride','campaign_ride','free_ride_bonus'])await db`INSERT INTO reward_transactions(id,rider_id,points_earned,source,metadata) VALUES(${id()},${rider},100,${source},${db.json({rideSessionId:standard,totalDistanceKm:9999})})`;
  const get=rid=>db`SELECT * FROM get_impact_summary(${rid})`;
- const own=(await get(rider))[0];equal(Number(own.total_rides),4);equal(Number(own.total_distance_km),15.04);equal(Number(own.co2_saved_kg),2.86);
- equal(Number((await get(foreign))[0].co2_saved_kg),0.76);equal(Number((await get(null))[0].co2_saved_kg),3.62);
+ equal(Number((await get(rider))[0].total_rides),4);
+ await db.begin(tx=>tx.unsafe(fs.readFileSync(path.join(__dirname,'062_impact_verified_history_coverage.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'')));
+ const own=(await get(rider))[0];equal(Number(own.total_rides),5);equal(Number(own.total_distance_km),25.04);equal(Number(own.co2_saved_kg),4.76);
+ equal(Number((await get(foreign))[0].co2_saved_kg),0.76);equal(Number((await get(null))[0].co2_saved_kg),5.52);
  equal((await db`SELECT * FROM get_impact_ride_evidence(${rider}) WHERE session_id=${boosted}`).length,1);
  const days=await db`SELECT (completed_at AT TIME ZONE 'Europe/Amsterdam')::date::text reporting_day,count(*) n FROM get_impact_ride_evidence(${rider}) GROUP BY 1 ORDER BY 1`;
- equal(days.map(x=>[x.reporting_day,Number(x.n)]),[['2026-03-29',3],['2026-03-30',1]]);
+ equal(days.map(x=>[x.reporting_day,Number(x.n)]),[['2026-03-29',4],['2026-03-30',1]]);
  const daily=await db`SELECT * FROM get_impact_daily(366)`;
  equal(daily.map(x=>x.date),['2026-03-29','2026-03-30']);
- equal(daily.map(x=>Number(x.co2SavedKg)),[2.67,0.95]);
+ equal(daily.map(x=>Number(x.co2SavedKg)),[4.57,0.95]);
  await deny(()=>db`SELECT * FROM get_impact_daily(0)`,'22023');
  const auth=(actor,fn)=>db.begin(async tx=>{await tx.unsafe('SET LOCAL ROLE authenticated');await tx`SELECT set_config('request.jwt.claim.sub',${actor},true),set_config('request.jwt.claims',${JSON.stringify({sub:actor,role:'authenticated'})},true)`;return fn(tx)});
  const me=await auth(user,async tx=>(await tx`SELECT * FROM get_lifetime_impact_summary()`)[0]);equal(me,own);
@@ -39,7 +41,7 @@ async function main(){
  await db`UPDATE "user" SET status='suspended' WHERE id=${user}`;
  await deny(()=>auth(user,tx=>tx`SELECT * FROM get_lifetime_impact_summary()`),'42501');
  await deny(()=>db.begin(async tx=>{await tx.unsafe('SET LOCAL ROLE anon');return tx`SELECT get_impact_methodology()`}),'42501');
- const method=(await db`SELECT get_impact_methodology() m`)[0].m;equal(method.methodologyId,'MOVRR-NL-CAR-COMPARISON-2026-v1');equal(method.factorKgCo2ePerVehicleKm,0.190);equal(method.actualAvoidedEmissions,false);
+ const method=(await db`SELECT get_impact_methodology() m`)[0].m;equal(method.methodologyId,'MOVRR-NL-CAR-COMPARISON-2026-v2');equal(method.factorKgCo2ePerVehicleKm,0.190);equal(method.actualAvoidedEmissions,false);
  equal(Number((await db`SELECT count(*) n FROM reward_transactions`)[0].n),3);equal(Number((await db`SELECT count(*) n FROM rider_badge_award`)[0].n),0);
  equal(Number((await db`SELECT total_distance_meters FROM ride_session WHERE id=${standard}`)[0].total_distance_meters),10000);
  console.log(JSON.stringify({assertions:n,database:'isolated PostgreSQL 17',productionMutations:false}));
