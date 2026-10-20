@@ -177,6 +177,15 @@ const languageOptions = [
   { value: "es", label: "Spanish" },
 ];
 
+const statusDescriptions = {
+  active: "User can access the platform",
+  pending: "Awaiting activation",
+  inactive: "Account is disabled",
+};
+
+const roleLabel = (role: string) =>
+  role.split("_").map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
+
 export default function CreateUserPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -493,23 +502,23 @@ export default function CreateUserPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4">
                     <FormField
                       control={form.control}
                       name="role"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="content-start">
                           <FormLabel className="text-sm font-semibold flex items-center gap-2">
                             User Role{" "}
                             <span className="text-destructive">*</span>
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
-                                <SelectValue placeholder="Select role" />
+                                <SelectValue placeholder="Select role">{roleLabel(field.value)}</SelectValue>
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -537,14 +546,7 @@ export default function CreateUserPage() {
                                 <SelectItem key={roleValue} value={roleValue}>
                                   <div className="flex flex-col">
                                     <span className="font-medium self-start">
-                                      {roleValue
-                                        .split("_")
-                                        .map(
-                                          (part) =>
-                                            part.charAt(0).toUpperCase() +
-                                            part.slice(1),
-                                        )
-                                        .join(" ")}
+                                      {roleLabel(roleValue)}
                                     </span>
                                     <span className="text-xs text-muted-foreground">
                                       {roleDescriptions[roleValue]}
@@ -567,18 +569,18 @@ export default function CreateUserPage() {
                       control={form.control}
                       name="status"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="content-start">
                           <FormLabel className="text-sm font-semibold flex items-center gap-2">
                             Account Status{" "}
                             <span className="text-destructive">*</span>
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
-                                <SelectValue placeholder="Select status" />
+                                <SelectValue placeholder="Select status">{field.value.charAt(0).toUpperCase() + field.value.slice(1)}</SelectValue>
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -614,6 +616,9 @@ export default function CreateUserPage() {
                               </SelectItem>
                             </SelectContent>
                           </Select>
+                          <FormDescription className="text-xs">
+                            {statusDescriptions[field.value]}
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
