@@ -34,6 +34,15 @@ DO $guards$ DECLARE f record; body text; patched text; BEGIN
   IF body NOT LIKE '%PERFORM public.assert_active_account();%' THEN
    IF f.lanname='plpgsql' THEN
     patched:=regexp_replace(body,'\mBEGIN\M',E'BEGIN\n PERFORM public.assert_active_account();','i');
+   ELSIF f.proname='execute_my_ride_time_settlement' AND f.lanname='sql' THEN
+    -- Production uses a SQL wrapper. Keep its signature, ACL and delegation;
+    -- convert only this inspected body so the security guard runs first.
+    IF pg_get_function_identity_arguments(f.oid)<>'p_session uuid, p_token uuid'
+      OR pg_get_function_result(f.oid)<>'jsonb'
+      OR regexp_replace((SELECT prosrc FROM pg_proc WHERE oid=f.oid),'\s','','g')<>'SELECTpublic.execute_ride_time_settlement(p_session,p_token);' THEN
+     RAISE EXCEPTION 'Settlement wrapper drift requires review'; END IF;
+    EXECUTE 'CREATE OR REPLACE FUNCTION public.execute_my_ride_time_settlement(p_session uuid,p_token uuid) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='''' AS $guard$ BEGIN PERFORM public.assert_active_account(); RETURN public.execute_ride_time_settlement(p_session,p_token); END $guard$';
+    CONTINUE;
    ELSIF f.proname IN ('current_rider_id','get_authenticated_rider_id') AND f.lanname='sql' THEN
     patched:=replace(body,'auth.uid()','CASE WHEN public.account_is_active() THEN auth.uid() ELSE NULL END');
    ELSE RAISE EXCEPTION 'Unsupported guarded function contract: %',f.proname;

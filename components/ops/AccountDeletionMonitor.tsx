@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useCapability } from "@/hooks/useAdminUser";
 import { AccountDeletionReview } from "@/components/ops/AccountDeletionReview";
 import { AccountDeletionRestorePreparation } from "@/components/ops/AccountDeletionRestorePreparation";
+import { AccountDeletionIntakeControl } from "@/components/ops/AccountDeletionIntakeControl";
 import type { DeletionReviewCategory } from "@/app/actions/accountDeletion";
 
 type MonitorRow = AccountDeletionReceipt & { stale?: boolean; openReviews?: number };
@@ -47,6 +48,7 @@ export function AccountDeletionMonitor() {
   return <Card className="border-border">
     <CardHeader><CardTitle>Account deletion review</CardTitle></CardHeader>
     <CardContent className="space-y-3">
+      <AccountDeletionIntakeControl />
       <p className="text-sm text-muted-foreground">Contract v1. Destructive processing and retention purges require verified schema coverage and policy approvals. No schedule is enabled by this panel.</p>
       <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Refresh deletion requests</Button>
       {canRecover && <AccountDeletionRestorePreparation onPrepared={() => query.refetch()} />}

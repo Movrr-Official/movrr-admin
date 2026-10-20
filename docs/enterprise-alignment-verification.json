@@ -87,7 +87,7 @@
   "orderedSql": [
     {
       "path": "movrr-admin/scripts/055_alignment_security.sql",
-      "normalizedLfSha256": "4e4ce64695a8ac71fd861dd1c973d63d149c4b9b1d6bd3d473719ae8e54c8ece"
+      "normalizedLfSha256": "4ae72f911a438d45804d99e5d51c58687b99f5216d0c630b9df64f2edb3821e2"
     },
     {
       "path": "movrr-mobile/scripts/093_alignment_accessory_custody.sql",
@@ -108,6 +108,10 @@
     {
       "path": "movrr-admin/scripts/059_alignment_impact.sql",
       "normalizedLfSha256": "d8b6a3cf8d27c8967286b7fc41b357a6059ea84ad7afee3ce6a102b109284a37"
+    },
+    {
+      "path": "movrr-admin/scripts/060_account_deletion_intake_control.sql",
+      "normalizedLfSha256": "84a37d0a4fd783d2f03a867dd41d10644c34e0d35cdeec20f8a03dd41132e469"
     }
   ],
   "externalAcceptance": [
@@ -116,5 +120,49 @@
     "Environmental methodology product-policy approval",
     "Staging/browser/provider acceptance on the released revisions",
     "Mobile-owner triage of unchanged history timeout and obsolete offline Rewards test fixtures"
-  ]
+  ],
+  "focusedReleaseReadiness": {
+    "date": "2026-10-20",
+    "decision": "NO-GO pending protected staging, coordinated cutover/recovery acceptance and rollout authorization",
+    "deletionIntakeControl": "implemented in source; production remains disabled; no policy approvals bypassed",
+    "impactPolicy": "proposed, unapproved; no production calculations or awards changed",
+    "productionDeletionRequestsEnabled": false,
+    "publicShopRedemptionEnabled": false,
+    "productionCustodyConflicts": 0,
+    "productionDriftCheck": "passed including four settlement entry points",
+    "migrationRegression": "055 corrected for production SQL execute_my_ride_time_settlement wrapper",
+    "postgresAssertions": 44,
+    "postgresFixture": "actual function contracts and ordered migrations, minimal deletion tables; not a production clone",
+    "adminFocused": {
+      "previousDeletionTests": 48,
+      "newIntakeTests": 11,
+      "typecheck": "passed",
+      "build": "passed"
+    },
+    "webFocused": {
+      "tests": 14,
+      "typecheck": "passed",
+      "changedPageLint": "passed",
+      "build": "passed"
+    },
+    "mobile": {
+      "baseline": "8d4ece2",
+      "current": "d42129978ddd34cd38e0783c45ef22fe3c549beb",
+      "runtimeChanged": false,
+      "baselineReproducedFailures": 5,
+      "currentFocusedPassed": 42,
+      "currentFocusedFailed": 4,
+      "ignoredCanonicalFixtureDiagnostic": "4 Rewards cases pass with canonical key/object and deterministic retry fixture; no tracked changes"
+    },
+    "environmentalBadge": {
+      "code": "co2_50",
+      "catalogVisible": true,
+      "ruleType": null,
+      "availability": "upcoming",
+      "dependency": "impact_methodology",
+      "excludedFromAwardAllowlist": true
+    },
+    "deploymentsPerformed": false,
+    "alignmentDatabaseRegressionAssertions": 88
+  }
 }

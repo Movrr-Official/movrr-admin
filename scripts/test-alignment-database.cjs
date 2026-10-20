@@ -26,7 +26,7 @@ const equal = (a, b) => {
   },
   id = () => crypto.randomUUID();
 const q = (x) => '"' + x.replaceAll('"', '""') + '"';
-async function fixture() {
+async function fixture(db) {
   const schema = JSON.parse(
     fs.readFileSync(path.join(__dirname, "fixtures/alignment/schema.json"), "utf8"),
   );
@@ -116,7 +116,7 @@ async function fixture() {
 async function main() {
   await root.unsafe("CREATE DATABASE " + name);
   db = postgres({ ...options, database: name });
-  await fixture();
+  await fixture(db);
   const user = id(),
     rider = id(),
     other = id(),
@@ -731,7 +731,8 @@ async function main() {
     }),
   );
 }
-main()
+module.exports = { fixture };
+if (require.main === module) main()
   .catch((e) => {
     console.error(e.stack, e.where ?? "", e.position ?? "");
     process.exitCode = 1;

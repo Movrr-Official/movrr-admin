@@ -29,6 +29,33 @@ AS $function$
   );
 $function$;
 
+CREATE OR REPLACE FUNCTION public.claim_my_ride_settlement(p_session_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE st public.ride_reward_settlement;
+BEGIN
+ SELECT j.* INTO st FROM public.ride_reward_settlement j JOIN public.rider r ON r.id=j.rider_id
+ JOIN public.ride_session s ON s.id=j.ride_session_id
+ WHERE j.ride_session_id=p_session_id AND r.user_id=auth.uid() AND s.status IN ('completed','rejected') FOR UPDATE OF j;
+ IF st.ride_session_id IS NULL OR st.status='settled' OR st.next_attempt_at>clock_timestamp() OR st.lease_until>clock_timestamp() THEN RETURN NULL;END IF;
+ PERFORM public.account_deletion_assert_writable(auth.uid());
+ IF st.status='awaiting_verification' OR st.award_status='manual_review' THEN
+  IF NOT public.ride_settlement_can_reassess(p_session_id) THEN RETURN NULL;END IF;
+ END IF;
+ IF st.attempts>=8 THEN
+  UPDATE public.ride_reward_settlement SET status='awaiting_verification',award_status='manual_review',last_error='settlement_retry_exhausted',
+   lease_token=NULL,lease_until=NULL,next_attempt_at='infinity',updated_at=clock_timestamp() WHERE ride_session_id=p_session_id;
+  RETURN NULL;
+ END IF;
+ UPDATE public.ride_reward_settlement SET status='calculating',attempts=attempts+1,lease_token=gen_random_uuid(),
+  lease_until=clock_timestamp()+interval '5 minutes',last_error=NULL,award_status=NULL,updated_at=clock_timestamp()
+ WHERE ride_session_id=p_session_id RETURNING * INTO st;
+ RETURN to_jsonb(st);
+END $function$;
+
 CREATE OR REPLACE FUNCTION public.confirm_campaign_accessory_installed(p_assignment_id uuid)
  RETURNS void
  LANGUAGE plpgsql
@@ -81,6 +108,58 @@ AS $function$
   WHERE r.user_id = auth.uid()
   LIMIT 1;
 $function$;
+
+CREATE OR REPLACE FUNCTION public.enqueue_my_ride_settlement(p_session_id uuid, p_context jsonb)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE v_rider uuid;
+BEGIN
+  SELECT s.rider_id INTO v_rider FROM ride_session s JOIN rider r ON r.id=s.rider_id
+  WHERE s.id=p_session_id AND r.user_id=auth.uid();
+  IF v_rider IS NULL THEN RAISE EXCEPTION 'ride not owned' USING ERRCODE='42501'; END IF;
+  IF p_context->'params'->>'sessionId' IS DISTINCT FROM p_session_id::text THEN
+    RAISE EXCEPTION 'settlement identity mismatch';
+  END IF;
+  INSERT INTO ride_reward_settlement(ride_session_id,rider_id,context)
+  VALUES(p_session_id,v_rider,p_context) ON CONFLICT(ride_session_id) DO NOTHING;
+END $function$;
+
+CREATE OR REPLACE FUNCTION public.execute_my_ride_time_settlement(p_session uuid, p_token uuid)
+ RETURNS jsonb
+ LANGUAGE sql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$ SELECT public.execute_ride_time_settlement(p_session,p_token);$function$;
+
+CREATE OR REPLACE FUNCTION public.finish_my_ride_settlement(p_session_id uuid, p_token uuid, p_award_status text, p_error text DEFAULT NULL::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE st public.ride_reward_settlement;technical boolean;
+BEGIN
+ SELECT x.* INTO st FROM public.ride_reward_settlement x JOIN public.rider r ON r.id=x.rider_id
+ WHERE x.ride_session_id=p_session_id AND r.user_id=auth.uid() FOR UPDATE OF x;
+ IF st.ride_session_id IS NULL THEN RAISE EXCEPTION USING ERRCODE='42501',MESSAGE='ride not owned';END IF;
+ IF st.status='settled' THEN RETURN (to_jsonb(st)-'context'-'lease_token') || jsonb_build_object('summary',public.get_my_ride_summary(p_session_id));END IF;
+ IF st.status<>'calculating' OR st.lease_token IS DISTINCT FROM p_token OR st.lease_until<=clock_timestamp() THEN RAISE EXCEPTION 'settlement lease lost';END IF;
+ IF p_error IS NULL AND p_award_status NOT IN ('manual_review','verification_pending','speed_flagged') THEN RAISE EXCEPTION 'backend component completion proof required';END IF;
+ -- A client error or status cannot downgrade the executor's financial review.
+ technical:=st.award_status IS DISTINCT FROM 'manual_review' AND p_error IS NOT NULL;
+ UPDATE public.ride_reward_settlement SET
+  status=CASE WHEN technical AND st.attempts<8 THEN 'failed' ELSE 'awaiting_verification' END,
+  award_status=CASE WHEN technical AND st.attempts<8 THEN 'error' ELSE 'manual_review' END,
+  last_error=CASE WHEN st.award_status='manual_review' THEN st.last_error WHEN technical AND st.attempts>=8 THEN 'settlement_retry_exhausted'
+   WHEN technical THEN 'settlement_execution_failed' ELSE 'ride_verification_required' END,
+  lease_token=NULL,lease_until=NULL,updated_at=clock_timestamp(),
+  next_attempt_at=CASE WHEN technical AND st.attempts>=8 THEN 'infinity'::timestamptz ELSE clock_timestamp()+make_interval(secs=>CASE WHEN technical THEN least(300,5*power(2,least(st.attempts,6))::integer) ELSE 300 END) END
+ WHERE ride_session_id=p_session_id RETURNING * INTO st;
+ RETURN (to_jsonb(st)-'context'-'lease_token') || jsonb_build_object('summary',public.get_my_ride_summary(p_session_id));
+END $function$;
 
 CREATE OR REPLACE FUNCTION public.get_authenticated_rider_id()
  RETURNS uuid
