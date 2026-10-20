@@ -31,16 +31,17 @@
     },
     {
       "name": "Approved-rider Community creation boundary",
-      "status": "implemented and verified locally; production migration authorization pending",
+      "status": "deployed; non-destructive production authorization verification passed",
       "migration": "scripts/065_community_approved_rider_authorization.sql",
       "work": "Reuse existing staff-managed unrevoked creator grant; enforce active rider/account, Auth bans/deletion and ownership for direct inserts and RPCs. Keep active organizers able to edit after grant revocation; preserve discovery/participation.",
-      "verification": "56 PostgreSQL assertions plus nine real PostgREST assertions; rollback and replay verified. Production customer records untouched."
+      "verification": "130 read-only production assertions: two existing identities eligible, 20 denied, 22 cross-account helper denials and 21 cross-account INSERT-policy denials. No ride mutations. Deployed bodies match the tested migration; absent suspended/Auth-banned cohorts retain exact guards covered by 56 isolated PostgreSQL and nine PostgREST tests.",
+      "migrationJournalVersion": "20261020151107",
+      "sha256": "6e95dea6827fc7cc02dd88e09d9922739c2281e84f5a98377f29536aa8155f3f"
     },
     {
       "name": "Remaining launch acceptance",
       "status": "open",
       "work": [
-        "Obtain explicit authorization before applying Community migration 065; then verify production definitions/ACL and authorized test-identity acceptance.",
         "Verify the new companion routes and retired not-found behavior in an authenticated production browser session.",
         "Exercise additional authorized rider, employee-role and organisation identities for live isolation acceptance; focused regression tests already pass.",
         "Exercise live account switching and logout using authorized test accounts; private cache cancellation and clearing tests already pass.",
@@ -63,9 +64,10 @@
     "publicShopRedemption": "unchanged; not activated",
     "selfServiceDeletionIntake": "disabled; unchanged",
     "financialTestTransactions": "none executed",
-    "databaseSchemaAndPrivileges": "unchanged in production; Community migration 065 is committed but awaiting explicit authorization",
+    "databaseSchemaAndPrivileges": "Community migration 065 applied as 20261020151107; only approved Community function bodies/ACL and trigger changed. All unrelated RLS and financial permissions verified unchanged.",
     "mobileRuntimeAndReleases": "unchanged; no EAS or OTA work"
   },
   "mobileFirstEvidence": "../verification/mobile-first-alignment/production.json",
-  "mobileFirstProductDecision": "../product/mobile-first-companion.md"
+  "mobileFirstProductDecision": "../product/mobile-first-companion.md",
+  "communityAuthorizationEvidence": "../verification/community-065-rollout/production.json"
 }

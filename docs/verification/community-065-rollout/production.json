@@ -1,0 +1,196 @@
+{
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "authorization": "Owner explicitly authorized applying the exact tested migration 065 from be89fbc to production; non-destructive verification only, no synthetic rides.",
+  "sourceCheck": {
+    "revision": "be89fbcd11c368d66c9cb8ab9b1fda292aecc59d",
+    "file": "scripts/065_community_approved_rider_authorization.sql",
+    "testedFileSha256": "6e95dea6827fc7cc02dd88e09d9922739c2281e84f5a98377f29536aa8155f3f",
+    "gitBlobSha256": "afa04c953bc540a4411030b7dbe4fd75803f18da47682b66c359397c591bc940",
+    "sourceMatchesRevision": true,
+    "testedChecksumMatches": true,
+    "lineEndings": "working source CRLF; committed Git blob LF; normalized content identical"
+  },
+  "application": {
+    "migrationApplied": true,
+    "journalVersion": "20261020151107",
+    "name": "065_community_approved_rider_authorization",
+    "sourceRevision": "be89fbcd11c368d66c9cb8ab9b1fda292aecc59d",
+    "testedSha256": "6e95dea6827fc7cc02dd88e09d9922739c2281e84f5a98377f29536aa8155f3f",
+    "gitBlobSha256": "afa04c953bc540a4411030b7dbe4fd75803f18da47682b66c359397c591bc940",
+    "sourceMatchesRevision": true,
+    "boundary": {
+      "functionBodiesMatchTestedSource": true,
+      "creationGuardPrecedesReplay": true,
+      "enabledBeforeInsertUpdateTrigger": true,
+      "helperPrivileges": {
+        "authenticated": true,
+        "anon": false,
+        "service": false,
+        "private_active": false,
+        "private_trigger": false
+      }
+    },
+    "community": {
+      "community_ride": {
+        "count": 4,
+        "digest": "d3706884f98b34ba5c30e774b5c79565"
+      },
+      "community_ride_participant": {
+        "count": 4,
+        "digest": "d05ef57bc2837edc2ff1983aba3a64a4"
+      },
+      "community_ride_creator_grant": {
+        "count": 3,
+        "digest": "2442578085309d5d6a545e8f7060ea7e"
+      }
+    },
+    "communityUnchanged": true,
+    "unrelatedCatalogsAndPermissionsUnchanged": true,
+    "operatingStates": [
+      {
+        "deletion": {
+          "policyVersion": 1,
+          "contractVersion": 1,
+          "requestsEnabled": false
+        },
+        "shop": [
+          false
+        ]
+      }
+    ],
+    "startedAt": "2026-10-20T15:13:11.425Z",
+    "completedAt": "2026-10-20T15:13:12.620Z",
+    "project": "kzdvunpuxaxlphqvmzxw"
+  },
+  "verification": {
+    "project": "kzdvunpuxaxlphqvmzxw",
+    "verifiedAt": "2026-10-20T15:17:01.321Z",
+    "readOnly": true,
+    "assertions": 130,
+    "journal": {
+      "version": "20261020151107",
+      "name": "065_community_approved_rider_authorization",
+      "checksumMatches": true,
+      "sha256": "6e95dea6827fc7cc02dd88e09d9922739c2281e84f5a98377f29536aa8155f3f",
+      "createdBy": "codex-authorized:be89fbcd11c368d66c9cb8ab9b1fda292aecc59d",
+      "idempotencyKey": "community-065:6e95dea6827fc7cc02dd88e09d9922739c2281e84f5a98377f29536aa8155f3f",
+      "rollbackStatements": 1
+    },
+    "actualIdentityChecks": {
+      "identities": 22,
+      "allowed": 2,
+      "denied": 20,
+      "activeGrantHoldersDeniedForState": 1,
+      "deniedRpc": 20,
+      "approvedGateReachedValidation": 2,
+      "crossAccountDenied": 22,
+      "tablePolicyChecks": 22,
+      "crossAccountTableDenials": 21,
+      "cohorts": {
+        "approvedActive": 2,
+        "unapprovedActive": 15,
+        "revokedGrant": 0,
+        "suspendedPublicAccount": 0,
+        "suspendedRider": 0,
+        "inactiveRider": 1,
+        "authBanned": 0,
+        "deleted": 0,
+        "pendingPublicAccount": 0,
+        "missingRider": 4
+      }
+    },
+    "tableBoundary": {
+      "rlsEnabled": true,
+      "restrictiveApprovalOwnershipPolicy": true,
+      "liveWithCheckPredicateEvaluatedReadOnly": true,
+      "enabledBeforeInsertUpdateTrigger": true,
+      "ridersCannotDisableTrigger": true
+    },
+    "organizers": {
+      "approvalRequiredForCreationOnly": true,
+      "ownershipAndActiveAccountStillRequired": true,
+      "editAndCancelRpcBodiesMatchTestedPatch": true
+    },
+    "participation": {
+      "joinAndLeaveFunctionsUnchanged": true,
+      "existingActiveIdentityDiscovery": [
+        {
+          "approved": true,
+          "identities": 2,
+          "minVisiblePublicRides": 3,
+          "maxVisiblePublicRides": 3
+        },
+        {
+          "approved": false,
+          "identities": 15,
+          "minVisiblePublicRides": 3,
+          "maxVisiblePublicRides": 3
+        }
+      ]
+    },
+    "admin": {
+      "serviceGrantAccess": true,
+      "serviceRlsBypassUnchanged": true,
+      "riderGrantPoliciesReadOnly": true,
+      "controlsNotMutated": true
+    },
+    "stateDomain": [
+      {
+        "typname": "rider_status",
+        "labels": [
+          "active",
+          "inactive",
+          "suspended"
+        ]
+      },
+      {
+        "typname": "user_status",
+        "labels": [
+          "active",
+          "suspended",
+          "pending",
+          "deleted"
+        ]
+      }
+    ],
+    "operatingStates": [
+      {
+        "deletion": {
+          "policyVersion": 1,
+          "contractVersion": 1,
+          "requestsEnabled": false
+        },
+        "shop": [
+          false
+        ]
+      }
+    ],
+    "limitations": [
+      "No production ride creation, edit, cancellation, participation or grant mutation was performed.",
+      "Successful creation and changed-state scenarios absent from existing production cohorts are covered by the prior isolated PostgreSQL/PostgREST tests and exact deployed function-body checks, not claimed as live production mutations.",
+      "The production role checks use transaction-local JWT claims in read-only database transactions; they do not constitute an end-to-end Mobile sign-in test."
+    ]
+  },
+  "postCommitIntegrity": {
+    "verifiedAt": "2026-10-20T15:16:14.010Z",
+    "unchanged": true,
+    "baseline": "integrity-baseline.json",
+    "policiesUnchanged": 242,
+    "relationsAndAclUnchanged": 815,
+    "unrelatedFunctionsAndAclUnchanged": 1215,
+    "unrelatedTriggersUnchanged": 315,
+    "rolesUnchanged": 32,
+    "schemasAndAclUnchanged": 12,
+    "defaultAclEntriesUnchanged": 27
+  },
+  "adminFocusedRegression": {
+    "files": 1,
+    "tests": 6,
+    "passed": 6
+  },
+  "mobile": {
+    "commit": "d42129978ddd34cd38e0783c45ef22fe3c549beb",
+    "worktreeUnchanged": true
+  },
+  "unrelatedDeployments": "none"
+}

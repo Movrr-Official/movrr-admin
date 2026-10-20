@@ -1,0 +1,58 @@
+{
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "sourceRevision": "be89fbcd11c368d66c9cb8ab9b1fda292aecc59d",
+  "journalVersion": "20261020151107",
+  "description": "Digests captured under Community table SHARE locks before applying 065; compared equal before commit. Excludes only the six approved Community function names and the new Community trigger.",
+  "digests": {
+    "policies": {
+      "sha256": "32897826eb1e7f998165d0968eed1e454a96238561a85ba1a22e79865d6ee4dd",
+      "entries": 242
+    },
+    "relations": {
+      "sha256": "6eb2d9d52720760d32f36e57608709213e7b1f4103dffa63af4346f0f8007dad",
+      "entries": 815
+    },
+    "columns": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "entries": 0
+    },
+    "defaults": {
+      "sha256": "84df190135ad39f9ad229615f0a27e348add3c4fd3420c2ed143ddc5778ffe1c",
+      "entries": 27
+    },
+    "schemas": {
+      "sha256": "72d6192ff824664e7ae01eccbab07d4ca2797ff61624f9b465cdbb91c0122b6a",
+      "entries": 12
+    },
+    "roles": {
+      "sha256": "3d2d5975fe90987f776bd0fed809eae4f95fbce9a32197a7ae749de37704ad77",
+      "entries": 32
+    },
+    "states": {
+      "sha256": "550c6510731a4b9eee3dc82024661f39cf8a2defd528a705a87c998851cd03e3",
+      "entries": 1
+    },
+    "unrelatedFunctions": {
+      "sha256": "5ac49f12ca13771e9acfcb2785b2e9eba55b6d99d9bbc5a7587c4d737905bc76",
+      "entries": 1215
+    },
+    "unrelatedTriggers": {
+      "sha256": "44de597796eca34f15da80f441b22087ef56da8a5bccf81e9c082f6cd272d20a",
+      "entries": 315
+    },
+    "community": {
+      "community_ride": {
+        "count": 4,
+        "digest": "d3706884f98b34ba5c30e774b5c79565"
+      },
+      "community_ride_participant": {
+        "count": 4,
+        "digest": "d05ef57bc2837edc2ff1983aba3a64a4"
+      },
+      "community_ride_creator_grant": {
+        "count": 3,
+        "digest": "2442578085309d5d6a545e8f7060ea7e"
+      }
+    }
+  }
+}
