@@ -951,14 +951,14 @@ export function RiderDetailsDrawer({
                                         <div className="p-4 rounded-xl bg-success/12 border border-success/20 dark:bg-success/20 dark:border-success/40">
                                           <p className="text-xs text-success mb-1 flex items-center gap-1">
                                             <Leaf className="h-3.5 w-3.5" />
-                                            CO₂ Saved
+                                            Car comparison (CO₂e WTW)
                                           </p>
                                           <p className="text-2xl font-bold text-success">
                                             {performanceMetrics.co2SavedKg.toLocaleString()}{" "}
                                             kg
                                           </p>
                                           <p className="text-xs text-success mt-1">
-                                            vs driving
+                                            Equivalent car journey estimate, not actual emissions avoided.
                                           </p>
                                         </div>
                                       )}

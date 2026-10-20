@@ -489,7 +489,7 @@ export default function RideSessionsOverview() {
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base font-semibold">
-                        Distance & CO₂ Saved
+                        Verified distance & car comparison
                       </CardTitle>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
@@ -501,13 +501,14 @@ export default function RideSessionsOverview() {
                         <span className="flex items-center gap-1 text-success">
                           <Leaf className="h-3.5 w-3.5" />
                           {analytics
-                            ? `${analytics.distanceTrend.reduce((s, d) => s + d.co2SavedKg, 0).toLocaleString()} kg CO₂`
+                            ? `${analytics.distanceTrend.reduce((s, d) => s + d.co2SavedKg, 0).toLocaleString()} kg CO₂e WTW`
                             : "—"}
                         </span>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
+                    <p className="mb-2 text-xs text-muted-foreground">Equivalent car journey WTW estimate; not actual emissions avoided. Verified completed sessions with settlement evidence only.</p>
                     <div className="h-48">
                       <ResponsiveContainer width="100%" height="100%">
                         <RechartsAreaChart
@@ -566,7 +567,7 @@ export default function RideSessionsOverview() {
                             formatter={(v: number, name: string) =>
                               name === "distanceKm"
                                 ? [`${v} km`, "Distance"]
-                                : [`${v} kg`, "CO₂ Saved"]
+                                : [`${v} kg`, "Car comparison (CO₂e WTW)"]
                             }
                           />
                           <Area

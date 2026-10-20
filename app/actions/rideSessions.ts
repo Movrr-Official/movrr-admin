@@ -18,7 +18,7 @@ import {
 
 /**
  * Platform-wide distance and CO₂ impact aggregation.
- * CO₂ methodology: 0.180 kg/km = average car emission offset by biking.
+ * Versioned backend car-journey WTW comparison; never actual avoided emissions.
  */
 export async function getDistanceStats(): Promise<{
   success: boolean;

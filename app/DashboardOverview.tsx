@@ -881,7 +881,8 @@ export default function DashboardOverview() {
             animationDelay="0.4s"
           />
           <StatsCard
-            title="CO₂ Saved"
+            title="Car comparison (CO₂e WTW)"
+            description="Equivalent car journey estimate; not actual emissions avoided."
             value={
               distanceLoading
                 ? "—"
@@ -1300,10 +1301,10 @@ export default function DashboardOverview() {
               <div>
                 <CardTitle className="text-xl font-bold flex items-center gap-2">
                   <Ruler className="h-5 w-5 text-muted-foreground" />
-                  Distance & CO₂ Impact
+                  Verified distance & car comparison
                 </CardTitle>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Daily rewarded ride distance and estimated impact
+                  Verified completed cycling distance; equivalent car WTW estimate, not actual avoided emissions.
                 </p>
               </div>
               <div
@@ -1436,7 +1437,7 @@ export default function DashboardOverview() {
                         <ChartTooltipContent
                           seriesLabelMap={{
                             km: "Distance (km)",
-                            co2: "CO₂ Saved (kg)",
+                            co2: "Car comparison (kg CO₂e WTW)",
                           }}
                         />
                       }
@@ -1482,7 +1483,7 @@ export default function DashboardOverview() {
                       style={{ backgroundColor: "var(--chart-1)" }}
                       aria-hidden="true"
                     />
-                    <span>CO₂ Saved (kg)</span>
+                    <span>Car comparison (kg CO₂e WTW)</span>
                   </div>
                   <div className="ml-auto text-xs">
                     Total:{" "}
