@@ -1,12 +1,12 @@
 {
-  "verifiedAt": "2026-10-20T17:22:21.979Z",
+  "verifiedAt": "2026-10-20T17:39:58.979Z",
   "productionProject": "kzdvunpuxaxlphqvmzxw",
-  "productionMigrationsApplied": false,
-  "activationAttempted": false,
+  "productionMigrationsApplied": true,
+  "activationAttempted": true,
   "productionState": {
-    "intake": "disabled",
-    "operatingVersion": 0,
-    "activePolicyVersion": 1,
+    "intake": "enabled",
+    "operatingVersion": 1,
+    "activePolicyVersion": 2,
     "managedExecution": false,
     "publicShopRedemption": false
   },
@@ -41,10 +41,10 @@
     "start": "original request submission",
     "deadlineExtensionOnReadOrRetry": false
   },
-  "preservation": "No production business, request, receipt, policy or approval mutations performed. Existing completion/restore/execution controls unchanged in the prepared migrations.",
+  "preservation": "Approved migrations applied with protected-table fingerprints, immutable policy v1, critical execution/receipt function bodies and ACLs preserved. Later legitimate Admin monitor reads add lifecycle audit entries; no production deletion requests were created.",
   "mobileRuntimeChanged": false,
   "edgeFunctionsChanged": false,
-  "productionApprovalStillRequired": true,
+  "productionApprovalStillRequired": false,
   "readOnlyProductionPreflight": {
     "status": "passed",
     "recordedAt": "2026-10-20T17:24:05.480Z",
@@ -55,5 +55,26 @@
     "operatingVersion": "0",
     "managedExecution": false,
     "protectedTableFingerprintsRecorded": true
+  },
+  "preparationVerifiedAt": "2026-10-20T17:22:21.979Z",
+  "activationConfirmed": true,
+  "rolloutEvidence": [
+    "applied.json",
+    "post-deployment.json",
+    "production-preservation.json",
+    "deployment.json",
+    "activation.json",
+    "readiness-after-activation.json"
+  ],
+  "remainingStep": "No intake activation blocker. Applicable retention, accounting, backup/restore and independent case approvals remain required before irreversible execution.",
+  "activationAudit": {
+    "actor": "fd15d91a-235a-4532-b906-622dc6579ee7",
+    "actorRole": "super_admin",
+    "operation": "782a5a3a-d3a8-4d6d-b25b-04988bfa923b",
+    "auditId": "7b4bfdea-8e8c-4984-9893-0bda0a914102",
+    "timestamp": "2026-10-20T17:39:48.695Z",
+    "reason": "Owner-approved intake-only activation; receipt access expires 30 days after original submission; irreversible execution remains disabled",
+    "previousVersion": 0,
+    "newVersion": 1
   }
 }

@@ -5,9 +5,9 @@
   "milestones": [
     {
       "name": "Account-deletion request intake activation",
-      "status": "intake/execution separation prepared and tested; awaiting explicit approval of new production migrations",
-      "work": "Owner approves intake and 30-day original-request receipt credentials. Migrations 066/067 separate intake readiness from execution approvals, publish only the approved receipt scope as immutable policy v2, and route new requests to existing manual review. 87 isolated boundary assertions, 44 original intake assertions, 50 Admin authorization/recovery tests and TypeScript pass. Production remains Disabled/version 0 until approved migration application and the genuine MFA operating command. Accountant, partner and backup-retention decisions remain execution safeguards, not automatic intake prerequisites. Shop and managed execution remain Disabled.",
-      "evidence": "../verification/intake-execution-separation/baseline.json",
+      "status": "production Enabled/version 1; MFA activation and audit verified",
+      "work": "Approved migrations 066/067 installed and journal/checksum verified. Genuine super_admin MFA command enabled intake at 2026-10-20T17:39:48.695Z, version 0 to 1; receipt policy v2 gives 30 days from original submission without retry extension. Production contract reports requestsEnabled=true; no intake blockers. Eligibility, ownership, duplicate handling and manual-review routing remain enforced. Irreversible execution remains Disabled with pending retention/accounting/backup and case approvals. No synthetic production request or financial mutation.",
+      "evidence": "../verification/intake-execution-separation/verification.json",
       "decisionPackage": "../operations/deletion-intake-separation.md"
     },
     {
@@ -74,10 +74,10 @@
     }
   ],
   "operatingStates": {
-    "publicShopRedemption": "unchanged; not activated",
-    "selfServiceDeletionIntake": "Disabled/version 0; production confirmed; activation blocked by existing policy/readiness prerequisites",
+    "publicShopRedemption": "Disabled; production confirmed",
+    "selfServiceDeletionIntake": "Enabled/version 1; production contract and actual MFA command/audit confirmed at 2026-10-20T17:39:58.979Z",
     "financialTestTransactions": "none executed",
-    "databaseSchemaAndPrivileges": "Community migration 065 applied as 20261020151107; only approved Community function bodies/ACL and trigger changed. All unrelated RLS and financial permissions verified unchanged.",
+    "databaseSchemaAndPrivileges": "Community migration 065 applied as 20261020151107; only approved Community function bodies/ACL and trigger changed. All unrelated RLS and financial permissions verified unchanged. Approved deletion migrations 066/067 applied as 20261020171801/20261020171802; protected data and critical execution/receipt contracts preserved.",
     "mobileRuntimeAndReleases": "unchanged; no EAS or OTA work"
   },
   "mobileFirstEvidence": "../verification/mobile-first-alignment/production.json",

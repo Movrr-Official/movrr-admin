@@ -1,0 +1,316 @@
+{
+  "inspectedAt": "2026-10-20T17:40:06.138Z",
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "readOnly": "on",
+  "contract": {
+    "policyVersion": 2,
+    "contractVersion": 1,
+    "requestsEnabled": true
+  },
+  "gate": {
+    "operating_state": "enabled",
+    "operating_version": "1",
+    "requests_enabled": true,
+    "active_policy_version": 2,
+    "operating_changed_at": "2026-10-20T17:39:48.695Z",
+    "operating_changed_by": "fd15d91a-235a-4532-b906-622dc6579ee7",
+    "operating_reason": "Owner-approved intake-only activation; receipt access expires 30 days after original submission; irreversible execution remains disabled",
+    "managed_resources_execution_enabled": false,
+    "catalog_digest_present": false,
+    "catalog_verified": false,
+    "catalog_review_reference_present": false,
+    "barrier_verified": false,
+    "disposition_verified": false
+  },
+  "policies": [
+    {
+      "version": 2,
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending"
+    }
+  ],
+  "rules": [
+    {
+      "scope": "external.erase",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference_present": false,
+      "allowed": false
+    },
+    {
+      "scope": "personal.erase",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference_present": false,
+      "allowed": false
+    },
+    {
+      "scope": "receipt.complete",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference_present": false,
+      "allowed": false
+    },
+    {
+      "scope": "receipt.delivery",
+      "technical_status": "approved",
+      "legal_status": "approved",
+      "finance_status": "not_required",
+      "partner_status": "not_required",
+      "approval_reference_present": true,
+      "allowed": true
+    },
+    {
+      "scope": "restore.suppress",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference_present": false,
+      "allowed": false
+    }
+  ],
+  "retention": [
+    {
+      "category": "campaign_carry",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": [
+        "metrics",
+        "operation_digest",
+        "expires_at"
+      ]
+    },
+    {
+      "category": "campaign_evidence",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": []
+    },
+    {
+      "category": "campaign_supplemental",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": [
+        "statistics",
+        "completed_route_ids"
+      ]
+    },
+    {
+      "category": "deletion_journal",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": []
+    },
+    {
+      "category": "deletion_receipt",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": []
+    },
+    {
+      "category": "equipment_custody_event",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": []
+    },
+    {
+      "category": "equipment_obligation",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": []
+    },
+    {
+      "category": "financial_evidence",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": []
+    },
+    {
+      "category": "receipt_access",
+      "approval_status": "approved",
+      "period_present": true,
+      "lawful_basis_present": true,
+      "start_event": "barrier_established",
+      "minimum_fields": [
+        "token_digest",
+        "expires_at"
+      ]
+    },
+    {
+      "category": "redemption_obligation",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": []
+    },
+    {
+      "category": "restore_recovery",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": [
+        "job_id",
+        "signature",
+        "manifest",
+        "state"
+      ]
+    },
+    {
+      "category": "restore_suppression",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": []
+    },
+    {
+      "category": "support_obligation",
+      "approval_status": "pending",
+      "period_present": false,
+      "lawful_basis_present": false,
+      "start_event": null,
+      "minimum_fields": []
+    }
+  ],
+  "counts": {
+    "requests": "0",
+    "receipt_access": "0",
+    "lifecycle_audit": "12",
+    "intake_command_receipts": "1"
+  },
+  "functions": [
+    {
+      "proname": "account_deletion_activation_authorized",
+      "anon": false,
+      "authenticated": false,
+      "service_role": true,
+      "sha256": "4a434675408460a509afb8cfd4a666aeff9473b6ceca6b0021621178159313de"
+    },
+    {
+      "proname": "account_deletion_contract_status",
+      "anon": false,
+      "authenticated": false,
+      "service_role": true,
+      "sha256": "1648aa5db42e2ec24cb5100c9806ab0fde18a0a202ac72e0e580554c3c5a9ccc"
+    },
+    {
+      "proname": "account_deletion_intake_ready",
+      "anon": false,
+      "authenticated": false,
+      "service_role": false,
+      "sha256": "04b04c80f5f454166b35a4903bf6d20e8a1e84cf50cf6ffe6ca280a6a0be3567"
+    },
+    {
+      "proname": "account_deletion_intake_status",
+      "anon": false,
+      "authenticated": true,
+      "service_role": false,
+      "sha256": "ed9c54a1393bc0eb6169d95ddf762345b50b13dd735417f5ed7f23a7a68f7bdc"
+    },
+    {
+      "proname": "account_deletion_rule_allowed",
+      "anon": false,
+      "authenticated": false,
+      "service_role": false,
+      "sha256": "cf2f0536240db2932fa7b9bbce03503f27d3a2518fe15393d8ad3e582751d74f"
+    },
+    {
+      "proname": "establish_account_deletion_barrier",
+      "anon": false,
+      "authenticated": false,
+      "service_role": false,
+      "sha256": "fe5e607aec59e31ceef4f4baaa0d901695bf08bcad7f89cbcae660094e717c29"
+    },
+    {
+      "proname": "ops_assert_capability",
+      "anon": false,
+      "authenticated": true,
+      "service_role": false,
+      "sha256": "775c506f7294b491b62f0d60c10c162c3f9e8ac33bb7e3868dd54b829ca352d1"
+    },
+    {
+      "proname": "read_account_deletion_delivered_receipt",
+      "anon": false,
+      "authenticated": false,
+      "service_role": true,
+      "sha256": "c26de129c83a1b4b0c3c43633a8d08758ad667604d2add681d2a65a735d76b80"
+    },
+    {
+      "proname": "read_account_deletion_lifecycle",
+      "anon": false,
+      "authenticated": false,
+      "service_role": true,
+      "sha256": "9fccd6373e7a8b3326e0275c81069aec0caf94b351e0698d6ff2631133c0adb2"
+    },
+    {
+      "proname": "request_verified_account_deletion",
+      "anon": false,
+      "authenticated": false,
+      "service_role": true,
+      "sha256": "b9597dcfb343da72072dc0054eb4a9d6fd17574698608d5b7a6008e1d12c3722"
+    },
+    {
+      "proname": "request_verified_account_deletion_core",
+      "anon": false,
+      "authenticated": false,
+      "service_role": false,
+      "sha256": "318be11cd4de5677fa8651ef6e6b966916988c78402ef84180a40e099909376d"
+    },
+    {
+      "proname": "set_account_deletion_intake",
+      "anon": false,
+      "authenticated": true,
+      "service_role": false,
+      "sha256": "a76212429773461ae218c28e230792a797f7167618728173768c8f9d76976c60"
+    }
+  ],
+  "shop": [
+    {
+      "redemption_enabled": false
+    }
+  ],
+  "executionBlockers": [
+    "catalog_digest_present",
+    "catalog_verified",
+    "catalog_review_reference_present",
+    "barrier_verified",
+    "disposition_verified",
+    "policy_rule:personal.erase",
+    "policy_rule:external.erase",
+    "policy_rule:receipt.complete",
+    "policy_rule:restore.suppress"
+  ],
+  "separatedIntakeInstalled": true,
+  "intakeReady": true,
+  "blockers": [],
+  "deployedCommandMatchesSource": true,
+  "operatingCommandSource": "066_deletion_intake_execution_separation.sql",
+  "activationAttempted": false
+}

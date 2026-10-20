@@ -1,7 +1,7 @@
 {
   "project": "kzdvunpuxaxlphqvmzxw",
   "receiptApprovalReference": "MOVRR-owner-2026-10-20-receipt-access-30d",
-  "productionMigrationApproval": "required before application; not yet granted",
+  "productionMigrationApproval": "Explicit MOVRR owner approval on 20 October 2026 for these exact files/checksums; applied and journal-verified.",
   "migrations": [
     {
       "file": "066_deletion_intake_execution_separation.sql",

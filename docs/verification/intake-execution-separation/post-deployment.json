@@ -1,0 +1,47 @@
+{
+  "verified": true,
+  "installed": {
+    "receiptPolicy": {
+      "period": "30 days",
+      "start_event": "barrier_established",
+      "minimum_fields": [
+        "token_digest",
+        "expires_at"
+      ],
+      "approval_reference": "MOVRR-owner-2026-10-20-receipt-access-30d"
+    },
+    "permissions": {
+      "admin_command": true,
+      "service_command": false,
+      "direct_rider_request": false,
+      "anon_helper": false
+    },
+    "onlyAllowedAction": "receipt.delivery",
+    "functionBodiesMatchReviewedSource": true
+  },
+  "operatingState": {
+    "operating_state": "enabled",
+    "operating_version": "1",
+    "active_policy_version": 2,
+    "managed_resources_execution_enabled": false
+  },
+  "contract": {
+    "policyVersion": 2,
+    "contractVersion": 1,
+    "requestsEnabled": true
+  },
+  "journal": [
+    {
+      "version": "20261020171802",
+      "name": "067_deletion_intake_receipt_policy",
+      "digest": "0e7cd1e314cd9c394f054fbe43de92808c01dd21b5b2825185eb9e8c9712fc6f"
+    },
+    {
+      "version": "20261020171801",
+      "name": "066_deletion_intake_execution_separation",
+      "digest": "343f9b15381d48a424e5aa777a362a457876ea84711c9ea2c21ad6224c2deef5"
+    }
+  ],
+  "recordedAt": "2026-10-20T17:40:07.883Z",
+  "project": "kzdvunpuxaxlphqvmzxw"
+}

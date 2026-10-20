@@ -1,0 +1,12 @@
+{
+    "id":  "dpl_4D3q9jaKVZJF4kfvUzbJgkpskhYB",
+    "target":  "production",
+    "aliases":  [
+                    "admin.movrr.nl",
+                    "movrr-admin-movrrops-projects.vercel.app"
+                ],
+    "sourceRevision":  "bd23a479ba2f6e487f4933b04e00e820962f6857",
+    "state":  "READY",
+    "verifiedAt":  "2026-10-20T17:37:42.9914709Z",
+    "url":  "movrr-admin-3z799xl5n-movrrops-projects.vercel.app"
+}

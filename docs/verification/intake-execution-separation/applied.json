@@ -1,0 +1,51 @@
+{
+  "applied": true,
+  "sourceRevision": "bd23a479ba2f6e487f4933b04e00e820962f6857",
+  "migrations": [
+    {
+      "file": "066_deletion_intake_execution_separation.sql",
+      "version": "20261020171801",
+      "sha256": "343f9b15381d48a424e5aa777a362a457876ea84711c9ea2c21ad6224c2deef5"
+    },
+    {
+      "file": "067_deletion_intake_receipt_policy.sql",
+      "version": "20261020171802",
+      "sha256": "0e7cd1e314cd9c394f054fbe43de92808c01dd21b5b2825185eb9e8c9712fc6f"
+    }
+  ],
+  "installed": {
+    "receiptPolicy": {
+      "period": "30 days",
+      "start_event": "barrier_established",
+      "minimum_fields": [
+        "token_digest",
+        "expires_at"
+      ],
+      "approval_reference": "MOVRR-owner-2026-10-20-receipt-access-30d"
+    },
+    "permissions": {
+      "admin_command": true,
+      "service_command": false,
+      "direct_rider_request": false,
+      "anon_helper": false
+    },
+    "onlyAllowedAction": "receipt.delivery",
+    "functionBodiesMatchReviewedSource": true
+  },
+  "operatingState": {
+    "operating_state": "disabled",
+    "operating_version": "0",
+    "active_policy_version": 2,
+    "managed_resources_execution_enabled": false
+  },
+  "contract": {
+    "policyVersion": 2,
+    "contractVersion": 1,
+    "requestsEnabled": false
+  },
+  "protectedDataPreserved": true,
+  "v1Preserved": true,
+  "executionAndReceiptFunctionsPreserved": true,
+  "recordedAt": "2026-10-20T17:34:23.065Z",
+  "project": "kzdvunpuxaxlphqvmzxw"
+}

@@ -1,6 +1,6 @@
 # Deletion request intake: separate from execution
 
-20 October 2026. **Source prepared and tested; production migrations not applied. Production intake remains Disabled/version 0.** This record supersedes the earlier package's treatment of execution policy completion as a prerequisite for receiving a request. That package remains relevant to actual erasure and retained obligations, not a requirement for independent accountant/partner approval before intake.
+20 October 2026. **Owner-approved migrations 066/067 applied and verified; production intake Enabled/version 1, confirmed after the genuine MFA Admin command. Irreversible execution remains Disabled.** This record supersedes the earlier package's treatment of execution policy completion as a prerequisite for receiving a request. That package remains relevant to actual erasure and retained obligations, not a requirement for independent accountant/partner approval before intake.
 
 ## Authorized scope and receipt policy
 
@@ -66,4 +66,18 @@ Then:
 
 Before commit, any migration failure rolls back. After commit, retain the schema journal, immutable policy history and accepted requests. For operational containment, use the same MFA control to Hold/Disable **new intake**; existing receipts/reviews remain available. Do not restore the old execution-coupled gate, delete audit history, disable barriers/RLS or roll back valid financial records.
 
-**Remaining activation step:** explicit approval of the two production migrations, then controlled application and the already-authorized MFA intake command. Full accountant/partner/backup retention decisions remain execution work, not additional prerequisites for receiving requests under this correction.
+**Activation completed:** the genuine MFA Admin command enabled intake and the resulting state/audit were verified. The two exact production migrations were explicitly approved, applied and journal/checksum verified. Full accountant/partner/backup retention decisions remain execution work, not additional prerequisites for receiving requests under this correction.
+
+## Production rollout, 20 October 2026
+
+The owner explicitly approved the exact manifest files/checksums. [Application evidence](../verification/intake-execution-separation/applied.json) records atomic installation at 17:34:23 UTC: 066 as `20261020171801`, SHA-256 `343f9b15381d48a424e5aa777a362a457876ea84711c9ea2c21ad6224c2deef5`; 067 as `20261020171802`, SHA-256 `0e7cd1e314cd9c394f054fbe43de92808c01dd21b5b2825185eb9e8c9712fc6f`. [Post-deployment verification](../verification/intake-execution-separation/post-deployment.json) confirms matching live bodies/journal, receipt policy v2, permissions and preserved critical contracts. [Preservation evidence](../verification/intake-execution-separation/production-preservation.json) records before/after protected-table fingerprints and immutable v1 preservation. No real request or financial transaction was created.
+
+The Admin wording update is [deployed and READY](../verification/intake-execution-separation/deployment.json) at `admin.movrr.nl`, deployment `dpl_4D3q9jaKVZJF4kfvUzbJgkpskhYB`, source `bd23a479ba2f6e487f4933b04e00e820962f6857` (implementation `eb3feb0c9d83f3733b5662b6fd1a2c5df87f768a`).
+
+Before the owner submitted the MFA form, the 17:38:44 UTC read still reported Disabled/version 0 with no activation audit. The following confirmed activation supersedes that intermediate status. Browser automation had no connected tab; no MFA identity was synthesized.
+
+### Confirmed activation
+
+The owner then submitted the existing MFA Admin form. Read-only verification at **2026-10-20T17:39:58.979Z** confirms **Enabled/version 1**, `requestsEnabled=true`, policy 2, intake readiness true and MFA enforced. Actual activation at `2026-10-20T17:39:48.695Z`: actor `fd15d91a-235a-4532-b906-622dc6579ee7` (`super_admin`), operation `782a5a3a-d3a8-4d6d-b25b-04988bfa923b`, audit `7b4bfdea-8e8c-4984-9893-0bda0a914102`; previous state Disabled/version 0, resulting state Enabled/version 1. Reason: ?Owner-approved intake-only activation; receipt access expires 30 days after original submission; irreversible execution remains disabled?. The [activation evidence](../verification/intake-execution-separation/activation.json) supersedes the earlier pending snapshot.
+
+Post-activation migration verification and [readiness inspection](../verification/intake-execution-separation/readiness-after-activation.json) pass: exact reviewed checksums/live function bodies, 30-day original-submission receipt rule, private permissions, zero intake blockers, managed execution false and public Shop redemption false. Existing requests/credentials/reviews remain zero; no synthetic live request was used. Server expiry, ownership, retries and review routing were verified through the 87 PostgreSQL assertions and unchanged deployed contracts. The owner?s successful MFA operating command establishes live Admin control access; automated visual inspection and live end-to-end request submission were not performed. Applicable execution-policy decisions remain pending and cannot be inferred from intake approval.

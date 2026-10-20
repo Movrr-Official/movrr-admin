@@ -1,0 +1,276 @@
+{
+  "before": {
+    "gate": {
+      "operating_state": "disabled",
+      "operating_version": "0",
+      "active_policy_version": 1,
+      "managed_resources_execution_enabled": false
+    },
+    "contract": {
+      "policyVersion": 1,
+      "contractVersion": 1,
+      "requestsEnabled": false
+    },
+    "functions": [
+      {
+        "signature": "account_deletion_activation_authorized(uuid,uuid)",
+        "proname": "account_deletion_activation_authorized",
+        "digest": "4a434675408460a509afb8cfd4a666aeff9473b6ceca6b0021621178159313de",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "account_deletion_contract_status()",
+        "proname": "account_deletion_contract_status",
+        "digest": "d40f42b4e5aeea9c3c141138beb707ef9c19adec6b3194ae58276de5f21f0ba0",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "account_deletion_monitor(uuid)",
+        "proname": "account_deletion_monitor",
+        "digest": "1f076fe4b2e869f7050b0139a42dd70fc2ae33f4d6b88aaa6c6a10b6ef8dc372",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "claim_account_deletions()",
+        "proname": "claim_account_deletions",
+        "digest": "e89db7bad97e646df1c41bd06967968984f831a0f036142552683a8d49e489f2",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "claim_account_deletions(integer)",
+        "proname": "claim_account_deletions",
+        "digest": "9dc1b2d4dbb2ece0f0276f032ba3a18fb2b2c7829f170f35972089c004b2d4cb",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "establish_account_deletion_barrier(uuid,integer,boolean)",
+        "proname": "establish_account_deletion_barrier",
+        "digest": "2e39c95f1e189c25e28d950c75e4f70c6350b755bd19371a37ac06ec32a70d70",
+        "acl": "{postgres=X/postgres}"
+      },
+      {
+        "signature": "ops_assert_capability(text)",
+        "proname": "ops_assert_capability",
+        "digest": "775c506f7294b491b62f0d60c10c162c3f9e8ac33bb7e3868dd54b829ca352d1",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres}"
+      },
+      {
+        "signature": "ops_audit(text,text,text,jsonb,jsonb,text,uuid)",
+        "proname": "ops_audit",
+        "digest": "7462a871a1bff3f79c01d09760ab7ee5b15bc53bbbe90d2d9266c0699bcc25b8",
+        "acl": "{postgres=X/postgres}"
+      },
+      {
+        "signature": "read_account_deletion_delivered_receipt(uuid,text)",
+        "proname": "read_account_deletion_delivered_receipt",
+        "digest": "c26de129c83a1b4b0c3c43633a8d08758ad667604d2add681d2a65a735d76b80",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "read_account_deletion_lifecycle(uuid,uuid)",
+        "proname": "read_account_deletion_lifecycle",
+        "digest": "9fccd6373e7a8b3326e0275c81069aec0caf94b351e0698d6ff2631133c0adb2",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "request_verified_account_deletion_core(uuid,integer,boolean)",
+        "proname": "request_verified_account_deletion_core",
+        "digest": "318be11cd4de5677fa8651ef6e6b966916988c78402ef84180a40e099909376d",
+        "acl": "{postgres=X/postgres}"
+      },
+      {
+        "signature": "request_verified_account_deletion(uuid,integer,boolean)",
+        "proname": "request_verified_account_deletion",
+        "digest": "b9597dcfb343da72072dc0054eb4a9d6fd17574698608d5b7a6008e1d12c3722",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "set_account_deletion_intake(text,bigint,text,uuid)",
+        "proname": "set_account_deletion_intake",
+        "digest": "666aac1c3305c479a9d8c743c737cfb3fd0b9b74c8d5f564e75f7e0b0df7a3a2",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres}"
+      }
+    ],
+    "policyV1": "488253c7c7ee9850964a950b0f31b89f",
+    "data": {
+      "reward_transactions": {
+        "count": "34",
+        "digest": "4303fe12af68b78ab612156d51fa69b3"
+      },
+      "rider_reward_balance": {
+        "count": "18",
+        "digest": "2f90b7fc1bf69eac68ba1983b30765ab"
+      },
+      "reward_redemptions": {
+        "count": "2",
+        "digest": "ffedf21e34e8a641fc5c14ae1127a52f"
+      },
+      "fulfilment": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "ride_session": {
+        "count": "66",
+        "digest": "0c9d53123188fd76b995ac20ebe00c02"
+      },
+      "account_deletion_jobs": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "account_deletion_review": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "account_deletion_audit": {
+        "count": "10",
+        "digest": "f1c1b614f9f45eb52dc6a9f716394f15"
+      },
+      "account_deletion_receipt_access": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      }
+    },
+    "shop": [
+      {
+        "redemption_enabled": false
+      }
+    ]
+  },
+  "after": {
+    "gate": {
+      "operating_state": "disabled",
+      "operating_version": "0",
+      "active_policy_version": 2,
+      "managed_resources_execution_enabled": false
+    },
+    "contract": {
+      "policyVersion": 2,
+      "contractVersion": 1,
+      "requestsEnabled": false
+    },
+    "functions": [
+      {
+        "signature": "account_deletion_activation_authorized(uuid,uuid)",
+        "proname": "account_deletion_activation_authorized",
+        "digest": "4a434675408460a509afb8cfd4a666aeff9473b6ceca6b0021621178159313de",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "account_deletion_contract_status()",
+        "proname": "account_deletion_contract_status",
+        "digest": "1648aa5db42e2ec24cb5100c9806ab0fde18a0a202ac72e0e580554c3c5a9ccc",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "account_deletion_monitor(uuid)",
+        "proname": "account_deletion_monitor",
+        "digest": "1f076fe4b2e869f7050b0139a42dd70fc2ae33f4d6b88aaa6c6a10b6ef8dc372",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "claim_account_deletions()",
+        "proname": "claim_account_deletions",
+        "digest": "e89db7bad97e646df1c41bd06967968984f831a0f036142552683a8d49e489f2",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "claim_account_deletions(integer)",
+        "proname": "claim_account_deletions",
+        "digest": "9dc1b2d4dbb2ece0f0276f032ba3a18fb2b2c7829f170f35972089c004b2d4cb",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "establish_account_deletion_barrier(uuid,integer,boolean)",
+        "proname": "establish_account_deletion_barrier",
+        "digest": "fe5e607aec59e31ceef4f4baaa0d901695bf08bcad7f89cbcae660094e717c29",
+        "acl": "{postgres=X/postgres}"
+      },
+      {
+        "signature": "ops_assert_capability(text)",
+        "proname": "ops_assert_capability",
+        "digest": "775c506f7294b491b62f0d60c10c162c3f9e8ac33bb7e3868dd54b829ca352d1",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres}"
+      },
+      {
+        "signature": "ops_audit(text,text,text,jsonb,jsonb,text,uuid)",
+        "proname": "ops_audit",
+        "digest": "7462a871a1bff3f79c01d09760ab7ee5b15bc53bbbe90d2d9266c0699bcc25b8",
+        "acl": "{postgres=X/postgres}"
+      },
+      {
+        "signature": "read_account_deletion_delivered_receipt(uuid,text)",
+        "proname": "read_account_deletion_delivered_receipt",
+        "digest": "c26de129c83a1b4b0c3c43633a8d08758ad667604d2add681d2a65a735d76b80",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "read_account_deletion_lifecycle(uuid,uuid)",
+        "proname": "read_account_deletion_lifecycle",
+        "digest": "9fccd6373e7a8b3326e0275c81069aec0caf94b351e0698d6ff2631133c0adb2",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "request_verified_account_deletion_core(uuid,integer,boolean)",
+        "proname": "request_verified_account_deletion_core",
+        "digest": "318be11cd4de5677fa8651ef6e6b966916988c78402ef84180a40e099909376d",
+        "acl": "{postgres=X/postgres}"
+      },
+      {
+        "signature": "request_verified_account_deletion(uuid,integer,boolean)",
+        "proname": "request_verified_account_deletion",
+        "digest": "b9597dcfb343da72072dc0054eb4a9d6fd17574698608d5b7a6008e1d12c3722",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "signature": "set_account_deletion_intake(text,bigint,text,uuid)",
+        "proname": "set_account_deletion_intake",
+        "digest": "a76212429773461ae218c28e230792a797f7167618728173768c8f9d76976c60",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres}"
+      }
+    ],
+    "policyV1": "488253c7c7ee9850964a950b0f31b89f",
+    "data": {
+      "reward_transactions": {
+        "count": "34",
+        "digest": "4303fe12af68b78ab612156d51fa69b3"
+      },
+      "rider_reward_balance": {
+        "count": "18",
+        "digest": "2f90b7fc1bf69eac68ba1983b30765ab"
+      },
+      "reward_redemptions": {
+        "count": "2",
+        "digest": "ffedf21e34e8a641fc5c14ae1127a52f"
+      },
+      "fulfilment": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "ride_session": {
+        "count": "66",
+        "digest": "0c9d53123188fd76b995ac20ebe00c02"
+      },
+      "account_deletion_jobs": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "account_deletion_review": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "account_deletion_audit": {
+        "count": "10",
+        "digest": "f1c1b614f9f45eb52dc6a9f716394f15"
+      },
+      "account_deletion_receipt_access": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      }
+    },
+    "shop": [
+      {
+        "redemption_enabled": false
+      }
+    ]
+  }
+}

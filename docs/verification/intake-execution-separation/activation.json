@@ -1,0 +1,71 @@
+{
+  "checkedAt": "2026-10-20T17:39:58.979Z",
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "readOnly": "on",
+  "gate": {
+    "operating_state": "enabled",
+    "operating_version": "1",
+    "operating_changed_at": "2026-10-20T17:39:48.695Z",
+    "operating_changed_by": "fd15d91a-235a-4532-b906-622dc6579ee7",
+    "operating_reason": "Owner-approved intake-only activation; receipt access expires 30 days after original submission; irreversible execution remains disabled",
+    "active_policy_version": 2,
+    "managed_resources_execution_enabled": false
+  },
+  "contract": {
+    "policyVersion": 2,
+    "contractVersion": 1,
+    "requestsEnabled": true
+  },
+  "intakeReady": true,
+  "mfaEnforced": true,
+  "activation": [
+    {
+      "operation": "782a5a3a-d3a8-4d6d-b25b-04988bfa923b",
+      "actor_user_id": "fd15d91a-235a-4532-b906-622dc6579ee7",
+      "command_recorded_at": "2026-10-20T17:39:48.665Z",
+      "payload": {
+        "state": "enabled",
+        "reason": "Owner-approved intake-only activation; receipt access expires 30 days after original submission; irreversible execution remains disabled",
+        "expected": 0
+      },
+      "result": {
+        "state": "enabled",
+        "reason": "Owner-approved intake-only activation; receipt access expires 30 days after original submission; irreversible execution remains disabled",
+        "version": 1,
+        "changedAt": "2026-10-20T17:39:48.695504+00:00",
+        "changedBy": "fd15d91a-235a-4532-b906-622dc6579ee7",
+        "policyVersion": 2,
+        "requestsEnabled": true
+      },
+      "audit_id": "7b4bfdea-8e8c-4984-9893-0bda0a914102",
+      "audit_recorded_at": "2026-10-20T17:39:48.665Z",
+      "previous_state": {
+        "state": "disabled",
+        "version": 0
+      },
+      "resulting_state": {
+        "state": "enabled",
+        "reason": "Owner-approved intake-only activation; receipt access expires 30 days after original submission; irreversible execution remains disabled",
+        "version": 1,
+        "changedAt": "2026-10-20T17:39:48.695504+00:00",
+        "changedBy": "fd15d91a-235a-4532-b906-622dc6579ee7",
+        "policyVersion": 2,
+        "requestsEnabled": true
+      },
+      "reason": "Owner-approved intake-only activation; receipt access expires 30 days after original submission; irreversible execution remains disabled",
+      "actor_role": "super_admin"
+    }
+  ],
+  "counts": {
+    "requests": "0",
+    "receipt_access": "0",
+    "reviews": "0",
+    "lifecycle_audit": "12"
+  },
+  "shop": [
+    {
+      "redemption_enabled": false
+    }
+  ],
+  "activationVerified": true
+}
