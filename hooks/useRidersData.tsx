@@ -7,7 +7,7 @@ import { RootState } from "@/redux/store";
 import { Rider, RiderFiltersSchema } from "@/schemas";
 import { mockRiders } from "@/data/mockRiders";
 import { mockRoutes } from "@/data/mockRoutes";
-import { getRiders } from "@/app/actions/riders";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 import { shouldUseMockData } from "@/lib/dataSource";
 
 export const useRidersData = (filters?: RiderFiltersSchema) => {
@@ -18,7 +18,6 @@ export const useRidersData = (filters?: RiderFiltersSchema) => {
   return useQuery<Rider[]>({
     queryKey: ["riders", filters, selectedRouteIds],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
       if (shouldUseMockData()) {
         let riders = [...mockRiders];
         const routes = [...mockRoutes];
@@ -104,7 +103,7 @@ export const useRidersData = (filters?: RiderFiltersSchema) => {
         return riders;
       }
 
-      const result = await getRiders(filters);
+      const result = await dashboardRead("riders", filters);
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to fetch riders");
       }

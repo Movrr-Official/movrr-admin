@@ -7,8 +7,7 @@ import { User, UserFiltersSchema } from "@/schemas";
 import { mockCampaigns } from "@/data/mockCampaigns";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { getUsers } from "@/app/actions/users";
-import { getCampaigns } from "@/app/actions/campaigns";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 import { shouldUseMockData } from "@/lib/dataSource";
 
 export const useUsersData = (filters?: UserFiltersSchema) => {
@@ -19,7 +18,6 @@ export const useUsersData = (filters?: UserFiltersSchema) => {
   return useQuery<User[]>({
     queryKey: ["users", filters, selectedAdvertiserIds],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (shouldUseMockData()) {
         let users = [...mockUsers];
@@ -100,19 +98,18 @@ export const useUsersData = (filters?: UserFiltersSchema) => {
         return users;
       }
 
-      const usersResult = await getUsers(filters, selectedAdvertiserIds);
+      const [usersResult, campaignsResult] = await Promise.all([
+        dashboardRead("users", filters, selectedAdvertiserIds),
+        dashboardRead("campaigns", undefined, selectedAdvertiserIds),
+      ]);
       if (!usersResult.success || !usersResult.data) {
         throw new Error(usersResult.error || "Failed to fetch users");
       }
 
-      const campaignsResult = await getCampaigns(
-        undefined,
-        selectedAdvertiserIds,
-      );
-      const campaigns =
-        campaignsResult.success && campaignsResult.data
-          ? campaignsResult.data
-          : [];
+      if (!campaignsResult.success || !campaignsResult.data) {
+        throw new Error(campaignsResult.error || "Failed to fetch campaign statistics");
+      }
+      const campaigns = campaignsResult.data;
 
       const usersWithStats = usersResult.data.map((user) => {
         if (user.role === "advertiser") {

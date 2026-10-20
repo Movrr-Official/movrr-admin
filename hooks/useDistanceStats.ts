@@ -1,13 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getDistanceStats } from "@/app/actions/rideSessions";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 
 export const useDistanceStats = () =>
   useQuery({
     queryKey: ["distanceStats"],
     queryFn: async () => {
-      const result = await getDistanceStats();
+      const result = await dashboardRead("distanceStats");
       if (!result.success || !result.data) throw new Error(result.error ?? "Failed");
       return result.data;
     },

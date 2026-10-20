@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { createSupabaseServerClient } from "./supabase-server";
 import { createSupabaseAdminClient } from "./supabase-admin";
 import { headers } from "next/headers";
@@ -480,7 +481,9 @@ const persistAdminDashboardSession = async (
 /**
  * Returns the authenticated admin user with role information
  */
-export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+// Deduplicate layout/page authorization within a render; every new request
+// still validates identity, MFA, policy and the trusted dashboard session.
+export const getAuthenticatedUser = cache(async (): Promise<AuthenticatedUser | null> => {
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -546,7 +549,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
       error,
     );
   }
-}
+});
 
 /**
  * Check if user has specific permission (for server components/actions)

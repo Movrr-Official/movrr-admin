@@ -6,11 +6,11 @@ import { mockRewardTransactions, mockRiderBalances } from "@/data/mockRewards";
 import { mockCampaigns } from "@/data/mockCampaigns";
 import { mockUsers } from "@/data/mockUsers";
 import {
-  getRewardStats,
   getRewardTransactions,
   getRiderBalances,
 } from "@/app/actions/rewards";
 import { shouldUseMockData } from "@/lib/dataSource";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 
 interface RewardFilters {
   riderId?: string;
@@ -31,7 +31,6 @@ export const useRewardTransactions = (filters?: RewardFilters) => {
   return useQuery<RewardTransaction[]>({
     queryKey: ["rewardTransactions", filters],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (shouldUseMockData()) {
         let transactions = [...mockRewardTransactions];
@@ -87,7 +86,6 @@ export const useRiderBalances = () => {
   return useQuery<RiderBalance[]>({
     queryKey: ["riderBalances"],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
       if (shouldUseMockData()) {
         return mockRiderBalances;
       }
@@ -107,7 +105,6 @@ export const useRewardStats = (filters?: RewardStatsFilters) => {
   return useQuery({
     queryKey: ["rewardStats", filters],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (shouldUseMockData()) {
         let transactions = [...mockRewardTransactions];
@@ -245,7 +242,7 @@ export const useRewardStats = (filters?: RewardStatsFilters) => {
         };
       }
 
-      const result = await getRewardStats(filters?.dateRange);
+      const result = await dashboardRead("rewardStats", filters?.dateRange);
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to fetch reward stats");
       }

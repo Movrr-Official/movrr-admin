@@ -3,19 +3,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { mockRoutes } from "@/data/mockRoutes";
 import { RiderRoute } from "@/schemas";
-import { getRoutes } from "@/app/actions/routes";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 import { shouldUseMockData } from "@/lib/dataSource";
 
 export const useRouteData = () => {
   return useQuery<RiderRoute[]>({
     queryKey: ["routes"],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
       if (shouldUseMockData()) {
         return [...mockRoutes];
       }
 
-      const result = await getRoutes();
+      const result = await dashboardRead("routes");
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to fetch routes");
       }

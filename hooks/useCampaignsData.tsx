@@ -4,7 +4,7 @@ import { Campaign, CampaignFiltersSchema } from "@/schemas";
 import { mockCampaigns } from "@/data/mockCampaigns";
 import { RootState } from "@/redux/store";
 import { useQuery } from "@tanstack/react-query";
-import { getCampaigns } from "@/app/actions/campaigns";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 import { shouldUseMockData } from "@/lib/dataSource";
 
 export const useCampaignsData = (filters?: CampaignFiltersSchema) => {
@@ -15,7 +15,7 @@ export const useCampaignsData = (filters?: CampaignFiltersSchema) => {
   return useQuery<Campaign[]>({
     queryKey: ["campaigns", filters, selectedAdvertiserIds],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+
 
       if (shouldUseMockData()) {
         let campaigns = [...mockCampaigns];
@@ -76,7 +76,7 @@ export const useCampaignsData = (filters?: CampaignFiltersSchema) => {
         return campaigns;
       }
 
-      const result = await getCampaigns(filters, selectedAdvertiserIds);
+      const result = await dashboardRead("campaigns", filters, selectedAdvertiserIds);
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to fetch campaigns");
       }

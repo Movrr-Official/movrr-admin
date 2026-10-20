@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { RideSession, RideSessionFilters } from "@/schemas";
-import { getRideSessions } from "@/app/actions/rideSessions";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 import { shouldUseMockData } from "@/lib/dataSource";
 
 const mockRideSessions: RideSession[] = [
@@ -95,7 +95,7 @@ export const useRideSessionsData = (
     queryKey: ["rideSessions", filters],
     enabled: options?.enabled ?? true,
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
+
 
       if (shouldUseMockData()) {
         let sessions = [...mockRideSessions];
@@ -133,7 +133,7 @@ export const useRideSessionsData = (
         );
       }
 
-      const result = await getRideSessions(filters);
+      const result = await dashboardRead("rideSessions", filters);
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to fetch ride sessions");
       }

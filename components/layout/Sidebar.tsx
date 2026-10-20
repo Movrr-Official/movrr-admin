@@ -47,7 +47,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { signOut } from "@/lib/auth";
-import { ADMIN_USER_QUERY_KEY } from "@/hooks/useAdminUser";
 import { CountDisplay, useCounts } from "@/providers/CountProvider";
 import { UserRole } from "@/schemas";
 import { useToast } from "@/hooks/useToast";
@@ -418,16 +417,12 @@ const Sidebar = ({ currentRole }: { currentRole?: UserRole | null }) => {
     startTransition(async () => {
       try {
         await signOut();
-        queryClient.setQueryData(ADMIN_USER_QUERY_KEY, null);
-        queryClient.removeQueries({
-          queryKey: ADMIN_USER_QUERY_KEY,
-          exact: true,
-        });
+        queryClient.clear();
         toast({
           title: "Signed out",
           description: "You have been successfully signed out.",
         });
-        setTimeout(() => router.push("/auth/signin"), 500);
+        router.replace("/auth/signin");
       } catch (error) {
         console.error("Sign out failed:", error);
         toast({

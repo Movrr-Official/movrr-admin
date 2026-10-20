@@ -1,34 +1,13 @@
-import { mockUsers } from "@/data/mockUsers";
-import { RootState } from "@/redux/store";
+import { useMemo } from "react";
 import { UserFiltersSchema, UserRole } from "@/schemas";
-import { useQuery } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
-import { getUsers } from "@/app/actions/users";
-import { shouldUseMockData } from "@/lib/dataSource";
+import { useUsersData } from "@/hooks/useUsersData";
 
 export const useUserStats = (filters?: UserFiltersSchema) => {
-  const selectedAdvertiserIds = useSelector(
-    (state: RootState) => state.advertiserFilter.selectedAdvertiserIds,
-  );
-
-  return useQuery({
-    queryKey: ["user-stats", filters, selectedAdvertiserIds],
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const usersResult = shouldUseMockData()
-        ? { success: true, data: mockUsers }
-        : await getUsers(filters, selectedAdvertiserIds);
-
-      const users =
-        usersResult.success && usersResult.data ? usersResult.data : [];
-
-      let filteredUsers = selectedAdvertiserIds.length
-        ? users.filter(
-            (u) =>
-              u.role !== "advertiser" || selectedAdvertiserIds.includes(u.id),
-          )
-        : users;
+  // Share the same account-scoped query and error state as the user chart.
+  const query = useUsersData(filters);
+  const data = useMemo(() => {
+      if (!query.data) return undefined;
+      let filteredUsers = query.data;
 
       if (filters?.dateRange?.from || filters?.dateRange?.to) {
         const from = filters.dateRange?.from
@@ -68,6 +47,6 @@ export const useUserStats = (filters?: UserFiltersSchema) => {
         roleCounts,
         latestCreated: latestUser ? new Date(latestUser.createdAt) : null,
       };
-    },
-  });
+  }, [query.data, filters?.dateRange?.from, filters?.dateRange?.to]);
+  return { ...query, data };
 };

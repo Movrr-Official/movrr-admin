@@ -2,17 +2,17 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
-  getSessionAnalytics,
   getStreakLeaderboard,
   type SessionAnalytics,
   type StreakLeader,
 } from "@/app/actions/sessionAnalytics";
+import { dashboardRead } from "@/lib/dashboard/readTransport";
 
 export const useSessionAnalytics = (days = 30) =>
   useQuery<SessionAnalytics>({
     queryKey: ["sessionAnalytics", days],
     queryFn: async () => {
-      const result = await getSessionAnalytics(days);
+      const result = await dashboardRead("sessionAnalytics", days);
       if (!result.success || !result.data) throw new Error(result.error ?? "Failed");
       return result.data;
     },
