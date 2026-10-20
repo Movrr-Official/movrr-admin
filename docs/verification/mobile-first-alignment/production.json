@@ -1,0 +1,187 @@
+{
+  "date": "2026-10-20",
+  "web": {
+    "commit": "e5cf27b58199f2f274069503d4e35ce8ef7ed99e",
+    "deploymentId": "dpl_DCANL9GvEimQYDn8SKY4L6WTv2cB",
+    "deploymentUrl": "https://movrr-ehprgn97q-movrrops-projects.vercel.app",
+    "productionUrl": "https://app.movrr.nl",
+    "readyState": "READY",
+    "region": "fra1",
+    "tests": {
+      "files": 12,
+      "passed": 77,
+      "typecheck": "passed",
+      "productionBuild": "passed locally and on Vercel",
+      "changedFilesLint": "passed",
+      "fullLint": "18 pre-existing no-explicit-any errors in untouched services/advertiser.ts; two existing warnings"
+    },
+    "retiredRoutesAbsentFromBuild": [
+      "/dashboard/community",
+      "/dashboard/partners",
+      "/dashboard/rewards/shop",
+      "/dashboard/account",
+      "/dashboard/privacy"
+    ],
+    "retiredConsumersAbsentFromServerBundles": [
+      "communityRideAction",
+      "/community-rides",
+      "/rewards/catalog",
+      "/partners/locations"
+    ],
+    "productionHttp": {
+      "origin": "https://app.movrr.nl",
+      "verifiedAt": "2026-10-20T15:01:53.183Z",
+      "authenticated": false,
+      "results": [
+        {
+          "path": "/auth/signin",
+          "method": "GET",
+          "status": 200,
+          "location": null
+        },
+        {
+          "path": "/dashboard",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/campaigns",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/routes",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/rides",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/rewards",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/notifications",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/settings",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/settings/privacy",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/settings/self-service",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/community",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/partners",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/rewards/shop",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/account",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/dashboard/privacy",
+          "method": "GET",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "path": "/not-a-movrr-page",
+          "method": "GET",
+          "status": 404,
+          "location": null
+        },
+        {
+          "path": "/api/community-rides",
+          "method": "POST",
+          "status": 404
+        },
+        {
+          "path": "/api/dashboard/community",
+          "method": "POST",
+          "status": 404
+        },
+        {
+          "path": "/api/rewards/redeem",
+          "method": "POST",
+          "status": 404
+        },
+        {
+          "path": "/api/partners/locations",
+          "method": "POST",
+          "status": 404
+        }
+      ]
+    },
+    "liveAuthenticatedBrowserAcceptance": "pending; no connected browser session was available"
+  },
+  "backend": {
+    "productionMigrationApplied": false,
+    "productionContractUnchanged": true,
+    "migration": "scripts/065_community_approved_rider_authorization.sql",
+    "sha256": "6e95dea6827fc7cc02dd88e09d9922739c2281e84f5a98377f29536aa8155f3f",
+    "approval": "explicit production authorization required",
+    "localPostgresAssertions": 56,
+    "localPostgrestAssertions": 9,
+    "baselineSuspendedRiderBypassReproduced": true,
+    "baselineSource": "read-only production functions/policies/triggers fixture",
+    "alignmentDatabaseAssertions": 88,
+    "adminTests": {
+      "files": 64,
+      "passed": 683,
+      "typecheck": "passed",
+      "lint": "passed (repository aliases lint to TypeScript)",
+      "productionBuild": "passed"
+    },
+    "adminDeployment": "none; existing approval UI and RBAC reused",
+    "productionMutations": "none"
+  },
+  "mobile": {
+    "commit": "d42129978ddd34cd38e0783c45ef22fe3c549beb",
+    "worktreeUnchanged": true,
+    "buildsOrOta": "none"
+  },
+  "operatingStates": {
+    "publicShopRedemption": "disabled; unchanged",
+    "deletionIntake": "disabled; unchanged",
+    "financialTransactions": "none"
+  }
+}

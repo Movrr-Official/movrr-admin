@@ -22,9 +22,26 @@
       "limits": "Individual session observations establish a material improvement, not consistent population p75 performance. Cold loads and some navigation remain above the engineering targets."
     },
     {
+      "name": "Mobile-first web companion alignment",
+      "status": "deployed; production anonymous smoke checks passed",
+      "commit": "e5cf27b58199f2f274069503d4e35ce8ef7ed99e",
+      "deploymentId": "dpl_DCANL9GvEimQYDn8SKY4L6WTv2cB",
+      "work": "Seven rider destinations; Community, rider Shop catalog and Partner discovery consumers retired. Self-service/privacy moved into Settings; Wallet, achievements and redemption/credential history retained.",
+      "acceptanceLimit": "Authenticated live browser acceptance pending; local navigation/history, rendering, account/privacy and financial regressions passed."
+    },
+    {
+      "name": "Approved-rider Community creation boundary",
+      "status": "implemented and verified locally; production migration authorization pending",
+      "migration": "scripts/065_community_approved_rider_authorization.sql",
+      "work": "Reuse existing staff-managed unrevoked creator grant; enforce active rider/account, Auth bans/deletion and ownership for direct inserts and RPCs. Keep active organizers able to edit after grant revocation; preserve discovery/participation.",
+      "verification": "56 PostgreSQL assertions plus nine real PostgREST assertions; rollback and replay verified. Production customer records untouched."
+    },
+    {
       "name": "Remaining launch acceptance",
       "status": "open",
       "work": [
+        "Obtain explicit authorization before applying Community migration 065; then verify production definitions/ACL and authorized test-identity acceptance.",
+        "Verify the new companion routes and retired not-found behavior in an authenticated production browser session.",
         "Exercise additional authorized rider, employee-role and organisation identities for live isolation acceptance; focused regression tests already pass.",
         "Exercise live account switching and logout using authorized test accounts; private cache cancellation and clearing tests already pass.",
         "Collect repeated cold and warm production observations across representative sessions before claiming p75 below 800ms or primary navigation below one second.",
@@ -46,7 +63,9 @@
     "publicShopRedemption": "unchanged; not activated",
     "selfServiceDeletionIntake": "disabled; unchanged",
     "financialTestTransactions": "none executed",
-    "databaseSchemaAndPrivileges": "unchanged",
+    "databaseSchemaAndPrivileges": "unchanged in production; Community migration 065 is committed but awaiting explicit authorization",
     "mobileRuntimeAndReleases": "unchanged; no EAS or OTA work"
-  }
+  },
+  "mobileFirstEvidence": "../verification/mobile-first-alignment/production.json",
+  "mobileFirstProductDecision": "../product/mobile-first-companion.md"
 }
