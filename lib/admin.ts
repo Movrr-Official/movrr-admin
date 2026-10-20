@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
+import { unstable_rethrow } from "next/navigation";
 import { createSupabaseServerClient } from "./supabase-server";
 import { createSupabaseAdminClient } from "./supabase-admin";
 import { headers } from "next/headers";
@@ -535,6 +536,9 @@ export const getAuthenticatedUser = cache(async (): Promise<AuthenticatedUser | 
 
     return authenticatedUser;
   } catch (error) {
+    // Preserve framework dynamic-render/redirect control flow. These signals
+    // are not authentication outages and must reach Next.js unchanged.
+    unstable_rethrow(error);
     if (isAdminAuthError(error)) {
       throw error;
     }

@@ -45,3 +45,8 @@ it('fails closed when either policy or trusted-session storage is unavailable', 
   await expect(getAuthenticatedUser()).rejects.toMatchObject({code:'AUTH_INTERNAL_ERROR'});
   expect(deps.upsert).not.toHaveBeenCalled();
 });
+it('passes framework dynamic-render control flow through unchanged', async () => {
+  const signal=Object.assign(new Error('dynamic rendering required'),{digest:'DYNAMIC_SERVER_USAGE'});
+  deps.user.mockRejectedValue(signal);
+  await expect(getAuthenticatedUser()).rejects.toBe(signal);
+});
