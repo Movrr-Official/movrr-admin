@@ -40,6 +40,7 @@ describe("rider API JWT boundary", () => {
     "/api/v1/wallet/balance",
     "/api/v1/wallet/transactions",
     "/api/v1/wallet/statement",
+    "/api/v1/government/me",
     "/api/v1/rewards/redeem",
     "/api/v1/rewards/redemptions",
     "/api/v1/rewards/catalog/item",
@@ -62,6 +63,8 @@ describe("rider API JWT boundary", () => {
     "/api/v1/rewards/admin",
     "/api/v1/wallet/balance/other",
     "/api/v1/wallet/statement/other",
+    "/api/v1/government/me/other",
+    "/api/v1/government/programmes",
     "/riders",
   ])("keeps %s behind its existing dashboard gate", (path) =>
     expect(isRiderApiPath(path)).toBe(false),
