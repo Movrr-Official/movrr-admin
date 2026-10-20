@@ -21,6 +21,7 @@ async function main(){
  const get=rid=>db`SELECT * FROM get_impact_summary(${rid})`;
  equal(Number((await get(rider))[0].total_rides),4);
  await db.begin(tx=>tx.unsafe(fs.readFileSync(path.join(__dirname,'062_impact_verified_history_coverage.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'')));
+ await db.begin(tx=>tx.unsafe(fs.readFileSync(path.join(__dirname,'063_impact_daily_precision.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'')));
  const own=(await get(rider))[0];equal(Number(own.total_rides),5);equal(Number(own.total_distance_km),25.04);equal(Number(own.co2_saved_kg),4.76);
  equal(Number((await get(foreign))[0].co2_saved_kg),0.76);equal(Number((await get(null))[0].co2_saved_kg),5.52);
  equal((await db`SELECT * FROM get_impact_ride_evidence(${rider}) WHERE session_id=${boosted}`).length,1);
@@ -28,7 +29,8 @@ async function main(){
  equal(days.map(x=>[x.reporting_day,Number(x.n)]),[['2026-03-29',4],['2026-03-30',1]]);
  const daily=await db`SELECT * FROM get_impact_daily(366)`;
  equal(daily.map(x=>x.date),['2026-03-29','2026-03-30']);
- equal(daily.map(x=>Number(x.co2SavedKg)),[4.57,0.95]);
+ equal(daily.map(x=>Number(x.co2SavedKg)),[4.5676,0.95]);
+ equal(Number(daily.reduce((sum,x)=>sum+Number(x.co2SavedKg),0).toFixed(2)),5.52);
  await deny(()=>db`SELECT * FROM get_impact_daily(0)`,'22023');
  const auth=(actor,fn)=>db.begin(async tx=>{await tx.unsafe('SET LOCAL ROLE authenticated');await tx`SELECT set_config('request.jwt.claim.sub',${actor},true),set_config('request.jwt.claims',${JSON.stringify({sub:actor,role:'authenticated'})},true)`;return fn(tx)});
  const me=await auth(user,async tx=>(await tx`SELECT * FROM get_lifetime_impact_summary()`)[0]);equal(me,own);

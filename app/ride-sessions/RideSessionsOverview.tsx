@@ -501,7 +501,7 @@ export default function RideSessionsOverview() {
                         <span className="flex items-center gap-1 text-success">
                           <Leaf className="h-3.5 w-3.5" />
                           {analytics
-                            ? `${analytics.distanceTrend.reduce((s, d) => s + d.co2SavedKg, 0).toLocaleString()} kg CO₂e WTW`
+                            ? `${analytics.distanceTrend.reduce((s, d) => s + d.co2SavedKg, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} kg CO₂e WTW`
                             : "—"}
                         </span>
                       </div>
@@ -567,7 +567,7 @@ export default function RideSessionsOverview() {
                             formatter={(v: number, name: string) =>
                               name === "distanceKm"
                                 ? [`${v} km`, "Distance"]
-                                : [`${v} kg`, "Car comparison (CO₂e WTW)"]
+                                : [`${Number(v).toFixed(2)} kg`, "Car comparison (CO₂e WTW)"]
                             }
                           />
                           <Area

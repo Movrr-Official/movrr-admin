@@ -887,7 +887,7 @@ export default function DashboardOverview() {
               distanceLoading
                 ? "—"
                 : distanceStats
-                  ? `${distanceStats.co2SavedKg.toLocaleString()} kg`
+                  ? `${distanceStats.co2SavedKg.toLocaleString(undefined, { maximumFractionDigits: 2 })} kg`
                   : "N/A"
             }
             icon={Leaf}
@@ -1497,8 +1497,8 @@ export default function DashboardOverview() {
                     <span className="font-semibold text-success dark:text-success">
                       {sessionAnalytics.distanceTrend
                         .reduce((s, d) => s + d.co2SavedKg, 0)
-                        .toFixed(1)}{" "}
-                      kg CO₂
+                        .toFixed(2)}{" "}
+                      kg CO₂e WTW
                     </span>
                   </div>
                 </div>

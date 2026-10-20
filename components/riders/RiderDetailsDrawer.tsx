@@ -954,7 +954,7 @@ export function RiderDetailsDrawer({
                                             Car comparison (CO₂e WTW)
                                           </p>
                                           <p className="text-2xl font-bold text-success">
-                                            {performanceMetrics.co2SavedKg.toLocaleString()}{" "}
+                                            {performanceMetrics.co2SavedKg.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
                                             kg
                                           </p>
                                           <p className="text-xs text-success mt-1">
