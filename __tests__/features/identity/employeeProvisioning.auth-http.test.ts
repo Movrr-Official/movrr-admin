@@ -35,7 +35,12 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
   const input = () => ({ email: `${randomUUID()}@example.test`, name: "Real Auth Employee", role: "partner_operations_manager" as const, status: "active" as const, isVerified: true, languagePreference: "en", sendWelcomeEmail: false });
   beforeAll(async () => {
     await root.unsafe(`CREATE DATABASE "${database}"`);
-    await db.unsafe("CREATE SCHEMA auth");
+    await db.unsafe(`CREATE SCHEMA auth;
+      DO $$ BEGIN
+        IF NOT EXISTS(SELECT FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon; END IF;
+        IF NOT EXISTS(SELECT FROM pg_roles WHERE rolname='authenticated') THEN CREATE ROLE authenticated; END IF;
+        IF NOT EXISTS(SELECT FROM pg_roles WHERE rolname='service_role') THEN CREATE ROLE service_role; END IF;
+      END $$;`);
     execFileSync("docker", ["run", "--detach", "--name", container, "--label", "movrr.task=employee-provisioning-auth-http", "--publish", "127.0.0.1:55444:9999",
       "--env", "GOTRUE_API_HOST=0.0.0.0", "--env", "GOTRUE_API_PORT=9999", "--env", "GOTRUE_DB_DRIVER=postgres",
       "--env", `GOTRUE_DB_DATABASE_URL=postgres://postgres:isolated-local-test-only@host.docker.internal:55443/${database}?search_path=auth`,

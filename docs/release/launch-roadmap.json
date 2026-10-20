@@ -1,6 +1,6 @@
 {
   "updatedAt": "2026-10-20",
-  "scope": "MOVRR web and Admin launch follow-up; existing Mobile work is unchanged",
+  "scope": "MOVRR integrated production acceptance across Mobile, Admin, web and Supabase; owner device and external-provider acceptance remain open",
   "evidence": "../verification/final-dashboard-performance/production.json",
   "milestones": [
     {
@@ -81,8 +81,33 @@
     },
     {
       "name": "Launch decision",
-      "status": "pending owner review of production evidence and remaining acceptance",
-      "work": "Retain established release safeguards and existing approved backend contracts. No additional staging prerequisite or repeat of completed X01-X17/F1-F13 audits is introduced."
+      "status": "automated acceptance PASS; full launch NO-GO pending device and external-provider evidence",
+      "work": "GO for owner iOS acceptance on Preview build 5. Android current-source certification requires a separately approved compatible internal native build. Complete outdoor/background/offline recovery, first-entry Samsung PiP, authenticated production navigation/MFA/OAuth and controlled invitation/push journeys. No new migration, deployment, EAS build, OTA or store submission is authorized by this record.",
+      "evidence": "../../../movrr-mobile/docs/verification/production-integrated-acceptance/acceptance.json"
+    },
+    {
+      "name": "Admin provisioning and atomic creation",
+      "status": "deployed; fresh production journal and live function-body comparison passed",
+      "commit": "7d5d53753a1c68b10c49ec614e4360c580e8f9ce",
+      "deploymentId": "dpl_2Hvf87yio6ZWFxzzRprx4S6EA4xn",
+      "migrations": ["20261020195301", "20261020195302"],
+      "validation": "068/069 journal source checks and 13 provisioning function bodies match. Default Admin suite: 692 passing; opt-in provisioning: 33 real PostgreSQL plus 7 real local GoTrue tests passed. Atomic creation: 79 PostgreSQL/PostGIS assertions. No production identity, membership or email mutation.",
+      "acceptanceLimit": "Live invitation provider acceptance, inbox receipt and real invitation acceptance remain unverified; no explicitly authorized controlled recipient established. Database idempotency does not establish exactly-once email delivery."
+    },
+    {
+      "name": "Production integrated automated acceptance",
+      "status": "passed with documented unrelated web advertiser lint baseline",
+      "work": "13 fresh production read-only assertions; 15 Wallet projections reconcile, zero duplicate ride awards, zero anonymous financial rows, current Community bodies match and recovery scheduling healthy. Cross-application 119 SQL/31 HTTP, Community 56 SQL/9 HTTP, Shop 230 and current cap/recovery 118 assertions pass in isolated environments. Mobile 2718, Admin 692 and web 77 default tests pass; TypeScript and production/JS builds pass. Corrections affect acceptance fixtures/tooling only.",
+      "evidence": "../../../movrr-mobile/docs/verification/production-integrated-acceptance/acceptance.json",
+      "operatingState": "Shop Disabled; deletion intake Enabled/policy 2; irreversible execution Disabled; environmental awards upcoming/non-awardable; partner discovery gates remain closed"
+    },
+    {
+      "name": "Physical device and provider acceptance",
+      "status": "pending owner execution; no physical results claimed",
+      "ios": "Preview b3c26900-5e01-46b6-aed6-1909aec2928f, 1.0.0 (5), source 8d4ece207cc225cdd0124660844acd11b56e1d16; bundled runtime matches accepted source, installed device identity unverified",
+      "android": "Latest Preview 4c74603e-7ba8-4b6d-b478-fe3bec24b2bc, 1.0.0 (4), source 702ea8c6c243a71da345272f8493700f6349264d; existing preview OTA at 282aed4 also predates native/config/PiP changes. New compatible native build needs approval. First-entry blank PiP remains undiagnosed and uncertified.",
+      "checklist": "../../../movrr-mobile/docs/operations/physical-device-launch-acceptance.md",
+      "access": "No connected Android device, Chrome DevTools session or CUA browser/app surface. No credential/session/MFA extraction or authentication bypass."
     }
   ],
   "operatingStates": {
@@ -90,7 +115,7 @@
     "selfServiceDeletionIntake": "Enabled/version 1; production contract and actual MFA command/audit confirmed at 2026-10-20T17:39:58.979Z",
     "financialTestTransactions": "none executed",
     "databaseSchemaAndPrivileges": "Community migration 065 applied as 20261020151107; only approved Community function bodies/ACL and trigger changed. All unrelated RLS and financial permissions verified unchanged. Approved deletion migrations 066/067 applied as 20261020171801/20261020171802; protected data and critical execution/receipt contracts preserved.",
-    "mobileRuntimeAndReleases": "unchanged; no EAS or OTA work"
+    "mobileRuntimeAndReleases": "unchanged; existing EAS build/channel records inspected read-only; no build, OTA or submission initiated"
   },
   "mobileFirstEvidence": "../verification/mobile-first-alignment/production.json",
   "mobileFirstProductDecision": "../product/mobile-first-companion.md",

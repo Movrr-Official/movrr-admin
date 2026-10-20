@@ -197,7 +197,7 @@ module.exports = async ({ db, user, rider, other, otherRider, operator, campaign
     // Exercise the actual web parsers against HTTP responses, not hand-built DTOs.
     const appRoot = path.resolve(__dirname, "../../movrr-app");
     const load = (relative, ports = {}) => {
-      const f = path.join(appRoot, relative),
+      const f = path.resolve(appRoot, relative),
         x = new Module(f, module);
       x.filename = f;
       x.paths = Module._nodeModulePaths(path.dirname(f));
@@ -214,6 +214,17 @@ module.exports = async ({ db, user, rider, other, otherRider, operator, campaign
     const webFetch = async (endpoint) => {
       const url = new URL(endpoint, "http://isolated.test");
       if (url.pathname === "/wallet/balance") return repo.getBalance(rider);
+      if (url.pathname === "/wallet/statement") {
+        const { createWalletQueries } = load("../movrr-admin/features/wallet/application/queries/walletQueries.ts", {
+          "@/lib/result/ApplicationResult": load("../movrr-admin/lib/result/ApplicationResult.ts"),
+        });
+        const result = await createWalletQueries({
+          authorisation: { assertCapability: () => ({ ok: true }) },
+          ledger: repo,
+        }).getStatement({ principal: { type: "rider", riderId: rider } });
+        assert(result.ok, result.message);
+        return result.value;
+      }
       if (url.pathname === "/wallet/transactions")
         return repo.listEntries(rider, {
           cursor: url.searchParams.get("cursor") ?? undefined,
