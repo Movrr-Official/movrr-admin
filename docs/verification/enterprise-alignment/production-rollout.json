@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "recordedAt": "2026-10-20T11:58:13.412Z",
-  "decision": "Partial rollout; ride operations permission correction and deletion-intake activation remain blocked",
+  "recordedAt": "2026-10-20T12:11:58.153Z",
+  "decision": "Alignment and impact deployed; deletion-intake activation remains blocked",
   "productionProject": "kzdvunpuxaxlphqvmzxw",
   "migrations": [
     {
@@ -72,6 +72,13 @@
       "version": "20261020113901",
       "sha256": "c3ae69a9fa8c7625a0948f55af0f20a9dcbe157db0cff9ce2a2965268c504b94",
       "committedAt": "2026-10-20T11:39:06.789Z",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/064_ride_operations_settlement_read_permission.sql",
+      "version": "20261020121001",
+      "sha256": "5b1170d0a4ba150d6f6b4c00448181f8fafa1e21a125cb96660bb4c85c69c582",
+      "committedAt": "2026-10-20T12:10:46.480Z",
       "journalVerified": true
     }
   ],
@@ -156,7 +163,7 @@
   },
   "verification": {
     "database": {
-      "verifiedAt": "2026-10-20T11:54:53.658Z",
+      "verifiedAt": "2026-10-20T12:11:36.477Z",
       "productionProject": "kzdvunpuxaxlphqvmzxw",
       "appliedMigrations": [
         {
@@ -228,6 +235,13 @@
           "sha256": "c3ae69a9fa8c7625a0948f55af0f20a9dcbe157db0cff9ce2a2965268c504b94",
           "committedAt": "2026-10-20T11:39:06.789Z",
           "journalVerified": true
+        },
+        {
+          "path": "movrr-admin/scripts/064_ride_operations_settlement_read_permission.sql",
+          "version": "20261020121001",
+          "sha256": "5b1170d0a4ba150d6f6b4c00448181f8fafa1e21a125cb96660bb4c85c69c582",
+          "committedAt": "2026-10-20T12:10:46.480Z",
+          "journalVerified": true
         }
       ],
       "preservation": {
@@ -236,6 +250,11 @@
         "rowsUnchanged": true
       },
       "checks": {
+        "rideReadPermission": {
+          "service_role": true,
+          "authenticated": false,
+          "anon": false
+        },
         "shop": {
           "state": "disabled",
           "version": "0",
@@ -258,7 +277,7 @@
         },
         "worker": [
           {
-            "finished_at": "2026-10-20T11:50:02.351Z",
+            "finished_at": "2026-10-20T12:10:01.527Z",
             "result": {
               "failed": 0,
               "delivered": 0,
@@ -321,18 +340,64 @@
       "financialMutations": false
     },
     "liveProbes": {
-      "checkedAt": "2026-10-20T11:54:48.370Z",
+      "checkedAt": "2026-10-20T12:11:32.244Z",
       "rideOperations": {
-        "status": 403,
-        "error": {
-          "code": "42501",
-          "message": "permission denied for function get_ride_reward_read_state"
-        },
+        "status": 200,
+        "error": null,
         "authentication": "Existing service binding; read-only RPC, not staff UI",
-        "rows": 0,
-        "sessionStatuses": {},
-        "earningModes": {},
-        "fieldNames": []
+        "rows": 66,
+        "sessionStatuses": {
+          "rejected": 28,
+          "cancelled": 15,
+          "completed": 22,
+          "active": 1
+        },
+        "earningModes": {
+          "standard_ride": 65,
+          "ad_enhanced_ride": 1
+        },
+        "fieldNames": [
+          "id",
+          "status",
+          "metadata",
+          "rider_id",
+          "route_id",
+          "bike_type",
+          "created_at",
+          "route_name",
+          "started_at",
+          "updated_at",
+          "_settlement",
+          "campaign_id",
+          "duration_ms",
+          "completed_at",
+          "earning_mode",
+          "battery_usage",
+          "bonus_applied",
+          "max_speed_kmh",
+          "moving_time_ms",
+          "rider_route_id",
+          "policy_snapshot",
+          "compliance_score",
+          "algorithm_version",
+          "average_speed_kmh",
+          "last_heartbeat_at",
+          "multiplier_applied",
+          "suggested_route_id",
+          "verification_result",
+          "ride_quality_percent",
+          "total_distance_meters",
+          "campaign_impact_impressions"
+        ],
+        "settlementStatuses": {
+          "settled": 28,
+          "unknown": 37,
+          "awaiting_verification": 1
+        },
+        "exactSessionLookup": true,
+        "deterministicPaginationAndReplay": true,
+        "invalidPageRejected": true,
+        "anonymousDirectHelperAndPageDenied": true
       },
       "publicBoundaries": [
         {
@@ -433,7 +498,7 @@
     ],
     "shopWorker": [
       {
-        "finished_at": "2026-10-20T11:50:02.351Z",
+        "finished_at": "2026-10-20T12:10:01.527Z",
         "result": {
           "failed": 0,
           "delivered": 0,
@@ -717,15 +782,6 @@
   "temporaryHoldsRemoved": true,
   "remaining": [
     {
-      "id": "X08-live-ACL",
-      "status": "Tested source correction committed; production application blocked by automatic approval review",
-      "sourceRevision": "a69de432229e276d7cea6a66b58d572167bf11cd",
-      "migration": "scripts/064_ride_operations_settlement_read_permission.sql",
-      "sha256": "5b1170d0a4ba150d6f6b4c00448181f8fafa1e21a125cb96660bb4c85c69c582",
-      "evidence": "Service-role ride page HTTP 403 / SQL 42501: permission denied for function get_ride_reward_read_state",
-      "approval": "Explicit approval requested; no alternate execution attempted"
-    },
-    {
       "id": "X11-activation",
       "status": "Blocked by existing policy/evidence safeguards; intake remains disabled"
     },
@@ -733,5 +789,222 @@
       "id": "authenticated-live-acceptance",
       "status": "Not executed: no connected real rider or authorized MFA staff session"
     }
-  ]
+  ],
+  "ridePermissionActivation": {
+    "explicitUserApproval": true,
+    "approvalEvidence": "Current conversation: Approve migration 064",
+    "sourceRevision": "a69de432229e276d7cea6a66b58d572167bf11cd",
+    "migration": {
+      "project": "kzdvunpuxaxlphqvmzxw",
+      "authorized": true,
+      "startedAt": "2026-10-20T12:10:46.333Z",
+      "applied": [
+        {
+          "path": "movrr-admin/scripts/064_ride_operations_settlement_read_permission.sql",
+          "version": "20261020121001",
+          "sha256": "5b1170d0a4ba150d6f6b4c00448181f8fafa1e21a125cb96660bb4c85c69c582",
+          "committedAt": "2026-10-20T12:10:46.480Z"
+        }
+      ],
+      "preservedTables": 24,
+      "changedTables": [],
+      "completedAt": "2026-10-20T12:10:47.172Z"
+    },
+    "preservationBefore": {
+      "reward_transactions": {
+        "rows": "34",
+        "digest": "b30f855447291c91df0656e02cabf4b3a7eb84d432ef8effaaf4ab5a7e0f8e30"
+      },
+      "rider_reward_balance": {
+        "rows": "18",
+        "digest": "1a93735ec8a1a363139b264c0e25cbd82e6bcfb5a5eb14add992f3af2adcca80"
+      },
+      "reward_redemptions": {
+        "rows": "2",
+        "digest": "bfe926c997ea9c75924961fc45dc94cdace6fa4edb31b2a26ec22ab43d90bad4"
+      },
+      "reward_catalog": {
+        "rows": "38",
+        "digest": "26dc96a611e71fc4e17e944f9c63e6d16f22add7aa0515e833f7e5722247e51e"
+      },
+      "fulfilment": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fulfilment_event": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fulfilment_token": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fulfilment_resource": {
+        "rows": "38",
+        "digest": "4a9461e14f2fa33e9e379633f2dcaa5c3a3850d58a62f261a7dbe017d6f8eb33"
+      },
+      "fulfilment_resource_item": {
+        "rows": "25",
+        "digest": "67ae4b800aadf911c27dbb25b7e24c139044bf947cf86afbd8f1164983da1896"
+      },
+      "fulfilment_resource_allocation": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "partner_validation": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "shop_credential": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "user": {
+        "rows": "22",
+        "digest": "69c173a8ba996a85a5f389f16aca5ebb43a02a248de402d2f3153ab414dc3b6e"
+      },
+      "rider": {
+        "rows": "18",
+        "digest": "9b559fca8e16deaaea2e83f1c86efceb92d4241ec56f3da4fe335ac68de558a5"
+      },
+      "ride_session": {
+        "rows": "66",
+        "digest": "29db504eecb357032f1e79712168c26c043163be690d55a049ae5e384847dbe4"
+      },
+      "ride_reward_execution_receipt": {
+        "rows": "2",
+        "digest": "065b3b024cc633c2f8d4baa93f96f4607df51e6159d8821c351dbae44d7b55cf"
+      },
+      "campaign_signup": {
+        "rows": "1",
+        "digest": "2a9b12e10d2ef68492f6fdee5e7b9ad1dae1191f08e143d8102066ed9e81a1e2"
+      },
+      "campaign_assignment": {
+        "rows": "3",
+        "digest": "e5969ca046f7f6fbdc6920f4ed10f94c1c4cc2891bba59b114c9dc30213ee446"
+      },
+      "rider_campaign_accessory_assignment": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "campaign_accessory_inventory_item": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "rider_campaign_accessory_event": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "platform_audit_record": {
+        "rows": "148",
+        "digest": "9e1ca3ca8e64a51de3e12017ee9cd4abe47ca53718411e2be4984db58872bdac"
+      },
+      "rider_badge_award": {
+        "rows": "7",
+        "digest": "93923cf8250367294a9c95f214f07d7e914f9d7d4854a5852a7072368eae726d"
+      },
+      "rider_badge_definition": {
+        "rows": "12",
+        "digest": "e0fb19963c6aa19cfa3759fecd217457d79e3457c63e73ce08416ce4ee502329"
+      }
+    },
+    "preservationAfter": {
+      "reward_transactions": {
+        "rows": "34",
+        "digest": "b30f855447291c91df0656e02cabf4b3a7eb84d432ef8effaaf4ab5a7e0f8e30"
+      },
+      "rider_reward_balance": {
+        "rows": "18",
+        "digest": "1a93735ec8a1a363139b264c0e25cbd82e6bcfb5a5eb14add992f3af2adcca80"
+      },
+      "reward_redemptions": {
+        "rows": "2",
+        "digest": "bfe926c997ea9c75924961fc45dc94cdace6fa4edb31b2a26ec22ab43d90bad4"
+      },
+      "reward_catalog": {
+        "rows": "38",
+        "digest": "26dc96a611e71fc4e17e944f9c63e6d16f22add7aa0515e833f7e5722247e51e"
+      },
+      "fulfilment": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fulfilment_event": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fulfilment_token": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fulfilment_resource": {
+        "rows": "38",
+        "digest": "4a9461e14f2fa33e9e379633f2dcaa5c3a3850d58a62f261a7dbe017d6f8eb33"
+      },
+      "fulfilment_resource_item": {
+        "rows": "25",
+        "digest": "67ae4b800aadf911c27dbb25b7e24c139044bf947cf86afbd8f1164983da1896"
+      },
+      "fulfilment_resource_allocation": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "partner_validation": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "shop_credential": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "user": {
+        "rows": "22",
+        "digest": "69c173a8ba996a85a5f389f16aca5ebb43a02a248de402d2f3153ab414dc3b6e"
+      },
+      "rider": {
+        "rows": "18",
+        "digest": "9b559fca8e16deaaea2e83f1c86efceb92d4241ec56f3da4fe335ac68de558a5"
+      },
+      "ride_session": {
+        "rows": "66",
+        "digest": "29db504eecb357032f1e79712168c26c043163be690d55a049ae5e384847dbe4"
+      },
+      "ride_reward_execution_receipt": {
+        "rows": "2",
+        "digest": "065b3b024cc633c2f8d4baa93f96f4607df51e6159d8821c351dbae44d7b55cf"
+      },
+      "campaign_signup": {
+        "rows": "1",
+        "digest": "2a9b12e10d2ef68492f6fdee5e7b9ad1dae1191f08e143d8102066ed9e81a1e2"
+      },
+      "campaign_assignment": {
+        "rows": "3",
+        "digest": "e5969ca046f7f6fbdc6920f4ed10f94c1c4cc2891bba59b114c9dc30213ee446"
+      },
+      "rider_campaign_accessory_assignment": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "campaign_accessory_inventory_item": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "rider_campaign_accessory_event": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "platform_audit_record": {
+        "rows": "148",
+        "digest": "9e1ca3ca8e64a51de3e12017ee9cd4abe47ca53718411e2be4984db58872bdac"
+      },
+      "rider_badge_award": {
+        "rows": "7",
+        "digest": "93923cf8250367294a9c95f214f07d7e914f9d7d4854a5852a7072368eae726d"
+      },
+      "rider_badge_definition": {
+        "rows": "12",
+        "digest": "e0fb19963c6aa19cfa3759fecd217457d79e3457c63e73ce08416ce4ee502329"
+      }
+    }
+  }
 }

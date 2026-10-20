@@ -14,7 +14,7 @@
     "X05": "Fully Resolved",
     "X06": "Fully Resolved",
     "X07": "Fully Resolved",
-    "X08": "Partially Resolved",
+    "X08": "Fully Resolved",
     "X09": "Fully Resolved",
     "X10": "Fully Resolved",
     "X11": "Partially Resolved",
@@ -144,10 +144,15 @@
       "version": "20261020113901",
       "normalizedLfSha256": "c3ae69a9fa8c7625a0948f55af0f20a9dcbe157db0cff9ce2a2965268c504b94",
       "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/064_ride_operations_settlement_read_permission.sql",
+      "version": "20261020121001",
+      "normalizedLfSha256": "5b1170d0a4ba150d6f6b4c00448181f8fafa1e21a125cb96660bb4c85c69c582",
+      "journalVerified": true
     }
   ],
   "externalAcceptance": [
-    "X08-live-ACL: Tested source correction committed; production application blocked by automatic approval review",
     "X11-activation: Blocked by existing policy/evidence safeguards; intake remains disabled",
     "authenticated-live-acceptance: Not executed: no connected real rider or authorized MFA staff session"
   ],
@@ -197,7 +202,7 @@
     "historicalPredeploymentEvidence": true
   },
   "productionAcceptance": {
-    "decision": "Partial rollout; ride operations permission correction and deletion-intake activation remain blocked",
+    "decision": "Alignment and impact deployed; deletion-intake activation remains blocked",
     "verifiedDate": "2026-10-20",
     "timezone": "Europe/Amsterdam",
     "stagingRequired": false,
@@ -326,8 +331,8 @@
   "productionFinancialMutations": false,
   "productionRollout": {
     "evidence": "docs/verification/enterprise-alignment/production-rollout.json",
-    "decision": "Partial rollout; ride operations permission correction and deletion-intake activation remain blocked",
-    "appliedMigrations": 10,
+    "decision": "Alignment and impact deployed; deletion-intake activation remains blocked",
+    "appliedMigrations": 11,
     "deletionIntakeEnabled": false,
     "shopRedemptionEnabled": false,
     "authenticatedLiveBrowserAcceptance": false
