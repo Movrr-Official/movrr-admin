@@ -20,6 +20,7 @@ export function isRiderApiPath(pathname: string): boolean {
   // These exact Platform paths enforce bearer identity and capabilities in their
   // handlers. Partner commands additionally authorize the actual target in SQL.
   return (
+    pathname === "/api/v1/wallet/statement" ||
     pathname.startsWith("/api/sessions/") ||
     /^\/api\/v1\/(?:partners\/(?:locations|me|resources|validate|collections\/confirm|fulfilments\/pending|rewards(?:\/[^/]+)?|settings|staff)|wallet\/(?:balance|transactions)|rewards\/(?:catalog(?:\/[^/]+)?|redeem|redemptions(?:\/[^/]+)?)|riders\/me\/(?:rides|achievements|accessories|brands|impact)|riders\/me\/campaigns(?:\/(?:opt-in|withdraw|confirm))?|community-rides(?:\/[^/]+(?:\/(?:join|leave|cancel))?)?|fulfilment(?:\/tokens\/consume|\/[^/]+(?:\/(?:timeline|token|cancel|refund|confirm-collection|retry))?)?)$/.test(
       pathname,
