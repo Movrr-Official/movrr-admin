@@ -8,7 +8,19 @@
       "status": "production Enabled/version 1; MFA activation and audit verified",
       "work": "Approved migrations 066/067 installed and journal/checksum verified. Genuine super_admin MFA command enabled intake at 2026-10-20T17:39:48.695Z, version 0 to 1; receipt policy v2 gives 30 days from original submission without retry extension. Production contract reports requestsEnabled=true; no intake blockers. Eligibility, ownership, duplicate handling and manual-review routing remain enforced. Irreversible execution remains Disabled with pending retention/accounting/backup and case approvals. No synthetic production request or financial mutation.",
       "evidence": "../verification/intake-execution-separation/verification.json",
-      "decisionPackage": "../operations/deletion-intake-separation.md"
+      "decisionPackage": "../operations/deletion-intake-separation.md",
+      "operatorLocation": "/ops/account-deletion (Ops ? Account deletion); review removed from Overview and Background Jobs"
+    },
+    {
+      "name": "Admin dashboard consistency corrections",
+      "status": "deployed; production build, alias, authentication redirects and protected operating states verified",
+      "commit": "e17538cd4cc8df246954d43fe86110a460b9b420",
+      "work": "Use shared Select/Input/Label/Checkbox controls in intake, equipment, partner locations, audit, notification and ride-search fields. Place deletion review on a dedicated Ops page with its existing privacy capability. Align Pro Tips header and toolbar with shared dashboard components, preserving search, filters, export, refresh and creation.",
+      "validation": "TypeScript and 108 focused navigation, authorization, deletion and partner regression tests passed. No schema, operating-state, Mobile runtime or financial behavior changes.",
+      "followUpCommit": "94d669d7706b16fec4fb57a73fc98723547e55c9",
+      "deploymentId": "dpl_2KmRos6JVD6zWZZAzDFaRdUtwRha",
+      "evidence": "../verification/dashboard-consistency/production.json",
+      "acceptanceLimit": "Authenticated visual browser inspection was unavailable; no live UI interaction or production deletion request was used."
     },
     {
       "name": "Approved environmental-impact methodology",

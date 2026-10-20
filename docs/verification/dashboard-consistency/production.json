@@ -1,0 +1,19 @@
+﻿{
+    "verifiedAt":  "2026-10-20T17:55:02.2303470Z",
+    "id":  "dpl_2KmRos6JVD6zWZZAzDFaRdUtwRha",
+    "state":  "READY",
+    "target":  "production",
+    "url":  "movrr-admin-dc22nm2mi-movrrops-projects.vercel.app",
+    "productionAlias":  "admin.movrr.nl",
+    "deployedSourceRevision":  "94d669d7706b16fec4fb57a73fc98723547e55c9",
+    "primaryImplementation":  "e17538cd4cc8df246954d43fe86110a460b9b420",
+    "build":  "Vercel production compilation and TypeScript passed",
+    "localTypecheck":  "passed",
+    "focusedTests":  {
+                         "tests":  108,
+                         "status":  "passed",
+                         "files":  8
+                     },
+    "visualAcceptance":  "Authenticated browser unavailable to automation; no live visual acceptance claimed",
+    "runtimeScope":  "Admin UI only; no database migration, Mobile runtime or operating-state mutation"
+}

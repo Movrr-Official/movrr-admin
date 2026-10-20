@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-10-20T17:54:42.516Z",
+  "anonymous": true,
+  "results": [
+    {
+      "path": "/",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2F"
+    },
+    {
+      "path": "/ops/account-deletion",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Fops%2Faccount-deletion"
+    },
+    {
+      "path": "/ops/jobs",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Fops%2Fjobs"
+    },
+    {
+      "path": "/pro-tips",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Fpro-tips"
+    }
+  ]
+}
