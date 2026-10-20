@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -112,7 +113,7 @@ async function fetchRoutes(
 }
 
 async function createRoute(
-  data: RouteFormData,
+  data: RouteFormData & { operationId?: string },
 ): Promise<{ route: SuggestedRoute }> {
   const body = {
     ...data,
@@ -202,8 +203,13 @@ export default function SuggestedRoutesOverview() {
       ) / 10
     : 0;
 
+  const creation = useCreationOperation("suggested-route");
   const createMutation = useMutation({
-    mutationFn: createRoute,
+    mutationFn: async (data: RouteFormData) => {
+      const result = await createRoute({ ...data, operationId: creation.operationId(data) });
+      creation.complete();
+      return result;
+    },
     onSuccess: () => {
       toast({ title: "Route created" });
       queryClient.invalidateQueries({ queryKey: ["suggestedRoutes"] });

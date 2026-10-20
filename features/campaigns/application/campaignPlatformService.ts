@@ -13,6 +13,7 @@ import {
 import { sendCampaignLifecycleEmail } from "@/features/notifications/infrastructure/campaignLifecycleEmail";
 
 export type CampaignWriteInput = {
+  operationId?: string;
   name: string;
   description?: string;
   budget: number;
@@ -130,6 +131,7 @@ export async function createCampaignForPrincipal(
   }
 
   const { data, error } = await insertCampaignRecord({
+    actorId: ctx.principal.userId, operationId: input.operationId,
     advertiserId,
     name: input.name,
     description: input.description,

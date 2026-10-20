@@ -58,6 +58,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DASHBOARD_COUNTS_QUERY_KEY } from "@/providers/CountProvider";
 
+import { accountCreationRoleSchema } from "@/schemas/user";
+import { CANONICAL_EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
+
 const createUserFormSchema = z.object({
   email: z.string().email("Invalid email address").min(1, "Email is required"),
   name: z
@@ -65,31 +68,7 @@ const createUserFormSchema = z.object({
     .min(1, "Full name is required")
     .max(100, "Name must be less than 100 characters"),
   phone: z.string().optional(),
-  role: z.enum([
-    "admin",
-    "super_admin",
-    "security_admin",
-    "operations_manager",
-    "platform_operator",
-    "campaign_manager",
-    "partner_operations_manager",
-    "fraud_analyst",
-    "trust_safety_analyst",
-    "support_agent",
-    "support_lead",
-    "finance_operator",
-    "compliance_analyst",
-    "programme_operations_manager",
-    "executive_viewer",
-    "product_operations",
-    "engineering_operations",
-    "moderator",
-    "support",
-    "compliance_officer",
-    "advertiser",
-    "rider",
-    "government",
-  ]),
+  role: accountCreationRoleSchema,
   status: z.enum(["active", "inactive", "pending"]),
   organization: z.string().optional(),
   languagePreference: z.string().default("en"),
@@ -145,29 +124,7 @@ const roleDescriptions: Record<string, string> = {
   advertiser: "Advertiser product account",
 };
 
-const EMPLOYEE_CREATE_ROLE_VALUES = [
-  "operations_manager",
-  "campaign_manager",
-  "partner_operations_manager",
-  "fraud_analyst",
-  "trust_safety_analyst",
-  "support_agent",
-  "support_lead",
-  "finance_operator",
-  "compliance_analyst",
-  "programme_operations_manager",
-  "executive_viewer",
-  "product_operations",
-  "engineering_operations",
-  "platform_operator",
-  "security_admin",
-  "super_admin",
-  "admin",
-  "moderator",
-  "support",
-  "government",
-  "compliance_officer",
-] as const;
+const EMPLOYEE_CREATE_ROLE_VALUES = CANONICAL_EMPLOYEE_ROLES;
 
 const languageOptions = [
   { value: "en", label: "English" },
@@ -197,16 +154,9 @@ export default function CreateUserPage() {
   );
   const initialRole = useMemo(() => {
     const requestedRole = searchParams.get("role");
-    if (
-      requestedRole === "rider" ||
-      requestedRole === "admin" ||
-      requestedRole === "super_admin" ||
-      requestedRole === "moderator" ||
-      requestedRole === "support" ||
-      requestedRole === "government"
-    ) {
-      return requestedRole;
-    }
+    // Preserve an explicitly requested role for validation. An invalid role must
+    // not silently turn an employee creation link into a Rider request.
+    if (requestedRole) return requestedRole as CreateUserFormData["role"];
     return "rider";
   }, [searchParams]);
 
@@ -242,9 +192,9 @@ export default function CreateUserPage() {
 
       toast({
         title: "User Created Successfully",
-        description: data.sendWelcomeEmail
+        description: result.warning ?? (data.sendWelcomeEmail
           ? `User "${data.name}" has been created and received an account setup email.`
-          : `User "${data.name}" has been created successfully.`,
+          : `User "${data.name}" has been created successfully.`),
       });
 
       await queryClient.invalidateQueries({

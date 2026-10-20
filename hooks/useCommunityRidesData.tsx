@@ -1,3 +1,4 @@
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { mockCommunityRides } from "@/data/mockCommunityRides";
@@ -37,10 +38,14 @@ export const useCommunityRidesData = (filters?: CommunityRideFiltersSchema) => {
 };
 
 export const useCreateCommunityRide = () => {
+  const creation = useCreationOperation("community-ride");
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: CreateCommunityRideFormData) =>
-      createCommunityRide(input),
+    mutationFn: async (input: CreateCommunityRideFormData) => {
+      const result = await createCommunityRide({ ...input, operationId: creation.operationId(input) });
+      if (result.success) creation.complete();
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: COMMUNITY_RIDES_QUERY_KEY });
     },

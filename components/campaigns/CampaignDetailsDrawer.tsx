@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -123,6 +124,7 @@ export function CampaignDetailsDrawer({
   onCampaignUpdate,
 }: CampaignDetailsDrawerProps) {
   const router = useRouter();
+  const duplicateCreation = useCreationOperation("campaign-copy");
   const { toast } = useToast();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -331,11 +333,12 @@ export function CampaignDetailsDrawer({
 
     setIsLoading(true);
     try {
-      const result = await duplicateCampaign(campaign.id);
+      const result = await duplicateCampaign(campaign.id, duplicateCreation.operationId({ campaignId: campaign.id }));
 
       if (!result.success) {
         throw new Error(result.error || "Failed to duplicate campaign");
       }
+      duplicateCreation.complete();
 
       toast({
         title: "Campaign Duplicated",

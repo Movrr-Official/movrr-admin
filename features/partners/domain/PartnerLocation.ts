@@ -15,6 +15,7 @@ export const BoundsSchema = z
 export type LocationBounds = z.infer<typeof BoundsSchema>;
 export const LocationInputSchema = z
     .object({
+    operationId: z.string().uuid().optional(),
     id: z.string().uuid().optional(),
     expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
     name: z.string().trim().min(1).max(120),

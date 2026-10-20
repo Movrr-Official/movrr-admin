@@ -58,6 +58,7 @@ export const rewardPointsInputSchema = z.preprocess(value => {
 
 export const upsertRewardCatalogSchema = z
   .object({
+    operationId: z.string().uuid().optional(),
     id: z.string().optional(),
     expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
     sku: z.string().min(3),

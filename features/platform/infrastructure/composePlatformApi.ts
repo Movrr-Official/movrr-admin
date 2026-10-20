@@ -314,6 +314,7 @@ export async function createPlatformApiForTests(
             return fail("validation", "Valid organisation type is required");
           }
           return organisationCommands.create(ctx, {
+            operationId: typeof body.operationId === "string" ? body.operationId : undefined,
             name,
             type: type as Organisation["type"],
           });

@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
@@ -38,6 +39,7 @@ export default function CampaignsTableContent({
 }: CampaignsTableContentProps) {
   const searchParams = useSearchParams();
   const { selectedId, setSelectedId } = useDrawerQueryId();
+  const duplicateCreation = useCreationOperation("campaign-copy");
   const { toast } = useToast();
   const router = useRouter();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
@@ -182,12 +184,13 @@ export default function CampaignsTableContent({
     async (campaign: Campaign) => {
       try {
         const { duplicateCampaign } = await import("@/app/actions/campaigns");
-        const result = await duplicateCampaign(campaign.id);
+        const result = await duplicateCampaign(campaign.id, duplicateCreation.operationId({ campaignId: campaign.id }));
 
         if (!result.success) {
           throw new Error(result.error || "Failed to duplicate campaign");
         }
 
+        duplicateCreation.complete();
         toast({
           title: "Campaign Duplicated",
           description: `Campaign "${campaign.name}" has been duplicated successfully.`,

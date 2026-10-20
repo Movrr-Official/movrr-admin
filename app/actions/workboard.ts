@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { randomUUID } from "node:crypto";
 
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -47,67 +48,12 @@ export async function bootstrapWorkboardTeam(): Promise<WorkboardBootstrap> {
   const auth = await requireCapability("workboard.access", { mutation: true });
   const supabase = createSupabaseAdminClient();
 
-  const { data: existingMember } = await supabase
-    .from("workboard_team_members")
-    .select("team_id, role, status")
-    .eq("user_id", auth.authUser.id)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (existingMember?.team_id) {
-    const { data: team } = await supabase
-      .from("workboard_teams")
-      .select("id, name")
-      .eq("id", existingMember.team_id)
-      .maybeSingle();
-
-    return {
-      teamId: existingMember.team_id,
-      teamName: team?.name ?? "MOVRR HQ",
-      role: existingMember.role as WorkboardBootstrap["role"],
-    };
-  }
-
-  const { data: existingTeam } = await supabase
-    .from("workboard_teams")
-    .select("id, name")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (existingTeam?.id) {
-    throw new Error("Not authorized to access this workboard team");
-  }
-
-  if (!["super_admin", "admin"].includes(auth.adminUser.role)) {
-    throw new Error("Not authorized to bootstrap a workboard team");
-  }
-
-  const { data: newTeam, error: teamError } = await supabase
-    .from("workboard_teams")
-    .insert({
-      name: "MOVRR HQ",
-      created_by: auth.authUser.id,
-    })
-    .select("id, name")
-    .single();
-
-  if (teamError || !newTeam) {
-    throw new Error(teamError?.message || "Failed to create workboard team");
-  }
-
-  await supabase.from("workboard_team_members").insert({
-    team_id: newTeam.id,
-    user_id: auth.authUser.id,
-    role: "owner",
-    status: "active",
+  const { data, error } = await supabase.rpc("admin_create", {
+    p_actor: auth.authUser.id, p_operation: auth.authUser.id,
+    p_kind: "workboard_bootstrap", p_input: {},
   });
-
-  return {
-    teamId: newTeam.id,
-    teamName: newTeam.name,
-    role: "owner",
-  };
+  if (error) throw new Error(error.message);
+  return data as WorkboardBootstrap;
 }
 
 export async function getWorkboardMembers(teamId: string) {
@@ -461,6 +407,7 @@ export async function removeWorkboardMember(memberId: string) {
 }
 
 export async function createWorkboardBoard(input: {
+  operationId?: string;
   teamId: string;
   title: string;
   helper?: string | null;
@@ -473,6 +420,7 @@ export async function createWorkboardBoard(input: {
 
   const payload = z
     .object({
+      operationId: z.string().uuid().optional(),
       teamId: z.string().uuid(),
       title: z.string().min(1),
       helper: z.string().nullable().optional(),
@@ -496,9 +444,9 @@ export async function createWorkboardBoard(input: {
     throw new Error("Not authorized to create boards");
   }
 
-  const { data: board, error } = await supabase
-    .from("workboard_boards")
-    .insert({
+  const { data: board, error } = await supabase.rpc("admin_create", {
+    p_actor: auth.authUser.id, p_operation: payload.operationId ?? randomUUID(),
+    p_kind: "workboard_board", p_input: { record: {
       team_id: payload.teamId,
       title: payload.title,
       helper: payload.helper ?? null,
@@ -507,9 +455,8 @@ export async function createWorkboardBoard(input: {
       position: payload.position,
       created_by: auth.authUser.id,
       updated_by: auth.authUser.id,
-    })
-    .select("id")
-    .single();
+    } },
+  });
 
   if (error || !board) {
     throw new Error(error?.message || "Failed to create board");
@@ -519,6 +466,7 @@ export async function createWorkboardBoard(input: {
 }
 
 export async function createWorkboardCard(input: {
+  operationId?: string;
   teamId: string;
   boardId: string;
   title: string;
@@ -534,6 +482,7 @@ export async function createWorkboardCard(input: {
 
   const payload = z
     .object({
+      operationId: z.string().uuid().optional(),
       teamId: z.string().uuid(),
       boardId: z.string().uuid(),
       title: z.string().min(1),
@@ -566,9 +515,9 @@ export async function createWorkboardCard(input: {
     throw new Error("Not authorized to create cards");
   }
 
-  const { data: card, error } = await supabase
-    .from("workboard_cards")
-    .insert({
+  const { data: card, error } = await supabase.rpc("admin_create", {
+    p_actor: auth.authUser.id, p_operation: payload.operationId ?? randomUUID(),
+    p_kind: "workboard_card", p_input: { record: {
       team_id: payload.teamId,
       board_id: payload.boardId,
       title: payload.title,
@@ -580,9 +529,8 @@ export async function createWorkboardCard(input: {
       position: payload.position,
       created_by: auth.authUser.id,
       updated_by: auth.authUser.id,
-    })
-    .select("id")
-    .single();
+    } },
+  });
 
   if (error || !card) {
     throw new Error(error?.message || "Failed to create card");

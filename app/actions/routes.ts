@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
 
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { writeUserActivities } from "@/lib/userActivity";
 import {
   enforceApprovalSod,
-  recordEntityInitiator,
 } from "@/features/authorization/sodEnforcement";
 import { RiderRoute, routeStatusSchema } from "@/schemas";
 import { DB_TABLES } from "@/lib/rewardConstants";
@@ -51,6 +51,7 @@ const routePayloadSchema = z.object({
 const templateStatusSchema = z.enum(["active", "draft", "paused"]);
 
 const routeTemplatePayloadSchema = z.object({
+  operationId: z.string().uuid().optional(),
   name: z.string().min(3),
   city: z.string().min(2),
   zone: z.string().min(2),
@@ -61,6 +62,7 @@ const routeTemplatePayloadSchema = z.object({
 });
 
 const duplicateRouteTemplateSchema = z.object({
+  operationId: z.string().uuid().optional(),
   templateId: z.string(),
   name: z.string().min(1).optional(),
 });
@@ -78,12 +80,23 @@ const routeStopSchema = z.object({
   notes: z.string().optional(),
 });
 
+const createRouteBundleSchema = routePayloadSchema.extend({
+  operationId: z.string().uuid().optional(),
+  stops: z.array(routeStopSchema).optional(),
+  zones: z.array(z.object({ name: z.string().min(1), geom: z.record(z.unknown()) })).optional(),
+  hotZones: z.array(z.object({ name: z.string().min(1), geom: z.record(z.unknown()),
+    bonus_percent: z.number().min(0), starts_at: z.string().nullable().optional(), ends_at: z.string().nullable().optional(),
+  })).optional(),
+});
+
 const createRouteStopsSchema = z.object({
+  operationId: z.string().uuid().optional(),
   routeId: z.string(),
   stops: z.array(routeStopSchema).min(1),
 });
 
 const upsertRouteStopSchema = routeStopSchema.extend({
+  operationId: z.string().uuid().optional(),
   id: z.string().optional(),
   routeId: z.string(),
 });
@@ -374,7 +387,7 @@ export async function createRouteTemplate(
   data: z.infer<typeof routeTemplatePayloadSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireCapability("routes.write", { mutation: true });
+    const auth = await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = routeTemplatePayloadSchema.parse(data);
 
@@ -400,7 +413,9 @@ export async function createRouteTemplate(
       };
     }
 
-    const { error } = await supabaseAdmin.from("route").insert({
+    const { error } = await supabaseAdmin.rpc("admin_create", {
+      p_actor: auth.authUser.id, p_operation: validatedData.operationId ?? randomUUID(),
+      p_kind: "route", p_input: { record: {
       name: validatedData.name,
       description: validatedData.notes ?? null,
       campaign_id: null,
@@ -417,6 +432,7 @@ export async function createRouteTemplate(
       tolerance: seedRoute.tolerance ?? null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+    } },
     });
 
     if (error) {
@@ -443,7 +459,7 @@ export async function duplicateRouteTemplate(
   data: z.infer<typeof duplicateRouteTemplateSchema>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireCapability("routes.write", { mutation: true });
+    const auth = await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = duplicateRouteTemplateSchema.parse(data);
 
@@ -459,7 +475,9 @@ export async function duplicateRouteTemplate(
       return { success: false, error: templateError.message };
     }
 
-    const { error } = await supabaseAdmin.from("route").insert({
+    const { error } = await supabaseAdmin.rpc("admin_create", {
+      p_actor: auth.authUser.id, p_operation: validatedData.operationId ?? randomUUID(),
+      p_kind: "route", p_input: { record: {
       name: validatedData.name ?? `${templateRoute.name} (Copy)`,
       description: templateRoute.description ?? null,
       campaign_id: templateRoute.campaign_id ?? null,
@@ -477,6 +495,7 @@ export async function duplicateRouteTemplate(
       tolerance: templateRoute.tolerance ?? null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+    } },
     });
 
     if (error) {
@@ -522,64 +541,12 @@ export async function assignRouteToRiders(
       return { success: false, error: routeError.message };
     }
 
-    const { data: existingAssignments, error: existingError } =
-      await supabaseAdmin
-        .from("rider_route")
-        .select("rider_id")
-        .eq("route_id", validatedData.routeId)
-        .in("rider_id", validatedData.riderIds);
-
-    if (existingError) {
-      return { success: false, error: existingError.message };
-    }
-
-    const existingRiderIds = new Set(
-      (existingAssignments ?? [])
-        .map((assignment) => assignment.rider_id)
-        .filter(Boolean),
-    );
-
-    const riderIdsToAssign = validatedData.riderIds.filter(
-      (riderId) => !existingRiderIds.has(riderId),
-    );
-
-    if (riderIdsToAssign.length === 0) {
-      return {
-        success: true,
-        assignedCount: 0,
-        skippedCount: validatedData.riderIds.length,
-      };
-    }
-
+    const { data: assignment, error } = await supabaseAdmin.rpc("assign_admin_route", {
+      p_actor: auth.authUser.id, p_route: validatedData.routeId, p_riders: validatedData.riderIds,
+    });
+    if (error) return { success: false, error: error.message };
+    const riderIdsToAssign = (assignment?.riderIds ?? []) as string[];
     const now = new Date().toISOString();
-    const payload = riderIdsToAssign.map((riderId) => ({
-      rider_id: riderId,
-      route_id: route.id,
-      campaign_id: route.campaign_id ?? null,
-      status: "assigned",
-      assigned_at: now,
-      updated_at: now,
-    }));
-
-    const { data: insertedRoutes, error } = await supabaseAdmin
-      .from("rider_route")
-      .insert(payload)
-      .select("id");
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    for (const row of insertedRoutes ?? []) {
-      if (row.id) {
-        await recordEntityInitiator(supabaseAdmin, {
-          adminId: auth.authUser.id,
-          entityType: "rider_route",
-          entityId: String(row.id),
-          action: "rider_route.create",
-        });
-      }
-    }
 
     const { data: assignedRiders } = await supabaseAdmin
       .from("rider")
@@ -613,7 +580,7 @@ export async function assignRouteToRiders(
     return {
       success: true,
       assignedCount: riderIdsToAssign.length,
-      skippedCount: validatedData.riderIds.length - riderIdsToAssign.length,
+      skippedCount: assignment?.skippedCount ?? 0,
     };
   } catch (error) {
     console.error("Assign route to riders error:", error);
@@ -631,12 +598,12 @@ export async function assignRouteToRiders(
  * Create a new route template.
  */
 export async function createRoute(
-  data: z.infer<typeof routePayloadSchema>,
+  data: z.infer<typeof createRouteBundleSchema>,
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
-    await requireCapability("routes.write", { mutation: true });
+    const auth = await requireCapability("routes.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
-    const validatedData = routePayloadSchema.parse(data);
+    const validatedData = createRouteBundleSchema.parse(data);
 
     if (
       validatedData.startLat === undefined ||
@@ -650,9 +617,12 @@ export async function createRoute(
       };
     }
 
-    const { data: created, error } = await supabaseAdmin
-      .from("route")
-      .insert({
+    if ((validatedData.zones?.length ?? 0) + (validatedData.hotZones?.length ?? 0) > 0) {
+      await requireCapability("campaigns.write", { mutation: true });
+    }
+    const { data: created, error } = await supabaseAdmin.rpc("admin_create", {
+      p_actor: auth.authUser.id, p_operation: validatedData.operationId ?? randomUUID(), p_kind: "route",
+      p_input: { record: {
         name: validatedData.name ?? "New Route",
         description: validatedData.description ?? null,
         campaign_id: validatedData.campaignId ?? null,
@@ -670,9 +640,11 @@ export async function createRoute(
         tolerance: validatedData.tolerance ?? null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
+      },
+        stops: (validatedData.stops ?? []).map(({ order, ...stop }) => ({ ...stop, stop_order: order })),
+        zones: validatedData.zones ?? [], hotZones: validatedData.hotZones ?? [],
+      },
+    });
 
     if (error) {
       return { success: false, error: error.message };
@@ -691,40 +663,25 @@ export async function createRoute(
 /**
  * Create strategic stops for a route.
  */
-export async function createRouteStops(
-  data: z.infer<typeof createRouteStopsSchema>,
-): Promise<{ success: boolean; error?: string }> {
+export async function createRouteStops(data: z.infer<typeof createRouteStopsSchema>) {
+  const parsed = createRouteStopsSchema.parse(data);
+  return saveRouteStopChanges({ ...parsed, stops: parsed.stops });
+}
+
+export async function saveRouteStopChanges(data: { operationId?: string; routeId: string; stops: (z.infer<typeof routeStopSchema> & { id?: string })[] }): Promise<{ success: boolean; error?: string; ids?: string[] }> {
   try {
-    await requireCapability("routes.write", { mutation: true });
-    const supabaseAdmin = createSupabaseAdminClient();
-    const validatedData = createRouteStopsSchema.parse(data);
-
-    const payload = validatedData.stops.map((stop) => ({
-      route_id: validatedData.routeId,
-      name: stop.name,
-      lat: stop.lat,
-      lng: stop.lng,
-      stop_order: stop.order,
-      notes: stop.notes ?? null,
-      created_at: new Date().toISOString(),
-    }));
-
-    const { error } = await supabaseAdmin.from("route_stop").insert(payload);
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
+    const auth = await requireCapability("routes.write", { mutation: true });
+    const parsed = z.object({ operationId: z.string().uuid().optional(), routeId: z.string().uuid(),
+      stops: z.array(routeStopSchema.extend({ id: z.string().uuid().optional() })),
+    }).parse(data);
+    const { data: saved, error } = await createSupabaseAdminClient().rpc("admin_create", {
+      p_actor: auth.authUser.id, p_operation: parsed.operationId ?? randomUUID(), p_kind: "route_stops",
+      p_input: { routeId: parsed.routeId, stops: parsed.stops.map(({ order, ...stop }) => ({ ...stop, notes: stop.notes ?? null, stop_order: order })) },
+    });
+    if (error) return { success: false, error: error.message };
     revalidatePath("/routes");
-    return { success: true };
-  } catch (error) {
-    console.error("Create route stops error:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create route stops",
-    };
-  }
+    return { success: true, ids: saved.ids as string[] };
+  } catch (error) { return { success: false, error: error instanceof Error ? error.message : "Stop changes failed" }; }
 }
 
 /**
@@ -780,60 +737,12 @@ export async function getRouteStops(routeId: string): Promise<{
 /**
  * Create or update a strategic stop.
  */
-export async function upsertRouteStop(
-  data: z.infer<typeof upsertRouteStopSchema>,
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    await requireCapability("routes.write", { mutation: true });
-    const supabaseAdmin = createSupabaseAdminClient();
-    const validatedData = upsertRouteStopSchema.parse(data);
-
-    if (validatedData.id) {
-      const { error } = await supabaseAdmin
-        .from("route_stop")
-        .update({
-          name: validatedData.name,
-          lat: validatedData.lat,
-          lng: validatedData.lng,
-          stop_order: validatedData.order,
-          notes: validatedData.notes ?? null,
-        })
-        .eq("id", validatedData.id);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-    } else {
-      const { error } = await supabaseAdmin.from("route_stop").insert({
-        route_id: validatedData.routeId,
-        name: validatedData.name,
-        lat: validatedData.lat,
-        lng: validatedData.lng,
-        stop_order: validatedData.order,
-        notes: validatedData.notes ?? null,
-        created_at: new Date().toISOString(),
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-    }
-
-    revalidatePath("/routes");
-    return { success: true };
-  } catch (error) {
-    console.error("Upsert route stop error:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to upsert route stop",
-    };
-  }
+export async function upsertRouteStop(data: z.infer<typeof upsertRouteStopSchema>): Promise<{ success: boolean; error?: string }> {
+  const parsed = upsertRouteStopSchema.parse(data);
+  const { routeId, operationId, ...stop } = parsed;
+  return saveRouteStopChanges({ routeId, operationId, stops: [stop] });
 }
 
-/**
- * Delete a strategic stop.
- */
 export async function deleteRouteStop(
   data: z.infer<typeof deleteRouteStopSchema>,
 ): Promise<{ success: boolean; error?: string }> {

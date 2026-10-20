@@ -21,6 +21,7 @@ export const proTipSchema = z.object({
 });
 
 export const createProTipSchema = z.object({
+  operationId: z.string().uuid().optional(),
   icon: z.string().min(1, "Icon is required").max(8, "Use a single emoji"),
   text: z
     .string()

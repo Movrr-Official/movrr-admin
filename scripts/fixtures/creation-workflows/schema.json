@@ -1,0 +1,3541 @@
+{
+  "columns": [
+    {
+      "table_name": "advertiser",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "industry",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "website",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "verified",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "false"
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "budget",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "language",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": "'en'::text"
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "timezone",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": "'UTC'::text"
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "company_name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "logo_url",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "active_campaigns",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "total_campaigns",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "email_notifications",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "campaign_updates",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "total_impressions",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "riders_engaged",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "avg_campaign_duration",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "advertiser",
+      "column_name": "company_email",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "advertiser_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "budget",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "start_date",
+      "data_type": "date",
+      "udt_name": "date",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "end_date",
+      "data_type": "date",
+      "udt_name": "date",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "campaign_type",
+      "data_type": "USER-DEFINED",
+      "udt_name": "campaign_type",
+      "is_nullable": "YES",
+      "column_default": "'destination_ride'::campaign_type"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "vehicle_type_required",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_zones",
+      "data_type": "ARRAY",
+      "udt_name": "_text",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "creative_assets",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "impressions",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "engagement_rate",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "coverage_goal",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "visibility_target",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "max_riders",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "signup_deadline",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "selection_strategy",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "selection_params",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "requirements",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "campaign_multiplier",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": "1.0"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "campaign_points_cap",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "600"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "expected_min_daily_verified_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "expected_max_daily_verified_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "qr_scans",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "partner_display_name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_ride_count",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_distance_km",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_duration_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "reward_estimate_min_points",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "reward_estimate_max_points",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "lifecycle_status",
+      "data_type": "USER-DEFINED",
+      "udt_name": "campaign_lifecycle_status",
+      "is_nullable": "NO",
+      "column_default": "'draft'::campaign_lifecycle_status"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "analytics_erasure_review_required",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "campaign_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "bonus_percent",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "starts_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "ends_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "geom",
+      "data_type": "USER-DEFINED",
+      "udt_name": "geometry",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "campaign_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "geom",
+      "data_type": "USER-DEFINED",
+      "udt_name": "geometry",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "retired_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "retirement_reason",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "retirement_operation_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "organizer_rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "title",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "scheduled_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "meeting_point_lat",
+      "data_type": "double precision",
+      "udt_name": "float8",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "meeting_point_lng",
+      "data_type": "double precision",
+      "udt_name": "float8",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "meeting_point_name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "route_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "max_participants",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "20"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "bike_types_allowed",
+      "data_type": "ARRAY",
+      "udt_name": "_text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "category",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'social'::text"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'upcoming'::text"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "is_public",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "true"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "created_by_user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "organizer_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'movrr'::text"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "organizer_user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "organizer_name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'MOVRR'::text"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "cover_image_path",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "cover_image_url",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "distance_km",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "meeting_point_address",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "pro_tips",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "pro_tips",
+      "column_name": "icon",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "pro_tips",
+      "column_name": "text",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "pro_tips",
+      "column_name": "category",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "pro_tips",
+      "column_name": "priority",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "pro_tips",
+      "column_name": "is_active",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "pro_tips",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "pro_tips",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "route",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "route",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "campaign_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "start_lat",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "start_lng",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "end_lat",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "end_lng",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "estimated_duration_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "route",
+      "column_name": "coverage_km",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "route",
+      "column_name": "tolerance",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "50"
+    },
+    {
+      "table_name": "route",
+      "column_name": "saturation_limit",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "campaign_priority_rank",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "optimization_metadata",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "route",
+      "column_name": "supported_earning_modes",
+      "data_type": "ARRAY",
+      "udt_name": "_movrr_earning_mode",
+      "is_nullable": "NO",
+      "column_default": "ARRAY['standard_ride'::movrr_earning_mode]"
+    },
+    {
+      "table_name": "route",
+      "column_name": "compatible_bike_types",
+      "data_type": "ARRAY",
+      "udt_name": "_movrr_bike_type",
+      "is_nullable": "NO",
+      "column_default": "ARRAY['standard_bike'::movrr_bike_type, 'e_bike'::movrr_bike_type, 'fat_bike'::movrr_bike_type]"
+    },
+    {
+      "table_name": "route",
+      "column_name": "multi_rider_capacity",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "route",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "route",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "route",
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "city",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "country",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "route",
+      "column_name": "difficulty",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": "'easy'::text"
+    },
+    {
+      "table_name": "route",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": "'pending'::text"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "route_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "lat",
+      "data_type": "double precision",
+      "udt_name": "float8",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "lng",
+      "data_type": "double precision",
+      "udt_name": "float8",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "stop_order",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "notes",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "email",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "city",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "bike_ownership",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "udt_name": "waitlist_status",
+      "is_nullable": "NO",
+      "column_default": "'pending'::waitlist_status"
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "status_reason",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "converted_to_user",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "country_code",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "region",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "geo_city",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "timezone",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "geo_source",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "utm_source",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "utm_medium",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "utm_campaign",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "referrer",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "geo_region_code",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "utm_content",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "utm_term",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "landing_path",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "acquisition_channel",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "audience",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "waitlist",
+      "column_name": "source",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "team_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "title",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "helper",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "tone",
+      "data_type": "USER-DEFINED",
+      "udt_name": "workboard_tone",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "status_key",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "position",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "archived_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "created_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "updated_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "workboard_boards",
+      "column_name": "created_by_erased",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "team_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "board_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "title",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "type",
+      "data_type": "USER-DEFINED",
+      "udt_name": "workboard_card_type",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "priority",
+      "data_type": "USER-DEFINED",
+      "udt_name": "workboard_card_priority",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "due_date",
+      "data_type": "date",
+      "udt_name": "date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "effort",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "position",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "archived_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "created_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "updated_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "card_number",
+      "data_type": "bigint",
+      "udt_name": "int8",
+      "is_nullable": "NO",
+      "column_default": "nextval('workboard_card_seq'::regclass)"
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "card_reference",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_cards",
+      "column_name": "created_by_erased",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "workboard_team_members",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "workboard_team_members",
+      "column_name": "team_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_team_members",
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_team_members",
+      "column_name": "role",
+      "data_type": "USER-DEFINED",
+      "udt_name": "workboard_member_role",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_team_members",
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "udt_name": "workboard_status",
+      "is_nullable": "NO",
+      "column_default": "'active'::workboard_status"
+    },
+    {
+      "table_name": "workboard_team_members",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "workboard_team_members",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "workboard_teams",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "workboard_teams",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_teams",
+      "column_name": "created_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "workboard_teams",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "workboard_teams",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "workboard_teams",
+      "column_name": "created_by_erased",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "organisation",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "organisation",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "organisation",
+      "column_name": "type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "organisation",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'active'::text"
+    },
+    {
+      "table_name": "organisation",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "organisation",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "organisation_membership",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "organisation_membership",
+      "column_name": "organisation_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "organisation_membership",
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "organisation_membership",
+      "column_name": "role",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "organisation_membership",
+      "column_name": "bundle_key",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "organisation_membership",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'active'::text"
+    },
+    {
+      "table_name": "organisation_membership",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "organisation_membership",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "actor_user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "actor_email",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "principal_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "capability",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "target_entity_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "target_entity_id",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "previous_state",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "resulting_state",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "correlation_id",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "reason",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "actor_user_id_erased",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "sku",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "title",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "category",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'draft'::text"
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "points_price",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "partner_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "partner_url",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "thumbnail_url",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "gallery_urls",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'[]'::jsonb"
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "inventory_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'unlimited'::text"
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "inventory_count",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "max_per_rider",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "featured_rank",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "is_featured",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "visibility_rules",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "tags",
+      "data_type": "ARRAY",
+      "udt_name": "_text",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "published_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "fulfilment_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog",
+      "column_name": "resource_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "reward_partner",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner",
+      "column_name": "website",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner",
+      "column_name": "logo_url",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner",
+      "column_name": "contact_email",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'active'::text"
+    },
+    {
+      "table_name": "reward_partner",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "reward_partner",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "reward_partner",
+      "column_name": "organisation_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner",
+      "column_name": "business_category",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "organisation_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "partner_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "address",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "latitude",
+      "data_type": "double precision",
+      "udt_name": "float8",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "longitude",
+      "data_type": "double precision",
+      "udt_name": "float8",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'draft'::text"
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "verified_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "verified_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "created_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "updated_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "created_by_erased",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "updated_by_erased",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "reward_partner_location",
+      "column_name": "verified_by_erased",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "partner_location_audit",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "partner_location_audit",
+      "column_name": "location_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "partner_location_audit",
+      "column_name": "actor_user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "partner_location_audit",
+      "column_name": "correlation_id",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "partner_location_audit",
+      "column_name": "previous_state",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "partner_location_audit",
+      "column_name": "resulting_state",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "partner_location_audit",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "partner_location_audit",
+      "column_name": "actor_user_id_erased",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "reward_catalog_location",
+      "column_name": "location_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_catalog_location",
+      "column_name": "catalog_item_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "route_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "campaign_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'assigned'::text"
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "progress",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "impressions",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "assigned_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "assigned_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "completed_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "started_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "cancellation_reason",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "cancelled_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "optimization_metadata",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "rider_route",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "geometry",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'[]'::jsonb"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "city",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "zones",
+      "data_type": "ARRAY",
+      "udt_name": "_text",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "difficulty",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'easy'::text"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "estimated_duration_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "30"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "estimated_distance_meters",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "5000"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "reward_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'bonus'::text"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "reward_value",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "max_bonus_per_ride",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "max_total_rewards",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "active",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "true"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "start_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "end_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "created_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "mode",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'standard_ride'::text"
+    },
+    {
+      "table_name": "suggested_routes",
+      "column_name": "tolerance_m",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "30"
+    }
+  ],
+  "enums": [
+    {
+      "typname": "campaign_lifecycle_status",
+      "labels": [
+        "draft",
+        "open_for_signup",
+        "selection_in_progress",
+        "confirmed",
+        "active",
+        "completed",
+        "paused",
+        "cancelled"
+      ]
+    },
+    {
+      "typname": "campaign_status",
+      "labels": [
+        "draft",
+        "active",
+        "paused",
+        "completed",
+        "available",
+        "open_for_signup",
+        "selection_in_progress",
+        "confirmed"
+      ]
+    },
+    {
+      "typname": "campaign_type",
+      "labels": [
+        "swarm",
+        "destination_ride"
+      ]
+    },
+    {
+      "typname": "movrr_accessory_assignment_status",
+      "labels": [
+        "assigned",
+        "ready_for_install",
+        "installed",
+        "issue_reported",
+        "return_due",
+        "returned",
+        "lost",
+        "cancelled"
+      ]
+    },
+    {
+      "typname": "movrr_accessory_event_type",
+      "labels": [
+        "assigned",
+        "ready_for_install",
+        "installed",
+        "issue_reported",
+        "damaged",
+        "missing",
+        "return_due",
+        "returned",
+        "lost",
+        "cancelled",
+        "note"
+      ]
+    },
+    {
+      "typname": "movrr_accessory_inventory_status",
+      "labels": [
+        "available",
+        "reserved",
+        "assigned",
+        "installed",
+        "maintenance",
+        "lost",
+        "retired"
+      ]
+    },
+    {
+      "typname": "movrr_bike_type",
+      "labels": [
+        "standard_bike",
+        "e_bike",
+        "fat_bike",
+        "unknown"
+      ]
+    },
+    {
+      "typname": "movrr_brand_preference",
+      "labels": [
+        "preferred",
+        "neutral",
+        "avoided"
+      ]
+    },
+    {
+      "typname": "movrr_brand_status",
+      "labels": [
+        "draft",
+        "published",
+        "paused",
+        "archived"
+      ]
+    },
+    {
+      "typname": "movrr_earning_mode",
+      "labels": [
+        "standard_ride",
+        "ad_enhanced_ride"
+      ]
+    },
+    {
+      "typname": "movrr_verification_status",
+      "labels": [
+        "pending",
+        "verified",
+        "rejected",
+        "manual_review"
+      ]
+    },
+    {
+      "typname": "notification_type",
+      "labels": [
+        "campaign_assigned",
+        "campaign_completed",
+        "route_assigned",
+        "route_completed",
+        "system",
+        "reward",
+        "status",
+        "achievement_unlocked"
+      ]
+    },
+    {
+      "typname": "platform_invitation_status",
+      "labels": [
+        "pending",
+        "accepted",
+        "expired",
+        "revoked",
+        "rejected"
+      ]
+    },
+    {
+      "typname": "rider_status",
+      "labels": [
+        "active",
+        "inactive",
+        "suspended"
+      ]
+    },
+    {
+      "typname": "user_role",
+      "labels": [
+        "super_admin",
+        "admin",
+        "moderator",
+        "support",
+        "advertiser",
+        "rider",
+        "gov"
+      ]
+    },
+    {
+      "typname": "user_status",
+      "labels": [
+        "active",
+        "suspended",
+        "pending",
+        "deleted"
+      ]
+    },
+    {
+      "typname": "waitlist_status",
+      "labels": [
+        "pending",
+        "approved",
+        "rejected"
+      ]
+    },
+    {
+      "typname": "workboard_card_priority",
+      "labels": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ]
+    },
+    {
+      "typname": "workboard_card_type",
+      "labels": [
+        "Engineering",
+        "Operations",
+        "Campaign",
+        "Product",
+        "Growth"
+      ]
+    },
+    {
+      "typname": "workboard_member_role",
+      "labels": [
+        "owner",
+        "admin",
+        "editor",
+        "viewer"
+      ]
+    },
+    {
+      "typname": "workboard_status",
+      "labels": [
+        "active",
+        "inactive"
+      ]
+    },
+    {
+      "typname": "workboard_tone",
+      "labels": [
+        "slate",
+        "indigo",
+        "emerald",
+        "amber"
+      ]
+    }
+  ],
+  "constraints": [
+    {
+      "relation": "advertiser",
+      "conname": "advertiser_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "advertiser",
+      "conname": "advertiser_user_id_key",
+      "definition": "UNIQUE (user_id)"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_budget_check",
+      "definition": "CHECK ((budget >= (0)::numeric))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_end_date_after_start",
+      "definition": "CHECK ((end_date >= start_date))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_expected_minutes_valid",
+      "definition": "CHECK (((expected_min_daily_verified_minutes IS NULL) OR (expected_max_daily_verified_minutes IS NULL) OR (expected_min_daily_verified_minutes <= expected_max_daily_verified_minutes)))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_multiplier_allowed",
+      "definition": "CHECK ((campaign_multiplier = ANY (ARRAY[1.0, 1.25, 1.5, 2.0])))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_points_cap_non_negative",
+      "definition": "CHECK ((campaign_points_cap >= 0))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_qr_scans_non_negative",
+      "definition": "CHECK ((qr_scans >= 0))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_reward_estimate_max_points_nonnegative",
+      "definition": "CHECK (((reward_estimate_max_points IS NULL) OR (reward_estimate_max_points >= 0)))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_reward_estimate_min_points_nonnegative",
+      "definition": "CHECK (((reward_estimate_min_points IS NULL) OR (reward_estimate_min_points >= 0)))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_reward_estimate_range_valid",
+      "definition": "CHECK (((reward_estimate_min_points IS NULL) OR (reward_estimate_max_points IS NULL) OR (reward_estimate_max_points >= reward_estimate_min_points)))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_signup_deadline_before_end",
+      "definition": "CHECK (((signup_deadline IS NULL) OR (end_date IS NULL) OR (signup_deadline <= end_date)))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_target_distance_km_nonnegative",
+      "definition": "CHECK (((target_distance_km IS NULL) OR (target_distance_km >= (0)::numeric)))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_target_duration_minutes_nonnegative",
+      "definition": "CHECK (((target_duration_minutes IS NULL) OR (target_duration_minutes >= 0)))"
+    },
+    {
+      "relation": "campaign",
+      "conname": "campaign_target_ride_count_nonnegative",
+      "definition": "CHECK (((target_ride_count IS NULL) OR (target_ride_count >= 0)))"
+    },
+    {
+      "relation": "campaign_hot_zone",
+      "conname": "campaign_hot_zone_bonus_percent_check",
+      "definition": "CHECK ((bonus_percent >= 0))"
+    },
+    {
+      "relation": "campaign_hot_zone",
+      "conname": "campaign_hot_zone_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "campaign_zone",
+      "conname": "campaign_zone_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "campaign_zone",
+      "conname": "campaign_zone_retirement_complete",
+      "definition": "CHECK ((((retired_at IS NULL) AND (retirement_reason IS NULL) AND (retirement_operation_id IS NULL)) OR ((retired_at IS NOT NULL) AND (retirement_reason IS NOT NULL) AND (length(btrim(retirement_reason)) > 0) AND (retirement_operation_id IS NOT NULL))))"
+    },
+    {
+      "relation": "community_ride",
+      "conname": "chk_community_ride_cover_image_path_length",
+      "definition": "CHECK (((cover_image_path IS NULL) OR (char_length(cover_image_path) <= 512)))"
+    },
+    {
+      "relation": "community_ride",
+      "conname": "chk_community_ride_cover_image_url_length",
+      "definition": "CHECK (((cover_image_url IS NULL) OR (char_length(cover_image_url) <= 2048)))"
+    },
+    {
+      "relation": "community_ride",
+      "conname": "community_ride_category_values",
+      "definition": "CHECK ((category = ANY (ARRAY['beginner'::text, 'intermediate'::text, 'challenging'::text, 'social'::text])))"
+    },
+    {
+      "relation": "community_ride",
+      "conname": "community_ride_description_length",
+      "definition": "CHECK (((description IS NULL) OR (char_length(description) <= 500)))"
+    },
+    {
+      "relation": "community_ride",
+      "conname": "community_ride_distance_km_check",
+      "definition": "CHECK (((distance_km IS NULL) OR (distance_km > (0)::numeric)))"
+    },
+    {
+      "relation": "community_ride",
+      "conname": "community_ride_max_participants_range",
+      "definition": "CHECK (((max_participants >= 2) AND (max_participants <= 100)))"
+    },
+    {
+      "relation": "community_ride",
+      "conname": "community_ride_organizer_type_check",
+      "definition": "CHECK ((organizer_type = ANY (ARRAY['rider'::text, 'admin'::text, 'movrr'::text])))"
+    },
+    {
+      "relation": "community_ride",
+      "conname": "community_ride_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "community_ride",
+      "conname": "community_ride_status_values",
+      "definition": "CHECK ((status = ANY (ARRAY['upcoming'::text, 'active'::text, 'completed'::text, 'cancelled'::text])))"
+    },
+    {
+      "relation": "community_ride",
+      "conname": "community_ride_title_length",
+      "definition": "CHECK (((char_length(title) >= 3) AND (char_length(title) <= 100)))"
+    },
+    {
+      "relation": "pro_tips",
+      "conname": "pro_tips_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "pro_tips",
+      "conname": "pro_tips_priority_check",
+      "definition": "CHECK ((priority >= 0))"
+    },
+    {
+      "relation": "pro_tips",
+      "conname": "pro_tips_text_length",
+      "definition": "CHECK (((char_length(text) > 0) AND (char_length(text) <= 500)))"
+    },
+    {
+      "relation": "route",
+      "conname": "route_path_valid",
+      "definition": "CHECK (route_path_valid(optimization_metadata, start_lat, start_lng, end_lat, end_lng, coverage_km, estimated_duration_minutes))"
+    },
+    {
+      "relation": "route",
+      "conname": "route_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "route_stop",
+      "conname": "route_stop_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "waitlist",
+      "conname": "waitlist_audience_check",
+      "definition": "CHECK (((audience IS NULL) OR (audience = ANY (ARRAY['rider'::text, 'brand'::text, 'partner'::text]))))"
+    },
+    {
+      "relation": "waitlist",
+      "conname": "waitlist_bike_ownership_check",
+      "definition": "CHECK (((bike_ownership IS NULL) OR (bike_ownership = ANY (ARRAY['own'::text, 'interested'::text, 'planning'::text]))))"
+    },
+    {
+      "relation": "waitlist",
+      "conname": "waitlist_email_key",
+      "definition": "UNIQUE (email)"
+    },
+    {
+      "relation": "waitlist",
+      "conname": "waitlist_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "workboard_boards",
+      "conname": "deletion_created_by_state",
+      "definition": "CHECK ((((created_by IS NOT NULL) AND (NOT created_by_erased)) OR ((created_by IS NULL) AND created_by_erased)))"
+    },
+    {
+      "relation": "workboard_boards",
+      "conname": "workboard_boards_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "workboard_boards",
+      "conname": "workboard_boards_team_id_status_key_key",
+      "definition": "UNIQUE (team_id, status_key)"
+    },
+    {
+      "relation": "workboard_cards",
+      "conname": "deletion_created_by_state",
+      "definition": "CHECK ((((created_by IS NOT NULL) AND (NOT created_by_erased)) OR ((created_by IS NULL) AND created_by_erased)))"
+    },
+    {
+      "relation": "workboard_cards",
+      "conname": "workboard_cards_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "workboard_team_members",
+      "conname": "workboard_team_members_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "workboard_team_members",
+      "conname": "workboard_team_members_team_id_user_id_key",
+      "definition": "UNIQUE (team_id, user_id)"
+    },
+    {
+      "relation": "workboard_teams",
+      "conname": "deletion_created_by_state",
+      "definition": "CHECK ((((created_by IS NOT NULL) AND (NOT created_by_erased)) OR ((created_by IS NULL) AND created_by_erased)))"
+    },
+    {
+      "relation": "workboard_teams",
+      "conname": "workboard_teams_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "suggested_routes",
+      "conname": "suggested_routes_difficulty_check",
+      "definition": "CHECK ((difficulty = ANY (ARRAY['easy'::text, 'moderate'::text, 'challenging'::text])))"
+    },
+    {
+      "relation": "suggested_routes",
+      "conname": "suggested_routes_estimated_distance_meters_check",
+      "definition": "CHECK ((estimated_distance_meters > 0))"
+    },
+    {
+      "relation": "suggested_routes",
+      "conname": "suggested_routes_estimated_duration_minutes_check",
+      "definition": "CHECK ((estimated_duration_minutes > 0))"
+    },
+    {
+      "relation": "suggested_routes",
+      "conname": "suggested_routes_mode_check",
+      "definition": "CHECK ((mode = ANY (ARRAY['standard_ride'::text, 'campaign'::text])))"
+    },
+    {
+      "relation": "suggested_routes",
+      "conname": "suggested_routes_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "suggested_routes",
+      "conname": "suggested_routes_reward_type_check",
+      "definition": "CHECK ((reward_type = ANY (ARRAY['multiplier'::text, 'bonus'::text])))"
+    },
+    {
+      "relation": "suggested_routes",
+      "conname": "suggested_routes_reward_value_check",
+      "definition": "CHECK ((reward_value >= (0)::numeric))"
+    },
+    {
+      "relation": "suggested_routes",
+      "conname": "suggested_routes_tolerance_m_check",
+      "definition": "CHECK (((tolerance_m > 0) AND (tolerance_m <= 500)))"
+    }
+  ],
+  "formattedTypes": [
+    {
+      "table_name": "campaign",
+      "column_name": "id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "advertiser_id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "name",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "description",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "budget",
+      "formatted_type": "numeric(10,2)"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "start_date",
+      "formatted_type": "date"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "end_date",
+      "formatted_type": "date"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "campaign_type",
+      "formatted_type": "campaign_type"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "vehicle_type_required",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_zones",
+      "formatted_type": "text[]"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "creative_assets",
+      "formatted_type": "jsonb"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "impressions",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "engagement_rate",
+      "formatted_type": "numeric(5,2)"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "created_at",
+      "formatted_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "updated_at",
+      "formatted_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "coverage_goal",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "visibility_target",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "max_riders",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "signup_deadline",
+      "formatted_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "selection_strategy",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "selection_params",
+      "formatted_type": "jsonb"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "requirements",
+      "formatted_type": "jsonb"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "campaign_multiplier",
+      "formatted_type": "numeric"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "campaign_points_cap",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "expected_min_daily_verified_minutes",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "expected_max_daily_verified_minutes",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "qr_scans",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "partner_display_name",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_ride_count",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_distance_km",
+      "formatted_type": "numeric(10,2)"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_duration_minutes",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "reward_estimate_min_points",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "reward_estimate_max_points",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "lifecycle_status",
+      "formatted_type": "campaign_lifecycle_status"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "analytics_erasure_review_required",
+      "formatted_type": "boolean"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "campaign_id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "name",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "bonus_percent",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "starts_at",
+      "formatted_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "ends_at",
+      "formatted_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "geom",
+      "formatted_type": "geometry(MultiPolygon,4326)"
+    },
+    {
+      "table_name": "campaign_hot_zone",
+      "column_name": "created_at",
+      "formatted_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "campaign_id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "name",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "geom",
+      "formatted_type": "geometry(MultiPolygon,4326)"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "created_at",
+      "formatted_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "retired_at",
+      "formatted_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "retirement_reason",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "campaign_zone",
+      "column_name": "retirement_operation_id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "route",
+      "column_name": "id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "route",
+      "column_name": "name",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "route",
+      "column_name": "campaign_id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "route",
+      "column_name": "start_lat",
+      "formatted_type": "numeric(10,7)"
+    },
+    {
+      "table_name": "route",
+      "column_name": "start_lng",
+      "formatted_type": "numeric(10,7)"
+    },
+    {
+      "table_name": "route",
+      "column_name": "end_lat",
+      "formatted_type": "numeric(10,7)"
+    },
+    {
+      "table_name": "route",
+      "column_name": "end_lng",
+      "formatted_type": "numeric(10,7)"
+    },
+    {
+      "table_name": "route",
+      "column_name": "estimated_duration_minutes",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "route",
+      "column_name": "coverage_km",
+      "formatted_type": "numeric(10,2)"
+    },
+    {
+      "table_name": "route",
+      "column_name": "tolerance",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "route",
+      "column_name": "saturation_limit",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "route",
+      "column_name": "campaign_priority_rank",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "route",
+      "column_name": "optimization_metadata",
+      "formatted_type": "jsonb"
+    },
+    {
+      "table_name": "route",
+      "column_name": "supported_earning_modes",
+      "formatted_type": "movrr_earning_mode[]"
+    },
+    {
+      "table_name": "route",
+      "column_name": "compatible_bike_types",
+      "formatted_type": "movrr_bike_type[]"
+    },
+    {
+      "table_name": "route",
+      "column_name": "multi_rider_capacity",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "route",
+      "column_name": "created_at",
+      "formatted_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "route",
+      "column_name": "updated_at",
+      "formatted_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "route",
+      "column_name": "description",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "route",
+      "column_name": "city",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "route",
+      "column_name": "country",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "route",
+      "column_name": "difficulty",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "route",
+      "column_name": "status",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "route_id",
+      "formatted_type": "uuid"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "name",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "lat",
+      "formatted_type": "double precision"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "lng",
+      "formatted_type": "double precision"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "stop_order",
+      "formatted_type": "integer"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "notes",
+      "formatted_type": "text"
+    },
+    {
+      "table_name": "route_stop",
+      "column_name": "created_at",
+      "formatted_type": "timestamp with time zone"
+    }
+  ]
+}

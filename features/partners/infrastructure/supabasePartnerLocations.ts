@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseRateLimitStore } from "@/features/fraud/infrastructure/supabaseRateLimitStore";
 import type { PartnerLocationPort } from "@/features/partners/application/partnerLocationService";
@@ -63,11 +64,16 @@ export function createSupabasePartnerLocationPort(): PartnerLocationPort {
                 .map((link) => link.catalog_item_id)));
         },
         async save(organisationId, input, actor, correlationId) {
-            const { data, error } = await createSupabaseAdminClient().rpc("save_partner_location", {
+            const client = createSupabaseAdminClient();
+            const { data, error } = input.id
+              ? await client.rpc("save_partner_location", {
                 p_org: organisationId,
                 p_input: input,
                 p_actor: actor,
                 p_correlation: correlationId,
+            }) : await client.rpc("admin_create", {
+                p_actor: actor, p_operation: input.operationId ?? randomUUID(), p_kind: "partner_location",
+                p_input: { organisationId, location: input },
             });
             if (error)
                 throw new Error(error.message);

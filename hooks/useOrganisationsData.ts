@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -90,14 +91,16 @@ export function useOrganisationStaff(organisationId: string) {
 
 export function useCreateOrganisation() {
   const queryClient = useQueryClient();
+  const creation = useCreationOperation("organisation");
   return useMutation({
     mutationFn: async (input: CreateOrganisationInput) => {
       const result = await platformPost<Organisation>("/api/v1/organisations", {
-        body: input,
+        body: { ...input, operationId: creation.operationId(input) },
       });
       if (!result.ok) {
         throw new Error(result.message || "Failed to create organisation");
       }
+      creation.complete();
       return result.value;
     },
     onSuccess: () => {

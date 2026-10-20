@@ -81,7 +81,7 @@ export default function WaitlistTableContent({
 
       toast({
         title: "Status Updated",
-        description: `Entry status has been updated to ${newStatus}`,
+        description: result.warning ?? `Entry status has been updated to ${newStatus}`,
         variant: "default",
       });
 

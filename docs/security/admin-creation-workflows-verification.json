@@ -1,0 +1,58 @@
+{
+  "verifiedAt": "2026-10-20T19:27:22.957Z",
+  "productionApplied": false,
+  "productionDeployed": false,
+  "incidentAccountModified": false,
+  "productionInspection": {
+    "readOnly": true,
+    "inspectedAt": "2026-10-20T19:21:52.898Z",
+    "accountState": {
+      "authBanned": false,
+      "publicRole": "rider",
+      "publicStatus": "active",
+      "riderStatus": "active",
+      "employeeGrant": false,
+      "organisationMembershipCount": 0,
+      "lastSignIn": null
+    },
+    "shopState": "disabled",
+    "redemptionEnabled": false,
+    "deletionRequestsEnabled": true,
+    "bootstrapAndInvitationBaselinesMatch": true
+  },
+  "checks": {
+    "vitest": {
+      "passed": 732,
+      "files": 67,
+      "postgresProvisioningTests": 33,
+      "realAuthHttpTests": 7
+    },
+    "creationPostgresAssertions": 79,
+    "rollbackAssertions": 8,
+    "shopPreservationAssertions": 306,
+    "deletionPreservationAssertions": 87,
+    "typecheck": "passed",
+    "nextProductionBuild": "passed"
+  },
+  "orderedSql": [
+    {
+      "path": "scripts/068_employee_provisioning.sql",
+      "normalizedLfSha256": "ef473752c15d0406961d96375642378f96cd442744f45980e32216dbcce6528c"
+    },
+    {
+      "path": "scripts/069_admin_creation_transactions.sql",
+      "normalizedLfSha256": "f54359db7ebb47ab6068fc078136bf3ee8223ff67ba1c28a3de787eea543d4dc"
+    }
+  ],
+  "rollback": {
+    "path": "scripts/manual/creation-workflows/rollback-unused.sql",
+    "normalizedLfSha256": "48a7dc1f4b92389fe5280bbc11701b1f42b3404de52401caf9d5c3652f10ad66",
+    "requiresUnusedLedgers": true
+  },
+  "limits": [
+    "No production trigger/dependency rehearsal or deployment smoke test performed.",
+    "External email provider delivery is not exactly-once certified.",
+    "Employee data-scope presets retain the documented existing global dashboard semantics.",
+    "Synthetic local fixtures are not a full production clone."
+  ]
+}

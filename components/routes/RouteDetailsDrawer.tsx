@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
@@ -85,7 +86,7 @@ import {
   exportRouteData,
   updateRoute,
   getRouteStops,
-  upsertRouteStop,
+  saveRouteStopChanges,
   deleteRouteStop,
   unassignRouteAssignment,
 } from "@/app/actions/routes";
@@ -96,8 +97,7 @@ import {
   deleteCampaignZone,
   getCampaignHotZones,
   getCampaignZones,
-  upsertCampaignHotZone,
-  upsertCampaignZone,
+  saveCampaignGeography,
 } from "@/app/actions/campaigns";
 import { useCampaignsData } from "@/hooks/useCampaignsData";
 import { shouldUseMockData } from "@/lib/dataSource";
@@ -224,6 +224,8 @@ export function RouteDetailsDrawer({
   onOpenChange,
   onRouteUpdate,
 }: RouteDetailsDrawerProps) {
+  const stopCreation = useCreationOperation("route-stop-changes");
+  const geographyCreation = useCreationOperation("campaign-geography-changes");
   const { toast } = useToast();
   const { data: campaigns } = useCampaignsData();
   const useMockData = shouldUseMockData();
@@ -541,29 +543,17 @@ export function RouteDetailsDrawer({
     if (!routeTemplateId) return;
 
     setIsSavingStops(true);
-    for (let index = 0; index < routeStops.length; index += 1) {
-      const stop = routeStops[index];
-      const result = await upsertRouteStop({
-        id: stop.isNew ? undefined : stop.id,
-        routeId: routeTemplateId,
-        name: stop.name.trim(),
-        lat: Number(stop.lat),
-        lng: Number(stop.lng),
-        order: index,
-        notes: stop.notes.trim() || undefined,
-      });
-
-      if (!result.success) {
-        setIsSavingStops(false);
-        toast({
-          title: "Unable to save stops",
-          description: result.error ?? "Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+    const stopsInput = { routeId: routeTemplateId, stops: routeStops.map((stop, order) => ({
+      id: stop.isNew ? undefined : stop.id, name: stop.name.trim(), lat: Number(stop.lat), lng: Number(stop.lng), order, notes: stop.notes.trim() || undefined,
+    })) };
+    const result = await saveRouteStopChanges({ ...stopsInput, operationId: stopCreation.operationId(stopsInput) });
+    if (!result.success) {
+      setIsSavingStops(false);
+      toast({ title: "Unable to save stops", description: result.error ?? "Please try again.", variant: "destructive" });
+      return;
     }
-
+    setRouteStops(prev => prev.map((stop, index) => ({ ...stop, id: result.ids![index], isNew: false })));
+    stopCreation.complete();
     setIsSavingStops(false);
     toast({
       title: "Stops updated",
@@ -596,50 +586,20 @@ export function RouteDetailsDrawer({
 
     setIsSavingZones(true);
 
-    for (const zone of campaignZones) {
-      if (zone.retiredAt) continue;
-      const parsed = parseGeoJson(zone.geojson);
-      if (!parsed.value) continue;
-      const result = await upsertCampaignZone({
-        id: zone.isNew ? undefined : zone.id,
-        campaignId,
-        name: zone.name.trim(),
-        geom: parsed.value,
-      });
-      if (!result.success) {
-        setIsSavingZones(false);
-        toast({
-          title: "Unable to save zones",
-          description: result.error ?? "Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+    const geographyInput = { campaignId,
+      zones: campaignZones.filter(zone => !zone.retiredAt).map(zone => ({ id: zone.isNew ? undefined : zone.id, name: zone.name.trim(), geom: parseGeoJson(zone.geojson).value! })),
+      hotZones: hotZones.map(zone => ({ id: zone.isNew ? undefined : zone.id, name: zone.name.trim(), geom: parseGeoJson(zone.geojson).value!, bonusPercent: Number(zone.bonusPercent), startsAt: toIsoString(zone.startsAt), endsAt: toIsoString(zone.endsAt) })),
+    };
+    const result = await saveCampaignGeography({ ...geographyInput, operationId: geographyCreation.operationId(geographyInput) });
+    if (!result.success) {
+      setIsSavingZones(false);
+      toast({ title: "Unable to save zones", description: result.error ?? "Please try again.", variant: "destructive" });
+      return;
     }
-
-    for (const zone of hotZones) {
-      const parsed = parseGeoJson(zone.geojson);
-      if (!parsed.value) continue;
-      const result = await upsertCampaignHotZone({
-        id: zone.isNew ? undefined : zone.id,
-        campaignId,
-        name: zone.name.trim(),
-        bonusPercent: Number(zone.bonusPercent),
-        startsAt: toIsoString(zone.startsAt),
-        endsAt: toIsoString(zone.endsAt),
-        geom: parsed.value,
-      });
-      if (!result.success) {
-        setIsSavingZones(false);
-        toast({
-          title: "Unable to save hot zones",
-          description: result.error ?? "Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
+    let zoneIndex = 0;
+    setCampaignZones(prev => prev.map(zone => zone.retiredAt ? zone : ({ ...zone, id: result.zoneIds![zoneIndex++], isNew: false })));
+    setHotZones(prev => prev.map((zone, index) => ({ ...zone, id: result.hotZoneIds![index], isNew: false })));
+    geographyCreation.complete();
     setIsSavingZones(false);
     toast({
       title: "Zones updated",

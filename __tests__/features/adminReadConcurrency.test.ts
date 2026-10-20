@@ -1,11 +1,11 @@
 import { beforeEach, expect, it, vi } from "vitest";
-const deps = vi.hoisted(() => ({ policy: vi.fn(), assurance: vi.fn(), trusted: vi.fn(), user: vi.fn(), upsert: vi.fn() }));
+const deps = vi.hoisted(() => ({ policy: vi.fn(), assurance: vi.fn(), trusted: vi.fn(), user: vi.fn(), upsert: vi.fn(), account: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/headers", () => ({headers: async () => new Headers({'x-pathname':'/'})}));
 vi.mock("@/lib/supabase-server", () => ({createSupabaseServerClient: async () => ({auth:{getUser:deps.user}})}));
 vi.mock("@/lib/supabase-admin", () => ({createSupabaseAdminClient: () => ({from:(table:string) => {
-  const query = {select:()=>query,eq:()=>query, single:async()=>({data:{id:'employee',user_id:'a',role:'super_admin',email:'employee@isolated.test'},error:null}),maybeSingle:deps.trusted,upsert:deps.upsert};
-  if (!['admin_users','admin_dashboard_sessions'].includes(table)) throw new Error('Unexpected data access');
+  const query = {select:()=>query,eq:()=>query, single:async()=>({data:{id:'employee',user_id:'a',role:'super_admin',email:'employee@isolated.test'},error:null}),maybeSingle:table==='user'?deps.account:deps.trusted,upsert:deps.upsert};
+  if (!['user','admin_users','admin_dashboard_sessions'].includes(table)) throw new Error('Unexpected data access');
   return query;
 }})}));
 vi.mock("@/lib/adminMfa", () => ({getServerAdminAuthenticatorAssurance:deps.assurance}));
@@ -17,9 +17,15 @@ beforeEach(() => {
   vi.resetAllMocks();
   const now = new Date().toISOString();
   deps.user.mockResolvedValue({data:{user:{id:'a',last_sign_in_at:now}},error:null});
+  deps.account.mockResolvedValue({data:{status:'active'},error:null});
   deps.trusted.mockResolvedValue({data:{auth_last_sign_in_at:now,session_started_at:now,last_seen_at:now,session_expires_at:new Date(Date.now()+3600000).toISOString()},error:null});
   deps.policy.mockResolvedValue({enforceAdminMfa:true,adminSessionTimeoutMinutes:60});
   deps.assurance.mockResolvedValue({currentLevel:'aal2'});
+});
+it.each(['pending','suspended','deleted'])('denies %s employees with an existing session', async status => {
+  deps.account.mockResolvedValue({data:{status},error:null});
+  await expect(getAuthenticatedUser()).rejects.toMatchObject({code:'NOT_ADMIN'});
+  expect(deps.upsert).not.toHaveBeenCalled();
 });
 it('starts policy, trusted-session and MFA checks together and waits for all before authorizing', async () => {
   let release!: (value: unknown) => void;

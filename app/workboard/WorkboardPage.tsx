@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -149,6 +150,8 @@ const formatCardId = (card: WorkboardCard) => {
 };
 
 export default function WorkboardPage() {
+  const cardCreation = useCreationOperation("workboard-card");
+  const boardCreation = useCreationOperation("workboard-board");
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const { toast } = useToast();
   const useMockData = NEXT_PUBLIC_USE_MOCK_DATA && !isProduction;
@@ -581,6 +584,7 @@ export default function WorkboardPage() {
 
     try {
       await createWorkboardCard({
+        operationId: cardCreation.operationId({ teamId, boardId, title: trimmedTitle, description: newCardDescription }),
         teamId,
         boardId,
         title: trimmedTitle,
@@ -591,7 +595,8 @@ export default function WorkboardPage() {
         effort: "3 pts",
         position: nextPosition,
       });
-      await fetchCards(teamId);
+      cardCreation.complete();
+      await fetchCards(teamId).catch(() => toast({ title: "Card created", description: "Refresh to load the latest board." }));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       toast({
@@ -642,6 +647,7 @@ export default function WorkboardPage() {
 
     try {
       const result = await createWorkboardBoard({
+        operationId: boardCreation.operationId({ teamId, title, helper, status, tone }),
         teamId,
         title,
         helper,
@@ -649,8 +655,9 @@ export default function WorkboardPage() {
         statusKey: status,
         position: boards.length,
       });
+      boardCreation.complete();
       setPendingBoardScrollId(result.id);
-      await fetchBoards(teamId);
+      await fetchBoards(teamId).catch(() => toast({ title: "Board created", description: "Refresh to load the latest board." }));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       toast({

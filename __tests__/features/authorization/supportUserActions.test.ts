@@ -1,5 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { employeeHasCapability } from "@/features/organisations/domain/employeeRoleTemplates";
+vi.mock("server-only", () => ({}));
 const state = vi.hoisted(() => ({ role: "support", requireCapability: vi.fn(), client: vi.fn(), from: vi.fn(), revalidate: vi.fn() }));
 vi.mock("@/lib/admin", () => ({ requireCapability: (...args: unknown[]) => state.requireCapability(...args) }));
 vi.mock("@/lib/supabase-admin", () => ({ createSupabaseAdminClient: () => state.client() }));

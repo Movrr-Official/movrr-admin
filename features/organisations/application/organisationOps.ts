@@ -44,7 +44,7 @@ export type UpdateOrganisationInput = {
 export type OrganisationOpsCommands = {
   create: (
     ctx: RequestContext,
-    input: { name: string; type: Organisation["type"] },
+    input: { name: string; type: Organisation["type"]; operationId?: string },
   ) => Promise<ApplicationResult<Organisation>>;
   update: (
     ctx: RequestContext,
@@ -117,6 +117,12 @@ export function createOrganisationOpsStore(): OrganisationListPort {
       return organisations.get(id) ?? null;
     },
     async addMember(input) {
+      for (const existing of memberships.values()) {
+        if (existing.organisationId === input.organisationId && existing.userId === input.userId) {
+          if (existing.role === input.role && existing.bundleKey === (input.bundleKey ?? ORG_ROLE_BUNDLE_KEYS[input.role]) && existing.status === "active") return existing;
+          throw new Error("Membership already exists with different access; use the authorized role update workflow");
+        }
+      }
       const now = new Date().toISOString();
       const membership: OrganisationMembership = {
         id: randomUUID(),
@@ -262,6 +268,10 @@ export function createOrganisationOpsQueries(deps: {
     async listStaff(ctx, organisationId) {
       const authz = deps.authorisation.assertCapability(ctx, "staff.manage");
       if (!authz.ok) return authz;
+      if (ctx.principal.type !== "admin" &&
+          (ctx.principal.type !== "organisation" || ctx.principal.organisationId !== organisationId)) {
+        return fail("permission_denied", "Cannot inspect another organisation's staff");
+      }
       return ok(await deps.store.listMembersByOrganisation(organisationId));
     },
   };
@@ -275,11 +285,16 @@ export function createOrganisationOpsCommands(deps: {
     async create(ctx, input) {
       const authz = deps.authorisation.assertCapability(ctx, "rewards.manage");
       if (!authz.ok) return authz;
-      return createOrganisation(input, { organisations: deps.store });
+      if (ctx.principal.type !== "admin") return fail("permission_denied", "Organisation creation requires Admin authorization");
+      return createOrganisation({ ...input, actorId: ctx.principal.userId }, { organisations: deps.store });
     },
     async update(ctx, input) {
       const authz = deps.authorisation.assertCapability(ctx, "rewards.manage");
       if (!authz.ok) return authz;
+      if (ctx.principal.type !== "admin" &&
+          (ctx.principal.type !== "organisation" || ctx.principal.organisationId !== input.id)) {
+        return fail("permission_denied", "Cannot change another organisation");
+      }
       if (input.name !== undefined && !input.name.trim()) {
         return fail("validation_failed", "Organisation name is required");
       }
@@ -307,6 +322,13 @@ export function createOrganisationOpsCommands(deps: {
     async addStaff(ctx, input) {
       const authz = deps.authorisation.assertCapability(ctx, "staff.manage");
       if (!authz.ok) return authz;
+      if (ctx.principal.type !== "admin" &&
+          (ctx.principal.type !== "organisation" || ctx.principal.organisationId !== input.organisationId)) {
+        return fail("permission_denied", "Cannot staff another organisation");
+      }
+      if (ctx.principal.type !== "admin" && input.role === "owner") {
+        return fail("permission_denied", "Ownership assignment requires Admin authorization");
+      }
       if (!isMembershipRole(input.role)) {
         return fail("validation_failed", "Invalid membership role");
       }
@@ -315,8 +337,18 @@ export function createOrganisationOpsCommands(deps: {
     async updateStaffRole(ctx, input) {
       const authz = deps.authorisation.assertCapability(ctx, "staff.manage");
       if (!authz.ok) return authz;
+      if (ctx.principal.type !== "admin" &&
+          (ctx.principal.type !== "organisation" || ctx.principal.organisationId !== input.organisationId || input.role === "owner")) {
+        return fail("permission_denied", "Cannot assign ownership or staff another organisation");
+      }
       if (!isMembershipRole(input.role)) {
         return fail("validation_failed", "Invalid membership role");
+      }
+      if (ctx.principal.type !== "admin") {
+        const existing = await deps.store.findMembershipById(input.membershipId);
+        if (!existing || existing.organisationId !== input.organisationId || existing.role === "owner") {
+          return fail("permission_denied", "Ownership changes require Admin authorization");
+        }
       }
       const updated = await deps.store.updateMemberRole(input);
       if (!updated) return fail("not_found", "Membership not found");

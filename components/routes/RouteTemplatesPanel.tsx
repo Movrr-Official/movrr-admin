@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 
 import {
   CalendarClock,
@@ -87,6 +88,7 @@ const getTemplateId = () => {
 };
 
 export function RouteTemplatesPanel() {
+  const creation = useCreationOperation("route-template");
   const { toast } = useToast();
   const useMockData = shouldUseMockData();
   const { data: templatesData, refetch } = useRouteTemplatesData();
@@ -215,6 +217,7 @@ export function RouteTemplatesPanel() {
     }
 
     const result = await createRouteTemplate({
+      operationId: creation.operationId(formState),
       name: newTemplate.name,
       city: newTemplate.city,
       zone: newTemplate.zone,
@@ -233,7 +236,8 @@ export function RouteTemplatesPanel() {
       return;
     }
 
-    await refetch();
+    creation.complete();
+    await refetch().catch(() => undefined);
     setIsDialogOpen(false);
     resetForm();
     toast({
@@ -261,6 +265,7 @@ export function RouteTemplatesPanel() {
     }
 
     const result = await duplicateRouteTemplate({
+      operationId: creation.operationId({ templateId: template.id, name: copy.name }),
       templateId: template.id,
       name: copy.name,
     });
@@ -274,7 +279,8 @@ export function RouteTemplatesPanel() {
       return;
     }
 
-    await refetch();
+    creation.complete();
+    await refetch().catch(() => undefined);
     toast({
       title: "Template duplicated",
       description: `Created a draft copy of "${template.name}".`,
@@ -356,7 +362,8 @@ export function RouteTemplatesPanel() {
       return;
     }
 
-    await refetch();
+    creation.complete();
+    await refetch().catch(() => undefined);
     setIsSendOpen(false);
     resetSendState();
 

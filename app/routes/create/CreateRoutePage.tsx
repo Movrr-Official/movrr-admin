@@ -32,11 +32,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/useToast";
 import { useCampaignsData } from "@/hooks/useCampaignsData";
-import { createRoute, createRouteStops } from "@/app/actions/routes";
-import {
-  upsertCampaignHotZone,
-  upsertCampaignZone,
-} from "@/app/actions/campaigns";
+import { createRoute } from "@/app/actions/routes";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 import { shouldUseMockData } from "@/lib/dataSource";
 
 const requiredNumber = (schema: z.ZodNumber) =>
@@ -125,6 +122,7 @@ const toIsoString = (value?: string) => {
 };
 
 export default function CreateRoutePage() {
+  const creation = useCreationOperation("route");
   const router = useRouter();
   const { toast } = useToast();
   const { data: campaigns } = useCampaignsData();
@@ -282,7 +280,7 @@ export default function CreateRoutePage() {
 
     setIsSubmitting(true);
 
-    const createResult = await createRoute({
+    const routeInput = {
       name: values.name,
       description: values.description,
       campaignId: values.campaignId || null,
@@ -297,7 +295,11 @@ export default function CreateRoutePage() {
       difficulty: values.difficulty,
       status: values.status,
       tolerance: values.tolerance,
-    });
+      stops: strategicStops.map((stop, order) => ({ name: stop.name.trim(), lat: Number(stop.lat), lng: Number(stop.lng), order, notes: stop.notes.trim() || undefined })),
+      zones: campaignZones.map(zone => ({ name: zone.name, geom: parseGeoJson(zone.geojson).value! })),
+      hotZones: hotZones.map(zone => ({ name: zone.name, geom: parseGeoJson(zone.geojson).value!, bonus_percent: Number(zone.bonusPercent), starts_at: toIsoString(zone.startsAt), ends_at: toIsoString(zone.endsAt) })),
+    };
+    const createResult = await createRoute({ ...routeInput, operationId: creation.operationId(routeInput) });
 
     if (!createResult.success || !createResult.data?.id) {
       setIsSubmitting(false);
@@ -309,77 +311,7 @@ export default function CreateRoutePage() {
       return;
     }
 
-    const routeId = createResult.data.id as string;
-
-    if (strategicStops.length > 0) {
-      const stopsPayload = strategicStops.map((stop, index) => ({
-        name: stop.name.trim(),
-        lat: Number(stop.lat),
-        lng: Number(stop.lng),
-        order: index,
-        notes: stop.notes.trim() || undefined,
-      }));
-
-      const stopResult = await createRouteStops({
-        routeId,
-        stops: stopsPayload,
-      });
-
-      if (!stopResult.success) {
-        setIsSubmitting(false);
-        toast({
-          title: "Route created with warnings",
-          description: stopResult.error ?? "Stops were not saved.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    if (values.campaignId && campaignZones.length > 0) {
-      for (const zone of campaignZones) {
-        const parsed = parseGeoJson(zone.geojson);
-        if (!parsed.value) continue;
-        const zoneResult = await upsertCampaignZone({
-          campaignId: values.campaignId,
-          name: zone.name,
-          geom: parsed.value,
-        });
-        if (!zoneResult.success) {
-          setIsSubmitting(false);
-          toast({
-            title: "Route created with warnings",
-            description: zoneResult.error ?? "Failed to save campaign zone.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-    }
-
-    if (values.campaignId && hotZones.length > 0) {
-      for (const zone of hotZones) {
-        const parsed = parseGeoJson(zone.geojson);
-        if (!parsed.value) continue;
-        const hotZoneResult = await upsertCampaignHotZone({
-          campaignId: values.campaignId,
-          name: zone.name,
-          bonusPercent: Number(zone.bonusPercent),
-          startsAt: toIsoString(zone.startsAt),
-          endsAt: toIsoString(zone.endsAt),
-          geom: parsed.value,
-        });
-        if (!hotZoneResult.success) {
-          setIsSubmitting(false);
-          toast({
-            title: "Route created with warnings",
-            description: hotZoneResult.error ?? "Failed to save hot zone.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-    }
+    creation.complete();
 
     toast({
       title: "Route created",

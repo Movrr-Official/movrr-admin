@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -114,6 +115,7 @@ const rewardCatalogFormSchema = z
 type RewardCatalogFormValues = z.infer<typeof rewardCatalogFormSchema>;
 
 export default function CreateRewardCatalogPage() {
+  const creation = useCreationOperation("catalog");
   const router = useRouter();
   const { toast } = useToast();
   const useMockData = shouldUseMockData();
@@ -168,6 +170,7 @@ export default function CreateRewardCatalogPage() {
     setIsSubmitting(true);
 
     const result = await upsertRewardCatalog({
+      operationId: creation.operationId(values),
       sku: values.sku.trim(),
       title: values.title.trim(),
       description: values.description?.trim() || undefined,
@@ -212,6 +215,8 @@ export default function CreateRewardCatalogPage() {
       });
       return;
     }
+
+    creation.complete();
 
     const hasStagedUploads =
       Boolean(stagedMedia.thumbnailFile) ||

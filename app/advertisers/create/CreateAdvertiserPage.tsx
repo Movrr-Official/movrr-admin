@@ -107,7 +107,7 @@ export default function CreateAdvertiserPage() {
 
       toast({
         title: "Advertiser Created",
-        description: `${data.companyName} has been added successfully.`,
+        description: result.warning ?? `${data.companyName} has been added successfully.`,
       });
       await queryClient.invalidateQueries({
         queryKey: DASHBOARD_COUNTS_QUERY_KEY,

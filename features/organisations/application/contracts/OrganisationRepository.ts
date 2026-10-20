@@ -3,6 +3,8 @@ import type { OrganisationMembership } from "@/features/organisations/domain/Mem
 import type { MembershipRole } from "@/features/organisations/domain/CapabilityCatalog";
 
 export type CreateOrganisationInput = {
+  operationId?: string;
+  actorId?: string;
   name: string;
   type: Organisation["type"];
   status?: Organisation["status"];

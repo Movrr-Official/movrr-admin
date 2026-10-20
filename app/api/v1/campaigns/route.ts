@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     handle: async (ctx, req) => {
       const body = await readJsonBody(req);
       return createCampaignForPrincipal(ctx, {
+        operationId: typeof body.operationId === "string" ? body.operationId : undefined,
         name: String(body.name ?? ""),
         description: typeof body.description === "string" ? body.description : undefined,
         budget: Number(body.budget ?? 0),

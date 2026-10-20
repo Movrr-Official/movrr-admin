@@ -1,3 +1,4 @@
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { mockProTips } from "@/data/mockProTips";
@@ -37,9 +38,14 @@ export const useProTipsData = (filters?: ProTipFiltersSchema) => {
 };
 
 export const useCreateProTip = () => {
+  const creation = useCreationOperation("pro-tip");
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: CreateProTipFormData) => createProTip(input),
+    mutationFn: async (input: CreateProTipFormData) => {
+      const result = await createProTip({ ...input, operationId: creation.operationId(input) });
+      if (result.success) creation.complete();
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PRO_TIPS_QUERY_KEY });
     },

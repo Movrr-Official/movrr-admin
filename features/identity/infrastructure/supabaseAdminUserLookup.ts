@@ -9,6 +9,8 @@ import type { FindAdminUser } from "@/features/identity/application/contracts/Au
  */
 export const findAdminUser: FindAdminUser = async (userId: string) => {
   const supabase = createSupabaseAdminClient();
+  const account = await supabase.from("user").select("status").eq("id", userId).maybeSingle();
+  if (account.error || account.data?.status !== "active") return null;
 
   const { data, error } = await supabase
     .from("admin_users")

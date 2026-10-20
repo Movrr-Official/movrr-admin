@@ -1,9 +1,12 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import type { CampaignLifecycleStatus } from "@/features/platform/vocabulary";
 
 export type CampaignRecordInput = {
+  actorId: string;
+  operationId?: string;
   advertiserId: string;
   name: string;
   description?: string;
@@ -59,20 +62,11 @@ export async function insertCampaignRecord(
     updated_at: new Date().toISOString(),
   };
 
-  const { data, error } = await supabase
-    .from("campaign")
-    .insert(campaignData)
-    .select()
-    .single();
-
+  const { data, error } = await supabase.rpc("admin_create", {
+    p_actor: input.actorId, p_operation: input.operationId ?? randomUUID(),
+    p_kind: "campaign", p_input: { record: campaignData, routeIds: input.routeIds ?? [] },
+  });
   if (error) return { data: null, error: error.message };
-
-  if (input.routeIds && input.routeIds.length > 0 && data?.id) {
-    await supabase
-      .from("route")
-      .update({ campaign_id: data.id })
-      .in("id", input.routeIds);
-  }
 
   return { data: data as Record<string, unknown>, error: null };
 }

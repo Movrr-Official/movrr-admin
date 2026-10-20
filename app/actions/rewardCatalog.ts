@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
 
 import { requireCapability } from "@/lib/admin";
 import { shouldUseMockData } from "@/lib/dataSource";
 import { logger } from "@/lib/logger";
 import {
   enforceApprovalSod,
-  recordEntityInitiator,
 } from "@/features/authorization/sodEnforcement";
 import {
   cleanupUnreferencedRewardCatalogMedia,
@@ -29,7 +29,7 @@ import {
 } from "@/schemas";
 import { z } from "zod";
 
-async function writeCatalog(id: string | null, payload: Record<string, unknown>, expected?: string) {
+async function writeCatalog(id: string | null, payload: Record<string, unknown>, expected?: string, partner?: { name?: string; website?: string }) {
   const auth = await requireCapability("rewards.manage", { mutation: true });
   const supabase = createSupabaseAdminClient();
   const { data: current, error } = id ? await supabase.from("reward_catalog").select("status, updated_at").eq("id", id).single() : { data: null, error: null };
@@ -41,6 +41,10 @@ async function writeCatalog(id: string | null, payload: Record<string, unknown>,
     const blocked = await enforceApprovalSod({ supabase, workflowId: "reward_approval", entityType: "reward_catalog", entityId: id, approverUserId: auth.authUser.id });
     if (blocked) return { data: null, error: { message: blocked } };
   }
+  if (partner) return supabase.rpc("admin_save_catalog", {
+    p_actor: auth.authUser.id, p_id: id, p_payload: payload, p_expected: expected ?? null,
+    p_partner_name: partner.name ?? null, p_partner_website: partner.website ?? null,
+  });
   return supabase.rpc("shop_save_catalog", { p_actor: auth.authUser.id, p_id: id, p_payload: payload, p_expected: expected ?? null });
 }
 
@@ -86,102 +90,6 @@ const mapCatalogRow = (row: any): RewardCatalogItem => {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
-};
-
-/**
- * Catalog partner upsert + reverse sync to Platform `organisation`.
- * Ensures reward_partner.organisation_id is linked (045 dual-write reverse).
- */
-const upsertPartner = async (name?: string, website?: string) => {
-  if (!name) return undefined;
-  const supabaseAdmin = createSupabaseAdminClient();
-  const now = new Date().toISOString();
-
-  const ensureOrganisationLink = async (
-    partnerId: string,
-    organisationId: string | null,
-  ): Promise<string> => {
-    if (organisationId) return partnerId;
-
-    const { data: existingOrg } = await supabaseAdmin
-      .from("organisation")
-      .select("id")
-      .eq("type", "reward_partner")
-      .ilike("name", name)
-      .maybeSingle();
-
-    let orgId = existingOrg?.id as string | undefined;
-    if (!orgId) {
-      const { data: createdOrg, error: orgError } = await supabaseAdmin
-        .from("organisation")
-        .insert({
-          name,
-          type: "reward_partner",
-          status: "active",
-          created_at: now,
-          updated_at: now,
-        })
-        .select("id")
-        .single();
-      if (orgError) throw orgError;
-      orgId = createdOrg.id as string;
-    }
-
-    const { error: linkError } = await supabaseAdmin
-      .from("reward_partner")
-      .update({ organisation_id: orgId, updated_at: now })
-      .eq("id", partnerId);
-    if (linkError) throw linkError;
-    return partnerId;
-  };
-
-  const { data: existing } = await supabaseAdmin
-    .from("reward_partner")
-    .select("id, organisation_id")
-    .ilike("name", name)
-    .maybeSingle();
-
-  if (existing?.id) {
-    if (website) {
-      await supabaseAdmin
-        .from("reward_partner")
-        .update({ website, updated_at: now })
-        .eq("id", existing.id);
-    }
-    return ensureOrganisationLink(
-      existing.id as string,
-      (existing.organisation_id as string | null) ?? null,
-    );
-  }
-
-  const { data: createdOrg, error: orgError } = await supabaseAdmin
-    .from("organisation")
-    .insert({
-      name,
-      type: "reward_partner",
-      status: "active",
-      created_at: now,
-      updated_at: now,
-    })
-    .select("id")
-    .single();
-  if (orgError) throw orgError;
-
-  const { data: created, error } = await supabaseAdmin
-    .from("reward_partner")
-    .insert({
-      name,
-      website: website ?? null,
-      status: "active",
-      organisation_id: createdOrg.id,
-      created_at: now,
-      updated_at: now,
-    })
-    .select("id")
-    .single();
-
-  if (error) throw error;
-  return created.id as string;
 };
 
 export async function getRewardCatalog(
@@ -239,11 +147,6 @@ export async function upsertRewardCatalog(
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = upsertRewardCatalogSchema.parse(data);
 
-    const partnerId = await upsertPartner(
-      validatedData.partnerName,
-      validatedData.partnerUrl,
-    );
-
     const payload = {
       sku: validatedData.sku,
       title: validatedData.title,
@@ -251,7 +154,7 @@ export async function upsertRewardCatalog(
       category: validatedData.category,
       status: validatedData.status ?? "draft",
       points_price: validatedData.pointsPrice,
-      partner_id: partnerId ?? null,
+      partner_id: null,
       partner_url: validatedData.partnerUrl ?? null,
       thumbnail_url: validatedData.thumbnailUrl ?? null,
       gallery_urls: validatedData.galleryUrls ?? [],
@@ -270,9 +173,6 @@ export async function upsertRewardCatalog(
       updated_at: new Date().toISOString(),
     };
 
-    const selectColumns =
-      "id, sku, title, description, category, status, points_price, partner_id, partner_url, thumbnail_url, gallery_urls, inventory_type, inventory_count, max_per_rider, featured_rank, is_featured, visibility_rules, tags, fulfilment_type, resource_id, published_at, created_at, updated_at, partner:partner_id (id, name, website)";
-
     let previousMediaUrls: string[] = [];
     if (validatedData.id) {
       const { data: existing } = await supabaseAdmin
@@ -288,21 +188,18 @@ export async function upsertRewardCatalog(
       }
     }
 
-    const response = await writeCatalog(validatedData.id ?? null, payload, validatedData.expectedUpdatedAt);
+    const response = validatedData.id
+      ? await writeCatalog(validatedData.id, payload, validatedData.expectedUpdatedAt, { name: validatedData.partnerName, website: validatedData.partnerUrl })
+      : await supabaseAdmin.rpc("admin_create", {
+        p_actor: auth.authUser.id, p_operation: validatedData.operationId ?? randomUUID(), p_kind: "catalog",
+        p_input: { record: payload, partnerName: validatedData.partnerName, partnerWebsite: validatedData.partnerUrl },
+      });
 
     if (response.error) {
       return { success: false, error: response.error.message };
     }
 
     const saved = mapCatalogRow(response.data);
-    if (!validatedData.id && saved.id) {
-      await recordEntityInitiator(supabaseAdmin, {
-        adminId: auth.authUser.id,
-        entityType: "reward_catalog",
-        entityId: saved.id,
-        action: "reward_catalog.create",
-      });
-    }
     if (validatedData.id && previousMediaUrls.length > 0) {
       const nextMediaUrls = [
         saved.thumbnailUrl ?? "",

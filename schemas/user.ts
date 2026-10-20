@@ -1,9 +1,13 @@
 import { z } from "zod";
+import { CANONICAL_EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
+
 import {
   performanceDataSchema,
   dashboardRouteSchema,
   statCardSchema,
 } from "./dashboard";
+
+export const accountCreationRoleSchema = z.enum(["rider", "advertiser", ...CANONICAL_EMPLOYEE_ROLES]);
 
 export const userRoleSchema = z.enum([
   // Product principals

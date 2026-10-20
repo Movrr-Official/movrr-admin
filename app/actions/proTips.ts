@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { shouldUseMockData } from "@/lib/dataSource";
@@ -9,6 +10,7 @@ import {
   ProTip,
   ProTipFiltersSchema,
   CreateProTipFormData,
+  createProTipSchema,
   UpdateProTipFormData,
 } from "@/schemas";
 
@@ -84,7 +86,7 @@ export async function getProTips(
 export async function createProTip(
   input: CreateProTipFormData,
 ): Promise<{ success: boolean; error?: string }> {
-  await requireCapability("protips.manage", { mutation: true });
+  const auth = await requireCapability("protips.manage", { mutation: true });
 
   if (shouldUseMockData()) {
     revalidatePath("/pro-tips");
@@ -92,14 +94,17 @@ export async function createProTip(
   }
 
   try {
+    const validated = createProTipSchema.parse(input);
     const supabase = createSupabaseAdminClient();
-    const { error } = await supabase.from("pro_tips").insert({
-      icon: input.icon,
-      text: input.text,
-      category: input.category ?? null,
-      priority: input.priority ?? 0,
-      is_active: input.isActive ?? true,
-    });
+    const { error } = await supabase.rpc("admin_create", {
+      p_actor: auth.authUser.id, p_operation: validated.operationId ?? randomUUID(), p_kind: "pro_tip",
+      p_input: { record: {
+      icon: validated.icon,
+      text: validated.text,
+      category: validated.category ?? null,
+      priority: validated.priority ?? 0,
+      is_active: validated.isActive ?? true,
+    } } });
 
     if (error) throw error;
     revalidatePath("/pro-tips");

@@ -183,6 +183,11 @@ export async function assertEligibleWorkboardInvitee(
     );
   }
 
+  const account = await supabase.from("user").select("status").eq("id", data.user_id).maybeSingle();
+  if (account.error || account.data?.status !== "active") {
+    return fail("inactive_account", "Workboard invitations require an active employee account.");
+  }
+
   if (data.email.toLowerCase() !== normalized) {
     return fail("email_mismatch", "Invitee email does not match platform identity");
   }

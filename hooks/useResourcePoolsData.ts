@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { platformGet, platformPost } from "@/lib/platformApi/client";
@@ -40,6 +41,7 @@ export function useResourcePools() {
 }
 
 export function useImportPoolCodes() {
+  const creation = useCreationOperation("voucher-import");
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: ImportPoolCodesInput) => {
@@ -49,7 +51,7 @@ export function useImportPoolCodes() {
         accepted: boolean;
       }>("/api/v1/partners/resources", {
         headers: {
-          "Idempotency-Key": crypto.randomUUID(),
+          "Idempotency-Key": creation.operationId(input),
         },
         body: {
           resourceId: input.resourceId,
@@ -61,6 +63,7 @@ export function useImportPoolCodes() {
       if (!result.ok) {
         throw new Error(result.message || "Failed to import pool codes");
       }
+      creation.complete();
       return result.value;
     },
     onSuccess: () => {

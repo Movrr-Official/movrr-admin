@@ -4,6 +4,7 @@
  */
 
 import "server-only";
+import { randomUUID } from "node:crypto";
 
 import {
   assertSameActorSod,
@@ -23,14 +24,17 @@ export async function recordEntityInitiator(
     metadata?: Record<string, unknown>;
   },
 ): Promise<void> {
-  await supabase.from("admin_audit_log").insert({
-    admin_id: input.adminId,
-    action: input.action,
-    entity_type: input.entityType,
-    entity_id: input.entityId,
-    metadata: input.metadata ?? {},
+  const { error } = await supabase.from("platform_audit_record").insert({
+    actor_user_id: input.adminId,
+    principal_type: "admin",
+    target_entity_type: input.entityType,
+    target_entity_id: input.entityId,
+    resulting_state: { ...input.metadata, action: input.action },
+    correlation_id: randomUUID(),
+    reason: "entity_initiator",
     created_at: new Date().toISOString(),
   });
+  if (error) throw new Error(`Creation audit failed: ${error.message}`);
 }
 
 export async function resolveEntityInitiator(
@@ -38,16 +42,18 @@ export async function resolveEntityInitiator(
   entityType: string,
   entityId: string,
 ): Promise<string | null> {
-  const { data } = await supabase
-    .from("admin_audit_log")
-    .select("admin_id")
-    .eq("entity_type", entityType)
-    .eq("entity_id", entityId)
+  const { data, error } = await supabase
+    .from("platform_audit_record")
+    .select("actor_user_id")
+    .eq("target_entity_type", entityType)
+    .eq("target_entity_id", entityId)
+    .eq("reason", "entity_initiator")
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
 
-  return typeof data?.admin_id === "string" ? data.admin_id : null;
+  if (error) throw new Error(`Creation audit unavailable: ${error.message}`);
+  return typeof data?.actor_user_id === "string" ? data.actor_user_id : null;
 }
 
 /**

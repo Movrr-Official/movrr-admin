@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
 
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -266,9 +267,9 @@ export async function createCommunityRide(
     }
 
     const now = new Date().toISOString();
-    const { data, error } = await supabase
-      .from("community_ride")
-      .insert({
+    const { data, error } = await supabase.rpc("admin_create", {
+      p_actor: auth.authUser.id, p_operation: parsed.data.operationId ?? randomUUID(), p_kind: "community_ride",
+      p_input: { record: {
         created_by_user_id: auth.authUser.id,
         organizer_type: organizerType,
         organizer_user_id: resolvedOrganizerUserId,
@@ -288,9 +289,8 @@ export async function createCommunityRide(
         is_public: isPublic,
         created_at: now,
         updated_at: now,
-      })
-      .select("id")
-      .single();
+      } },
+    });
 
     if (error) throw error;
 
@@ -302,7 +302,7 @@ export async function createCommunityRide(
     const activityRefs = await resolveActivityUserRefs(supabase, {
       targetUserIds: [auditTargetUserId, auth.authUser.id],
       actorUserIds: [auth.authUser.id],
-    });
+    }).catch(() => ({ userId: null, actorUserId: null }));
 
     const auditAction =
       organizerType === "movrr"

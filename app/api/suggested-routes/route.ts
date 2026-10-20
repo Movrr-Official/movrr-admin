@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -14,6 +15,7 @@ const waypointSchema = z.object({
 });
 
 const createRouteSchema = z.object({
+  operationId: z.string().uuid().optional(),
   name: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).optional().nullable(),
   geometry: z.array(waypointSchema).min(2).max(500),
@@ -125,9 +127,9 @@ export async function POST(request: Request) {
   const d = parsed.data;
   const supabase = createSupabaseAdminClient();
 
-  const { data, error } = await supabase
-    .from("suggested_routes")
-    .insert({
+  const { data, error } = await supabase.rpc("admin_create", {
+    p_actor: user.authUser.id, p_operation: d.operationId ?? randomUUID(), p_kind: "suggested_route",
+    p_input: { record: {
       name: d.name,
       description: d.description ?? null,
       geometry: d.geometry,
@@ -144,9 +146,8 @@ export async function POST(request: Request) {
       start_at: d.startAt ?? null,
       end_at: d.endAt ?? null,
       created_by: user.authUser.id,
-    })
-    .select()
-    .single();
+    } },
+  });
 
   if (error) {
     console.error("[suggested-routes] POST create failed", error);

@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 import { useEffect, useId, useRef, useState } from "react";
 import { EditorRequestScope } from "@/features/partners/application/editorRequestScope";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ export function PartnerLocationsPanel(props: {
 function PartnerLocationEditor({ organisationId, }: {
     organisationId: string;
 }) {
+    const creation = useCreationOperation(`partner-location.${organisationId}`);
     const scope = useRef(new EditorRequestScope());
     const fieldId = useId();
     const [cursor, setCursor] = useState<string | null>(null);
@@ -82,7 +84,7 @@ function PartnerLocationEditor({ organisationId, }: {
                 body: {
                     ...(selected
                         ? { id: selected.id, expectedUpdatedAt: selected.updatedAt }
-                        : {}),
+                        : { operationId: creation.operationId({ name, address, lat, lon, verified, status, rewardIds }) }),
                     name,
                     address,
                     latitude: lat.trim() ? Number(lat) : null,
@@ -101,6 +103,7 @@ function PartnerLocationEditor({ organisationId, }: {
                 setError(result.message);
                 return;
             }
+            creation.complete();
             setRows((old) => [
                 ...old.filter((r) => r.id !== result.value.id).slice(-99),
                 result.value,

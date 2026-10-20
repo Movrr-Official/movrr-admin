@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import type {
@@ -112,7 +113,11 @@ export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
   const store: OrganisationListPort = {
     async createOrganisation(input) {
       const supabase = createSupabaseAdminClient();
-      const { data, error } = await supabase.rpc("save_organisation_with_partner", { p_id: null, p_input: input });
+      if (!input.actorId) throw new Error("Authenticated organisation creation actor required");
+      const { data, error } = await supabase.rpc("admin_create", { p_actor: input.actorId,
+        p_operation: input.operationId ?? randomUUID(), p_kind: "organisation",
+        p_input: { name: input.name, type: input.type, status: input.status ?? "active" },
+      });
       throwOnError(error, "createOrganisation.atomic");
       const result = data as { organisation: OrganisationRow; partner: RewardPartnerRow | null };
       const organisation = mapOrganisation(result.organisation);
@@ -159,19 +164,30 @@ export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
       const supabase = createSupabaseAdminClient();
       const { data, error } = await supabase
         .from("organisation_membership")
-        .insert({
+        .upsert({
           organisation_id: input.organisationId,
           user_id: input.userId,
           role: input.role,
           bundle_key: input.bundleKey ?? ORG_ROLE_BUNDLE_KEYS[input.role],
           status: "active",
-        })
+        }, { onConflict: "organisation_id,user_id", ignoreDuplicates: true })
         .select(
           "id, organisation_id, user_id, role, bundle_key, status, created_at, updated_at",
         )
-        .single();
+        .maybeSingle();
 
       throwOnError(error, "addMember");
+      if (!data) {
+        const existing = await supabase.from("organisation_membership")
+          .select("id, organisation_id, user_id, role, bundle_key, status, created_at, updated_at")
+          .eq("organisation_id", input.organisationId).eq("user_id", input.userId).single();
+        throwOnError(existing.error, "addMember.retry");
+        if (!existing.data || existing.data.role !== input.role ||
+            existing.data.bundle_key !== (input.bundleKey ?? ORG_ROLE_BUNDLE_KEYS[input.role]) || existing.data.status !== "active") {
+          throw new Error("Membership already exists with different access; use the authorized role update workflow");
+        }
+        return mapMembership(existing.data as MembershipRow);
+      }
       return mapMembership(data as MembershipRow);
     },
 

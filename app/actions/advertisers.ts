@@ -571,7 +571,7 @@ export async function getAdvertiserById(
 
 export async function createAdvertiserProfile(
   data: z.infer<typeof createAdvertiserSchema>,
-): Promise<{ success: boolean; data?: AdvertiserOption; error?: string }> {
+): Promise<{ success: boolean; data?: AdvertiserOption; error?: string; warning?: string }> {
   try {
     const auth = await requireCapability("advertisers.manage", { mutation: true });
     const validatedData = createAdvertiserSchema.parse(data);
@@ -608,157 +608,30 @@ export async function createAdvertiserProfile(
     const emailNotifications = validatedData.emailNotifications ?? true;
     const campaignUpdates = validatedData.campaignUpdates ?? true;
 
-    const { data: existingUser, error: existingUserError } = await supabaseAdmin
-      .from("user")
-      .select("id, role, name, email, phone, status")
-      .eq("email", normalizedEmail)
-      .maybeSingle();
-
-    if (existingUserError) {
-      return { success: false, error: existingUserError.message };
-    }
-
-    let advertiserUserId = existingUser?.id;
-    let createdUserId: string | null = null;
-
-    if (existingUser) {
-      if (existingUser.role !== "advertiser") {
-        return {
-          success: false,
-          error:
-            "A user with this email already exists with a non-advertiser role. Update role to advertiser or use another email.",
-        };
-      }
-    } else {
-      const createUserResult = await createUser({
-        email: normalizedEmail,
-        name: normalizedContactName,
-        phone: normalizedPhone,
-        role: "advertiser",
-        status: validatedData.status,
-        organization: normalizedCompanyName,
-        languagePreference: normalizedLanguage,
-        isVerified: false,
-        accountNotes: "Created from advertiser operations.",
-        sendWelcomeEmail: validatedData.sendWelcomeEmail,
-        allowAdvertiserBootstrap: true,
-      });
-
-      if (!createUserResult.success || !createUserResult.data) {
-        return {
-          success: false,
-          error: createUserResult.error || "Failed to create advertiser user",
-        };
-      }
-
-      advertiserUserId = createUserResult.data.id;
-      createdUserId = createUserResult.data.id;
-    }
-
-    if (!advertiserUserId) {
-      return {
-        success: false,
-        error: "Unable to resolve advertiser user profile.",
-      };
-    }
-
-    const { error: updateUserError } = await supabaseAdmin
-      .from("user")
-      .update({
-        role: "advertiser",
-        name: normalizedContactName,
-        phone: normalizedPhone,
-        status: mapUiStatusToDb(validatedData.status),
-        organization: normalizedCompanyName,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", advertiserUserId);
-
-    if (updateUserError) {
-      return { success: false, error: updateUserError.message };
-    }
-
-    const { data: existingAdvertiser, error: existingAdvertiserError } =
-      await supabaseAdmin
-        .from("advertiser")
-        .select("id")
-        .eq("user_id", advertiserUserId)
-        .maybeSingle();
-
-    if (existingAdvertiserError) {
-      return { success: false, error: existingAdvertiserError.message };
-    }
-
-    let advertiserId = existingAdvertiser?.id;
-
-    if (existingAdvertiser?.id) {
-      const { error: advertiserUpdateError } = await supabaseAdmin
-        .from("advertiser")
-        .update({
-          company_name: normalizedCompanyName,
-          company_email: normalizedEmail,
-          website: normalizedWebsite,
-          logo_url: normalizedLogoUrl,
-          industry: normalizedIndustry,
-          language: normalizedLanguage,
-          timezone: normalizedTimezone,
-          email_notifications: emailNotifications,
-          campaign_updates: campaignUpdates,
-          budget: normalizedBudget,
-        })
-        .eq("id", existingAdvertiser.id);
-
-      if (advertiserUpdateError) {
-        return { success: false, error: advertiserUpdateError.message };
-      }
-    } else {
-      const { data: insertedAdvertiser, error: insertError } = await supabaseAdmin
-        .from("advertiser")
-        .insert({
-          user_id: advertiserUserId,
-          company_name: normalizedCompanyName,
-          company_email: normalizedEmail,
-          website: normalizedWebsite,
-          logo_url: normalizedLogoUrl,
-          industry: normalizedIndustry,
-          verified: false,
-          budget: normalizedBudget,
-          language: normalizedLanguage,
-          timezone: normalizedTimezone,
-          email_notifications: emailNotifications,
-          campaign_updates: campaignUpdates,
-          created_at: new Date().toISOString(),
-        })
-        .select("id")
-        .single();
-
-      if (insertError || !insertedAdvertiser?.id) {
-        if (createdUserId) {
-          await supabaseAdmin.from("user").delete().eq("id", createdUserId);
-          await supabaseAdmin.auth.admin.deleteUser(createdUserId);
-        }
-        return {
-          success: false,
-          error: insertError?.message || "Failed to create advertiser profile",
-        };
-      }
-
-      advertiserId = insertedAdvertiser.id;
-    }
-
-    if (!advertiserId) {
-      return { success: false, error: "Failed to resolve advertiser profile id" };
-    }
-
-    const { recordEntityInitiator } = await import(
-      "@/features/authorization/sodEnforcement"
-    );
-    await recordEntityInitiator(supabaseAdmin, {
-      adminId: auth.authUser.id,
-      entityType: "advertiser",
-      entityId: advertiserId,
-      action: "advertiser.create",
+    // Create commits Auth intent, public user and the full advertiser profile
+    // before activation. Existing records are edited via their own update flow.
+    const created = await createUser({
+      email: normalizedEmail, name: normalizedContactName, phone: normalizedPhone,
+      role: "advertiser", status: validatedData.status, organization: normalizedCompanyName,
+      languagePreference: normalizedLanguage, isVerified: false,
+      sendWelcomeEmail: validatedData.sendWelcomeEmail, allowAdvertiserBootstrap: true,
+      advertiserProfile: {
+        companyName: normalizedCompanyName, website: normalizedWebsite,
+        logoUrl: normalizedLogoUrl, industry: normalizedIndustry,
+        language: normalizedLanguage, timezone: normalizedTimezone, budget: normalizedBudget,
+        emailNotifications, campaignUpdates,
+      },
     });
+    if (!created.success || !created.data) return { success: false, error: created.error || "Advertiser creation failed" };
+    const advertiserUserId = created.data.id;
+    const { data: advertiserRow, error: advertiserReadError } = await supabaseAdmin.from("advertiser")
+      .select("id").eq("user_id", advertiserUserId).single();
+    if (advertiserReadError || !advertiserRow) {
+      // The account already committed; a read failure must not appear to undo it.
+      return { success: true, warning: "Advertiser created. Refresh to load its profile.",
+        data: { id: advertiserUserId, userId: advertiserUserId, companyName: normalizedCompanyName, label: normalizedCompanyName } };
+    }
+    const advertiserId = advertiserRow.id;
 
     revalidatePath("/advertisers");
     revalidatePath("/campaigns");
@@ -767,6 +640,7 @@ export async function createAdvertiserProfile(
 
     return {
       success: true,
+      warning: created.warning,
       data: {
         id: advertiserId,
         userId: advertiserUserId,

@@ -1,5 +1,8 @@
 "use server";
 
+import { provisionProduct, advertiserProvisioningSchema } from "@/features/identity/application/productProvisioning";
+import { notifyAccountSetup } from "@/lib/services/accountSetupNotification";
+import { provisionEmployee } from "@/features/identity/application/employeeProvisioning";
 import { EMPLOYEE_ROLES, resolveCanonicalEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
 import {
   capabilityRequiredToAssignRole,
@@ -15,6 +18,7 @@ import {
   updateUserRoleSchema,
   toggleUserStatusSchema,
   userRoleSchema,
+  accountCreationRoleSchema,
   userStatusSchema,
   RewardTransaction,
 } from "@/schemas";
@@ -25,7 +29,6 @@ import {
 } from "@/lib/rewardConstants";
 import { z } from "zod";
 import { Resend } from "resend";
-import AccountSetupEmail, { accountSetupText } from "@/emails/account-setup";
 import PasswordResetEmail, { passwordResetText } from "@/emails/password-reset";
 import { APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
 import {
@@ -42,20 +45,7 @@ import { ADMIN_DASHBOARD_SESSION_AUDIT_ACTION } from "@/lib/adminAccessMonitorin
 import {
   fetchUserActivityFeed,
   writeUserActivity,
-  writeUserActivities,
 } from "@/lib/userActivity";
-
-const mapUiRoleToDb = (role?: string | null) => {
-  if (!role) return "rider";
-  if (role === "super_admin") return "super_admin";
-  return role;
-};
-
-const mapDbRoleToUi = (role: string | null | undefined) => {
-  if (!role) return "rider";
-  if (role === "super_admin") return "super_admin";
-  return role;
-};
 
 const mapUiStatusToDb = (status: string) => {
   if (status === "inactive") return "suspended";
@@ -73,7 +63,7 @@ const createUserSchema = z
     email: z.string().email("Invalid email address"),
     name: z.string().min(1, "Full name is required").max(100),
     phone: z.string().optional(),
-    role: userRoleSchema,
+    role: accountCreationRoleSchema,
     status: userStatusSchema.default("active"),
     organization: z.string().optional(),
     languagePreference: z.string().default("en"),
@@ -83,7 +73,9 @@ const createUserSchema = z
     city: z.string().optional(),
     country: z.string().optional(),
     allowAdvertiserBootstrap: z.boolean().optional(),
+    advertiserProfile: advertiserProvisioningSchema.optional(),
   })
+  .strict()
   .superRefine((value, ctx) => {
     if (value.role === "advertiser" && !value.allowAdvertiserBootstrap) {
       ctx.addIssue({
@@ -152,181 +144,7 @@ const buildConfirmUrl = (hashedToken: string, type: string): string => {
   return url.toString();
 };
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const ADMIN_ACCESS_ROLES = new Set<string>(EMPLOYEE_ROLES);
-
-const ensurePublicUserProfile = async (
-  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
-  input: {
-    userId: string;
-    email?: string | null;
-    role?: string | null;
-  },
-) => {
-  const { data: existingUser, error: existingUserError } = await supabaseAdmin
-    .from("user")
-    .select("id")
-    .eq("id", input.userId)
-    .maybeSingle();
-
-  if (existingUserError) {
-    throw new Error(existingUserError.message);
-  }
-
-  if (existingUser?.id) {
-    return;
-  }
-
-  const { data: authLookup, error: authLookupError } =
-    await supabaseAdmin.auth.admin.getUserById(input.userId);
-
-  if (authLookupError || !authLookup?.user) {
-    throw new Error(
-      authLookupError?.message ||
-        "Unable to find auth user for public.user bootstrap.",
-    );
-  }
-
-  const authUser = authLookup.user;
-  const fullName =
-    typeof authUser.user_metadata?.full_name === "string" &&
-    authUser.user_metadata.full_name.trim()
-      ? authUser.user_metadata.full_name.trim()
-      : [
-          typeof authUser.user_metadata?.first_name === "string"
-            ? authUser.user_metadata.first_name
-            : "",
-          typeof authUser.user_metadata?.last_name === "string"
-            ? authUser.user_metadata.last_name
-            : "",
-        ]
-          .join(" ")
-          .trim() ||
-        authUser.email?.split("@")[0] ||
-        "Admin User";
-
-  const normalizedRole = mapUiRoleToDb(input.role ?? undefined);
-  const publicUserRole =
-    normalizedRole === "super_admin"
-      ? "super_admin"
-      : ADMIN_ACCESS_ROLES.has(normalizedRole ?? "")
-        ? "admin"
-        : (normalizedRole ?? "rider");
-
-  const { error: insertError } = await supabaseAdmin.from("user").insert({
-    id: input.userId,
-    email: input.email ?? authUser.email ?? `${input.userId}@movrr.local`,
-    name: fullName,
-    role: publicUserRole,
-    status: "active",
-    created_at: authUser.created_at ?? new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    email_verified: Boolean(authUser.email_confirmed_at),
-    is_verified: Boolean(authUser.email_confirmed_at),
-    language_preference:
-      typeof authUser.user_metadata?.language === "string" &&
-      authUser.user_metadata.language.trim()
-        ? authUser.user_metadata.language.trim()
-        : "en",
-  });
-
-  if (insertError) {
-    throw new Error(insertError.message);
-  }
-};
-
-const syncAdminAccessRecord = async (
-  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
-  input: {
-    userId: string;
-    email: string;
-    role?: string | null;
-    createdBy?: string | null;
-  },
-) => {
-  const normalizedRole = input.role ? mapUiRoleToDb(input.role) : undefined;
-  const shouldHaveAdminAccess = Boolean(
-    normalizedRole && ADMIN_ACCESS_ROLES.has(normalizedRole),
-  );
-
-  if (shouldHaveAdminAccess) {
-    await ensurePublicUserProfile(supabaseAdmin, {
-      userId: input.userId,
-      email: input.email,
-      role: normalizedRole,
-    });
-
-    if (input.createdBy) {
-      await ensurePublicUserProfile(supabaseAdmin, {
-        userId: input.createdBy,
-      });
-    }
-  }
-
-  if (!shouldHaveAdminAccess) {
-    const { error } = await supabaseAdmin
-      .from("admin_users")
-      .delete()
-      .eq("user_id", input.userId);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-    return;
-  }
-
-  const { error } = await supabaseAdmin.from("admin_users").upsert(
-    {
-      user_id: input.userId,
-      email: input.email,
-      role: normalizedRole,
-      created_by: input.createdBy ?? null,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id" },
-  );
-
-  if (error) {
-    throw new Error(error.message);
-  }
-};
-
-const waitForBootstrappedUserProfile = async (
-  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
-  userId: string,
-  maxAttempts: number = 10,
-): Promise<boolean> => {
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const { data, error } = await supabaseAdmin
-      .from("user")
-      .select("id")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    if (data?.id) {
-      return true;
-    }
-
-    await delay(150);
-  }
-
-  return false;
-};
-
-const cleanupCreatedUser = async (
-  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
-  userId: string,
-) => {
-  await supabaseAdmin.from("rider").delete().eq("user_id", userId);
-  await supabaseAdmin.from("advertiser").delete().eq("user_id", userId);
-  await supabaseAdmin.from("user").delete().eq("id", userId);
-  await supabaseAdmin.auth.admin.deleteUser(userId);
-};
 
 type UserActivityEntry = {
   id: string;
@@ -482,11 +300,12 @@ export async function getUsers(
   try {
     await requireCapability("users.read");
     const supabaseAdmin = createSupabaseAdminClient();
+    if (filters?.role && !userRoleSchema.safeParse(filters.role).success) return { success: false, error: "Invalid user role filter" };
 
     let query = supabaseAdmin.from("user").select("*");
 
-    if (filters?.role) {
-      query = query.eq("role", mapUiRoleToDb(filters.role));
+    if (filters?.role && !ADMIN_ACCESS_ROLES.has(filters.role)) {
+      query = query.eq("role", filters.role);
     }
 
     if (filters?.status) {
@@ -516,6 +335,11 @@ export async function getUsers(
       return { success: false, error: error.message };
     }
 
+    const { data: employeeRows, error: employeeError } = await supabaseAdmin
+      .from("admin_users").select("user_id, role");
+    if (employeeError) return { success: false, error: employeeError.message };
+    const employeeRoles = new Map((employeeRows ?? []).map((row) => [row.user_id, row.role]));
+
     const userIds = (data ?? []).map((row) => row.id);
     const lastActivitySignalMap = await fetchLatestUserActivitySignalMap(
       supabaseAdmin,
@@ -527,7 +351,7 @@ export async function getUsers(
       email: row.email,
       name: row.name,
       phone: row.phone ?? undefined,
-      role: mapDbRoleToUi(row.role),
+      role: employeeRoles.get(row.id) ?? row.role,
       status: mapDbStatusToUi(row.status),
       createdAt: row.created_at ?? new Date().toISOString(),
       updatedAt: row.updated_at ?? new Date().toISOString(),
@@ -543,6 +367,11 @@ export async function getUsers(
       languagePreference: row.language_preference ?? "en",
       accountNotes: row.account_notes ?? undefined,
     })) as User[];
+
+    if (filters?.role) {
+      const role = resolveCanonicalEmployeeRole(filters.role);
+      users = users.filter((user) => role ? resolveCanonicalEmployeeRole(user.role) === role : user.role === filters.role);
+    }
 
     if (selectedAdvertiserIds.length > 0) {
       users = users.filter(
@@ -566,7 +395,7 @@ export async function getUsers(
  */
 export async function createUser(
   data: z.infer<typeof createUserSchema>,
-): Promise<{ success: boolean; error?: string; data?: User }> {
+): Promise<{ success: boolean; error?: string; warning?: string; data?: User }> {
   try {
     const auth = await requireCapability("users.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
@@ -586,204 +415,34 @@ export async function createUser(
       };
     }
 
-    // Generate a random password (user will need to reset it)
-    const generateRandomPassword = () => {
-      const chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-      let password = "";
-      for (let i = 0; i < 16; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return password;
-    };
-
-    // Create Supabase Auth user via Admin API
-    const { data: authUser, error: authError } =
-      await supabaseAdmin.auth.admin.createUser({
-        email: validatedData.email,
-        password: generateRandomPassword(),
-        email_confirm: validatedData.isVerified,
-        user_metadata: {
-          full_name: validatedData.name,
-          phone: validatedData.phone?.trim() || undefined,
-          city: validatedData.city?.trim() || undefined,
-          country: validatedData.country?.trim() || undefined,
-          companyName: validatedData.organization?.trim() || undefined,
-          language: validatedData.languagePreference,
-          server_assigned_role: mapUiRoleToDb(validatedData.role),
-        },
+    const canonicalRole = resolveCanonicalEmployeeRole(validatedData.role);
+    let account;
+    if (canonicalRole) {
+      await requireCapability(capabilityRequiredToAssignRole(canonicalRole), { mutation: true });
+      account = await provisionEmployee(supabaseAdmin, auth.authUser.id, {
+        email: validatedData.email, name: validatedData.name, role: canonicalRole,
+        status: validatedData.status, phone: validatedData.phone, organization: validatedData.organization,
+        languagePreference: validatedData.languagePreference, isVerified: validatedData.isVerified,
+        accountNotes: validatedData.accountNotes, sendWelcomeEmail: validatedData.sendWelcomeEmail,
       });
-
-    if (authError || !authUser) {
-      console.error("Create user auth error:", authError);
-      return {
-        success: false,
-        error: authError?.message || "Failed to create authentication user",
-      };
-    }
-
-    const hasBootstrappedProfile = await waitForBootstrappedUserProfile(
-      supabaseAdmin,
-      authUser.user.id,
-    );
-
-    if (!hasBootstrappedProfile) {
-      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
-      return {
-        success: false,
-        error:
-          "User bootstrap profile was not created by the auth trigger. Check the database trigger configuration.",
-      };
-    }
-
-    const userData: Record<string, any> = {
-      email: validatedData.email,
-      name: validatedData.name,
-      role: mapUiRoleToDb(validatedData.role),
-      status: mapUiStatusToDb(validatedData.status),
-      email_verified: validatedData.isVerified,
-      is_verified: validatedData.isVerified,
-      verification_level: "basic",
-      language_preference: validatedData.languagePreference,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    if (validatedData.phone) userData.phone = validatedData.phone;
-    if (validatedData.organization)
-      userData.organization = validatedData.organization;
-    if (validatedData.accountNotes)
-      userData.account_notes = validatedData.accountNotes;
-
-    const { data: user, error: profileError } = await supabaseAdmin
-      .from("user")
-      .update(userData)
-      .eq("id", authUser.user.id)
-      .select()
-      .single();
-
-    if (profileError) {
-      console.error("Create user profile error:", profileError);
-      // Try to clean up auth user if profile creation fails
-      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
-      return {
-        success: false,
-        error: profileError.message,
-      };
-    }
-
-    try {
-      await syncAdminAccessRecord(supabaseAdmin, {
-        userId: authUser.user.id,
-        email: validatedData.email,
-        role: validatedData.role,
-        createdBy: auth.authUser.id,
+    } else {
+      if (validatedData.role === "advertiser") await requireCapability("advertisers.manage", { mutation: true });
+      account = await provisionProduct(supabaseAdmin, auth.authUser.id, {
+        email: validatedData.email, name: validatedData.name, role: validatedData.role as "rider" | "advertiser",
+        status: validatedData.status, phone: validatedData.phone, organization: validatedData.organization,
+        languagePreference: validatedData.languagePreference, isVerified: validatedData.isVerified,
+        accountNotes: validatedData.accountNotes, city: validatedData.city, country: validatedData.country,
+        advertiserProfile: validatedData.advertiserProfile,
       });
-    } catch (adminAccessError) {
-      console.error("Create user admin access sync error:", adminAccessError);
-      await cleanupCreatedUser(supabaseAdmin, authUser.user.id);
-      return {
-        success: false,
-        error:
-          adminAccessError instanceof Error
-            ? adminAccessError.message
-            : "Failed to provision admin dashboard access",
-      };
     }
-
-    const allowAccountSetupLinks =
-      policies.security.allowAccountSetupLinks !== false;
-    const allowSetupNotifications =
-      policies.notifications.onboardingSetupNotificationsEnabled !== false;
-
-    // Admin-created accounts should receive a setup link, not rely on an unknown generated password.
-    if (validatedData.sendWelcomeEmail) {
-      try {
-        if (!allowAccountSetupLinks) {
-          throw new Error(
-            "Account setup links are disabled by the current security policy.",
-          );
-        }
-
-        if (!allowSetupNotifications) {
-          throw new Error(
-            "Account setup notifications are disabled by the current notification policy.",
-          );
-        }
-
-        const resend = getResendClient();
-        if (!resend) {
-          console.warn(
-            "RESEND_API_KEY is not configured; skipping account setup email.",
-          );
-        } else {
-          const { data: recoveryData, error: recoveryError } =
-            await supabaseAdmin.auth.admin.generateLink({
-              type: "recovery",
-              email: validatedData.email,
-              options: {
-                redirectTo: getRecoveryRedirectUrl(),
-              },
-            });
-
-          if (recoveryError || !recoveryData?.properties?.hashed_token) {
-            throw new Error(
-              recoveryError?.message || "Failed to generate account setup link",
-            );
-          }
-
-          await resend.emails.send({
-            from: getSenderEmail(),
-            to: validatedData.email,
-            subject: "Set up your MOVRR account",
-            react: AccountSetupEmail({
-              name: validatedData.name,
-              setupUrl: buildConfirmUrl(
-                recoveryData.properties.hashed_token,
-                "recovery",
-              ),
-            }),
-            text: accountSetupText({
-              name: validatedData.name,
-              setupUrl: buildConfirmUrl(
-                recoveryData.properties.hashed_token,
-                "recovery",
-              ),
-            }),
-          });
-        }
-      } catch (emailError) {
-        console.error("Account setup email failed:", emailError);
-        await cleanupCreatedUser(supabaseAdmin, authUser.user.id);
-        return {
-          success: false,
-          error:
-            emailError instanceof Error
-              ? emailError.message
-              : "Failed to send account setup email",
-        };
-      }
-    }
-
+    const warning = validatedData.sendWelcomeEmail ? await notifyAccountSetup(supabaseAdmin, account) : undefined;
     await writeUserActivity(supabaseAdmin, {
-      user_id: authUser.user.id,
-      actor_user_id: auth.authUser.id,
-      source: "account",
-      action: "Account created",
-      description: `Account created with role ${validatedData.role}.`,
-      related_entity_type: "user",
-      related_entity_id: authUser.user.id,
-      metadata: {
-        role: validatedData.role,
-        status: validatedData.status,
-        sendWelcomeEmail: validatedData.sendWelcomeEmail,
-      },
-    }).catch((activityError) => {
-      console.warn("Create user activity write failed:", activityError);
-    });
-
+      user_id: account.id, actor_user_id: auth.authUser.id, source: "account", action: "Account created",
+      description: `Account provisioned with role ${account.role}.`, related_entity_type: "user", related_entity_id: account.id,
+      metadata: { role: account.role, status: account.status },
+    }).catch(() => undefined);
     revalidatePath("/users");
-    return { success: true, data: user as unknown as User };
+    return { success: true, warning, data: account as unknown as User };
   } catch (error) {
     console.error("Create user error:", error);
     return {
@@ -814,8 +473,6 @@ export async function updateUser(
       updateData.email = validatedData.email;
     if (validatedData.phone !== undefined)
       updateData.phone = validatedData.phone;
-    if (validatedData.role !== undefined)
-      updateData.role = mapUiRoleToDb(validatedData.role);
     if (validatedData.status !== undefined)
       updateData.status = mapUiStatusToDb(validatedData.status);
     if (validatedData.organization !== undefined)
@@ -827,54 +484,26 @@ export async function updateUser(
     if (validatedData.accountNotes !== undefined)
       updateData.account_notes = validatedData.accountNotes;
 
-    const { error } = await supabaseAdmin
-      .from("user")
-      .update(updateData)
-      .eq("id", validatedData.id);
+    if (validatedData.role) {
+      const role = resolveCanonicalEmployeeRole(validatedData.role) ?? validatedData.role;
+      await requireCapability(capabilityRequiredToAssignRole(role), { mutation: true });
+    }
+    const { error } = await supabaseAdmin.rpc("update_admin_user_profile", {
+      p_actor: auth.authUser.id, p_user: validatedData.id,
+      p_role: validatedData.role ? (resolveCanonicalEmployeeRole(validatedData.role) ?? validatedData.role) : null,
+      p_patch: updateData,
+    });
 
     if (error) {
       console.error("Update user error:", error);
       return { success: false, error: error.message };
     }
 
-    const adminEmail =
-      validatedData.email ??
-      (
-        await supabaseAdmin
-          .from("user")
-          .select("email, role")
-          .eq("id", validatedData.id)
-          .single()
-      ).data?.email;
-    const adminRole =
-      validatedData.role ??
-      mapDbRoleToUi(
-        (
-          await supabaseAdmin
-            .from("user")
-            .select("role")
-            .eq("id", validatedData.id)
-            .single()
-        ).data?.role,
-      );
-
-    if (adminEmail) {
-      try {
-        await syncAdminAccessRecord(supabaseAdmin, {
-          userId: validatedData.id,
-          email: adminEmail,
-          role: adminRole,
-        });
-      } catch (adminAccessError) {
-        console.error("Update user admin access sync error:", adminAccessError);
-        return {
-          success: false,
-          error:
-            adminAccessError instanceof Error
-              ? adminAccessError.message
-              : "Failed to sync admin dashboard access",
-        };
-      }
+    if (validatedData.status) {
+      const authStatus = await supabaseAdmin.auth.admin.updateUserById(validatedData.id, {
+        ban_duration: validatedData.status === "active" ? "none" : "876000h",
+      });
+      if (authStatus.error) return { success: false, error: `Profile saved; Auth status needs retry: ${authStatus.error.message}` };
     }
 
     await writeUserActivity(supabaseAdmin, {
@@ -922,51 +551,10 @@ export async function updateUserRole(
       : capabilityRequiredToAssignRole(canonicalRole);
     const auth = await requireCapability(requiredCapability, { mutation: true });
 
-    const { error } = await supabaseAdmin
-      .from("user")
-      .update({
-        role: mapUiRoleToDb(validatedData.role),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", validatedData.userId);
-
-    if (error) {
-      console.error("Update user role error:", error);
-      return { success: false, error: error.message };
-    }
-
-    const { data: userRow, error: userLookupError } = await supabaseAdmin
-      .from("user")
-      .select("email")
-      .eq("id", validatedData.userId)
-      .single();
-
-    if (userLookupError || !userRow?.email) {
-      return {
-        success: false,
-        error: userLookupError?.message || "User email not found",
-      };
-    }
-
-    try {
-      await syncAdminAccessRecord(supabaseAdmin, {
-        userId: validatedData.userId,
-        email: userRow.email,
-        role: validatedData.role,
-      });
-    } catch (adminAccessError) {
-      console.error(
-        "Update user role admin access sync error:",
-        adminAccessError,
-      );
-      return {
-        success: false,
-        error:
-          adminAccessError instanceof Error
-            ? adminAccessError.message
-            : "Failed to sync admin dashboard access",
-      };
-    }
+    const { error } = await supabaseAdmin.rpc("assign_employee_role", {
+      p_actor: auth.authUser.id, p_user: validatedData.userId, p_role: canonicalRole,
+    });
+    if (error) return { success: false, error: error.message };
 
     await writeUserActivity(supabaseAdmin, {
       user_id: validatedData.userId,
@@ -1017,49 +605,14 @@ export async function toggleUserStatus(
       return { success: false, error: error.message };
     }
 
-    if (validatedData.status !== "active") {
-      const { error: adminAccessDeleteError } = await supabaseAdmin
-        .from("admin_users")
-        .delete()
-        .eq("user_id", validatedData.userId);
+    const authStatus = await supabaseAdmin.auth.admin.updateUserById(validatedData.userId, {
+      ban_duration: validatedData.status === "active" ? "none" : "876000h",
+    });
+    if (authStatus.error) return { success: false, error: `Account status saved; Auth status needs retry: ${authStatus.error.message}` };
 
-      if (adminAccessDeleteError) {
-        return { success: false, error: adminAccessDeleteError.message };
-      }
-    } else {
-      const { data: userRow, error: userLookupError } = await supabaseAdmin
-        .from("user")
-        .select("email, role")
-        .eq("id", validatedData.userId)
-        .single();
-
-      if (userLookupError || !userRow?.email) {
-        return {
-          success: false,
-          error: userLookupError?.message || "User email not found",
-        };
-      }
-
-      try {
-        await syncAdminAccessRecord(supabaseAdmin, {
-          userId: validatedData.userId,
-          email: userRow.email,
-          role: mapDbRoleToUi(userRow.role),
-        });
-      } catch (adminAccessError) {
-        console.error(
-          "Toggle user status admin access sync error:",
-          adminAccessError,
-        );
-        return {
-          success: false,
-          error:
-            adminAccessError instanceof Error
-              ? adminAccessError.message
-              : "Failed to sync admin dashboard access",
-        };
-      }
-    }
+    // Suspension preserves the exact employee template. Access readers enforce
+    // public account status; rebuilding from coarse user.role would promote a
+    // Partner Operations Manager to the legacy admin capability bundle.
 
     await writeUserActivity(supabaseAdmin, {
       user_id: validatedData.userId,
@@ -1463,6 +1016,13 @@ export async function bulkUpdateUserStatus(
     if (error) {
       console.error("Bulk update user status error:", error);
       return { success: false, error: error.message };
+    }
+
+    for (const row of data ?? []) {
+      const authStatus = await supabaseAdmin.auth.admin.updateUserById(row.id, {
+        ban_duration: status === "active" ? "none" : "876000h",
+      });
+      if (authStatus.error) return { success: false, error: `Account statuses saved; Auth status needs retry: ${authStatus.error.message}` };
     }
 
     return { success: true, updatedCount: data?.length || 0 };

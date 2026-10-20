@@ -1,4 +1,5 @@
 "use client";
+import { useCreationOperation } from "@/hooks/useCreationOperation";
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -109,6 +110,7 @@ const availableZones = [
 ];
 
 export default function CreateCampaignPage() {
+  const creation = useCreationOperation("campaign");
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -186,6 +188,7 @@ export default function CreateCampaignPage() {
       const endDateISO = new Date(data.endDate).toISOString();
 
       const result = await createCampaign({
+        operationId: creation.operationId(data),
         name: data.name,
         description: data.description,
         budget: data.budget,
@@ -203,6 +206,7 @@ export default function CreateCampaignPage() {
       if (!result.success) {
         throw new Error(result.error || "Failed to create campaign");
       }
+      creation.complete();
 
       toast({
         title: "Campaign Created Successfully",

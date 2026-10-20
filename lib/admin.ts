@@ -498,6 +498,11 @@ export const getAuthenticatedUser = cache(async (): Promise<AuthenticatedUser | 
     }
 
     const supabaseAdmin = createSupabaseAdminClient();
+    const { data: account, error: accountError } = await supabaseAdmin
+      .from("user").select("status").eq("id", authUser.id).maybeSingle();
+    if (accountError || account?.status !== "active") {
+      throw new AdminAuthError("NOT_ADMIN", "Account is not active", accountError);
+    }
     const { data: adminRow, error: adminError } = await supabaseAdmin
       .from("admin_users")
       .select("id, user_id, email, role, created_at, updated_at")

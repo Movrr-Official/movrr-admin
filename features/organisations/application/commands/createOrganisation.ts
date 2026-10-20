@@ -17,12 +17,13 @@ export async function createOrganisation(
   if (!name) {
     return fail("validation_failed", "Organisation name is required");
   }
-  if (!input.type) {
+  if (!["movrr", "reward_partner", "advertiser", "government"].includes(input.type)) {
     return fail("validation_failed", "Organisation type is required");
   }
 
   const organisation = await deps.organisations.createOrganisation({
     name,
+    operationId: input.operationId, actorId: input.actorId,
     type: input.type,
     status: input.status ?? "active",
   });

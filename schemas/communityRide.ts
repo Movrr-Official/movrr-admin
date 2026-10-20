@@ -104,6 +104,7 @@ export const updateCommunityRideSchema = z.object({
 });
 
 export const createCommunityRideSchema = z.object({
+  operationId: z.string().uuid().optional(),
   title: z.string().min(1, "Title is required").max(100),
   description: z.string().optional(),
   scheduledAt: z.string().min(1, "Scheduled date is required"),

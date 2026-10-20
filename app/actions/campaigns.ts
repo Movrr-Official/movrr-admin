@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   enforceApprovalSod,
-  recordEntityInitiator,
 } from "@/features/authorization/sodEnforcement";
 import {
   Campaign,
@@ -100,6 +100,7 @@ const geoJsonSchema = z.object({
 });
 
 const campaignZoneSchema = z.object({
+  operationId: z.string().uuid().optional(),
   id: z.string().optional(),
   campaignId: z.string(),
   name: z.string().optional(),
@@ -107,6 +108,7 @@ const campaignZoneSchema = z.object({
 });
 
 const campaignHotZoneSchema = z.object({
+  operationId: z.string().uuid().optional(),
   id: z.string().optional(),
   campaignId: z.string(),
   name: z.string().optional(),
@@ -349,6 +351,7 @@ export async function getCampaigns(
 export async function createCampaign(
   data: z.infer<typeof createCampaignSchema> & {
     advertiserId: string;
+    operationId?: string;
     campaignType?: "destination_ride" | "swarm";
     targetZones?: string[];
     vehicleTypeRequired?: "bike" | "e-bike" | "cargo-bike";
@@ -362,6 +365,7 @@ export async function createCampaign(
     const validatedData = createCampaignSchema.parse(data);
 
     const { data: campaign, error } = await insertCampaignRecord({
+      actorId: auth.authUser.id, operationId: data.operationId,
       advertiserId: data.advertiserId,
       name: validatedData.name,
       description: validatedData.description,
@@ -380,15 +384,6 @@ export async function createCampaign(
     if (error) {
       console.error("Create campaign error:", error);
       return { success: false, error };
-    }
-
-    if (campaign?.id) {
-      await recordEntityInitiator(supabaseAdmin, {
-        adminId: auth.authUser.id,
-        entityType: "campaign",
-        entityId: String(campaign.id),
-        action: "campaign.create",
-      });
     }
 
     revalidatePath("/campaigns");
@@ -590,10 +585,10 @@ export async function deleteCampaign(
  * Server action to duplicate a campaign
  */
 export async function duplicateCampaign(
-  campaignId: string,
+  campaignId: string, operationId?: string,
 ): Promise<{ success: boolean; error?: string; data?: Campaign }> {
   try {
-    await requireCapability("campaigns.write", { mutation: true });
+    const auth = await requireCapability("campaigns.write", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
 
     // Fetch the original campaign
@@ -620,11 +615,10 @@ export async function duplicateCampaign(
       updated_at: new Date().toISOString(),
     };
 
-    const { data: newCampaign, error: createError } = await supabaseAdmin
-      .from("campaign")
-      .insert(newCampaignData)
-      .select()
-      .single();
+    const { data: newCampaign, error: createError } = await supabaseAdmin.rpc("admin_create", {
+      p_actor: auth.authUser.id, p_operation: operationId ?? randomUUID(), p_kind: "campaign",
+      p_input: { record: newCampaignData, routeIds: [] },
+    });
 
     if (createError) {
       console.error("Duplicate campaign error:", createError);
@@ -743,50 +737,29 @@ export async function getCampaignZones(campaignId: string, options: { includeRet
   return { ...result, data: result.data?.map(row => ({ ...row, geom: row.geojson })) ?? null };
 }
 
-export async function upsertCampaignZone(
-  data: z.infer<typeof campaignZoneSchema>,
-): Promise<{ success: boolean; error?: string }> {
+export async function upsertCampaignZone(data: z.infer<typeof campaignZoneSchema>): Promise<{ success: boolean; error?: string }> {
+  const parsed = campaignZoneSchema.parse(data);
+  return saveCampaignGeography({ operationId: parsed.operationId, campaignId: parsed.campaignId, zones: [parsed], hotZones: [] });
+}
+
+export async function saveCampaignGeography(data: { operationId?: string; campaignId: string; zones: Omit<z.infer<typeof campaignZoneSchema>, "campaignId">[]; hotZones: Omit<z.infer<typeof campaignHotZoneSchema>, "campaignId">[] }): Promise<{ success: boolean; error?: string; zoneIds?: string[]; hotZoneIds?: string[] }> {
   try {
-    await requireCapability("campaigns.write", { mutation: true });
-    const supabaseAdmin = createSupabaseAdminClient();
-    const validatedData = campaignZoneSchema.parse(data);
-
-    if (validatedData.id) {
-      const { error } = await supabaseAdmin
-        .from("campaign_zone")
-        .update({
-          name: validatedData.name,
-          geom: validatedData.geom,
-        })
-        .eq("id", validatedData.id);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-    } else {
-      const { error } = await supabaseAdmin.from("campaign_zone").insert({
-        campaign_id: validatedData.campaignId,
-        name: validatedData.name,
-        geom: validatedData.geom,
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-    }
-
+    const auth = await requireCapability("campaigns.write", { mutation: true });
+    const parsed = z.object({ operationId: z.string().uuid().optional(), campaignId: z.string().uuid(),
+      zones: z.array(campaignZoneSchema.omit({ campaignId: true })),
+      hotZones: z.array(campaignHotZoneSchema.omit({ campaignId: true })),
+    }).parse(data);
+    const { data: saved, error } = await createSupabaseAdminClient().rpc("admin_create", {
+      p_actor: auth.authUser.id, p_operation: parsed.operationId ?? randomUUID(), p_kind: "campaign_geography",
+      p_input: { campaignId: parsed.campaignId,
+        zones: parsed.zones.map(({ id, name, geom }) => ({ id, name, geom })),
+        hotZones: parsed.hotZones.map(({ id, name, geom, bonusPercent, startsAt, endsAt }) => ({ id, name, geom, bonus_percent: bonusPercent, starts_at: startsAt ?? null, ends_at: endsAt ?? null })),
+      },
+    });
+    if (error) return { success: false, error: error.message };
     revalidatePath("/campaigns");
-    revalidatePath(`/campaigns/${validatedData.campaignId}`);
-    return { success: true };
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to upsert campaign zone",
-    };
-  }
+    return { success: true, zoneIds: saved.zoneIds as string[], hotZoneIds: saved.hotZoneIds as string[] };
+  } catch (error) { return { success: false, error: error instanceof Error ? error.message : "Geography changes failed" }; }
 }
 
 export async function deleteCampaignZone(
@@ -829,56 +802,9 @@ export async function getCampaignHotZones(campaignId: string) {
     .order("created_at", { ascending: false });
 }
 
-export async function upsertCampaignHotZone(
-  data: z.infer<typeof campaignHotZoneSchema>,
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    await requireCapability("campaigns.write", { mutation: true });
-    const supabaseAdmin = createSupabaseAdminClient();
-    const validatedData = campaignHotZoneSchema.parse(data);
-
-    if (validatedData.id) {
-      const { error } = await supabaseAdmin
-        .from("campaign_hot_zone")
-        .update({
-          name: validatedData.name,
-          bonus_percent: validatedData.bonusPercent,
-          starts_at: validatedData.startsAt,
-          ends_at: validatedData.endsAt,
-          geom: validatedData.geom,
-        })
-        .eq("id", validatedData.id);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-    } else {
-      const { error } = await supabaseAdmin.from("campaign_hot_zone").insert({
-        campaign_id: validatedData.campaignId,
-        name: validatedData.name,
-        bonus_percent: validatedData.bonusPercent,
-        starts_at: validatedData.startsAt,
-        ends_at: validatedData.endsAt,
-        geom: validatedData.geom,
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-    }
-
-    revalidatePath("/campaigns");
-    revalidatePath(`/campaigns/${validatedData.campaignId}`);
-    return { success: true };
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to upsert campaign hot zone",
-    };
-  }
+export async function upsertCampaignHotZone(data: z.infer<typeof campaignHotZoneSchema>): Promise<{ success: boolean; error?: string }> {
+  const parsed = campaignHotZoneSchema.parse(data);
+  return saveCampaignGeography({ operationId: parsed.operationId, campaignId: parsed.campaignId, zones: [], hotZones: [parsed] });
 }
 
 /**
