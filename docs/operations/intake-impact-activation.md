@@ -4,7 +4,7 @@ Account-deletion intake remains **Disabled, operating version 0**. The approved 
 
 ## Deletion activation decision
 
-[Fresh production preflight](../verification/intake-impact-activation/deletion-readiness.json) used a read-only transaction against `kzdvunpuxaxlphqvmzxw` at 16:23 UTC. The deployed `set_account_deletion_intake` body matches migration 060. It requires the existing Security capability, active account, configured MFA, a security administrator, expected operating version, reason and operation UUID. It atomically records actor, previous/new state, version and a retry receipt only after all prerequisites pass.
+[Fresh production preflight](../verification/intake-impact-activation/deletion-readiness.json) used a read-only transaction against `kzdvunpuxaxlphqvmzxw` at 16:33 UTC. The deployed `set_account_deletion_intake` body matches migration 060. It requires the existing Security capability, active account, configured MFA, a security administrator, expected operating version, reason and operation UUID. It atomically records actor, previous/new state, version and a retry receipt only after all prerequisites pass.
 
 The existing enablement prerequisites fail:
 
@@ -24,7 +24,7 @@ Irreversible execution remains separately disabled (`managed_resources_execution
 
 ## Environmental production verification
 
-[Fresh SQL/API reconciliation](../verification/intake-impact-activation/impact-production.json) passes **35 read-only assertions**. Active methodology is `MOVRR-NL-CAR-COMPARISON-2026-v2`: **0.190 kg CO₂e/vehicle-km WTW**, Netherlands 2026 edition, reference data 2025. The [factor source](https://co2emissiefactoren.nl/factoren/2026/38/147/personenvervoer-auto-gemiddelde-auto-brandstofsoort-onbekend/) confirms 0.142 TTW + 0.048 WTT = 0.190 WTW. This is an equivalent-distance average-car comparison, not actual avoided emissions.
+[Fresh SQL/API reconciliation](../verification/intake-impact-activation/impact-production.json) passes **36 read-only assertions**. Active methodology is `MOVRR-NL-CAR-COMPARISON-2026-v2`: **0.190 kg CO₂e/vehicle-km WTW**, Netherlands 2026 edition, reference data 2025. The [factor source](https://co2emissiefactoren.nl/factoren/2026/38/147/personenvervoer-auto-gemiddelde-auto-brandstofsoort-onbekend/) confirms 0.142 TTW + 0.048 WTT = 0.190 WTW. This is an equivalent-distance average-car comparison, not actual avoided emissions.
 
 Migration 059 is retained unchanged. Already-installed additive migrations 061/062/063 provide the immutable registry, verified historical coverage independent of reward settlement, and precision-preserving daily buckets. All four local normalized checksums match the production migration journal. All five installed impact function bodies match their latest migration sources and contain no active `0.180` factor. Historical migrations and immutable methodology v1 remain evidence; v2 is the sole active calculation contract.
 
@@ -39,3 +39,7 @@ Production Admin revision `16a5951c55e3394f705f48ecc0d4cd7fc46685c7` (`dpl_2JPKh
 Environmental `co2_50` remains catalog-visible/upcoming, with null `rule_type` and exclusion from the award function. No environmental award was invoked or activated. No Wallet, ledger, ride-verification or historical financial records were written. Prior rollout preservation evidence remains in [the original production record](../verification/enterprise-alignment/production-rollout.json).
 
 No new migration or material backend change is necessary or pending deployment approval. Public Shop redemption remains **Disabled**. No EAS, OTA, store, native or Mobile service work occurred.
+
+## Final wording rollout
+
+[Final production metadata](../verification/intake-impact-activation/deployments.json) confirms Admin `7ceb809c8a3146d1fbe37e9eb4d99d62a026be75`, deployment `dpl_4uSDuAgsaQe8n7H25jaUDTiQFVeD`, READY and aliased to `admin.movrr.nl`. The only application-runtime difference from the previously deployed Admin revision is `components/settings/config.ts` wording. The Vercel production build and TypeScript checks passed. Web remains at the verified revision above. No new migration or material backend change was applied. Final SQL/API and intake checks were repeated after this deployment; their attached evidence supersedes the initial checks. No authenticated browser was available for visual acceptance.

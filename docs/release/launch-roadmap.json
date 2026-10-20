@@ -12,7 +12,7 @@
     {
       "name": "Approved environmental-impact methodology",
       "status": "already deployed; fresh production SQL and RPC API reconciliation passed",
-      "work": "MOVRR-NL-CAR-COMPARISON-2026-v2 uses 0.190 kg CO2e/vehicle-km WTW and verified completed authoritative distance. Migrations 059/061/062/063 and live bodies match source. Live total: 21 rides, 42.86987 km, 8.15 kg CO2e equivalent-car estimate. Environmental awards remain non-awardable. Authenticated visual acceptance remains open; one residual Admin settings description corrected.",
+      "work": "MOVRR-NL-CAR-COMPARISON-2026-v2 uses 0.190 kg CO2e/vehicle-km WTW and verified completed authoritative distance. Migrations 059/061/062/063 and live bodies match source. Live total: 21 rides, 42.86987 km, 8.15 kg CO2e equivalent-car estimate. Environmental awards remain non-awardable. Admin wording correction deployed as 7ceb809 / dpl_4uSDuAgsaQe8n7H25jaUDTiQFVeD; 36 post-deployment SQL/API assertions passed. Authenticated visual acceptance remains open.",
       "evidence": "../verification/intake-impact-activation/impact-production.json"
     },
     {

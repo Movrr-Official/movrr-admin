@@ -1,0 +1,66 @@
+{
+  "admin": {
+    "id": "dpl_4uSDuAgsaQe8n7H25jaUDTiQFVeD",
+    "alias": [
+      "admin.movrr.nl",
+      "movrr-admin-movrrops-projects.vercel.app"
+    ],
+    "target": "production",
+    "sourceRevision": "7ceb809c8a3146d1fbe37e9eb4d99d62a026be75",
+    "state": "READY",
+    "url": "movrr-admin-p50tpljcg-movrrops-projects.vercel.app"
+  },
+  "web": {
+    "id": "dpl_DCANL9GvEimQYDn8SKY4L6WTv2cB",
+    "alias": [
+      "app.movrr.nl",
+      "movrr-app-movrrops-projects.vercel.app"
+    ],
+    "target": "production",
+    "sourceRevision": "e5cf27b58199f2f274069503d4e35ce8ef7ed99e",
+    "state": "READY",
+    "url": "movrr-ehprgn97q-movrrops-projects.vercel.app"
+  },
+  "verifiedAt": "2026-10-20T16:33:52.7686075Z",
+  "httpSmoke": {
+    "checkedAt": "2026-10-20T16:34:23.462Z",
+    "authenticated": false,
+    "checks": [
+      {
+        "url": "https://admin.movrr.nl/api/v1/riders/me/impact",
+        "status": 401,
+        "location": null
+      },
+      {
+        "url": "https://admin.movrr.nl/ops/jobs",
+        "status": 307,
+        "location": "/auth/signin?redirectTo=%2Fops%2Fjobs"
+      },
+      {
+        "url": "https://app.movrr.nl/dashboard/settings/self-service",
+        "status": 307,
+        "location": "/auth/signin"
+      },
+      {
+        "url": "https://app.movrr.nl/dashboard/settings/privacy",
+        "status": 307,
+        "location": "/auth/signin"
+      }
+    ]
+  },
+  "regressions": {
+    "isolatedPostgresImpactAssertions": 32,
+    "isolatedPostgresIntakeAssertions": 44,
+    "adminDeletionTests": 49,
+    "mobileRequestReceiptTests": 15,
+    "adminProjectionParticipationApiTests": 23,
+    "webRiderPrivacyTests": 25,
+    "adminTypecheck": "passed",
+    "vercelProductionBuild": "passed"
+  },
+  "onlyRuntimeSourceChanged": "components/settings/config.ts",
+  "sourceRevision": "7ceb809c8a3146d1fbe37e9eb4d99d62a026be75",
+  "newProductionMigrations": 0,
+  "materialBackendChanges": 0,
+  "authenticatedVisualAcceptance": "not performed; no connected authenticated browser"
+}
