@@ -1,0 +1,737 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-20T11:58:13.412Z",
+  "decision": "Partial rollout; ride operations permission correction and deletion-intake activation remain blocked",
+  "productionProject": "kzdvunpuxaxlphqvmzxw",
+  "migrations": [
+    {
+      "path": "movrr-admin/scripts/055_alignment_security.sql",
+      "version": "20261020112301",
+      "sha256": "4ae72f911a438d45804d99e5d51c58687b99f5216d0c630b9df64f2edb3821e2",
+      "committedAt": "2026-10-20T11:23:18.417Z",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-mobile/scripts/093_alignment_accessory_custody.sql",
+      "version": "20261020112302",
+      "sha256": "fc1c8bd8aa4e3906fa91bca9f6b711a05dbdb7c66262cb7ea99e7a731c0fd895",
+      "committedAt": "2026-10-20T11:23:18.519Z",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/056_alignment_capabilities.sql",
+      "version": "20261020112303",
+      "sha256": "e62509b2e9730f434c84962ee48f34b5b3244cbc598bd4a7db48e2c59912b47a",
+      "committedAt": "2026-10-20T11:23:18.660Z",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/057_alignment_operations.sql",
+      "version": "20261020112304",
+      "sha256": "e22155721b9b57ff80887cc4699310097dcf95850a198a734236510dcf296ed9",
+      "committedAt": "2026-10-20T11:23:19.034Z",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/058_alignment_reads.sql",
+      "version": "20261020112305",
+      "sha256": "9b1e56164fffc100297d18ed75092c77ac92b2398dbd7e5334b0e6759b9f0dc7",
+      "committedAt": "2026-10-20T11:23:19.188Z",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/059_alignment_impact.sql",
+      "version": "20261020112306",
+      "sha256": "d8b6a3cf8d27c8967286b7fc41b357a6059ea84ad7afee3ce6a102b109284a37",
+      "committedAt": "2026-10-20T11:23:19.287Z",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/060_account_deletion_intake_control.sql",
+      "version": "20261020112307",
+      "sha256": "84a37d0a4fd783d2f03a867dd41d10644c34e0d35cdeec20f8a03dd41132e469",
+      "committedAt": "2026-10-20T11:23:19.423Z",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/061_approved_impact_methodology.sql",
+      "version": "20261020113201",
+      "sha256": "a31db3be23feb7067c5a77c950a71dcc998dab6a7331fcb6b6395d2fa03f3599",
+      "committedAt": "2026-10-20T11:32:04.342Z",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/062_impact_verified_history_coverage.sql",
+      "version": "20261020113501",
+      "sha256": "5f98df235fb3bd8e070af61849edf0268933b6b4aa40e7a67683b376425d48fe",
+      "committedAt": "2026-10-20T11:35:55.514Z",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/063_impact_daily_precision.sql",
+      "version": "20261020113901",
+      "sha256": "c3ae69a9fa8c7625a0948f55af0f20a9dcbe157db0cff9ce2a2965268c504b94",
+      "committedAt": "2026-10-20T11:39:06.789Z",
+      "journalVerified": true
+    }
+  ],
+  "original059Unmodified": true,
+  "deployments": {
+    "admin": {
+      "domain": "admin.movrr.nl",
+      "revision": "135e4c417ad3382d26cbff62712c984c8c910f1e",
+      "deploymentId": "dpl_CFvwP9enbY1JoNimPAbweFF7jsci",
+      "url": "https://movrr-admin-485m2d5us-movrrops-projects.vercel.app",
+      "state": "READY",
+      "customAliasConfirmed": true
+    },
+    "web": {
+      "domain": "app.movrr.nl",
+      "revision": "77a25988d6c12ff766596a82310bb07abe2e19d9",
+      "deploymentId": "dpl_J8eACsBqimyK3ni5wPEja8VXnAsg",
+      "url": "https://movrr-qkxeziu6z-movrrops-projects.vercel.app",
+      "state": "READY",
+      "customAliasConfirmed": true
+    },
+    "mobile": {
+      "sourceRevision": "d42129978ddd34cd38e0783c45ef22fe3c549beb",
+      "sql093Only": true,
+      "runtimeModified": false,
+      "released": false
+    }
+  },
+  "baselineDeployments": {
+    "admin": {
+      "revision": "961aeb581fd6eae2ddf4a178fe219957b6ea67d1",
+      "deploymentId": "dpl_Hb773zW6jJknwVJG2UCAHcNCLosn"
+    },
+    "web": {
+      "revision": "ed33e875c4f069a75d0ff5bbb79d8f52a23bfd7d",
+      "deploymentId": "dpl_FVnXdBEtBPXnrbLUfZvD2LxjCRib"
+    }
+  },
+  "productionWebConfiguration": {
+    "PLATFORM_API_URL": "https://admin.movrr.nl/api",
+    "productionOnly": true,
+    "environmentId": "RccAagkqAwPOAAUg",
+    "productionOriginValidation": "7 focused tests passed"
+  },
+  "impact": {
+    "method": {
+      "scope": "WTW",
+      "sourceUrl": "https://co2emissiefactoren.nl/factoren/2026/38/147/personenvervoer-auto-gemiddelde-auto-brandstofsoort-onbekend/",
+      "eligibility": "Completed session with backend verification_result.status=verified, positive finite authoritative total_distance_meters and a nonfuture completion timestamp. One session once, independent of reward, ledger or settlement receipts. Historical verified sessions remain eligible; unverified or invalid evidence is excluded.",
+      "installedAt": "2026-10-20T11:35:56.142042+00:00",
+      "approvalDate": "2026-10-20",
+      "factorEdition": 2026,
+      "methodologyId": "MOVRR-NL-CAR-COMPARISON-2026-v2",
+      "comparisonLabel": "Average car emissions for the same distance",
+      "actualAvoidedEmissions": false,
+      "emissionsReferenceYear": 2025,
+      "factorKgCo2ePerVehicleKm": 0.19
+    },
+    "reported": {
+      "total_rides": "21",
+      "total_distance_km": "42.86987000000000000000",
+      "co2_saved_kg": "8.15"
+    },
+    "independentlyReconciled": {
+      "total_rides": "21",
+      "total_distance_km": "42.8698700000000000",
+      "co2_saved_kg": "8.15"
+    },
+    "period": {
+      "distance_km": "7.32810000000000000000",
+      "comparison_kg_co2e": "1.39",
+      "independent_comparison_kg_co2e": "1.39"
+    },
+    "environmentalAchievementsActivated": false,
+    "existingBadgeDefinitionAndAwardsPreserved": true,
+    "corrections": {
+      "061": "Approved registry and canonical evidence projection",
+      "062": "Include actual verified historical rides without coupling distance to settlement receipts",
+      "063": "Retain precision until aggregation; round final display to two decimals"
+    },
+    "mobileCompatibility": "Existing SQL tuple/JSON field names retained for the unchanged Mobile consumer; no duplicate calculation"
+  },
+  "verification": {
+    "database": {
+      "verifiedAt": "2026-10-20T11:54:53.658Z",
+      "productionProject": "kzdvunpuxaxlphqvmzxw",
+      "appliedMigrations": [
+        {
+          "path": "movrr-admin/scripts/055_alignment_security.sql",
+          "version": "20261020112301",
+          "sha256": "4ae72f911a438d45804d99e5d51c58687b99f5216d0c630b9df64f2edb3821e2",
+          "committedAt": "2026-10-20T11:23:18.417Z",
+          "journalVerified": true
+        },
+        {
+          "path": "movrr-mobile/scripts/093_alignment_accessory_custody.sql",
+          "version": "20261020112302",
+          "sha256": "fc1c8bd8aa4e3906fa91bca9f6b711a05dbdb7c66262cb7ea99e7a731c0fd895",
+          "committedAt": "2026-10-20T11:23:18.519Z",
+          "journalVerified": true
+        },
+        {
+          "path": "movrr-admin/scripts/056_alignment_capabilities.sql",
+          "version": "20261020112303",
+          "sha256": "e62509b2e9730f434c84962ee48f34b5b3244cbc598bd4a7db48e2c59912b47a",
+          "committedAt": "2026-10-20T11:23:18.660Z",
+          "journalVerified": true
+        },
+        {
+          "path": "movrr-admin/scripts/057_alignment_operations.sql",
+          "version": "20261020112304",
+          "sha256": "e22155721b9b57ff80887cc4699310097dcf95850a198a734236510dcf296ed9",
+          "committedAt": "2026-10-20T11:23:19.034Z",
+          "journalVerified": true
+        },
+        {
+          "path": "movrr-admin/scripts/058_alignment_reads.sql",
+          "version": "20261020112305",
+          "sha256": "9b1e56164fffc100297d18ed75092c77ac92b2398dbd7e5334b0e6759b9f0dc7",
+          "committedAt": "2026-10-20T11:23:19.188Z",
+          "journalVerified": true
+        },
+        {
+          "path": "movrr-admin/scripts/059_alignment_impact.sql",
+          "version": "20261020112306",
+          "sha256": "d8b6a3cf8d27c8967286b7fc41b357a6059ea84ad7afee3ce6a102b109284a37",
+          "committedAt": "2026-10-20T11:23:19.287Z",
+          "journalVerified": true
+        },
+        {
+          "path": "movrr-admin/scripts/060_account_deletion_intake_control.sql",
+          "version": "20261020112307",
+          "sha256": "84a37d0a4fd783d2f03a867dd41d10644c34e0d35cdeec20f8a03dd41132e469",
+          "committedAt": "2026-10-20T11:23:19.423Z",
+          "journalVerified": true
+        },
+        {
+          "path": "movrr-admin/scripts/061_approved_impact_methodology.sql",
+          "version": "20261020113201",
+          "sha256": "a31db3be23feb7067c5a77c950a71dcc998dab6a7331fcb6b6395d2fa03f3599",
+          "committedAt": "2026-10-20T11:32:04.342Z",
+          "journalVerified": true
+        },
+        {
+          "path": "movrr-admin/scripts/062_impact_verified_history_coverage.sql",
+          "version": "20261020113501",
+          "sha256": "5f98df235fb3bd8e070af61849edf0268933b6b4aa40e7a67683b376425d48fe",
+          "committedAt": "2026-10-20T11:35:55.514Z",
+          "journalVerified": true
+        },
+        {
+          "path": "movrr-admin/scripts/063_impact_daily_precision.sql",
+          "version": "20261020113901",
+          "sha256": "c3ae69a9fa8c7625a0948f55af0f20a9dcbe157db0cff9ce2a2965268c504b94",
+          "committedAt": "2026-10-20T11:39:06.789Z",
+          "journalVerified": true
+        }
+      ],
+      "preservation": {
+        "tables": 22,
+        "changedTables": [],
+        "rowsUnchanged": true
+      },
+      "checks": {
+        "shop": {
+          "state": "disabled",
+          "version": "0",
+          "redemption_enabled": false
+        },
+        "deletion": {
+          "operating_state": "disabled",
+          "operating_version": "0",
+          "requests_enabled": false
+        },
+        "deletionContract": {
+          "policyVersion": 1,
+          "contractVersion": 1,
+          "requestsEnabled": false
+        },
+        "period": {
+          "distance_km": "7.32810000000000000000",
+          "comparison_kg_co2e": "1.39",
+          "independent_comparison_kg_co2e": "1.39"
+        },
+        "worker": [
+          {
+            "finished_at": "2026-10-20T11:50:02.351Z",
+            "result": {
+              "failed": 0,
+              "delivered": 0,
+              "recovered": 0,
+              "notificationFailures": 0
+            }
+          }
+        ],
+        "counts": {
+          "deletion_requests": 0,
+          "notification_jobs_pending": 0
+        }
+      },
+      "financialMutationsForTesting": false,
+      "mobileRuntimeChanged": false
+    },
+    "liveReadOnlyApi": {
+      "checkedAt": "2026-10-20T11:54:54.568Z",
+      "authentication": "Existing service role for scoped read-only RPCs; not a rider/Admin UI session",
+      "rpcResults": [
+        {
+          "rpc": "get_impact_summary",
+          "status": 200,
+          "aggregate": [
+            {
+              "total_rides": 21,
+              "total_distance_km": 42.86987,
+              "co2_saved_kg": 8.15
+            }
+          ]
+        },
+        {
+          "rpc": "account_deletion_contract_status",
+          "status": 200,
+          "aggregate": {
+            "policyVersion": 1,
+            "contractVersion": 1,
+            "requestsEnabled": false
+          }
+        },
+        {
+          "rpc": "read_rider_wallet_snapshot",
+          "status": 200,
+          "actualBalanceReconciled": true,
+          "shape": [
+            "asOf",
+            "riderId",
+            "pointsBalance",
+            "transactionCount",
+            "lifetimePointsEarned"
+          ]
+        }
+      ],
+      "anonymousOwnImpactDenied": 401,
+      "ledger": {
+        "credits": 32,
+        "debits": 2,
+        "refunds": 0
+      },
+      "financialMutations": false
+    },
+    "liveProbes": {
+      "checkedAt": "2026-10-20T11:54:48.370Z",
+      "rideOperations": {
+        "status": 403,
+        "error": {
+          "code": "42501",
+          "message": "permission denied for function get_ride_reward_read_state"
+        },
+        "authentication": "Existing service binding; read-only RPC, not staff UI",
+        "rows": 0,
+        "sessionStatuses": {},
+        "earningModes": {},
+        "fieldNames": []
+      },
+      "publicBoundaries": [
+        {
+          "url": "https://admin.movrr.nl/api/v1/wallet/balance",
+          "status": 401,
+          "location": null
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/wallet/transactions",
+          "status": 401,
+          "location": null
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/rewards/catalog",
+          "status": 401,
+          "location": null
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/riders/me/campaigns",
+          "status": 401,
+          "location": null
+        },
+        {
+          "url": "https://admin.movrr.nl/ride-sessions",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fride-sessions"
+        },
+        {
+          "url": "https://app.movrr.nl/dashboard",
+          "status": 307,
+          "location": "/auth/signin"
+        },
+        {
+          "url": "https://app.movrr.nl/account/deletion-receipt",
+          "status": 200,
+          "location": null
+        }
+      ]
+    },
+    "accountStatusGuards": [
+      {
+        "proname": "confirm_campaign_accessory_installed",
+        "active_guard": true
+      },
+      {
+        "proname": "execute_my_ride_time_settlement",
+        "active_guard": true
+      },
+      {
+        "proname": "join_community_ride",
+        "active_guard": true
+      },
+      {
+        "proname": "leave_community_ride",
+        "active_guard": true
+      },
+      {
+        "proname": "report_campaign_accessory_issue",
+        "active_guard": true
+      },
+      {
+        "proname": "rider_campaign_confirm",
+        "active_guard": true
+      },
+      {
+        "proname": "rider_campaign_opt_in",
+        "active_guard": true
+      },
+      {
+        "proname": "rider_campaign_withdraw",
+        "active_guard": true
+      },
+      {
+        "proname": "sync_my_achievement_progress",
+        "active_guard": true
+      },
+      {
+        "proname": "update_community_ride",
+        "active_guard": true
+      }
+    ],
+    "operationalCounts": [
+      {
+        "incidents": 0,
+        "pending_notification_jobs": 0,
+        "deletion_jobs": 0
+      }
+    ],
+    "activeCustodyConflicts": [
+      {
+        "active_custody_conflicts": 0
+      }
+    ],
+    "missingWalletProjections": [
+      {
+        "missing": 0
+      }
+    ],
+    "shopWorker": [
+      {
+        "finished_at": "2026-10-20T11:50:02.351Z",
+        "result": {
+          "failed": 0,
+          "delivered": 0,
+          "recovered": 0,
+          "notificationFailures": 0
+        }
+      }
+    ],
+    "privateOperationPermissions": [
+      {
+        "proname": "ops_accessory_page",
+        "anon": false,
+        "authenticated": true,
+        "service": false
+      },
+      {
+        "proname": "ops_list_incidents",
+        "anon": false,
+        "authenticated": true,
+        "service": false
+      },
+      {
+        "proname": "ops_pending_notification_sends",
+        "anon": false,
+        "authenticated": true,
+        "service": false
+      },
+      {
+        "proname": "ops_ride_session_page",
+        "anon": false,
+        "authenticated": false,
+        "service": true
+      },
+      {
+        "proname": "read_rider_wallet_snapshot",
+        "anon": false,
+        "authenticated": false,
+        "service": true
+      },
+      {
+        "proname": "set_account_deletion_intake",
+        "anon": false,
+        "authenticated": true,
+        "service": false
+      }
+    ],
+    "focusedRegression": {
+      "impactPostgresAssertions": 27,
+      "rideProjectionTests": 5,
+      "productionWebBindingTests": 7,
+      "ridePermissionPostgresAssertions": 13,
+      "adminTypecheck": "passed",
+      "webTypecheck": "passed",
+      "changedWebLint": "passed",
+      "finalVercelBuilds": "both passed",
+      "existingPassingSuitesReused": true,
+      "mobileSuitesRepeated": false
+    },
+    "applicationAuthenticationBoundaries": "401/307 verified; no real rider or MFA staff session available",
+    "notPerformed": [
+      "Authenticated rider/staff browser functional acceptance",
+      "Production financial or redemption test transactions",
+      "Production account-deletion test requests or irreversible deletion",
+      "Production notification sends or achievement-sync tests",
+      "Mobile runtime deployment or EAS/OTA/store actions"
+    ],
+    "runtimeErrorLogWindows": [
+      {
+        "deployment": "dpl_CFvwP9enbY1JoNimPAbweFF7jsci",
+        "filter": "level:error AND environment:production",
+        "summary": {
+          "type": "summary",
+          "recordsReturned": 0,
+          "timeRange": {
+            "start": "2026-10-20T11:47:34.625Z",
+            "end": "2026-10-20T11:57:34.625Z"
+          },
+          "pagination": {
+            "hasMore": false,
+            "next": null
+          },
+          "excludedIntervals": []
+        },
+        "limitation": "Bounded log window only; does not prove authenticated workflows succeeded"
+      },
+      {
+        "deployment": "dpl_J8eACsBqimyK3ni5wPEja8VXnAsg",
+        "filter": "level:error AND environment:production",
+        "summary": {
+          "type": "summary",
+          "recordsReturned": 0,
+          "timeRange": {
+            "start": "2026-10-20T11:43:02.481Z",
+            "end": "2026-10-20T11:53:02.481Z"
+          },
+          "pagination": {
+            "hasMore": false,
+            "next": null
+          },
+          "excludedIntervals": []
+        },
+        "limitation": "Bounded log window only; does not prove authenticated workflows succeeded"
+      }
+    ]
+  },
+  "deletionIntake": {
+    "operating_state": "disabled",
+    "operating_version": "0",
+    "requests_enabled": false,
+    "contract": {
+      "policyVersion": 1,
+      "contractVersion": 1,
+      "requestsEnabled": false
+    },
+    "activationAttempted": false,
+    "activationAuditEvent": null,
+    "reason": "Existing lifecycle activation evidence and policy action approvals are incomplete; existing control refuses enablement",
+    "readiness": {
+      "operating_state": "disabled",
+      "operating_version": "0",
+      "requests_enabled": false,
+      "active_policy_version": 1,
+      "catalog_evidence": false,
+      "catalog_verified": false,
+      "barrier_verified": false,
+      "disposition_verified": false
+    },
+    "policy": [
+      {
+        "version": 1,
+        "technical_status": "approved",
+        "legal_status": "pending",
+        "finance_status": "pending",
+        "partner_status": "pending"
+      }
+    ],
+    "rules": [
+      {
+        "scope": "external.erase",
+        "technical_status": "approved",
+        "legal_status": "pending",
+        "finance_status": "pending",
+        "partner_status": "pending",
+        "reference": false
+      },
+      {
+        "scope": "personal.erase",
+        "technical_status": "approved",
+        "legal_status": "pending",
+        "finance_status": "pending",
+        "partner_status": "pending",
+        "reference": false
+      },
+      {
+        "scope": "receipt.complete",
+        "technical_status": "approved",
+        "legal_status": "pending",
+        "finance_status": "pending",
+        "partner_status": "pending",
+        "reference": false
+      },
+      {
+        "scope": "restore.suppress",
+        "technical_status": "approved",
+        "legal_status": "pending",
+        "finance_status": "pending",
+        "partner_status": "pending",
+        "reference": false
+      }
+    ],
+    "manualPrivacyProcess": {
+      "channel": "privacy@movrr.nl",
+      "operators": "Founder and co-founder",
+      "evidence": "Explicit operator confirmation in this conversation",
+      "workspaceInspectionRequired": false
+    },
+    "next": "Complete the existing lifecycle policy/evidence workflow and live request/review/receipt acceptance, then use a genuine authorized MFA Admin session to activate intake. Do not fabricate approvals or bypass safeguards."
+  },
+  "shop": {
+    "state": "disabled",
+    "version": "0",
+    "redemption_enabled": false
+  },
+  "preservation": {
+    "tables": 22,
+    "changedTables": [],
+    "rowsUnchanged": true,
+    "fingerprints": {
+      "reward_transactions": {
+        "rows": "34",
+        "digest": "b30f855447291c91df0656e02cabf4b3a7eb84d432ef8effaaf4ab5a7e0f8e30"
+      },
+      "rider_reward_balance": {
+        "rows": "18",
+        "digest": "1a93735ec8a1a363139b264c0e25cbd82e6bcfb5a5eb14add992f3af2adcca80"
+      },
+      "reward_redemptions": {
+        "rows": "2",
+        "digest": "bfe926c997ea9c75924961fc45dc94cdace6fa4edb31b2a26ec22ab43d90bad4"
+      },
+      "reward_catalog": {
+        "rows": "38",
+        "digest": "26dc96a611e71fc4e17e944f9c63e6d16f22add7aa0515e833f7e5722247e51e"
+      },
+      "fulfilment": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fulfilment_event": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fulfilment_token": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fulfilment_resource": {
+        "rows": "38",
+        "digest": "4a9461e14f2fa33e9e379633f2dcaa5c3a3850d58a62f261a7dbe017d6f8eb33"
+      },
+      "fulfilment_resource_item": {
+        "rows": "25",
+        "digest": "67ae4b800aadf911c27dbb25b7e24c139044bf947cf86afbd8f1164983da1896"
+      },
+      "fulfilment_resource_allocation": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "partner_validation": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "shop_credential": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "user": {
+        "rows": "22",
+        "digest": "69c173a8ba996a85a5f389f16aca5ebb43a02a248de402d2f3153ab414dc3b6e"
+      },
+      "rider": {
+        "rows": "18",
+        "digest": "9b559fca8e16deaaea2e83f1c86efceb92d4241ec56f3da4fe335ac68de558a5"
+      },
+      "ride_session": {
+        "rows": "66",
+        "digest": "29db504eecb357032f1e79712168c26c043163be690d55a049ae5e384847dbe4"
+      },
+      "ride_reward_execution_receipt": {
+        "rows": "2",
+        "digest": "065b3b024cc633c2f8d4baa93f96f4607df51e6159d8821c351dbae44d7b55cf"
+      },
+      "campaign_signup": {
+        "rows": "1",
+        "digest": "2a9b12e10d2ef68492f6fdee5e7b9ad1dae1191f08e143d8102066ed9e81a1e2"
+      },
+      "campaign_assignment": {
+        "rows": "3",
+        "digest": "e5969ca046f7f6fbdc6920f4ed10f94c1c4cc2891bba59b114c9dc30213ee446"
+      },
+      "rider_campaign_accessory_assignment": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "campaign_accessory_inventory_item": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "rider_campaign_accessory_event": {
+        "rows": "0",
+        "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "platform_audit_record": {
+        "rows": "148",
+        "digest": "9e1ca3ca8e64a51de3e12017ee9cd4abe47ca53718411e2be4984db58872bdac"
+      }
+    },
+    "financialMutationsForTesting": false,
+    "productionBusinessRecordMutationsForTesting": false
+  },
+  "temporaryHoldsRemoved": true,
+  "remaining": [
+    {
+      "id": "X08-live-ACL",
+      "status": "Tested source correction committed; production application blocked by automatic approval review",
+      "sourceRevision": "a69de432229e276d7cea6a66b58d572167bf11cd",
+      "migration": "scripts/064_ride_operations_settlement_read_permission.sql",
+      "sha256": "5b1170d0a4ba150d6f6b4c00448181f8fafa1e21a125cb96660bb4c85c69c582",
+      "evidence": "Service-role ride page HTTP 403 / SQL 42501: permission denied for function get_ride_reward_read_state",
+      "approval": "Explicit approval requested; no alternate execution attempted"
+    },
+    {
+      "id": "X11-activation",
+      "status": "Blocked by existing policy/evidence safeguards; intake remains disabled"
+    },
+    {
+      "id": "authenticated-live-acceptance",
+      "status": "Not executed: no connected real rider or authorized MFA staff session"
+    }
+  ]
+}

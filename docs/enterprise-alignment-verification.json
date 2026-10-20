@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "verifiedDate": "2026-10-20",
-  "productionDeployed": false,
-  "productionMutations": false,
+  "productionDeployed": true,
+  "productionMutations": true,
   "publicShopRedemptionEnabled": false,
   "productionDeletionRequestsEnabled": false,
   "mobileRuntimeModified": false,
@@ -14,12 +14,12 @@
     "X05": "Fully Resolved",
     "X06": "Fully Resolved",
     "X07": "Fully Resolved",
-    "X08": "Fully Resolved",
+    "X08": "Partially Resolved",
     "X09": "Fully Resolved",
     "X10": "Fully Resolved",
     "X11": "Partially Resolved",
     "X12": "Fully Resolved",
-    "X13": "Partially Resolved",
+    "X13": "Fully Resolved",
     "X14": "Fully Resolved",
     "X15": "Fully Resolved",
     "X16": "Fully Resolved",
@@ -87,41 +87,75 @@
   "orderedSql": [
     {
       "path": "movrr-admin/scripts/055_alignment_security.sql",
-      "normalizedLfSha256": "4ae72f911a438d45804d99e5d51c58687b99f5216d0c630b9df64f2edb3821e2"
+      "version": "20261020112301",
+      "normalizedLfSha256": "4ae72f911a438d45804d99e5d51c58687b99f5216d0c630b9df64f2edb3821e2",
+      "journalVerified": true
     },
     {
       "path": "movrr-mobile/scripts/093_alignment_accessory_custody.sql",
-      "normalizedLfSha256": "fc1c8bd8aa4e3906fa91bca9f6b711a05dbdb7c66262cb7ea99e7a731c0fd895"
+      "version": "20261020112302",
+      "normalizedLfSha256": "fc1c8bd8aa4e3906fa91bca9f6b711a05dbdb7c66262cb7ea99e7a731c0fd895",
+      "journalVerified": true
     },
     {
       "path": "movrr-admin/scripts/056_alignment_capabilities.sql",
-      "normalizedLfSha256": "e62509b2e9730f434c84962ee48f34b5b3244cbc598bd4a7db48e2c59912b47a"
+      "version": "20261020112303",
+      "normalizedLfSha256": "e62509b2e9730f434c84962ee48f34b5b3244cbc598bd4a7db48e2c59912b47a",
+      "journalVerified": true
     },
     {
       "path": "movrr-admin/scripts/057_alignment_operations.sql",
-      "normalizedLfSha256": "e22155721b9b57ff80887cc4699310097dcf95850a198a734236510dcf296ed9"
+      "version": "20261020112304",
+      "normalizedLfSha256": "e22155721b9b57ff80887cc4699310097dcf95850a198a734236510dcf296ed9",
+      "journalVerified": true
     },
     {
       "path": "movrr-admin/scripts/058_alignment_reads.sql",
-      "normalizedLfSha256": "9b1e56164fffc100297d18ed75092c77ac92b2398dbd7e5334b0e6759b9f0dc7"
+      "version": "20261020112305",
+      "normalizedLfSha256": "9b1e56164fffc100297d18ed75092c77ac92b2398dbd7e5334b0e6759b9f0dc7",
+      "journalVerified": true
     },
     {
       "path": "movrr-admin/scripts/059_alignment_impact.sql",
-      "normalizedLfSha256": "d8b6a3cf8d27c8967286b7fc41b357a6059ea84ad7afee3ce6a102b109284a37"
+      "version": "20261020112306",
+      "normalizedLfSha256": "d8b6a3cf8d27c8967286b7fc41b357a6059ea84ad7afee3ce6a102b109284a37",
+      "journalVerified": true
     },
     {
       "path": "movrr-admin/scripts/060_account_deletion_intake_control.sql",
-      "normalizedLfSha256": "84a37d0a4fd783d2f03a867dd41d10644c34e0d35cdeec20f8a03dd41132e469"
+      "version": "20261020112307",
+      "normalizedLfSha256": "84a37d0a4fd783d2f03a867dd41d10644c34e0d35cdeec20f8a03dd41132e469",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/061_approved_impact_methodology.sql",
+      "version": "20261020113201",
+      "normalizedLfSha256": "a31db3be23feb7067c5a77c950a71dcc998dab6a7331fcb6b6395d2fa03f3599",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/062_impact_verified_history_coverage.sql",
+      "version": "20261020113501",
+      "normalizedLfSha256": "5f98df235fb3bd8e070af61849edf0268933b6b4aa40e7a67683b376425d48fe",
+      "journalVerified": true
+    },
+    {
+      "path": "movrr-admin/scripts/063_impact_daily_precision.sql",
+      "version": "20261020113901",
+      "normalizedLfSha256": "c3ae69a9fa8c7625a0948f55af0f20a9dcbe157db0cff9ce2a2965268c504b94",
+      "journalVerified": true
     }
   ],
   "externalAcceptance": [
-    "Explicit authorization for the controlled production rollout; safe post-deployment acceptance is performed within that rollout"
+    "X08-live-ACL: Tested source correction committed; production application blocked by automatic approval review",
+    "X11-activation: Blocked by existing policy/evidence safeguards; intake remains disabled",
+    "authenticated-live-acceptance: Not executed: no connected real rider or authorized MFA staff session"
   ],
   "focusedReleaseReadiness": {
     "date": "2026-10-20",
-    "decision": "GO for informed controlled production rollout authorization; staging and recovery rehearsal deferred by owner",
-    "deletionIntakeControl": "implemented in source; production remains disabled; no policy approvals bypassed",
-    "impactPolicy": "Product approved 2026-v1 verified distance and separately labelled 0.190 kg CO2e/vehicle-km average-car WTW comparison; runtime adoption not included in 055-060",
+    "decision": "Historical predeployment GO; see productionRollout for actual outcome",
+    "deletionIntakeControl": "Deployed; remains disabled by existing lifecycle readiness and approval guards",
+    "impactPolicy": "Approved 0.190 WTW comparison deployed through 061/062/063; no achievements activated",
     "productionDeletionRequestsEnabled": false,
     "publicShopRedemptionEnabled": false,
     "productionCustodyConflicts": 0,
@@ -158,11 +192,12 @@
       "dependency": "impact_methodology",
       "excludedFromAwardAllowlist": true
     },
-    "deploymentsPerformed": false,
-    "alignmentDatabaseRegressionAssertions": 88
+    "deploymentsPerformed": true,
+    "alignmentDatabaseRegressionAssertions": 88,
+    "historicalPredeploymentEvidence": true
   },
   "productionAcceptance": {
-    "decision": "GO for authorization; not deployed",
+    "decision": "Partial rollout; ride operations permission correction and deletion-intake activation remain blocked",
     "verifiedDate": "2026-10-20",
     "timezone": "Europe/Amsterdam",
     "stagingRequired": false,
@@ -249,13 +284,13 @@
       "verificationLevel": "operator-confirmed; no independent mailbox inspection claimed",
       "additionalMailboxVerificationRequired": false,
       "selfServiceIntakeEnabled": false,
-      "activationRequirement": "Existing privacy workflow operationally verified and explicit activation authorization; identity/retention/legal/receipt safeguards remain intact"
+      "activationRequirement": "Complete the existing lifecycle policy/evidence workflow and live request/review/receipt acceptance, then use a genuine authorized MFA Admin session to activate intake. Do not fabricate approvals or bypass safeguards."
     },
     "x13Policy": {
       "status": "product-approved",
       "approvalDate": "2026-10-20",
       "approvalAuthority": "MOVRR owner, current release-readiness instruction",
-      "methodologyId": "MOVRR-NL-CAR-COMPARISON-2026-v1",
+      "methodologyId": "MOVRR-NL-CAR-COMPARISON-2026-v2",
       "observedMetric": "authoritative verified completed cycling distance",
       "comparisonLabel": "Average car emissions for the same distance",
       "factor": 0.19,
@@ -267,21 +302,34 @@
       "sourceRechecked": "2026-10-20",
       "actualAvoidedEmissionsClaimApproved": false,
       "environmentalAwardsActivated": false,
-      "runtimeImplemented": false,
-      "frozenManifestRuntimeFactor": 0.18
+      "runtimeImplemented": true,
+      "sourceUrl": "https://co2emissiefactoren.nl/factoren/2026/38/147/personenvervoer-auto-gemiddelde-auto-brandstofsoort-onbekend/",
+      "eligibility": "Completed session with backend verification_result.status=verified, positive finite authoritative total_distance_meters and a nonfuture completion timestamp. One session once, independent of reward, ledger or settlement receipts. Historical verified sessions remain eligible; unverified or invalid evidence is excluded.",
+      "installedAt": "2026-10-20T11:35:56.142042+00:00",
+      "actualAvoidedEmissions": false,
+      "factorKgCo2ePerVehicleKm": 0.19
     },
     "candidates": {
-      "adminApplication": "c9e1cc4a5b1cc11b95e6704ed152b85365d103aa",
-      "web": "ed33e875c4f069a75d0ff5bbb79d8f52a23bfd7d",
-      "mobileUnchanged": "d42129978ddd34cd38e0783c45ef22fe3c549beb",
-      "adminPlanOnlySuccessor": "May supersede Admin source pin without application/migration changes"
+      "adminDeployed": "135e4c417ad3382d26cbff62712c984c8c910f1e",
+      "webDeployed": "77a25988d6c12ff766596a82310bb07abe2e19d9",
+      "mobileUnchanged": "d42129978ddd34cd38e0783c45ef22fe3c549beb"
     },
     "containment": "Path-scoped hosting hold and affected staff-command pause; matching Admin then web; preserve credentials/receipts and fulfillment workers",
     "recovery": "Rollback only uncommitted SQL; retain additive committed schema and forward-correct; aligned application candidates only",
     "authenticatedProductionSessionAvailable": false,
     "reusedRegressionEvidence": true,
     "fullSuitesRepeated": false,
-    "productionChangesMade": false,
-    "publicShopRedemptionEnabled": false
+    "productionChangesMade": true,
+    "publicShopRedemptionEnabled": false,
+    "historicalPredeploymentEvidence": true
+  },
+  "productionFinancialMutations": false,
+  "productionRollout": {
+    "evidence": "docs/verification/enterprise-alignment/production-rollout.json",
+    "decision": "Partial rollout; ride operations permission correction and deletion-intake activation remain blocked",
+    "appliedMigrations": 10,
+    "deletionIntakeEnabled": false,
+    "shopRedemptionEnabled": false,
+    "authenticatedLiveBrowserAcceptance": false
   }
 }
