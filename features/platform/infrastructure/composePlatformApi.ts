@@ -51,6 +51,7 @@ export type PlatformApiHandlers = {
     ) => Promise<Response>;
   };
   wallet: {
+    statement: (request: Request) => Promise<Response>;
     balance: (request: Request) => Promise<Response>;
     transactions: (request: Request) => Promise<Response>;
   };
@@ -222,6 +223,8 @@ export async function createPlatformApiForTests(
         ),
     },
     wallet: {
+      statement: (request) =>
+        route(request, "wallet.read", (ctx) => walletQueries.getStatement(ctx, new URL(request.url).searchParams.get("riderId") ?? undefined)),
       balance: (request) =>
         route(request, "wallet.read", (ctx) => walletQueries.getBalance(ctx, new URL(request.url).searchParams.get("riderId") ?? undefined)),
       transactions: (request) =>

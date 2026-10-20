@@ -116,12 +116,20 @@ async function apiFor(
 ): Promise<PlatformApiHandlers> {
   return createPlatformApiForTests({
     authDeps: authDepsFor(principalFor(kind)),
-    ledger: { getBalance: async riderId => ({ riderId, pointsBalance: 100, lifetimePointsEarned: 100, transactionCount: 0, asOf: new Date().toISOString() }), listEntries: async () => ({ entries: [], nextCursor: null, asOf: new Date().toISOString() }) },
+    ledger: { getBalance: async riderId => ({ riderId, pointsBalance: 100, lifetimePointsEarned: 100, transactionCount: 0, asOf: new Date().toISOString() }), listEntries: async (_riderId, input) => ({ entries: [], nextCursor: null, asOf: input?.asOf ?? new Date().toISOString() }) },
     seed: { fulfilments: [{ id: "f-1", redemptionId: "r-1", riderId: "rider-1", catalogItemId: "cat-1", fulfilmentType: "instant_digital", state: "ready", outcome: null, version: 1, partnerOrgId: "org-1", idempotencyKey: "k", expiresAt: null, completedAt: null, metadata: {}, events: [] }] },
   });
 }
 
 describe("Platform API /api/v1 authz matrix", () => {
+  it("statement authenticates, enforces rider ownership and denies organisation access", async () => {
+    const rider = await apiFor("rider");
+    expect((await rider.wallet.statement(new Request("http://x/api/v1/wallet/statement"))).status).toBe(401);
+    expect((await rider.wallet.statement(request("GET", "http://x/api/v1/wallet/statement"))).status).toBe(200);
+    expect((await rider.wallet.statement(request("GET", "http://x/api/v1/wallet/statement?riderId=another-rider"))).status).toBe(403);
+    const staff = await apiFor("staff");
+    expect((await staff.wallet.statement(request("GET", "http://x/api/v1/wallet/statement"))).status).toBe(403);
+  });
   it("rider can redeem, catalog, wallet, fulfilment read; cannot cancel/validate", async () => {
     const api = await apiFor("rider");
 
