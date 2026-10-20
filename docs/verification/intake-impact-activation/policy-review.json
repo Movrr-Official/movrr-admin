@@ -1,0 +1,653 @@
+{
+  "inspectedAt": "2026-10-20T16:54:16.122Z",
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "readOnly": "on",
+  "policies": [
+    {
+      "version": 1,
+      "contract_version": 1,
+      "created_at": "2026-10-13T20:39:57.815Z",
+      "direction": {
+        "campaign": "reconciled_privacy_safe_evidence_no_duplicate_facts",
+        "community": "eligible_transfer_else_controlled_cancellation_with_notification",
+        "equipment": "independent_restricted_obligations",
+        "retention": "purpose_specific_approved_minimum_fields_and_expiry",
+        "redemptions": "honor_valid_pre_barrier_obligations",
+        "unused_points": "proposed_forfeiture_subject_to_terms_acknowledgement_reconciliation_and_approval"
+      },
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending"
+    }
+  ],
+  "retention": [
+    {
+      "policy_version": 1,
+      "category": "campaign_carry",
+      "purpose": "Preserve reconciled aggregate campaign delivery after operational erasure",
+      "owner": "Compliance",
+      "minimum_fields": [
+        "metrics",
+        "operation_digest",
+        "expires_at"
+      ],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.compliance.review",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "reporting unavailable on expiry; hold requires explicit review",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "campaign_evidence",
+      "purpose": "Preserve reconciled delivery totals without rider re-identification",
+      "owner": "Compliance",
+      "minimum_fields": [],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.compliance.review",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "privacy assessment and hold review required",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "campaign_supplemental",
+      "purpose": "Preserve approved campaign averages and distinct shared route counts",
+      "owner": "Compliance",
+      "minimum_fields": [
+        "statistics",
+        "completed_route_ids"
+      ],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.compliance.review",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "campaign carry expiry withholds reporting; holds require review",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "deletion_journal",
+      "purpose": "Fence execution, reconcile outcomes and prove completion without operational profiles",
+      "owner": "Security Administration",
+      "minimum_fields": [],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.recovery",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "unresolved outcomes, obligations and holds require explicit review",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "deletion_receipt",
+      "purpose": "Prove verified erasure and approved exceptions",
+      "owner": "Compliance",
+      "minimum_fields": [],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.monitor",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "minimal receipt; hold review required",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "equipment_custody_event",
+      "purpose": "Preserve justified restricted equipment custody evidence",
+      "owner": "Operations",
+      "minimum_fields": [],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.operations.review",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "open obligation and hold require review",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "equipment_obligation",
+      "purpose": "Resolve equipment return and custody claims independently",
+      "owner": "Operations",
+      "minimum_fields": [],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.operations.review",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "restricted evidence only; review required",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "financial_evidence",
+      "purpose": "Reconcile earned points, pending awards and valid redemption obligations",
+      "owner": "Finance",
+      "minimum_fields": [],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.finance.review",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "hold blocks expiry; review required",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "receipt_access",
+      "purpose": "Deliver minimal deletion status after sign-out without recreating identity",
+      "owner": "Compliance",
+      "minimum_fields": [
+        "token_digest",
+        "expires_at"
+      ],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.compliance.review",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "access expires even when evidence is held",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "redemption_obligation",
+      "purpose": "Honor or reconcile a valid pre-barrier redemption independently of profile data",
+      "owner": "Finance",
+      "minimum_fields": [],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.finance.review",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "unresolved obligation requires explicit review",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "restore_recovery",
+      "purpose": "Quarantined backup re-erasure and independently reviewed reactivation",
+      "owner": "Security Administration",
+      "minimum_fields": [
+        "job_id",
+        "signature",
+        "manifest",
+        "state"
+      ],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.recovery",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "holds and unverified restoration prohibit release and expiry",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "restore_suppression",
+      "purpose": "Prevent backups and offline replay recreating erased records",
+      "owner": "Security Administration",
+      "minimum_fields": [],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.recovery",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "restore isolation and suppression approval required",
+      "approval_status": "pending",
+      "approval_reference": null
+    },
+    {
+      "policy_version": 1,
+      "category": "support_obligation",
+      "purpose": "Resolve justified outstanding claims with minimum contact data",
+      "owner": "Support",
+      "minimum_fields": [],
+      "lawful_basis": null,
+      "period": null,
+      "start_event": null,
+      "access_capability": "privacy.deletion.review",
+      "expiry_mechanism": "approved_expiry_worker",
+      "hold_review_policy": "scope and basis approval required",
+      "approval_status": "pending",
+      "approval_reference": null
+    }
+  ],
+  "actions": [
+    {
+      "policy_version": 1,
+      "scope": "advertiser.transfer",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "appendonly.privacy",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "authorship.detach",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "campaign.carry",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "campaign.report",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "campaign.supplemental",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {
+        "sourceContract": "captured_campaign_analytics_independent_v1"
+      },
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "case.resolve",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "community.cancel",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "community.invites.transfer",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "community.transfer",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "equipment.detach",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "equipment.resolve",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "evidence.restrict",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "export.stop",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "external.erase",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "fulfilment.dependencies",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "organisation.detach",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "personal.erase",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "receipt.complete",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "receipt.delivery",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "redemption.detach",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "redemption.resolve",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "referral.detach",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "restore.recover",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "restore.suppress",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "retention.expire",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "reward.reconcile",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    },
+    {
+      "policy_version": 1,
+      "scope": "wallet.close",
+      "technical_status": "approved",
+      "legal_status": "pending",
+      "finance_status": "pending",
+      "partner_status": "pending",
+      "approval_reference": null,
+      "parameters": {},
+      "allowed": false
+    }
+  ],
+  "immutableTriggers": [
+    {
+      "relation": "account_deletion_action_rule",
+      "tgname": "account_deletion_action_rule_immutable",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_action_rule_immutable BEFORE DELETE OR UPDATE ON public.account_deletion_action_rule FOR EACH ROW EXECUTE FUNCTION account_deletion_immutable()"
+    },
+    {
+      "relation": "account_deletion_policy_version",
+      "tgname": "account_deletion_policy_immutable",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_policy_immutable BEFORE DELETE OR UPDATE ON public.account_deletion_policy_version FOR EACH ROW EXECUTE FUNCTION account_deletion_immutable()"
+    },
+    {
+      "relation": "account_deletion_retention_rule",
+      "tgname": "account_deletion_retention_immutable",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_retention_immutable BEFORE DELETE OR UPDATE ON public.account_deletion_retention_rule FOR EACH ROW EXECUTE FUNCTION account_deletion_immutable()"
+    }
+  ],
+  "tablePermissions": [
+    {
+      "relname": "account_deletion_action_rule",
+      "relrowsecurity": true,
+      "authenticated_insert": false,
+      "authenticated_update": false,
+      "service_insert": false
+    },
+    {
+      "relname": "account_deletion_policy_version",
+      "relrowsecurity": true,
+      "authenticated_insert": false,
+      "authenticated_update": false,
+      "service_insert": false
+    },
+    {
+      "relname": "account_deletion_retention_rule",
+      "relrowsecurity": true,
+      "authenticated_insert": false,
+      "authenticated_update": false,
+      "service_insert": false
+    }
+  ],
+  "governanceWriters": [],
+  "functions": [
+    {
+      "proname": "account_deletion_activation_authorized",
+      "sha256": "4a434675408460a509afb8cfd4a666aeff9473b6ceca6b0021621178159313de"
+    },
+    {
+      "proname": "account_deletion_contract_status",
+      "sha256": "d40f42b4e5aeea9c3c141138beb707ef9c19adec6b3194ae58276de5f21f0ba0"
+    },
+    {
+      "proname": "account_deletion_immutable",
+      "sha256": "2695642804b0204454b481132125b39885d633554a4087b0aada5415c2821412"
+    },
+    {
+      "proname": "account_deletion_rule_allowed",
+      "sha256": "cf2f0536240db2932fa7b9bbce03503f27d3a2518fe15393d8ad3e582751d74f"
+    },
+    {
+      "proname": "capture_account_deletion_case",
+      "sha256": "68db6fd54be212f7229d1ed49603cf6c648e60da68ababf796041dc7636f7d4e"
+    },
+    {
+      "proname": "review_account_deletion_proposal",
+      "sha256": "e03caabedf90dee324ef4dcbab19072e20eb2896aaa3f5acfd7ab27f453c00fa"
+    },
+    {
+      "proname": "set_account_deletion_intake",
+      "sha256": "666aac1c3305c479a9d8c743c737cfb3fd0b9b74c8d5f564e75f7e0b0df7a3a2"
+    }
+  ],
+  "contract": {
+    "policyVersion": 1,
+    "contractVersion": 1,
+    "requestsEnabled": false
+  },
+  "gate": {
+    "operating_state": "disabled",
+    "operating_version": "0",
+    "active_policy_version": 1,
+    "managed_resources_execution_enabled": false,
+    "catalog_digest_present": false,
+    "catalog_verified_at": null,
+    "barrier_verified_at": null,
+    "disposition_verified_at": null
+  },
+  "counts": {
+    "requests": "0",
+    "receipt_access": "0",
+    "lifecycle_audit": "10",
+    "intake_commands": "0"
+  },
+  "shop": [
+    {
+      "redemption_enabled": false
+    }
+  ],
+  "ownerConfirmedUnverified": [
+    "No identified approved record establishing the longest recoverable backup/export window, including additional dumps, replicas or separately retained exports.",
+    "No identified accountant-approved Wallet/redemption classification, retention period or retention-clock start event."
+  ],
+  "noProductionMutations": true
+}

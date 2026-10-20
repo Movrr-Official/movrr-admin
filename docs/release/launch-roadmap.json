@@ -5,9 +5,10 @@
   "milestones": [
     {
       "name": "Account-deletion request intake activation",
-      "status": "blocked by existing mandatory production policy and readiness controls",
-      "work": "Production rechecked 20 October: Disabled/version 0, requestsEnabled=false. Complete genuine catalog/barrier/disposition evidence and existing action/retention approvals; then rerun the read-only preflight and use the authorized MFA Admin operating command. No activation attempted or audit event manufactured; irreversible execution remains separately disabled.",
-      "evidence": "../verification/intake-impact-activation/deletion-readiness.json"
+      "status": "policy decision package prepared; essential Finance/accounting and backup/security decisions remain pending",
+      "work": "Fresh read-only production review: Disabled/version 0, 13 pending retention rules and 28 disallowed action rules. Owner confirms no approved backup/export recovery horizon or accountant-approved Wallet/redemption classification, period or clock. Existing owner product directions reused. Complete the consolidated category schedule and genuine evidence; preserve immutable v1 and use the controlled additive-policy publication process before the authorized MFA intake command. Independent case approvals, holds and managed-execution Disabled state remain intact.",
+      "evidence": "../verification/intake-impact-activation/policy-review.json",
+      "decisionPackage": "../operations/account-deletion-policy-decisions.md"
     },
     {
       "name": "Approved environmental-impact methodology",
