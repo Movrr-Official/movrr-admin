@@ -608,7 +608,6 @@ export function BatchExportDialog({
                           start: e.target.value,
                         }))
                       }
-                      className="rounded-xl border-border/50 bg-background/60 font-medium"
                     />
                   </div>
                   <div className="space-y-2">
@@ -628,7 +627,6 @@ export function BatchExportDialog({
                           end: e.target.value,
                         }))
                       }
-                      className="rounded-xl border-border/50 bg-background/60 font-medium"
                     />
                   </div>
                 </CardContent>
