@@ -1,0 +1,1028 @@
+{
+  "date": "2026-10-20",
+  "productionProject": "kzdvunpuxaxlphqvmzxw",
+  "recordedAt": "2026-10-20T13:24:13.356Z",
+  "rootCauses": [
+    {
+      "defect": "Rider validation required verification_result.status, while the canonical historical SQL contract returns stored objects without status.",
+      "affectedRows": 17,
+      "totalRideRows": 66,
+      "fix": "Optional string status, preserving absent evidence and rejecting malformed types; no fabricated verification, settlement or points.",
+      "digests": {
+        "/dashboard": "2531727657",
+        "/dashboard/routes": "4007248634",
+        "/dashboard/rides": "3530931112",
+        "/dashboard/rewards": "2335976014",
+        "/dashboard/notifications": "180408308",
+        "/dashboard/settings": "1352413243"
+      }
+    },
+    {
+      "defect": "Layouts, pages and nested reader guards repeatedly resolved identity and organisation memberships.",
+      "fix": "React request-scoped identity/session memoization and parallel independent organisation discovery. No shared account data cache."
+    },
+    {
+      "defect": "Settings, notifications and routes depended on the full rider dashboard aggregate.",
+      "fix": "Read only the canonical data used by each page; backend failures in unrelated services cannot break these pages."
+    },
+    {
+      "defect": "Admin dashboard read-only Server Actions were serialized by the browser action dispatcher; several query functions imposed 300Ã¢â‚¬â€œ500ms artificial waits.",
+      "fix": "Uncached same-origin GET reads retaining the existing reader guards, overlapping queries, removal of measured waits, and one shared user query for chart/statistics."
+    },
+    {
+      "defect": "Wallet preparation repeated full Platform authentication for balance, ledger and final-balance HTTP requests.",
+      "fix": "One authenticated read-only backend statement endpoint; the same canonical balance/ledger/balance consistency check, complete pagination, ownership checks and bounded retry remain."
+    },
+    {
+      "defect": "Government profile discovery was redirected into employee cookie login by the proxy.",
+      "fix": "Exact /api/v1/government/me routing to its existing bearer/capability/organisation-scoped handler; sibling paths remain protected."
+    }
+  ],
+  "deployments": {
+    "admin": {
+      "sourceRevision": "224298472e2819645e38c7cbaedd3947ecc2a170",
+      "id": "dpl_9vfukCRKnwQkWWg6FWSG8Wi6gLCe",
+      "url": "movrr-admin-3ay3vrvda-movrrops-projects.vercel.app",
+      "state": "READY",
+      "customAlias": "admin.movrr.nl",
+      "customAliasVerified": true
+    },
+    "web": {
+      "sourceRevision": "9e6c8f6bf0a20361bb37ff63794dc73613975600",
+      "id": "dpl_AV7VVLak1GwgPqjXpRy5YoLcAfkC",
+      "url": "movrr-oy40u7z1v-movrrops-projects.vercel.app",
+      "state": "READY",
+      "customAlias": "app.movrr.nl",
+      "customAliasVerified": true
+    }
+  },
+  "changedSources": {
+    "admin": [
+      "__tests__/features/api/v1.authz.matrix.test.ts",
+      "__tests__/features/dashboardReads.test.ts",
+      "__tests__/features/dashboardSessionIsolation.test.ts",
+      "__tests__/features/governmentDiscoveryBoundary.test.ts",
+      "__tests__/features/walletStatement.test.ts",
+      "__tests__/security/pathMatch.test.ts",
+      "app/api/dashboard/reads/[resource]/route.ts",
+      "app/api/v1/wallet/statement/route.ts",
+      "components/layout/Sidebar.tsx",
+      "features/platform/infrastructure/composePlatformApi.ts",
+      "features/wallet/application/queries/walletQueries.ts",
+      "hooks/useCampaignsData.tsx",
+      "hooks/useDistanceStats.ts",
+      "hooks/useRewardsData.tsx",
+      "hooks/useRideSessionsData.ts",
+      "hooks/useRidersData.tsx",
+      "hooks/useRouteData.tsx",
+      "hooks/useSessionAnalytics.ts",
+      "hooks/useUserStats.tsx",
+      "hooks/useUsersData.tsx",
+      "lib/admin.ts",
+      "lib/dashboard/readTransport.ts",
+      "lib/pathMatch.ts",
+      "providers/QueryClientProvider.tsx"
+    ],
+    "web": [
+      "__tests__/historicalRideRendering.test.ts",
+      "__tests__/riderContracts.test.ts",
+      "__tests__/riderDashboardStatement.test.ts",
+      "app/dashboard/notifications/page.tsx",
+      "app/dashboard/routes/page.tsx",
+      "app/dashboard/settings/page.tsx",
+      "lib/appUser.ts",
+      "lib/notifications.ts",
+      "lib/platform/riderPlatform.ts",
+      "lib/platform/riderSelfService.ts",
+      "services/rider.ts"
+    ]
+  },
+  "sourceCommits": {
+    "admin": [
+      "224298472e2819645e38c7cbaedd3947ecc2a170 Resolve government membership through its scoped bearer handler",
+      "52abd9018337f1cba62ac01df0f514247243be8b Route Wallet statement requests through the bearer authorization boundary",
+      "02d790f8abe70e9aefde96225cf1c6090b7c4944 Prepare canonical Wallet statements within one authenticated read",
+      "d5beb32cfad85473dae90a1c4ac8e038f5abe5b6 Remove serialized dashboard reads and isolate private session caches"
+    ],
+    "web": [
+      "9e6c8f6bf0a20361bb37ff63794dc73613975600 Load assigned routes independently of unrelated dashboard services",
+      "4cf8bdc5dfbb8700dde8b7411e43cccc14dc0f1b Use backend-prepared Wallet statements to remove serial API hops",
+      "b52508ad6bdff6a7fd0155fdb919e28e7149b0e5 Fix historical ride rendering and deduplicate private dashboard reads"
+    ]
+  },
+  "verification": {
+    "web": {
+      "testFiles": 12,
+      "testsPassed": 83,
+      "typecheck": "passed",
+      "productionBuild": "passed locally and on Vercel",
+      "changedFileEslint": "passed",
+      "fullRepositoryLint": "18 pre-existing explicit-any errors in untouched services/advertiser.ts; two unused-parameter warnings"
+    },
+    "admin": {
+      "testFiles": 61,
+      "testsPassed": 665,
+      "typecheck": "passed",
+      "lint": "passed (repository lint script runs TypeScript)",
+      "productionBuild": "passed locally and on Vercel"
+    },
+    "security": "Unit/HTTP regressions cover rider ownership, mixed-owner data, denied capabilities, staff explicit Wallet scope, organisation denial, missing/invalid bearer, exact proxy paths, private no-store responses, account change/logout clearing and cancelled private requests.",
+    "walletConsistency": "Concurrent append retry, all pages, cutoff mismatch, repeated cursor rejection, bounded exhaustion, missing authoritative backend and incomplete statement rejection tested."
+  },
+  "performance": {
+    "conditions": "Existing authenticated rider and MFA staff sessions in the same Windows Chrome profile, same routes, no network/CPU throttling, browser cache enabled. Single-session samples, not controlled load tests or population percentiles.",
+    "adminBefore": {
+      "capturedAt": "2026-10-20T12:31:08.179Z",
+      "domContentLoadedMs": 4853,
+      "loadMs": 4995,
+      "document": {
+        "path": "/",
+        "method": "GET",
+        "type": "document",
+        "startMs": -2,
+        "durationMs": 4848,
+        "serverWaitMs": 3286,
+        "action": false,
+        "status": 200
+      },
+      "initialDataResponses": 16,
+      "lastInitialDataResponseMs": 43339,
+      "serverActions": 16,
+      "requests": [
+        {
+          "path": "/",
+          "method": "GET",
+          "type": "document",
+          "startMs": -2,
+          "durationMs": 4848,
+          "serverWaitMs": 3286,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 3916,
+          "durationMs": 2904,
+          "serverWaitMs": 2895,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 6824,
+          "durationMs": 2485,
+          "serverWaitMs": 2444,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 9311,
+          "durationMs": 2997,
+          "serverWaitMs": 2993,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/api/audit-logs",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 12407,
+          "durationMs": 1476,
+          "serverWaitMs": 1377,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 12494,
+          "durationMs": 1782,
+          "serverWaitMs": 1709,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 14278,
+          "durationMs": 1558,
+          "serverWaitMs": 1554,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 15838,
+          "durationMs": 1745,
+          "serverWaitMs": 1741,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 17585,
+          "durationMs": 2262,
+          "serverWaitMs": 2258,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 19850,
+          "durationMs": 2645,
+          "serverWaitMs": 2641,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 22499,
+          "durationMs": 3756,
+          "serverWaitMs": 3751,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 26257,
+          "durationMs": 3034,
+          "serverWaitMs": 3029,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 29292,
+          "durationMs": 1207,
+          "serverWaitMs": 1203,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 30502,
+          "durationMs": 6401,
+          "serverWaitMs": 6396,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 36905,
+          "durationMs": 1574,
+          "serverWaitMs": 1571,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 38482,
+          "durationMs": 1508,
+          "serverWaitMs": 1505,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 39992,
+          "durationMs": 1782,
+          "serverWaitMs": 1780,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 41776,
+          "durationMs": 1563,
+          "serverWaitMs": 1561,
+          "action": true,
+          "status": 200
+        }
+      ]
+    },
+    "adminAfter": {
+      "capturedAt": "2026-10-20T12:55:49.048Z",
+      "domContentLoadedMs": 3278,
+      "loadMs": 3361,
+      "document": {
+        "path": "/",
+        "method": "GET",
+        "type": "document",
+        "startMs": -2,
+        "durationMs": 3276,
+        "serverWaitMs": 2047,
+        "action": false,
+        "status": 200
+      },
+      "initialDataResponses": 15,
+      "lastInitialDataResponseMs": 15686,
+      "serverActions": 6,
+      "requests": [
+        {
+          "path": "/",
+          "method": "GET",
+          "type": "document",
+          "startMs": -2,
+          "durationMs": 3276,
+          "serverWaitMs": 2047,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 2529,
+          "durationMs": 2461,
+          "serverWaitMs": 2457,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 4992,
+          "durationMs": 2311,
+          "serverWaitMs": 2307,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 7306,
+          "durationMs": 2241,
+          "serverWaitMs": 2236,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/api/dashboard/reads/users",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 9637,
+          "durationMs": 3774,
+          "serverWaitMs": 3769,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/api/dashboard/reads/campaigns",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 9638,
+          "durationMs": 4367,
+          "serverWaitMs": 4364,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/api/dashboard/reads/riders",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 9640,
+          "durationMs": 3503,
+          "serverWaitMs": 3498,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/api/dashboard/reads/routes",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 9643,
+          "durationMs": 3546,
+          "serverWaitMs": 3543,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/api/dashboard/reads/campaigns",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 9645,
+          "durationMs": 2579,
+          "serverWaitMs": 2575,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/api/dashboard/reads/rewardStats",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 9648,
+          "durationMs": 3720,
+          "serverWaitMs": 3716,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/api/audit-logs",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 9651,
+          "durationMs": 3823,
+          "serverWaitMs": 3729,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/api/dashboard/reads/distanceStats",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 9652,
+          "durationMs": 3013,
+          "serverWaitMs": 3005,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/api/dashboard/reads/sessionAnalytics",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 9655,
+          "durationMs": 4431,
+          "serverWaitMs": 4402,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/api/dashboard/reads/rideSessions",
+          "method": "GET",
+          "type": "fetch",
+          "startMs": 9657,
+          "durationMs": 4003,
+          "serverWaitMs": 3984,
+          "action": false,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 9714,
+          "durationMs": 2611,
+          "serverWaitMs": 2573,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 12327,
+          "durationMs": 1681,
+          "serverWaitMs": 1673,
+          "action": true,
+          "status": 200
+        },
+        {
+          "path": "/",
+          "method": "POST",
+          "type": "fetch",
+          "startMs": 14007,
+          "durationMs": 1679,
+          "serverWaitMs": 1676,
+          "action": true,
+          "status": 200
+        }
+      ]
+    },
+    "webOriginalFailure": {
+      "documentMs": 6510,
+      "serverWaitMs": 2580,
+      "streamMs": 3920,
+      "domContentLoadedMs": 6520,
+      "loadMs": 6640,
+      "evidence": "Observed native Chrome Network/Timing UI; page rendered the Server Components error."
+    },
+    "webRenderingFixBeforeWalletOptimization": {
+      "documentMs": [
+        9320,
+        10630
+      ],
+      "evidence": "Observed successful native Chrome document reloads on b52508a; same rider, content and browser settings."
+    },
+    "webAfterWalletOptimization": {
+      "capturedAt": "2026-10-20T13:03:57.080Z",
+      "domContentLoadedMs": 4234,
+      "loadMs": 4351,
+      "document": {
+        "path": "/dashboard",
+        "method": "GET",
+        "type": "document",
+        "startMs": -1,
+        "durationMs": 4228,
+        "serverWaitMs": 2527,
+        "action": false,
+        "status": 200
+      },
+      "initialDataResponses": 0,
+      "lastInitialDataResponseMs": null,
+      "serverActions": 0,
+      "requests": [
+        {
+          "path": "/dashboard",
+          "method": "GET",
+          "type": "document",
+          "startMs": -1,
+          "durationMs": 4228,
+          "serverWaitMs": 2527,
+          "action": false,
+          "status": 200
+        }
+      ]
+    },
+    "browserMetrics": {
+      "riderDashboardLcpMs": 4280,
+      "riderDashboardCls": 0,
+      "settingsNavigationInputResponseMs": 56,
+      "settingsSoftNavigationLcpMs": 4390,
+      "notificationsSoftNavigationLcpMs": 2640,
+      "routesBeforeNarrowReadSoftNavigationLcpMs": 6920,
+      "routesAfterNarrowReadSoftNavigationLcpMs": 5390,
+      "routesFinalReloadLcpMs": 5480,
+      "rideHistorySoftNavigationLcpMs": 6190,
+      "note": "Native DevTools live metrics. Soft-navigation values are content timings, not just the early skeleton. No comparable pre-fix INP/CLS/CPU trace; no claim of client CPU or bundle-size improvement."
+    },
+    "backend": {
+      "representativePlans": {
+        "populatedRiderLookup": {
+          "executionMs": 11.714,
+          "planningMs": 0.733,
+          "actualRows": 48,
+          "plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 16.66,
+            "Total Cost": 16.67,
+            "Plan Rows": 7,
+            "Plan Width": 24,
+            "Actual Startup Time": 11.611,
+            "Actual Total Time": 11.62,
+            "Actual Rows": 48,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 30,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Limit",
+                "Parent Relationship": "InitPlan",
+                "Subplan Name": "InitPlan 1",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 11.26,
+                "Total Cost": 11.26,
+                "Plan Rows": 1,
+                "Plan Width": 24,
+                "Actual Startup Time": 11.486,
+                "Actual Total Time": 11.487,
+                "Actual Rows": 1,
+                "Actual Loops": 1,
+                "Shared Hit Blocks": 13,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Sort",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Startup Cost": 11.26,
+                    "Total Cost": 11.29,
+                    "Plan Rows": 10,
+                    "Plan Width": 24,
+                    "Actual Startup Time": 11.485,
+                    "Actual Total Time": 11.485,
+                    "Actual Rows": 1,
+                    "Actual Loops": 1,
+                    "Sort Key": [
+                      "(count(*)) DESC"
+                    ],
+                    "Sort Method": "top-N heapsort",
+                    "Sort Space Used": 25,
+                    "Sort Space Type": "Memory",
+                    "Shared Hit Blocks": 13,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0,
+                    "Plans": [
+                      {
+                        "Node Type": "Aggregate",
+                        "Strategy": "Hashed",
+                        "Partial Mode": "Simple",
+                        "Parent Relationship": "Outer",
+                        "Parallel Aware": false,
+                        "Async Capable": false,
+                        "Startup Cost": 11.11,
+                        "Total Cost": 11.21,
+                        "Plan Rows": 10,
+                        "Plan Width": 24,
+                        "Actual Startup Time": 10.86,
+                        "Actual Total Time": 10.863,
+                        "Actual Rows": 8,
+                        "Actual Loops": 1,
+                        "Group Key": [
+                          "ride_session_1.rider_id"
+                        ],
+                        "Planned Partitions": 0,
+                        "HashAgg Batches": 1,
+                        "Peak Memory Usage": 24,
+                        "Disk Usage": 0,
+                        "Shared Hit Blocks": 10,
+                        "Shared Read Blocks": 0,
+                        "Shared Dirtied Blocks": 0,
+                        "Shared Written Blocks": 0,
+                        "Local Hit Blocks": 0,
+                        "Local Read Blocks": 0,
+                        "Local Dirtied Blocks": 0,
+                        "Local Written Blocks": 0,
+                        "Temp Read Blocks": 0,
+                        "Temp Written Blocks": 0,
+                        "Plans": [
+                          {
+                            "Node Type": "Seq Scan",
+                            "Parent Relationship": "Outer",
+                            "Parallel Aware": false,
+                            "Async Capable": false,
+                            "Relation Name": "ride_session",
+                            "Alias": "ride_session_1",
+                            "Startup Cost": 0,
+                            "Total Cost": 10.74,
+                            "Plan Rows": 74,
+                            "Plan Width": 16,
+                            "Actual Startup Time": 0.643,
+                            "Actual Total Time": 10.815,
+                            "Actual Rows": 66,
+                            "Actual Loops": 1,
+                            "Shared Hit Blocks": 10,
+                            "Shared Read Blocks": 0,
+                            "Shared Dirtied Blocks": 0,
+                            "Shared Written Blocks": 0,
+                            "Local Hit Blocks": 0,
+                            "Local Read Blocks": 0,
+                            "Local Dirtied Blocks": 0,
+                            "Local Written Blocks": 0,
+                            "Temp Read Blocks": 0,
+                            "Temp Written Blocks": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "Node Type": "Sort",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 5.39,
+                "Total Cost": 5.41,
+                "Plan Rows": 7,
+                "Plan Width": 24,
+                "Actual Startup Time": 11.61,
+                "Actual Total Time": 11.613,
+                "Actual Rows": 48,
+                "Actual Loops": 1,
+                "Sort Key": [
+                  "ride_session.started_at DESC",
+                  "ride_session.id DESC"
+                ],
+                "Sort Method": "quicksort",
+                "Sort Space Used": 28,
+                "Sort Space Type": "Memory",
+                "Shared Hit Blocks": 30,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Forward",
+                    "Index Name": "idx_ride_session_rider_id",
+                    "Relation Name": "ride_session",
+                    "Alias": "ride_session",
+                    "Startup Cost": 0.14,
+                    "Total Cost": 5.29,
+                    "Plan Rows": 7,
+                    "Plan Width": 24,
+                    "Actual Startup Time": 11.509,
+                    "Actual Total Time": 11.558,
+                    "Actual Rows": 48,
+                    "Actual Loops": 1,
+                    "Index Cond": "(rider_id = (InitPlan 1).col1)",
+                    "Rows Removed by Index Recheck": 0,
+                    "Shared Hit Blocks": 24,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "operationalPage": {
+          "executionMs": 39.219,
+          "planningMs": 0.075,
+          "actualRows": 50,
+          "plan": {
+            "Node Type": "Function Scan",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Function Name": "ops_ride_session_page",
+            "Alias": "ops_ride_session_page",
+            "Startup Cost": 0.26,
+            "Total Cost": 10.26,
+            "Plan Rows": 1000,
+            "Plan Width": 32,
+            "Actual Startup Time": 39.186,
+            "Actual Total Time": 39.192,
+            "Actual Rows": 50,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 2332,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          }
+        }
+      },
+      "before": [
+        {
+          "rpc": "ops_ride_session_page",
+          "run": 0,
+          "status": 200,
+          "ms": 1442
+        },
+        {
+          "rpc": "get_impact_summary",
+          "run": 0,
+          "status": 200,
+          "ms": 259
+        },
+        {
+          "rpc": "ops_ride_session_page",
+          "run": 1,
+          "status": 200,
+          "ms": 421
+        },
+        {
+          "rpc": "get_impact_summary",
+          "run": 1,
+          "status": 200,
+          "ms": 262
+        },
+        {
+          "rpc": "ops_ride_session_page",
+          "run": 2,
+          "status": 200,
+          "ms": 255
+        },
+        {
+          "rpc": "get_impact_summary",
+          "run": 2,
+          "status": 200,
+          "ms": 239
+        }
+      ],
+      "after": [
+        {
+          "rpc": "ops_ride_session_page",
+          "run": 0,
+          "status": 200,
+          "ms": 206
+        },
+        {
+          "rpc": "get_impact_summary",
+          "run": 0,
+          "status": 200,
+          "ms": 97
+        },
+        {
+          "rpc": "ops_ride_session_page",
+          "run": 1,
+          "status": 200,
+          "ms": 87
+        },
+        {
+          "rpc": "get_impact_summary",
+          "run": 1,
+          "status": 200,
+          "ms": 56
+        },
+        {
+          "rpc": "ops_ride_session_page",
+          "run": 2,
+          "status": 200,
+          "ms": 83
+        },
+        {
+          "rpc": "get_impact_summary",
+          "run": 2,
+          "status": 200,
+          "ms": 86
+        }
+      ],
+      "changes": "No SQL, index, RLS, grants or migration changes. Network/API variation is not attributed to database optimization.",
+      "sampledPlan": {
+        "beforeMs": 0.658,
+        "afterMs": 0.858,
+        "index": "idx_ride_session_rider_id",
+        "limitation": "Sampled rider lookup returned zero rows; it is not an EXPLAIN of every production RPC."
+      }
+    }
+  },
+  "productionAcceptance": {
+    "rider": [
+      "/dashboard: real 44-point Wallet balance and actual workload state",
+      "/dashboard/notifications: two real reward notifications and stored preference",
+      "/dashboard/settings: real profile and canonical language preference",
+      "/dashboard/routes: actual empty assignment state and unavailable compliance",
+      "/dashboard/rides: real historical rides, committed points and unavailable/unknown verification and settlement preserved",
+      "/dashboard/rewards: real 44-point balance, lifetime earnings and two 22-point ledger entries"
+    ],
+    "admin": [
+      "Overview: same baseline values (22 users, 18 active riders, 25881 awarded points, 42.87 km and 8.15 kg comparison)",
+      "Ride Sessions: 66 real records; rider search returned 51 records with HTTP 200",
+      "Rewards: same 25881 awarded, 920 redeemed, 24961 outstanding, 36 transactions"
+    ],
+    "browserAccess": "Existing authenticated Chrome tabs were actually inspected and operated through supported Windows Computer Use. DevTools protocol was unavailable; native DevTools UI and sanitized HAR exports were used.",
+    "financialReadCheck": {
+      "at": "2026-10-20T13:01:17.642Z",
+      "readOnly": true,
+      "wallets": {
+        "checked": 18,
+        "reconciled": true
+      },
+      "shop": {
+        "state": "disabled",
+        "redemption_enabled": false
+      },
+      "deletion": {
+        "operating_state": "disabled",
+        "requests_enabled": false
+      }
+    },
+    "anonymousChecks": {
+      "at": "2026-10-20T13:03:23.905Z",
+      "rows": [
+        {
+          "url": "https://app.movrr.nl/dashboard",
+          "status": 307,
+          "location": "/auth/signin",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "ms": 246
+        },
+        {
+          "url": "https://app.movrr.nl/dashboard/notifications",
+          "status": 307,
+          "location": "/auth/signin",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "ms": 125
+        },
+        {
+          "url": "https://app.movrr.nl/dashboard/settings",
+          "status": 307,
+          "location": "/auth/signin",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "ms": 60
+        },
+        {
+          "url": "https://admin.movrr.nl/",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2F",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "ms": 440
+        },
+        {
+          "url": "https://admin.movrr.nl/api/dashboard/reads/users?args=[]",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fdashboard%2Freads%2Fusers%3Fargs%3D%255B%255D",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "ms": 201
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/wallet/statement",
+          "status": 401,
+          "location": null,
+          "cacheControl": "private, no-store, max-age=0",
+          "ms": 665
+        }
+      ]
+    },
+    "runtime": {
+      "web": {
+        "window": {
+          "start": "2026-10-20T13:18:37.421Z",
+          "end": "2026-10-20T13:23:37.421Z"
+        },
+        "records": []
+      },
+      "admin": {
+        "window": {
+          "start": "2026-10-20T13:18:06.290Z",
+          "end": "2026-10-20T13:23:06.290Z"
+        },
+        "records": []
+      }
+    }
+  },
+  "releaseSafeguards": {
+    "committedSourceArchivesOnly": true,
+    "stagedFilesReviewed": true,
+    "gitDeploymentDisabledPreserved": true,
+    "manualProductionCandidatesThenPromote": true,
+    "unrelatedSourceIncluded": false,
+    "databaseChanges": false,
+    "permissionsChanged": false,
+    "mobileModified": false,
+    "financialTransactionsExecuted": false,
+    "shopActivated": false,
+    "deletionOperatingStateChanged": false,
+    "rolloutCorrection": "Smoke checks caught the new statement proxy entry missing. Rider consumer was restored to b52508a while the exact-path fix was built; missing/invalid bearer now return 401 JSON and siblings retain the existing gate."
+  },
+  "limitations": [
+    "Live role/account-switch/logout matrices were not executed with alternate accounts; regression tests exercised those boundaries. Existing user sessions were preserved.",
+    "Observed rider LCP/navigation can still take several seconds. Server authentication and RPC round trips remain; no universal latency/SLA claim.",
+    "Full rider repository lint remains failing on untouched advertiser any types. Changed sources pass ESLint.",
+    "Browser timing samples are single-session observations with variable backend/network latency. No population percentiles, low-end device benchmark or complete client CPU profile.",
+    "No live government/partner/other staff-role session was supplied; government discovery authorization was verified through unit/HTTP tests and anonymous/invalid-bearer production checks."
+  ]
+}
