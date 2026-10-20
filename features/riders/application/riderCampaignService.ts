@@ -1,17 +1,10 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import {
-  fail,
-  ok,
-  type ApplicationResult,
-} from "@/lib/result/ApplicationResult";
+import { fail, ok, type ApplicationResult } from "@/lib/result/ApplicationResult";
 import type { RequestContext } from "@/features/identity/domain/Principal";
 
-function requireRider(
-  ctx: RequestContext,
-): ApplicationResult<{ riderId: string }> {
+function requireRider(ctx: RequestContext): ApplicationResult<{ riderId: string }> {
   if (ctx.principal.type !== "rider") {
     return fail("permission_denied", "Rider principal required");
   }
@@ -68,18 +61,11 @@ export async function confirmCampaignParticipation(
 
 export async function listRiderCampaigns(
   ctx: RequestContext,
+  supabase: SupabaseClient,
 ): Promise<ApplicationResult<unknown[]>> {
   const rider = requireRider(ctx);
   if (!rider.ok) return rider;
-
-  const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("campaign")
-    .select("*, campaign_signup!inner(status, rider_id)")
-    .eq("campaign_signup.rider_id", rider.value.riderId)
-    .limit(100);
-
-  if (error) return fail("BusinessFailure", error.message);
-
+  const { data, error } = await supabase.rpc("get_my_campaign_catalog");
+  if (error) return fail("InfrastructureFailure", "Campaign catalog unavailable");
   return ok(data ?? []);
 }

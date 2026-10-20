@@ -116,7 +116,7 @@ async function apiFor(
 ): Promise<PlatformApiHandlers> {
   return createPlatformApiForTests({
     authDeps: authDepsFor(principalFor(kind)),
-    ledger: { getBalance: async () => 100, listEntries: async () => [] },
+    ledger: { getBalance: async riderId => ({ riderId, pointsBalance: 100, lifetimePointsEarned: 100, transactionCount: 0, asOf: new Date().toISOString() }), listEntries: async () => ({ entries: [], nextCursor: null, asOf: new Date().toISOString() }) },
     seed: { fulfilments: [{ id: "f-1", redemptionId: "r-1", riderId: "rider-1", catalogItemId: "cat-1", fulfilmentType: "instant_digital", state: "ready", outcome: null, version: 1, partnerOrgId: "org-1", idempotencyKey: "k", expiresAt: null, completedAt: null, metadata: {}, events: [] }] },
   });
 }

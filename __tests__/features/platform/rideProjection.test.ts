@@ -1,11 +1,14 @@
 import { beforeEach, expect, it, vi } from "vitest";
-const { from, queries } = vi.hoisted(() => ({
+const { from, rpc, queries } = vi.hoisted(() => ({
   from: vi.fn(),
+  rpc: vi.fn(),
   queries: [] as Array<{ table: string; calls: Array<[string, unknown[]]> }>,
 }));
-vi.mock("@/lib/admin", () => ({ requireCapability: vi.fn(async () => ({ authUser: { id: "admin" } })) }));
+vi.mock("@/lib/admin", () => ({
+  requireCapability: vi.fn(async () => ({ authUser: { id: "admin" } })),
+}));
 vi.mock("@/lib/supabase-admin", () => ({
-  createSupabaseAdminClient: () => ({ from, rpc: vi.fn(async () => ({ data: [], error: null })) }),
+  createSupabaseAdminClient: () => ({ from, rpc }),
 }));
 import { getRewardTransactions } from "@/app/actions/rewards";
 import { getRideSessions } from "@/app/actions/rideSessions";
@@ -23,6 +26,15 @@ let ledgerError: { message: string } | null = null;
 let ledger = [] as Array<Record<string, unknown>>;
 beforeEach(() => {
   queries.length = 0;
+  rpc.mockImplementation(async (name: string) => ({
+    data:
+      name === "ops_ride_session_page"
+        ? [{ ...ride, _settlement: { status: "pending", completeness: "unresolved" } }]
+        : name === "get_impact_summary"
+          ? [{ total_rides: 1, total_distance_km: 1, co2_saved_kg: 0.18 }]
+          : [],
+    error: null,
+  }));
   ledgerError = null;
   ledger = [
     { source: "standard_ride", points_earned: 20 },
@@ -45,6 +57,7 @@ beforeEach(() => {
       "eq",
       "in",
       "gte",
+      "lte",
       "not",
       "neq",
       "order",
@@ -76,11 +89,9 @@ beforeEach(() => {
       for (const [name, args] of calls) {
         if (name === "neq")
           data = data.filter(
-            (row) =>
-              (row as Record<string, unknown>)[String(args[0])] !== args[1],
+            (row) => (row as Record<string, unknown>)[String(args[0])] !== args[1],
           );
-        if (name === "range")
-          data = data.slice(Number(args[0]), Number(args[1]) + 1);
+        if (name === "range") data = data.slice(Number(args[0]), Number(args[1]) + 1);
       }
       return Promise.resolve({
         data,
@@ -122,9 +133,7 @@ it("uses authoritative verdicts for rider performance and trends", async () => {
     completionRate: 100,
   });
   const result = await getSessionAnalytics();
-  expect(
-    result.data?.verificationTrend.reduce((n, p) => n + p.verified, 0),
-  ).toBe(1);
+  expect(result.data?.verificationTrend.reduce((n, p) => n + p.verified, 0)).toBe(1);
   expect(queries.some((q) => q.table === "ride_verification")).toBe(false);
 });
 

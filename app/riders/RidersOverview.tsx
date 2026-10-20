@@ -10,15 +10,12 @@ export default function RidersOverview() {
   const { data: riders, isLoading, refetch, isRefetching } = useRidersData();
 
   const totalRiders = riders?.length ?? 0;
-  const activeRiders =
-    riders?.filter((rider) => rider.status === "active").length ?? 0;
+  const activeRiders = riders?.filter((rider) => rider.status === "active").length ?? 0;
   const ridersOnRoutes =
     riders?.filter((rider) => (rider.activeRoutesCount ?? 0) > 0).length ?? 0;
   const ridersOnCampaigns =
-    riders?.filter((rider) => (rider.activeCampaignsCount ?? 0) > 0).length ??
-    0;
-  const certifiedRiders =
-    riders?.filter((rider) => rider.isCertified).length ?? 0;
+    riders?.filter((rider) => (rider.activeCampaignsCount ?? 0) > 0).length ?? 0;
+  const certifiedRiders = riders?.filter((rider) => rider.isCertified).length ?? 0;
   const averageProfileCompleteness =
     totalRiders > 0
       ? Math.round(
@@ -29,11 +26,16 @@ export default function RidersOverview() {
         )
       : 0;
   const totalPointsExposure =
-    riders?.reduce((total, rider) => total + (rider.pointsBalance ?? 0), 0) ??
-    0;
+    riders?.reduce((total, rider) => total + (rider.pointsBalance ?? 0), 0) ?? 0;
 
   return (
     <div className="min-h-screen page-canvas">
+      <a
+        className="inline-flex m-4 text-sm text-primary underline"
+        href="/riders/accessories"
+      >
+        Campaign equipment operations
+      </a>
       <div className="space-y-6 md:space-y-8">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-6">
           <StatsCard
@@ -67,7 +69,8 @@ export default function RidersOverview() {
             badges={[
               {
                 label: `${certifiedRiders} certified`,
-                className: "bg-info/10 text-info border-info/30 dark:bg-primary/15 dark:text-primary dark:border-primary/35",
+                className:
+                  "bg-info/10 text-info border-info/30 dark:bg-primary/15 dark:text-primary dark:border-primary/35",
               },
             ]}
             animationDelay="0.2s"

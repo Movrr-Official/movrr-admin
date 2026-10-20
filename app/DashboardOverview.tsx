@@ -1303,7 +1303,7 @@ export default function DashboardOverview() {
                   Distance & CO₂ Impact
                 </CardTitle>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Daily km ridden and CO₂ avoided vs driving (0.18 kg/km)
+                  Daily rewarded ride distance and estimated impact
                 </p>
               </div>
               <div

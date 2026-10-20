@@ -7,6 +7,7 @@ import {
   RideSession,
   RideSessionFilters,
   RideSessionStatus,
+  rideSessionFiltersSchema,
 } from "@/schemas";
 import {
   DB_TABLES,
@@ -32,21 +33,12 @@ export async function getDistanceStats(): Promise<{
     await requireCapability("rides.read");
     const supabase = createSupabaseAdminClient();
 
-    const { data, error } = await supabase
-      .from(DB_TABLES.RIDE_SESSION)
-      .select("total_distance_meters")
-      .not("total_distance_meters", "is", null);
-
-    if (error) return { success: false, error: error.message };
-
-    const rows = data ?? [];
-    const totalMeters = rows.reduce(
-      (sum, r) =>
-        sum + Number((r as Record<string, unknown>).total_distance_meters ?? 0),
-      0,
-    );
-    const totalDistanceKm = Math.round((totalMeters / 1000) * 10) / 10;
-    const co2SavedKg = Math.round(totalDistanceKm * 0.18 * 10) / 10;
+    const { data, error } = await supabase.rpc("get_impact_summary", { p_rider: null });
+    if (error || !data?.[0]) return { success: false, error: "Impact summary unavailable" };
+    const metric = data[0];
+    const totalDistanceKm = Number(metric.total_distance_km);
+    const co2SavedKg = Number(metric.co2_saved_kg);
+    const rows = { length: Number(metric.total_rides) };
 
     return {
       success: true,
@@ -78,19 +70,14 @@ export async function getRideSessions(
     //   rider_route_id ← mobile's FK to rider_route          (not route_assignment_id)
     //   verification_result ← JSONB machine verdict written at ride end
     // points_awarded / verified_minutes are sourced from reward_transactions, NOT ride_session columns.
-    const { data: sessionRows, error: sessionError } = await supabaseAdmin
-      .from(DB_TABLES.RIDE_SESSION)
-      .select(
-        "id, rider_id, campaign_id, route_id, rider_route_id, suggested_route_id, earning_mode, status, started_at, completed_at, bike_type, ride_quality_percent, moving_time_ms, total_distance_meters, compliance_score, bonus_applied, multiplier_applied, city, country, created_at, verification_result",
-      )
-      .order("created_at", { ascending: false })
-      .limit(500);
+    const parsedFilters = rideSessionFiltersSchema.parse(filters ?? {});
+    const { data: sessionRows, error: sessionError } = await supabaseAdmin.rpc("ops_ride_session_page", { p_filters: parsedFilters });
 
     if (sessionError) {
       return { success: false, error: sessionError.message };
     }
 
-    const rows = sessionRows ?? [];
+    const rows = (sessionRows ?? []) as Array<Record<string, any>>;
     const riderIds = [...new Set(rows.map((r) => r.rider_id).filter(Boolean))];
     const campaignIds = [
       ...new Set(rows.map((r) => r.campaign_id).filter(Boolean)),
@@ -269,7 +256,7 @@ export async function getRideSessions(
       return raw ? "unknown" : undefined;
     };
 
-    let mapped: RideSession[] = rows.map((row) => {
+    const mapped: RideSession[] = rows.map((row) => {
       const r = row as Record<string, unknown>;
       const machineVerdict = machineVerdictMap.get(row.id);
       const sessionReward = rewardBySession.get(row.id) ?? {
@@ -290,6 +277,7 @@ export async function getRideSessions(
 
       return {
         id: row.id,
+        settlement: r._settlement as RideSession["settlement"],
         riderId: row.rider_id,
         riderName: riderNameMap.get(row.rider_id) ?? "Unknown",
         status: inferredStatus as RideSessionStatus,
@@ -347,32 +335,6 @@ export async function getRideSessions(
         createdAt: row.created_at,
       };
     });
-
-    // Apply filters
-    if (filters?.earningMode && filters.earningMode !== "all") {
-      mapped = mapped.filter((s) => s.earningMode === filters.earningMode);
-    }
-
-    if (filters?.verificationStatus && filters.verificationStatus !== "all") {
-      mapped = mapped.filter(
-        (s) => s.verificationStatus === filters.verificationStatus,
-      );
-    }
-
-    if (filters?.riderId) {
-      mapped = mapped.filter((s) => s.riderId === filters.riderId);
-    }
-
-    if (filters?.searchQuery) {
-      const q = filters.searchQuery.trim().toLowerCase();
-      mapped = mapped.filter(
-        (s) =>
-          s.riderName?.toLowerCase().includes(q) ||
-          s.id.toLowerCase().includes(q) ||
-          s.campaignName?.toLowerCase().includes(q) ||
-          s.city?.toLowerCase().includes(q),
-      );
-    }
 
     return { success: true, data: mapped };
   } catch (error) {

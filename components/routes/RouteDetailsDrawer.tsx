@@ -78,7 +78,6 @@ import { RouteTrackingMap } from "@/components/routes/RouteTrackingMap";
 import {
   approveRoute,
   rejectRoute,
-  recalculateRouteCompliance,
   getRouteGPSTracking,
   getRouteComplianceBreakdown,
   getRoutePointsAwarded,
@@ -231,7 +230,6 @@ export function RouteDetailsDrawer({
   const [isLoading, setIsLoading] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [showRecalculateDialog, setShowRecalculateDialog] = useState(false);
   const [showUnassignDialog, setShowUnassignDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isExportingData, setIsExportingData] = useState(false);
@@ -316,9 +314,9 @@ export function RouteDetailsDrawer({
     try {
       const [gpsResult, complianceResult, pointsResult, timelineResult] =
         await Promise.all([
-          getRouteGPSTracking(routeTemplateId),
+          getRouteGPSTracking(route.id),
           getRouteComplianceBreakdown(route.id),
-          getRoutePointsAwarded(routeTemplateId),
+          getRoutePointsAwarded(route.id),
           getRouteTimeline(route.id),
         ]);
 
@@ -840,42 +838,6 @@ export function RouteDetailsDrawer({
     }
   };
 
-  const handleRecalculateCompliance = async () => {
-    if (!route) return;
-
-    setIsLoading(true);
-    try {
-      const result = await recalculateRouteCompliance({ routeId: route.id });
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to recalculate compliance");
-      }
-
-      toast({
-        title: "Compliance Recalculated",
-        description: `New compliance score: ${result.compliance}%`,
-      });
-
-      setShowRecalculateDialog(false);
-      onRouteUpdate?.();
-      // Reload compliance breakdown
-      const complianceResult = await getRouteComplianceBreakdown(route.id);
-      if (complianceResult.success) {
-        setComplianceBreakdown(complianceResult.data);
-      }
-    } catch (error) {
-      toast({
-        title: "Recalculation Failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to recalculate compliance. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleExportData = async () => {
     if (!route) return;
@@ -1329,15 +1291,6 @@ export function RouteDetailsDrawer({
                         <Target className="h-5 w-5" />
                         Compliance Breakdown
                       </CardTitle>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowRecalculateDialog(true)}
-                        disabled={isLoading}
-                      >
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Recalculate
-                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -1352,10 +1305,7 @@ export function RouteDetailsDrawer({
                             Overall Compliance Score
                           </span>
                           <span className="text-2xl font-bold text-primary">
-                            {complianceBreakdown.overallScore ||
-                              route.coverage ||
-                              0}
-                            %
+                            {complianceBreakdown.overallScore == null ? "Unavailable" : `${complianceBreakdown.overallScore}%`}
                           </span>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -1364,7 +1314,7 @@ export function RouteDetailsDrawer({
                               Waypoint Coverage
                             </p>
                             <p className="text-lg font-semibold">
-                              {complianceBreakdown.waypointCoverage || 0}%
+                              {complianceBreakdown.waypointCoverage == null ? "Unavailable" : `${complianceBreakdown.waypointCoverage}%`}
                             </p>
                           </div>
                           <div className="p-3 rounded-lg bg-muted/30">
@@ -1372,7 +1322,7 @@ export function RouteDetailsDrawer({
                               Route Deviation
                             </p>
                             <p className="text-lg font-semibold">
-                              {complianceBreakdown.routeDeviation || 0}%
+                              {complianceBreakdown.routeDeviation == null ? "Unavailable" : `${complianceBreakdown.routeDeviation}%`}
                             </p>
                           </div>
                           <div className="p-3 rounded-lg bg-muted/30">
@@ -1380,7 +1330,7 @@ export function RouteDetailsDrawer({
                               Time Compliance
                             </p>
                             <p className="text-lg font-semibold">
-                              {complianceBreakdown.timeCompliance || 0}%
+                              {complianceBreakdown.timeCompliance == null ? "Unavailable" : `${complianceBreakdown.timeCompliance}%`}
                             </p>
                           </div>
                           <div className="p-3 rounded-lg bg-muted/30">
@@ -1388,7 +1338,7 @@ export function RouteDetailsDrawer({
                               Speed Compliance
                             </p>
                             <p className="text-lg font-semibold">
-                              {complianceBreakdown.speedCompliance || 0}%
+                              {complianceBreakdown.speedCompliance == null ? "Unavailable" : `${complianceBreakdown.speedCompliance}%`}
                             </p>
                           </div>
                         </div>
@@ -2319,32 +2269,7 @@ export function RouteDetailsDrawer({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Recalculate Compliance Dialog */}
-      <AlertDialog
-        open={showRecalculateDialog}
-        onOpenChange={setShowRecalculateDialog}
-      >
-        <AlertDialogContent className="border-border">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Recalculate Compliance</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will recalculate the compliance score for this route based on
-              GPS tracking data and waypoint coverage.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleRecalculateCompliance}
-              disabled={isLoading}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "Recalculating..." : "Recalculate"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
 
       {/* Unassign Dialog */}
       <AlertDialog

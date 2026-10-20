@@ -126,7 +126,6 @@ const DEFAULT_SETTINGS: AdminSettingsValues = adminSettingsValuesSchema.parse({
   },
   impact: {
     distanceUnit: "km",
-    co2KgPerKm: 0.18,
   },
   campaigns: {
     defaultMultiplier: 1,

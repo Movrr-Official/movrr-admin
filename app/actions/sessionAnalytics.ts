@@ -45,10 +45,10 @@ export interface SessionAnalytics {
   bonusBreakdown: BonusTypeBreakdown[];
 }
 
-const CO2_KG_PER_KM = 0.18;
+
 
 function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Amsterdam", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 }
 
 function buildDateRange(days: number): string[] {
@@ -75,14 +75,15 @@ export async function getSessionAnalytics(days = 30): Promise<{
     const windowStartIso = windowStart.toISOString();
 
     // Fetch sessions in the window — includes bike_type, distance, and status
-    const { data: sessionRows, error: sessionError } = await supabase
-      .from(DB_TABLES.RIDE_SESSION)
-      .select(
-        "id, bike_type, total_distance_meters, created_at, verification_result",
-      )
-      .gte("created_at", windowStartIso);
-
-    if (sessionError) return { success: false, error: sessionError.message };
+    const sessionRows: Array<{id:string;bike_type:string|null;created_at:string;verification_result:{status?:string}|null}> = [];
+    const snapshot = new Date().toISOString();
+    for (let offset=0;;offset+=500) {
+      const page=await supabase.from(DB_TABLES.RIDE_SESSION)
+       .select("id,bike_type,created_at,verification_result").gte("created_at",windowStartIso).lte("created_at",snapshot)
+       .order("created_at").order("id").range(offset,offset+499);
+      if(page.error)return {success:false,error:page.error.message};
+      sessionRows.push(...(page.data??[]));if((page.data?.length??0)<500)break;
+    }
 
     const rows = sessionRows ?? [];
     const verMap = new Map<string, string>(
@@ -93,13 +94,14 @@ export async function getSessionAnalytics(days = 30): Promise<{
     );
 
     // Fetch bonus breakdown from reward_transactions metadata
-    const { data: txRows, error: txError } = await supabase
-      .from(DB_TABLES.REWARD_TRANSACTIONS)
-      .select("metadata, points_earned")
-      .gte("created_at", windowStartIso)
-      .not("metadata", "is", null);
-
-    if (txError) return { success: false, error: txError.message };
+    const txRows: Array<{metadata:unknown;points_earned:number}> = [];
+    for(let offset=0;;offset+=500){
+      const page=await supabase.from(DB_TABLES.REWARD_TRANSACTIONS).select("metadata,points_earned")
+       .gte("created_at",windowStartIso).lte("created_at",snapshot).not("metadata","is",null)
+       .order("created_at").order("id").range(offset,offset+499);
+      if(page.error)return {success:false,error:page.error.message};
+      txRows.push(...(page.data??[]));if((page.data?.length??0)<500)break;
+    }
 
     // ── Verification trend ────────────────────────────────────────────────────
     const dateRange = buildDateRange(days);
@@ -139,30 +141,12 @@ export async function getSessionAnalytics(days = 30): Promise<{
       .sort((a, b) => b.count - a.count);
 
     // ── Distance trend ────────────────────────────────────────────────────────
-    const distMap = new Map<string, { meters: number; sessions: number }>(
-      dateRange.map((d) => [d, { meters: 0, sessions: 0 }]),
-    );
-
-    rows.forEach((row) => {
-      const day = isoDate(new Date(row.created_at));
-      const entry = distMap.get(day);
-      if (!entry) return;
-      entry.meters += Number(
-        (row as Record<string, unknown>).total_distance_meters ?? 0,
-      );
-      entry.sessions++;
-    });
-
-    const distanceTrend: DistanceTrendPoint[] = Array.from(
-      distMap.entries(),
-    ).map(([date, { meters, sessions }]) => {
-      const distanceKm = Math.round((meters / 1000) * 10) / 10;
-      return {
-        date,
-        distanceKm,
-        co2SavedKg: Math.round(distanceKm * CO2_KG_PER_KM * 10) / 10,
-        sessions,
-      };
+    const { data: impactRows, error: impactError } = await supabase.rpc("get_impact_daily", { p_days: days });
+    if (impactError) return { success: false, error: impactError.message };
+    const daily = new Map((impactRows ?? []).map((row: DistanceTrendPoint) => [row.date, row]));
+    const distanceTrend: DistanceTrendPoint[] = dateRange.map(date => {
+      const row = daily.get(date) as DistanceTrendPoint | undefined;
+      return { date, distanceKm: Number(row?.distanceKm ?? 0), co2SavedKg: Number(row?.co2SavedKg ?? 0), sessions: Number(row?.sessions ?? 0) };
     });
 
     // ── Bonus breakdown from transaction metadata ─────────────────────────────

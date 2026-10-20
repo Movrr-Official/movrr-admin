@@ -7,10 +7,7 @@ import {
   getOpenIncidentCount,
   setIncidentStatus,
 } from "@/app/actions/incidents";
-import type {
-  CreateIncidentInput,
-  IncidentStatus,
-} from "@/features/incidents/types";
+import type { CreateIncidentInput, IncidentStatus } from "@/features/incidents/types";
 
 export const INCIDENTS_QUERY_KEY = ["incidents"] as const;
 export const OPEN_INCIDENTS_COUNT_QUERY_KEY = ["openIncidentsCount"] as const;
@@ -60,7 +57,12 @@ export function useCreateIncident() {
 export function useUpdateIncidentStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { id: string; status: IncidentStatus }) => {
+    mutationFn: async (input: {
+      id: string;
+      status: IncidentStatus;
+      expectedVersion: number;
+      operationId: string;
+    }) => {
       const result = await setIncidentStatus(input);
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to update incident");

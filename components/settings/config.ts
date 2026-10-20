@@ -317,14 +317,6 @@ export const SETTINGS_FIELDS: Record<SettingsSectionId, SettingsFieldConfig[]> =
         options: ["km", "mi"],
         description: "Unit used for distance display across the platform.",
       },
-      {
-        name: "co2KgPerKm",
-        label: "CO\u2082 Savings Factor (kg/km)",
-        type: "number",
-        min: 0,
-        description:
-          "Average CO\u2082 saved per km cycled vs. car equivalent. Used for lifetime impact calculations.",
-      },
     ],
     suggestedRoutes: [
       {

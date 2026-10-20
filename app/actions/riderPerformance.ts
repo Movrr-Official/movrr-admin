@@ -24,33 +24,26 @@ export async function getRiderPerformanceMetrics(riderId: string): Promise<{
     windowStart.setDate(windowStart.getDate() - 90);
 
     // Fetch all-time distance in parallel with windowed sessions
-    const [{ data: distanceRows }, { data: sessions, error: sessionsError }] =
-      await Promise.all([
-        supabase
-          .from("ride_session")
-          .select("total_distance_meters")
-          .eq("rider_id", riderId)
-          .not("total_distance_meters", "is", null),
-        supabase
-          .from("ride_session")
-          .select(
-            "id, status, verification_result, ride_quality_percent, created_at",
-          )
-          .eq("rider_id", riderId)
-          .gte("created_at", windowStart.toISOString())
-          .order("created_at", { ascending: false })
-          .limit(200),
-      ]);
+    const [
+      { data: impactRows, error: impactError },
+      { data: sessions, error: sessionsError },
+    ] = await Promise.all([
+      supabase.rpc("get_impact_summary", { p_rider: riderId }),
+      supabase
+        .from("ride_session")
+        .select("id, status, verification_result, ride_quality_percent, created_at")
+        .eq("rider_id", riderId)
+        .gte("created_at", windowStart.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ]);
 
     if (sessionsError) return { success: false, error: sessionsError.message };
 
-    const totalDistanceMeters = (distanceRows ?? []).reduce(
-      (sum, r) =>
-        sum + Number((r as Record<string, unknown>).total_distance_meters ?? 0),
-      0,
-    );
-    const totalDistanceKm = Math.round((totalDistanceMeters / 1000) * 10) / 10;
-    const co2SavedKg = Math.round(totalDistanceKm * 0.18 * 10) / 10;
+    if (impactError || !impactRows?.[0])
+      return { success: false, error: "Impact summary unavailable" };
+    const totalDistanceKm = Number(impactRows[0].total_distance_km);
+    const co2SavedKg = Number(impactRows[0].co2_saved_kg);
 
     const rows = sessions ?? [];
     const totalSessions = rows.length;
@@ -88,29 +81,22 @@ export async function getRiderPerformanceMetrics(riderId: string): Promise<{
     ).length;
 
     const completionRate =
-      totalSessions > 0
-        ? Math.round((completedCount / totalSessions) * 100)
-        : 0;
+      totalSessions > 0 ? Math.round((completedCount / totalSessions) * 100) : 0;
     const verificationSuccessRate =
-      completedCount > 0
-        ? Math.round((verifiedCount / completedCount) * 100)
-        : 0;
+      completedCount > 0 ? Math.round((verifiedCount / completedCount) * 100) : 0;
 
     // Quality score — average from sessions that have ride_quality_percent
     const qualityRows = rows.filter((r) => r.ride_quality_percent != null);
     const qualityDataAvailable = qualityRows.length > 0;
     const avgQualityScore = qualityDataAvailable
       ? Math.round(
-          qualityRows.reduce(
-            (sum, r) => sum + Number(r.ride_quality_percent),
-            0,
-          ) / qualityRows.length,
+          qualityRows.reduce((sum, r) => sum + Number(r.ride_quality_percent), 0) /
+            qualityRows.length,
         )
       : undefined;
 
     // Trend: compare 7-day verified rate vs 30-day verified rate
-    let trendDirection: RiderPerformanceMetrics["trendDirection"] =
-      "insufficient_data";
+    let trendDirection: RiderPerformanceMetrics["trendDirection"] = "insufficient_data";
     if (totalSessions >= 5) {
       const now = Date.now();
       const sevenDayMs = 7 * 24 * 60 * 60 * 1000;
@@ -125,13 +111,11 @@ export async function getRiderPerformanceMetrics(riderId: string): Promise<{
 
       if (recent7.length >= 2 && recent30.length >= 5) {
         const rate7 =
-          recent7.filter(
-            (r) => verMap.get(r.id) === VERIFICATION_STATUS.VERIFIED,
-          ).length / recent7.length;
+          recent7.filter((r) => verMap.get(r.id) === VERIFICATION_STATUS.VERIFIED)
+            .length / recent7.length;
         const rate30 =
-          recent30.filter(
-            (r) => verMap.get(r.id) === VERIFICATION_STATUS.VERIFIED,
-          ).length / recent30.length;
+          recent30.filter((r) => verMap.get(r.id) === VERIFICATION_STATUS.VERIFIED)
+            .length / recent30.length;
 
         const delta = rate7 - rate30;
         if (delta > 0.05) trendDirection = "improving";
@@ -158,9 +142,7 @@ export async function getRiderPerformanceMetrics(riderId: string): Promise<{
     return {
       success: false,
       error:
-        error instanceof Error
-          ? error.message
-          : "Failed to compute performance metrics",
+        error instanceof Error ? error.message : "Failed to compute performance metrics",
     };
   }
 }

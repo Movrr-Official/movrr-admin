@@ -1,0 +1,2922 @@
+{
+  "columns": [
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'pending'::text"
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "stage",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'queued'::text"
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "attempts",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "next_attempt_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "lease_until",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "lease_token",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "requested_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "completed_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "last_error",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "policy_version",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "review_required",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "review_due_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "account_deletion_jobs",
+      "column_name": "review_code",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "brand",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "brand",
+      "column_name": "advertiser_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "brand",
+      "column_name": "display_name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "brand",
+      "column_name": "legal_name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "brand",
+      "column_name": "category",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "brand",
+      "column_name": "short_description",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "brand",
+      "column_name": "values_summary",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "brand",
+      "column_name": "website_url",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "brand",
+      "column_name": "logo_url",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "brand",
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "udt_name": "movrr_brand_status",
+      "is_nullable": "NO",
+      "column_default": "'draft'::movrr_brand_status"
+    },
+    {
+      "table_name": "brand",
+      "column_name": "is_sensitive",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "brand",
+      "column_name": "eligibility_rules",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "brand",
+      "column_name": "matching_rules",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "brand",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "brand",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "advertiser_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "budget",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "start_date",
+      "data_type": "date",
+      "udt_name": "date",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "end_date",
+      "data_type": "date",
+      "udt_name": "date",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "campaign_type",
+      "data_type": "USER-DEFINED",
+      "udt_name": "campaign_type",
+      "is_nullable": "YES",
+      "column_default": "'destination_ride'::campaign_type"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "vehicle_type_required",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_zones",
+      "data_type": "ARRAY",
+      "udt_name": "_text",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "creative_assets",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "impressions",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "engagement_rate",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "coverage_goal",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "visibility_target",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "max_riders",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "signup_deadline",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "selection_strategy",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "selection_params",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "requirements",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "campaign_multiplier",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": "1.0"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "campaign_points_cap",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "600"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "expected_min_daily_verified_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "expected_max_daily_verified_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "qr_scans",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "partner_display_name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_ride_count",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_distance_km",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "target_duration_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "reward_estimate_min_points",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "reward_estimate_max_points",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "lifecycle_status",
+      "data_type": "USER-DEFINED",
+      "udt_name": "campaign_lifecycle_status",
+      "is_nullable": "NO",
+      "column_default": "'draft'::campaign_lifecycle_status"
+    },
+    {
+      "table_name": "campaign",
+      "column_name": "analytics_erasure_review_required",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "accessory_type_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "asset_code",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "serial_number",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "udt_name": "movrr_accessory_inventory_status",
+      "is_nullable": "NO",
+      "column_default": "'available'::movrr_accessory_inventory_status"
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "condition_note",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "current_campaign_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "current_rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "acquired_at",
+      "data_type": "date",
+      "udt_name": "date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "retired_at",
+      "data_type": "date",
+      "udt_name": "date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "metadata",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "campaign_accessory_inventory_item",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "organizer_rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "title",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "scheduled_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "meeting_point_lat",
+      "data_type": "double precision",
+      "udt_name": "float8",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "meeting_point_lng",
+      "data_type": "double precision",
+      "udt_name": "float8",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "meeting_point_name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "route_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "max_participants",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "20"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "bike_types_allowed",
+      "data_type": "ARRAY",
+      "udt_name": "_text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "category",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'social'::text"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'upcoming'::text"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "is_public",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "true"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "created_by_user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "organizer_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'movrr'::text"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "organizer_user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "organizer_name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'MOVRR'::text"
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "cover_image_path",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "cover_image_url",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "distance_km",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "community_ride",
+      "column_name": "meeting_point_address",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "actor_user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "actor_email",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "principal_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "capability",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "target_entity_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "target_entity_id",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "previous_state",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "resulting_state",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "correlation_id",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "reason",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "platform_audit_record",
+      "column_name": "actor_user_id_erased",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "campaign_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "ride_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "points_earned",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "source",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'standard_ride'::text"
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "metadata",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "YES",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "route_tracking_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "verified_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "base_rate",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "campaign_multiplier",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "quality_multiplier",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "awarded_on",
+      "data_type": "date",
+      "udt_name": "date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "week_start",
+      "data_type": "date",
+      "udt_name": "date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "period_start",
+      "data_type": "date",
+      "udt_name": "date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "reward_transactions",
+      "column_name": "bonus_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_configuration_snapshot",
+      "column_name": "ride_session_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_configuration_snapshot",
+      "column_name": "contract_version",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_configuration_snapshot",
+      "column_name": "captured_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_configuration_snapshot",
+      "column_name": "basis",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_configuration_snapshot",
+      "column_name": "content_digest",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_configuration_snapshot",
+      "column_name": "capture_kind",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "ride_session_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "contract_version",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'pending'::text"
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "context",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "attempts",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "lease_token",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "lease_until",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "next_attempt_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "settled_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "award_status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "last_error",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "automatic_reassessment_enabled",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "true"
+    },
+    {
+      "table_name": "ride_reward_settlement",
+      "column_name": "review_evidence_digest",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "route_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "rider_route_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "campaign_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "route_name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "earning_mode",
+      "data_type": "USER-DEFINED",
+      "udt_name": "movrr_earning_mode",
+      "is_nullable": "NO",
+      "column_default": "'standard_ride'::movrr_earning_mode"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "bike_type",
+      "data_type": "USER-DEFINED",
+      "udt_name": "movrr_bike_type",
+      "is_nullable": "NO",
+      "column_default": "'unknown'::movrr_bike_type"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "status",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'active'::text"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "started_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "completed_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "total_distance_meters",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "duration_ms",
+      "data_type": "bigint",
+      "udt_name": "int8",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "moving_time_ms",
+      "data_type": "bigint",
+      "udt_name": "int8",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "ride_quality_percent",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "campaign_impact_impressions",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "average_speed_kmh",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "max_speed_kmh",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "battery_usage",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "verification_result",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "metadata",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "suggested_route_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "compliance_score",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "bonus_applied",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "multiplier_applied",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "policy_snapshot",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "algorithm_version",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'v1'::text"
+    },
+    {
+      "table_name": "ride_session",
+      "column_name": "last_heartbeat_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "rider",
+      "column_name": "city",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "country",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "availability",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "rider",
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "udt_name": "rider_status",
+      "is_nullable": "NO",
+      "column_default": "'active'::rider_status"
+    },
+    {
+      "table_name": "rider",
+      "column_name": "rating",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": "0.0"
+    },
+    {
+      "table_name": "rider",
+      "column_name": "phone",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "emergency_contact",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "emergency_phone",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "vehicle_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "is_certified",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "total_campaigns",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "impressions_delivered",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "last_active",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "route_progress",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider",
+      "column_name": "current_campaign",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_award",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "rider_badge_award",
+      "column_name": "rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_award",
+      "column_name": "badge_definition_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_award",
+      "column_name": "ride_session_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_award",
+      "column_name": "source",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'system_rule'::text"
+    },
+    {
+      "table_name": "rider_badge_award",
+      "column_name": "metadata",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "rider_badge_award",
+      "column_name": "awarded_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_badge_award",
+      "column_name": "revoked_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_award",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_badge_award",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "code",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "short_label",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "description",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "hero_variant",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'strong'::text"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "hero_priority",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "100"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "unlock_rule",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "is_active",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "true"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "is_hero_eligible",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "true"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "category",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "icon",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "icon_family",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'MaterialCommunityIcons'::text"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "tint",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'neutral'::text"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "sort_order",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "100"
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "rule_type",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_badge_definition",
+      "column_name": "rule_threshold",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_brand_preference",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "rider_brand_preference",
+      "column_name": "rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_brand_preference",
+      "column_name": "brand_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_brand_preference",
+      "column_name": "preference",
+      "data_type": "USER-DEFINED",
+      "udt_name": "movrr_brand_preference",
+      "is_nullable": "NO",
+      "column_default": "'neutral'::movrr_brand_preference"
+    },
+    {
+      "table_name": "rider_brand_preference",
+      "column_name": "source",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'account_brand_preferences'::text"
+    },
+    {
+      "table_name": "rider_brand_preference",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_brand_preference",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_brand_preference_event",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "rider_brand_preference_event",
+      "column_name": "rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_brand_preference_event",
+      "column_name": "brand_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_brand_preference_event",
+      "column_name": "previous_preference",
+      "data_type": "USER-DEFINED",
+      "udt_name": "movrr_brand_preference",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_brand_preference_event",
+      "column_name": "new_preference",
+      "data_type": "USER-DEFINED",
+      "udt_name": "movrr_brand_preference",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_brand_preference_event",
+      "column_name": "source",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_brand_preference_event",
+      "column_name": "actor_user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_brand_preference_event",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "campaign_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "inventory_item_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "requirement_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "udt_name": "movrr_accessory_assignment_status",
+      "is_nullable": "NO",
+      "column_default": "'assigned'::movrr_accessory_assignment_status"
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "assigned_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "ready_for_install_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "installed_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "due_back_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "returned_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "issue_reported_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "install_instructions",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "return_instructions",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_campaign_accessory_assignment",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_campaign_accessory_event",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "rider_campaign_accessory_event",
+      "column_name": "assignment_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_event",
+      "column_name": "event_type",
+      "data_type": "USER-DEFINED",
+      "udt_name": "movrr_accessory_event_type",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_event",
+      "column_name": "actor_user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_event",
+      "column_name": "note",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_campaign_accessory_event",
+      "column_name": "metadata",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "rider_campaign_accessory_event",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_reward_balance",
+      "column_name": "rider_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_reward_balance",
+      "column_name": "points_balance",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "rider_reward_balance",
+      "column_name": "lifetime_points_earned",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "rider_reward_balance",
+      "column_name": "daily_points_earned",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "rider_reward_balance",
+      "column_name": "daily_points_cap",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "1000"
+    },
+    {
+      "table_name": "rider_reward_balance",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "rider_reward_balance",
+      "column_name": "weekly_points_earned",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "rider_reward_balance",
+      "column_name": "weekly_points_cap",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "600"
+    },
+    {
+      "table_name": "rider_reward_balance",
+      "column_name": "tier",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "rider_reward_balance",
+      "column_name": "tier_points_last30",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "user",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "email",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "name",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "phone",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "role",
+      "data_type": "USER-DEFINED",
+      "udt_name": "user_role",
+      "is_nullable": "NO",
+      "column_default": "'rider'::user_role"
+    },
+    {
+      "table_name": "user",
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "udt_name": "user_status",
+      "is_nullable": "NO",
+      "column_default": "'active'::user_status"
+    },
+    {
+      "table_name": "user",
+      "column_name": "organization",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "email_verified",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "is_verified",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "verification_level",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "language_preference",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "account_notes",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "avatar_url",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "last_login",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "last_active_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "deleted_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "created_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "updated_by",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "preferred_riding_area",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user",
+      "column_name": "emergency_contact",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "notifications",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "location_sharing",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "auto_accept_routes",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "false"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "weekend_rides",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "weekly_goal_rides",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "3"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "notify_route_assignments",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "notify_campaign_reminders",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "notify_earnings_updates",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "notify_reward_milestones",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "language",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": "'en-US'::text"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "distance_unit",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": "'miles'::text"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "quiet_hours_enabled",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "quiet_hours_start",
+      "data_type": "time without time zone",
+      "udt_name": "time",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "quiet_hours_end",
+      "data_type": "time without time zone",
+      "udt_name": "time",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "quiet_hours_timezone",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "daily_distance_goal_km",
+      "data_type": "numeric",
+      "udt_name": "numeric",
+      "is_nullable": "NO",
+      "column_default": "10"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "auto_pause_rides",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "true"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "smart_ride_detection_enabled",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "auto_start_ride_enabled",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "auto_finish_ride_enabled",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "ride_detection_cooldown_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "60"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "ride_detection_reask_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "3"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "idle_finish_prompt_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "5"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "idle_auto_finish_minutes",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "30"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "smart_ride_reminder_enabled",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "smart_ride_reminder_start",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'07:00'::text"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "smart_ride_reminder_end",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'09:00'::text"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "smart_ride_reminder_weekdays",
+      "data_type": "jsonb",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'[1, 2, 3, 4, 5]'::jsonb"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "notify_ride_lifecycle",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "NO",
+      "column_default": "true"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "show_pro_tips_on_home",
+      "data_type": "boolean",
+      "udt_name": "bool",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "standard_ride_tracking_mode",
+      "data_type": "text",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": "'smart_prompt'::text"
+    },
+    {
+      "table_name": "user_preferences",
+      "column_name": "temporary_stop_grace_period_seconds",
+      "data_type": "integer",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "180"
+    }
+  ],
+  "enums": [
+    {
+      "typname": "campaign_lifecycle_status",
+      "labels": [
+        "draft",
+        "open_for_signup",
+        "selection_in_progress",
+        "confirmed",
+        "active",
+        "completed",
+        "paused",
+        "cancelled"
+      ]
+    },
+    {
+      "typname": "campaign_status",
+      "labels": [
+        "draft",
+        "active",
+        "paused",
+        "completed",
+        "available",
+        "open_for_signup",
+        "selection_in_progress",
+        "confirmed"
+      ]
+    },
+    {
+      "typname": "campaign_type",
+      "labels": [
+        "swarm",
+        "destination_ride"
+      ]
+    },
+    {
+      "typname": "movrr_accessory_assignment_status",
+      "labels": [
+        "assigned",
+        "ready_for_install",
+        "installed",
+        "issue_reported",
+        "return_due",
+        "returned",
+        "lost",
+        "cancelled"
+      ]
+    },
+    {
+      "typname": "movrr_accessory_event_type",
+      "labels": [
+        "assigned",
+        "ready_for_install",
+        "installed",
+        "issue_reported",
+        "damaged",
+        "missing",
+        "return_due",
+        "returned",
+        "lost",
+        "cancelled",
+        "note"
+      ]
+    },
+    {
+      "typname": "movrr_accessory_inventory_status",
+      "labels": [
+        "available",
+        "reserved",
+        "assigned",
+        "installed",
+        "maintenance",
+        "lost",
+        "retired"
+      ]
+    },
+    {
+      "typname": "movrr_bike_type",
+      "labels": [
+        "standard_bike",
+        "e_bike",
+        "fat_bike",
+        "unknown"
+      ]
+    },
+    {
+      "typname": "movrr_brand_preference",
+      "labels": [
+        "preferred",
+        "neutral",
+        "avoided"
+      ]
+    },
+    {
+      "typname": "movrr_brand_status",
+      "labels": [
+        "draft",
+        "published",
+        "paused",
+        "archived"
+      ]
+    },
+    {
+      "typname": "movrr_earning_mode",
+      "labels": [
+        "standard_ride",
+        "ad_enhanced_ride"
+      ]
+    },
+    {
+      "typname": "movrr_verification_status",
+      "labels": [
+        "pending",
+        "verified",
+        "rejected",
+        "manual_review"
+      ]
+    },
+    {
+      "typname": "notification_type",
+      "labels": [
+        "campaign_assigned",
+        "campaign_completed",
+        "route_assigned",
+        "route_completed",
+        "system",
+        "reward",
+        "status",
+        "achievement_unlocked"
+      ]
+    },
+    {
+      "typname": "platform_invitation_status",
+      "labels": [
+        "pending",
+        "accepted",
+        "expired",
+        "revoked",
+        "rejected"
+      ]
+    },
+    {
+      "typname": "rider_status",
+      "labels": [
+        "active",
+        "inactive",
+        "suspended"
+      ]
+    },
+    {
+      "typname": "user_role",
+      "labels": [
+        "super_admin",
+        "admin",
+        "moderator",
+        "support",
+        "advertiser",
+        "rider",
+        "gov"
+      ]
+    },
+    {
+      "typname": "user_status",
+      "labels": [
+        "active",
+        "suspended",
+        "pending",
+        "deleted"
+      ]
+    },
+    {
+      "typname": "waitlist_status",
+      "labels": [
+        "pending",
+        "approved",
+        "rejected"
+      ]
+    },
+    {
+      "typname": "workboard_card_priority",
+      "labels": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ]
+    },
+    {
+      "typname": "workboard_card_type",
+      "labels": [
+        "Engineering",
+        "Operations",
+        "Campaign",
+        "Product",
+        "Growth"
+      ]
+    },
+    {
+      "typname": "workboard_member_role",
+      "labels": [
+        "owner",
+        "admin",
+        "editor",
+        "viewer"
+      ]
+    },
+    {
+      "typname": "workboard_status",
+      "labels": [
+        "active",
+        "inactive"
+      ]
+    },
+    {
+      "typname": "workboard_tone",
+      "labels": [
+        "slate",
+        "indigo",
+        "emerald",
+        "amber"
+      ]
+    }
+  ]
+}

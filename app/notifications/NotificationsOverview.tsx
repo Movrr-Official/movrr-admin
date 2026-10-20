@@ -25,8 +25,10 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/PageHeader";
 import { StatsCard } from "@/components/stats/StatsCard";
+import { useAdminUser, useCapability } from "@/hooks/useAdminUser";
 import { useToast } from "@/hooks/useToast";
-import { createNotifications } from "@/app/actions/notifications";
+import { useQuery } from "@tanstack/react-query";
+import { createNotifications, getPendingNotificationSends, resumeNotificationSend } from "@/app/actions/notifications";
 import {
   useNotificationStats,
   useNotificationsHistory,
@@ -83,6 +85,10 @@ export default function NotificationsOverview() {
   const { toast } = useToast();
   const [isSending, startTransition] = useTransition();
 
+  const [operationId, setOperationId] = useState(() => crypto.randomUUID());
+  const canSend = useCapability("notifications.send");
+  const { data: adminUser } = useAdminUser();
+  const recovery = useQuery({ queryKey: ["notificationSends", adminUser?.user_id], queryFn: getPendingNotificationSends, retry: false, enabled: canSend });
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [type, setType] = useState<NotificationType>("system");
@@ -141,6 +147,7 @@ export default function NotificationsOverview() {
 
     startTransition(async () => {
       const result = await createNotifications({
+        operationId,
         title: title.trim(),
         message: message.trim(),
         type,
@@ -161,10 +168,12 @@ export default function NotificationsOverview() {
       }
 
       toast({
-        title: "Notification sent",
-        description: `Sent to ${result.data?.recipientCount ?? 0} recipients.`,
+        title: result.data.pendingCount ? "Notification send queued" : "Notification sent",
+        description: `${result.data.createdCount} delivered; ${result.data.pendingCount} awaiting delivery.`,
       });
 
+      setOperationId(crypto.randomUUID());
+      void recovery.refetch();
       setTitle("");
       setMessage("");
       setUserIdsInput("");
@@ -176,6 +185,15 @@ export default function NotificationsOverview() {
   return (
     <div className="min-h-screen page-canvas">
       <div className="space-y-6 md:space-y-8">
+        {canSend && recovery.isError && <p role="alert">Pending notification sends unavailable. Refresh before starting another send.</p>}
+        {!!recovery.data?.length && <Card><CardHeader><CardTitle>Pending notification sends</CardTitle></CardHeader><CardContent className="space-y-3">
+          {recovery.data.map(job => <div key={job.operationId} className="flex items-center justify-between gap-3"><span>{job.createdCount} delivered ? {job.pendingCount} pending</span><Button disabled={isSending || !canSend} onClick={() => startTransition(async () => {
+            const result = await resumeNotificationSend(job.operationId);
+            if (!result.success) toast({ title: "Delivery deferred", description: result.error, variant: "destructive" });
+            await recovery.refetch(); void refetchHistory();
+          })}>Resume delivery</Button></div>)}
+        </CardContent></Card>}
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <StatsCard
             title="Total Sent"
@@ -332,7 +350,7 @@ export default function NotificationsOverview() {
               <Button
                 className="w-full"
                 onClick={handleSend}
-                disabled={isSending}
+                disabled={isSending || !canSend}
               >
                 {isSending ? "Sending..." : "Send Notification"}
               </Button>

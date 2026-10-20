@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "verifiedDate": "2026-10-20",
+  "productionDeployed": false,
+  "productionMutations": false,
+  "publicShopRedemptionEnabled": false,
+  "productionDeletionRequestsEnabled": false,
+  "mobileRuntimeModified": false,
+  "findings": {
+    "X01": "Fully Resolved",
+    "X02": "Fully Resolved",
+    "X03": "Fully Resolved",
+    "X04": "Fully Resolved",
+    "X05": "Fully Resolved",
+    "X06": "Fully Resolved",
+    "X07": "Fully Resolved",
+    "X08": "Fully Resolved",
+    "X09": "Fully Resolved",
+    "X10": "Fully Resolved",
+    "X11": "Partially Resolved",
+    "X12": "Fully Resolved",
+    "X13": "Partially Resolved",
+    "X14": "Fully Resolved",
+    "X15": "Fully Resolved",
+    "X16": "Fully Resolved",
+    "X17": "Fully Resolved"
+  },
+  "verification": {
+    "admin": {
+      "suites": 56,
+      "tests": 630,
+      "typecheck": "passed",
+      "configuredLint": "passed (TypeScript)",
+      "build": "passed"
+    },
+    "web": {
+      "suites": 10,
+      "tests": 69,
+      "typecheck": "passed",
+      "build": "passed",
+      "changedSourceLint": {
+        "errors": 0,
+        "warnings": 0
+      },
+      "fullLint": {
+        "existingErrors": 18,
+        "existingWarnings": 2,
+        "unchangedOwner": "services/advertiser.ts"
+      }
+    },
+    "isolatedDatabase": {
+      "postgresMajor": 17,
+      "postgrest": "16.4",
+      "totalAssertionsIncludingHttp": 119,
+      "httpAssertions": 31,
+      "productionClone": false,
+      "productionContractMetadataFixture": true
+    },
+    "canonicalShopPreservation": {
+      "postgresAssertions": 306,
+      "providerSchedulerTransportExercised": false
+    },
+    "readOnlyProductionDriftCheck": "passed",
+    "localeCoverage": "all existing stored rows use supported canonical values",
+    "mobilePreservation": {
+      "typecheck": "passed",
+      "fullJest": {
+        "passedSuites": 312,
+        "failedSuites": 3,
+        "passedTests": 2713,
+        "failedTests": 5
+      },
+      "focusedRepeat": {
+        "passedSuites": 1,
+        "failedSuites": 2,
+        "passedTests": 42,
+        "failedTests": 4
+      },
+      "remainingFailures": [
+        "features/rides/__tests__/routeSummaryHistory.test.tsx: initial retrieval timeout",
+        "features/rides/__tests__/offlineReadiness.test.tsx: three Rewards expectations use the old key/result fixture"
+      ],
+      "runtimeAndTestsModified": false,
+      "commitOnlyContains": "scripts/093_alignment_accessory_custody.sql"
+    }
+  },
+  "orderedSql": [
+    {
+      "path": "movrr-admin/scripts/055_alignment_security.sql",
+      "normalizedLfSha256": "4e4ce64695a8ac71fd861dd1c973d63d149c4b9b1d6bd3d473719ae8e54c8ece"
+    },
+    {
+      "path": "movrr-mobile/scripts/093_alignment_accessory_custody.sql",
+      "normalizedLfSha256": "fc1c8bd8aa4e3906fa91bca9f6b711a05dbdb7c66262cb7ea99e7a731c0fd895"
+    },
+    {
+      "path": "movrr-admin/scripts/056_alignment_capabilities.sql",
+      "normalizedLfSha256": "e62509b2e9730f434c84962ee48f34b5b3244cbc598bd4a7db48e2c59912b47a"
+    },
+    {
+      "path": "movrr-admin/scripts/057_alignment_operations.sql",
+      "normalizedLfSha256": "e22155721b9b57ff80887cc4699310097dcf95850a198a734236510dcf296ed9"
+    },
+    {
+      "path": "movrr-admin/scripts/058_alignment_reads.sql",
+      "normalizedLfSha256": "9b1e56164fffc100297d18ed75092c77ac92b2398dbd7e5334b0e6759b9f0dc7"
+    },
+    {
+      "path": "movrr-admin/scripts/059_alignment_impact.sql",
+      "normalizedLfSha256": "d8b6a3cf8d27c8967286b7fc41b357a6059ea84ad7afee3ce6a102b109284a37"
+    }
+  ],
+  "externalAcceptance": [
+    "Explicit coordinated production rollout authorization",
+    "Existing account-deletion policy and operational activation gate",
+    "Environmental methodology product-policy approval",
+    "Staging/browser/provider acceptance on the released revisions",
+    "Mobile-owner triage of unchanged history timeout and obsolete offline Rewards test fixtures"
+  ]
+}

@@ -1,20 +1,27 @@
-export type LedgerDirection = "debit" | "credit";
-
 export type LedgerEntry = {
   id: string;
   riderId: string;
-  /** Always a positive magnitude. */
+  /** Signed committed points, exactly as recorded in the ledger. */
   points: number;
-  direction: LedgerDirection;
-  referenceType: "redemption" | "fulfilment";
-  referenceId: string;
-  reason?: string;
-  correlationId: string;
+  source: string;
+  category: "campaign" | "route" | "adjustment" | "redemption" | "refund" | "other";
+  description: string;
   createdAt: string;
 };
-
-/** Read-only wallet projection. Financial writes are owned by the existing SQL kernel. */
+export type WalletBalance = {
+  riderId: string;
+  pointsBalance: number;
+  lifetimePointsEarned: number;
+  transactionCount: number;
+  asOf: string;
+};
+export type LedgerPage = {
+  entries: LedgerEntry[];
+  nextCursor: string | null;
+  asOf: string;
+};
+export type LedgerPageInput = { cursor?: string; asOf?: string; limit?: number };
 export type LedgerRepository = {
-  getBalance: (riderId: string) => Promise<number>;
-  listEntries: (riderId: string) => Promise<LedgerEntry[]>;
+  getBalance: (riderId: string) => Promise<WalletBalance>;
+  listEntries: (riderId: string, input?: LedgerPageInput) => Promise<LedgerPage>;
 };

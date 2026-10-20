@@ -1,112 +1,65 @@
 import "server-only";
-
-import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import type {
-  CreateIncidentInput,
-  Incident,
-  IncidentStatus,
-} from "./types";
-import { SEED_INCIDENTS } from "./seedIncidents";
-
-const SETTINGS_KEY = "ops_incidents";
-
-type IncidentStorePayload = {
-  incidents: Incident[];
-};
-
-async function loadPayload(): Promise<IncidentStorePayload> {
-  const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("platform_settings")
-    .select("value")
-    .eq("key", SETTINGS_KEY)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const value = data?.value as IncidentStorePayload | null;
-  if (value?.incidents?.length) {
-    return { incidents: value.incidents };
-  }
-
-  return { incidents: [...SEED_INCIDENTS] };
-}
-
-async function savePayload(payload: IncidentStorePayload): Promise<void> {
-  const supabase = createSupabaseAdminClient();
-  const { error } = await supabase.from("platform_settings").upsert(
-    {
-      key: SETTINGS_KEY,
-      value: payload,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "key" },
-  );
-
-  if (error) {
-    throw new Error(error.message);
-  }
-}
-
-const newId = () =>
-  `inc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-
+import { createSupabaseServerClient } from "@/lib/supabase-server";
+import type { CreateIncidentInput, Incident, IncidentStatus } from "./types";
+import { z } from "zod";
 export async function listIncidents(): Promise<Incident[]> {
-  const payload = await loadPayload();
-  return [...payload.incidents].sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-  );
+  const { data, error } = await (
+    await createSupabaseServerClient()
+  ).rpc("ops_list_incidents");
+  if (error) throw new Error("Incident store unavailable");
+  return data as Incident[];
 }
-
-export async function countOpenIncidents(): Promise<number> {
-  const payload = await loadPayload();
-  return payload.incidents.filter(
-    (incident) =>
-      incident.status === "open" || incident.status === "investigating",
+export async function countOpenIncidents() {
+  return (await listIncidents()).filter((i) =>
+    ["open", "investigating"].includes(i.status),
   ).length;
 }
-
-export async function createIncident(
-  input: CreateIncidentInput,
-  createdBy?: string,
-): Promise<Incident> {
-  const payload = await loadPayload();
-  const now = new Date().toISOString();
-  const incident: Incident = {
-    id: newId(),
-    title: input.title.trim(),
-    description: input.description.trim(),
-    severity: input.severity,
-    status: "open",
-    createdAt: now,
-    updatedAt: now,
-    createdBy,
-  };
-  payload.incidents = [incident, ...payload.incidents];
-  await savePayload(payload);
-  return incident;
+export async function createIncident(input: CreateIncidentInput): Promise<Incident> {
+  z.object({
+    operationId: z.string().uuid(),
+    title: z.string().trim().min(1).max(200),
+    description: z.string().max(10000),
+    severity: z.enum(["low", "medium", "high", "critical"]),
+  }).parse(input);
+  const { operationId, ...payload } = input;
+  const { data, error } = await (
+    await createSupabaseServerClient()
+  ).rpc("ops_incident_command", {
+    p_id: null,
+    p_status: null,
+    p_expected: null,
+    p_payload: payload,
+    p_operation: operationId,
+  });
+  if (error) throw new Error("Incident creation failed. Retry the same operation.");
+  return data as Incident;
 }
-
 export async function updateIncidentStatus(
   id: string,
   status: IncidentStatus,
-): Promise<Incident | null> {
-  const payload = await loadPayload();
-  const index = payload.incidents.findIndex((incident) => incident.id === id);
-  if (index < 0) return null;
-
-  const updated: Incident = {
-    ...payload.incidents[index],
-    status,
-    updatedAt: new Date().toISOString(),
-  };
-  payload.incidents = [
-    ...payload.incidents.slice(0, index),
-    updated,
-    ...payload.incidents.slice(index + 1),
-  ];
-  await savePayload(payload);
-  return updated;
+  expectedVersion: number,
+  operationId: string,
+): Promise<Incident> {
+  z.object({
+    id: z.string().min(1).max(100),
+    status: z.enum(["open", "investigating", "resolved", "closed"]),
+    expectedVersion: z.number().int().nonnegative(),
+    operationId: z.string().uuid(),
+  }).parse({ id, status, expectedVersion, operationId });
+  const { data, error } = await (
+    await createSupabaseServerClient()
+  ).rpc("ops_incident_command", {
+    p_id: id,
+    p_status: status,
+    p_expected: expectedVersion,
+    p_payload: null,
+    p_operation: operationId,
+  });
+  if (error)
+    throw new Error(
+      error.code === "40001"
+        ? "Incident changed. Refresh before updating."
+        : "Incident update unavailable. Retry the same operation.",
+    );
+  return data as Incident;
 }

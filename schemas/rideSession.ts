@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-export const rideSessionEarningModeSchema = z.enum([
-  "standard_ride",
-  "ad_enhanced_ride",
-]);
+export const rideSessionEarningModeSchema = z.enum(["standard_ride", "ad_enhanced_ride"]);
 
 /**
  * Ride session lifecycle status — mirrors mobile's RideSessionStatus.
@@ -32,16 +29,20 @@ export const rideVerificationStatusSchema = z.enum([
   "manual_review",
 ]);
 
-export const bikeTypeSchema = z.enum([
-  "standard_bike",
-  "e_bike",
-  "fat_bike",
-  "unknown",
-]);
+export const bikeTypeSchema = z.enum(["standard_bike", "e_bike", "fat_bike", "unknown"]);
 
 export const rideSessionSchema = z.object({
   id: z.string(),
   riderId: z.string(),
+  settlement: z
+    .object({
+      status: z.string(),
+      completeness: z.string().optional(),
+      reason_code: z.string().nullable().optional(),
+      attempts: z.number().optional(),
+      updated_at: z.string().optional(),
+    })
+    .optional(),
   riderName: z.string().optional(),
   /**
    * Ride lifecycle status — mirrors mobile's RideSessionStatus.
@@ -122,16 +123,15 @@ export const rideSessionFiltersSchema = z.object({
     .enum(["all", "pending", "verified", "rejected", "manual_review"])
     .optional(),
   riderId: z.string().optional(),
-  searchQuery: z.string().optional(),
+  searchQuery: z.string().trim().max(200).optional(),
+  page: z.number().int().nonnegative().optional(),
+  pageSize: z.number().int().min(1).max(200).optional(),
+  asOf: z.string().datetime({ offset: true }).optional(),
 });
 
 export type RideSession = z.infer<typeof rideSessionSchema>;
 export type RideSessionFilters = z.infer<typeof rideSessionFiltersSchema>;
 export type RideSessionStatus = z.infer<typeof rideSessionStatusSchema>;
-export type RideVerificationStatus = z.infer<
-  typeof rideVerificationStatusSchema
->;
-export type RideSessionEarningMode = z.infer<
-  typeof rideSessionEarningModeSchema
->;
+export type RideVerificationStatus = z.infer<typeof rideVerificationStatusSchema>;
+export type RideSessionEarningMode = z.infer<typeof rideSessionEarningModeSchema>;
 export type BikeType = z.infer<typeof bikeTypeSchema>;

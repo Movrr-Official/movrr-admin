@@ -226,7 +226,7 @@ export async function createPlatformApiForTests(
         route(request, "wallet.read", (ctx) => walletQueries.getBalance(ctx, new URL(request.url).searchParams.get("riderId") ?? undefined)),
       transactions: (request) =>
         route(request, "wallet.read", (ctx) =>
-          walletQueries.listTransactions(ctx, new URL(request.url).searchParams.get("riderId") ?? undefined),
+          walletQueries.listTransactions(ctx, new URL(request.url).searchParams.get("riderId") ?? undefined, { cursor: new URL(request.url).searchParams.get("cursor") ?? undefined, asOf: new URL(request.url).searchParams.get("asOf") ?? undefined }),
         ),
     },
     fulfilment: {

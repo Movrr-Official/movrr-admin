@@ -1,5 +1,6 @@
 "use server";
 
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -15,32 +16,6 @@ import {
   createNotificationSchema,
   notificationFiltersSchema,
 } from "@/schemas";
-
-const chunkArray = <T>(items: T[], size: number) => {
-  const chunks: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    chunks.push(items.slice(i, i + size));
-  }
-  return chunks;
-};
-
-const normalizeMetadata = (metadata: Record<string, any> | undefined) =>
-  metadata ?? {};
-
-const getOptedOutUserIds = async () => {
-  const supabaseAdmin = createSupabaseAdminClient();
-  const { data, error } = await supabaseAdmin
-    .from("user_preferences")
-    .select("user_id")
-    .eq("notifications", false);
-
-  if (error) {
-    console.warn("Failed to load notification preferences", error);
-    return [] as string[];
-  }
-
-  return (data ?? []).map((row) => row.user_id);
-};
 
 const mapNotificationRow = (
   row: any,
@@ -229,88 +204,29 @@ export async function getNotificationStats(): Promise<{
   }
 }
 
-export async function createNotifications(
-  payload: CreateNotificationInput,
-): Promise<{
-  success: boolean;
-  data?: { createdCount: number; recipientCount: number };
-  error?: string;
-}> {
+export async function createNotifications(payload: CreateNotificationInput) {
   try {
     await requireCapability("notifications.send", { mutation: true });
-    const supabaseAdmin = createSupabaseAdminClient();
-    const validatedPayload = createNotificationSchema.parse(payload);
-
-    let query = supabaseAdmin.from("user").select("id");
-
-    if (validatedPayload.target === "role") {
-      query = query.eq("role", validatedPayload.role);
-    }
-
-    if (validatedPayload.target === "userIds") {
-      query = query.in("id", validatedPayload.userIds ?? []);
-    }
-
-    if (validatedPayload.respectPreferences) {
-      const optedOutIds = await getOptedOutUserIds();
-      if (optedOutIds.length > 0) {
-        const quotedIds = optedOutIds.map((id) => `"${id}"`).join(",");
-        query = query.not("id", "in", `(${quotedIds})`);
-      }
-    }
-
-    const { data: recipients, error: recipientsError } = await query;
-
-    if (recipientsError) {
-      return { success: false, error: recipientsError.message };
-    }
-
-    const recipientIds = (recipients ?? []).map((recipient) => recipient.id);
-
-    if (recipientIds.length === 0) {
-      return {
-        success: true,
-        data: { createdCount: 0, recipientCount: 0 },
-      };
-    }
-
-    const rows = recipientIds.map((userId) => ({
-      user_id: userId,
-      type: validatedPayload.type,
-      title: validatedPayload.title,
-      message: validatedPayload.message,
-      metadata: normalizeMetadata(validatedPayload.metadata),
-    }));
-
-    const chunks = chunkArray(rows, 500);
-    let createdCount = 0;
-
-    for (const chunk of chunks) {
-      const { error } = await supabaseAdmin.from("notifications").insert(chunk);
-      if (error) {
-        return { success: false, error: error.message };
-      }
-      createdCount += chunk.length;
-    }
-
+    const { operationId, ...body } = createNotificationSchema.parse(payload);
+    const client = await createSupabaseServerClient();
+    const queued = await client.rpc("ops_queue_notifications", { p_operation: operationId, p_payload: body });
+    if (queued.error) throw new Error("Notification queue unavailable. Retry the same operation.");
+    return await resumeNotificationSend(operationId);
+  } catch (error) { return { success: false as const, error: error instanceof Error ? error.message : "Notification send unavailable" }; }
+}
+export async function resumeNotificationSend(operationId: string) {
+  try {
+    await requireCapability("notifications.send", { mutation: true });
+    z.string().uuid().parse(operationId);
+    const { data, error } = await (await createSupabaseServerClient()).rpc("ops_deliver_notification_batch", { p_operation: operationId, p_limit: 500 });
+    if (error) throw new Error("Notification batch unavailable. Retry the same operation.");
     revalidatePath("/notifications");
-
-    return {
-      success: true,
-      data: { createdCount, recipientCount: recipientIds.length },
-    };
-  } catch (error) {
-    logger.warn("createNotifications error", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return {
-      success: false,
-      error:
-        error instanceof z.ZodError
-          ? error.errors[0]?.message
-          : error instanceof Error
-            ? error.message
-            : "Failed to create notifications",
-    };
-  }
+    return { success: true as const, data: data as { operationId: string; createdCount: number; recipientCount: number; pendingCount: number; skippedCount: number } };
+  } catch (error) { return { success: false as const, error: error instanceof Error ? error.message : "Notification batch unavailable" }; }
+}
+export async function getPendingNotificationSends() {
+  await requireCapability("notifications.send", { mutation: true });
+  const { data, error } = await (await createSupabaseServerClient()).rpc("ops_pending_notification_sends");
+  if (error) throw new Error("Notification recovery queue unavailable");
+  return data as Array<{ operationId: string; createdCount: number; recipientCount: number; pendingCount: number }>;
 }

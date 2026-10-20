@@ -64,9 +64,6 @@ export const generalSettingsSchema = z.object({
     ),
   // Impact metrics
   distanceUnit: distanceUnitSchema.default("km"),
-  // 0.180 kg/km = average car CO₂ emission offset by biking (car-offset methodology,
-  // aligned with mobile app). Do NOT use 0.021 (direct cycling emission — wrong metric).
-  co2KgPerKm: nonNegativeNumber.default(0.180),
 });
 
 export type MaintenanceScope = z.infer<typeof maintenanceScopeSchema>;
@@ -121,8 +118,6 @@ export const rideVerificationSettingsSchema = z.object({
  */
 export const impactSettingsSchema = z.object({
   distanceUnit: distanceUnitSchema.default("km"),
-  // 0.180 kg/km = average car CO₂ emission offset by biking (car-offset methodology).
-  co2KgPerKm: nonNegativeNumber.default(0.180),
 });
 
 /**

@@ -59,6 +59,7 @@ export default function IncidentsOverview() {
   const createIncident = useCreateIncident();
   const updateStatus = useUpdateIncidentStatus();
 
+  const [operationId, setOperationId] = useState(() => crypto.randomUUID());
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState<IncidentSeverity>("medium");
@@ -72,8 +73,9 @@ export default function IncidentsOverview() {
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      await createIncident.mutateAsync({ title, description, severity });
+      await createIncident.mutateAsync({ title, description, severity, operationId });
       toast({ title: "Incident created" });
+      setOperationId(crypto.randomUUID());
       setTitle("");
       setDescription("");
       setSeverity("medium");
@@ -88,7 +90,9 @@ export default function IncidentsOverview() {
 
   const handleStatusChange = async (id: string, status: IncidentStatus) => {
     try {
-      await updateStatus.mutateAsync({ id, status });
+      const incident = incidents.find(i => i.id === id);
+      if (!incident) throw new Error("Refresh incident list");
+      await updateStatus.mutateAsync({ id, status, expectedVersion: incident.version, operationId: crypto.randomUUID() });
       toast({ title: "Incident updated" });
     } catch (err) {
       toast({
@@ -164,14 +168,14 @@ export default function IncidentsOverview() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Severity</Label>
+                  <Label htmlFor="incident-severity">Severity</Label>
                   <Select
                     value={severity}
                     onValueChange={(value) =>
                       setSeverity(value as IncidentSeverity)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="incident-severity">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

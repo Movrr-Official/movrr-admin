@@ -1,10 +1,8 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
-import {
-  NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  NEXT_PUBLIC_SUPABASE_URL,
-} from "@/lib/env";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_URL } from "@/lib/env";
 import type {
   VerifiedAccessToken,
   VerifyAccessToken,
@@ -33,6 +31,19 @@ export const verifySupabaseAccessToken: VerifyAccessToken = async (
   if (error || !user) {
     return null;
   }
+
+  // Re-read on every request: an existing JWT must not outlive suspension.
+  const account = await createSupabaseAdminClient()
+    .from("user")
+    .select("status")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (
+    account.error ||
+    !account.data ||
+    !["active", "pending"].includes(String(account.data.status).toLowerCase())
+  )
+    return null;
 
   return {
     userId: user.id,

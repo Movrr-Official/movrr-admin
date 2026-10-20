@@ -33,6 +33,8 @@ import {
   Clock,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { RideSession } from "@/schemas";
 import { RideSessionsTable } from "@/components/ride-sessions/RideSessionsTable";
 import { StatsCard } from "@/components/stats/StatsCard";
@@ -40,7 +42,7 @@ import { useRideSessionsData } from "@/hooks/useRideSessionsData";
 import { useSessionAnalytics } from "@/hooks/useSessionAnalytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const BIKE_TYPE_COLORS = [
@@ -53,12 +55,14 @@ const BIKE_TYPE_COLORS = [
 const CHART_AXIS_FONT_SIZE = 11;
 
 export default function RideSessionsOverview() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const [asOf, setAsOf] = useState(() => new Date().toISOString());
   const {
     data: sessions,
     isLoading,
     isFetching,
-    refetch,
-  } = useRideSessionsData();
+  } = useRideSessionsData({ searchQuery, page, pageSize: 100, asOf });
   const [analyticsDays, setAnalyticsDays] = useState<7 | 30 | 90>(30);
   const { data: analytics, isLoading: analyticsLoading } =
     useSessionAnalytics(analyticsDays);
@@ -104,6 +108,10 @@ export default function RideSessionsOverview() {
 
   return (
     <div className="min-h-screen page-canvas">
+      <div className="flex flex-wrap items-center gap-3 p-4">
+        <label htmlFor="ride-search">Search all rides</label><Input id="ride-search" className="max-w-md" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} placeholder="Session ID, rider, campaign or city" />
+        <Button variant="outline" disabled={!page || isFetching} onClick={() => setPage(p => p - 1)}>Previous</Button><span>Page {page + 1}</span><Button variant="outline" disabled={isFetching || (sessions?.length ?? 0) < 100} onClick={() => setPage(p => p + 1)}>Next</Button>
+      </div>
       <div className="space-y-6 md:space-y-8">
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -243,7 +251,7 @@ export default function RideSessionsOverview() {
               isRefetching={isFetching}
               toolbar={true}
               searchBar={false}
-              refetchData={refetch}
+              refetchData={() => { setPage(0); setAsOf(new Date().toISOString()); }}
             />
           </TabsContent>
 

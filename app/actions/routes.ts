@@ -19,9 +19,6 @@ const updateRouteStatusSchema = z.object({
   reason: z.string().optional(),
 });
 
-const recalculateComplianceSchema = z.object({
-  routeId: z.string(),
-});
 
 const exportRouteDataSchema = z.object({
   routeId: z.string(),
@@ -136,161 +133,6 @@ const toWaypoints = (
   return waypoints;
 };
 
-const toRadians = (value: number) => (value * Math.PI) / 180;
-
-const haversineKm = (
-  a: { lat: number; lng: number },
-  b: { lat: number; lng: number },
-) => {
-  const R = 6371;
-  const dLat = toRadians(b.lat - a.lat);
-  const dLng = toRadians(b.lng - a.lng);
-  const lat1 = toRadians(a.lat);
-  const lat2 = toRadians(b.lat);
-
-  const h =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
-};
-
-const extractGpsPoints = (path?: any[]) => {
-  if (!Array.isArray(path)) return [];
-  return path
-    .map((point) => {
-      const lat =
-        point?.lat ??
-        point?.latitude ??
-        point?.coords?.latitude ??
-        point?.location?.lat;
-      const lng =
-        point?.lng ??
-        point?.longitude ??
-        point?.coords?.longitude ??
-        point?.location?.lng;
-      const timestamp =
-        point?.timestamp ??
-        point?.recorded_at ??
-        point?.recordedAt ??
-        point?.time;
-
-      if (typeof lat !== "number" || typeof lng !== "number") return null;
-
-      return {
-        lat,
-        lng,
-        timestamp: timestamp ? new Date(timestamp).toISOString() : undefined,
-      };
-    })
-    .filter(Boolean) as Array<{ lat: number; lng: number; timestamp?: string }>;
-};
-
-const calculateDistanceKm = (points: Array<{ lat: number; lng: number }>) => {
-  if (points.length < 2) return 0;
-  let distance = 0;
-  for (let i = 1; i < points.length; i += 1) {
-    distance += haversineKm(points[i - 1], points[i]);
-  }
-  return distance;
-};
-
-const calculateDurationMinutes = (
-  points: Array<{ timestamp?: string }>,
-  fallbackStart?: string | null,
-  fallbackEnd?: string | null,
-) => {
-  const timestamps = points
-    .map((point) =>
-      point.timestamp ? new Date(point.timestamp).getTime() : null,
-    )
-    .filter((value): value is number => typeof value === "number");
-
-  if (timestamps.length >= 2) {
-    const min = Math.min(...timestamps);
-    const max = Math.max(...timestamps);
-    return Math.max(0, (max - min) / 60000);
-  }
-
-  if (fallbackStart && fallbackEnd) {
-    const start = new Date(fallbackStart).getTime();
-    const end = new Date(fallbackEnd).getTime();
-    if (!Number.isNaN(start) && !Number.isNaN(end)) {
-      return Math.max(0, (end - start) / 60000);
-    }
-  }
-
-  return 0;
-};
-
-const computeCompliance = (params: {
-  expectedDistanceKm: number;
-  actualDistanceKm: number;
-  estimatedDurationMinutes?: number | null;
-  actualDurationMinutes: number;
-  averageSpeed?: number | null;
-  maxSpeed?: number | null;
-  storedCompliance?: number | null;
-}) => {
-  const expectedDistance = params.expectedDistanceKm || 0;
-  const actualDistance = params.actualDistanceKm || 0;
-  const estimatedDuration = params.estimatedDurationMinutes ?? 0;
-  const actualDuration = params.actualDurationMinutes || 0;
-
-  const computedCoverage =
-    expectedDistance > 0
-      ? Math.min(100, Math.round((actualDistance / expectedDistance) * 100))
-      : 0;
-
-  const waypointCoverage =
-    params.storedCompliance && params.storedCompliance > 0
-      ? Math.round(params.storedCompliance)
-      : computedCoverage;
-
-  const timeCompliance =
-    estimatedDuration > 0 && actualDuration > 0
-      ? actualDuration <= estimatedDuration
-        ? 100
-        : Math.max(0, Math.round((estimatedDuration / actualDuration) * 100))
-      : 100;
-
-  const expectedSpeed =
-    estimatedDuration > 0 ? expectedDistance / (estimatedDuration / 60) : 0;
-  const actualSpeed =
-    params.averageSpeed && params.averageSpeed > 0
-      ? params.averageSpeed
-      : actualDuration > 0
-        ? actualDistance / (actualDuration / 60)
-        : 0;
-
-  const speedCompliance =
-    expectedSpeed > 0 && actualSpeed > 0
-      ? Math.max(
-          0,
-          Math.round(
-            100 - (Math.abs(actualSpeed - expectedSpeed) / expectedSpeed) * 100,
-          ),
-        )
-      : 100;
-
-  const routeDeviation = Math.max(0, 100 - waypointCoverage);
-  const overallScore = Math.round(
-    (waypointCoverage + timeCompliance + speedCompliance) / 3,
-  );
-
-  return {
-    waypointCoverage,
-    routeDeviation,
-    timeCompliance,
-    speedCompliance,
-    overallScore,
-    expectedDistanceKm: expectedDistance,
-    actualDistanceKm: actualDistance,
-    actualDurationMinutes: actualDuration,
-    averageSpeed: actualSpeed,
-    maxSpeed: params.maxSpeed ?? null,
-  };
-};
-
 const toPerformanceBucket = (progress?: number | null) => {
   const value = Number(progress ?? 0);
   if (value >= 80) return "high";
@@ -324,17 +166,10 @@ const toRouteStatus = (status?: TemplateStatus) => {
   }
 };
 
-async function resolveCanonicalRouteId(
-  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
-  routeOrAssignmentId: string,
-) {
-  const { data: riderRoute } = await supabaseAdmin
-    .from("rider_route")
-    .select("route_id")
-    .eq("id", routeOrAssignmentId)
-    .maybeSingle();
-
-  return riderRoute?.route_id ?? routeOrAssignmentId;
+async function resolveAssignmentScope(supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>, assignmentId: string) {
+ const { data, error } = await supabaseAdmin.from("rider_route").select("route_id,rider_id").eq("id",assignmentId).single();
+ if(error||!data?.rider_id)throw new Error("Route assignment unavailable");
+ return data;
 }
 
 /**
@@ -1406,114 +1241,6 @@ export async function deleteRoute(
 }
 
 /**
- * Server action to recalculate route compliance
- */
-export async function recalculateRouteCompliance(
-  data: z.infer<typeof recalculateComplianceSchema>,
-): Promise<{ success: boolean; compliance?: number; error?: string }> {
-  try {
-    await requireCapability("routes.write", { mutation: true });
-    const supabaseAdmin = createSupabaseAdminClient();
-    const validatedData = recalculateComplianceSchema.parse(data);
-
-    const { data: routeRow, error: routeError } = await supabaseAdmin
-      .from("rider_route")
-      .select("route_id, progress")
-      .eq("id", validatedData.routeId)
-      .single();
-
-    if (routeError) {
-      return { success: false, error: routeError.message };
-    }
-
-    const { data: routeData } = await supabaseAdmin
-      .from("route")
-      .select(
-        "coverage_km, estimated_duration_minutes, start_lat, start_lng, end_lat, end_lng",
-      )
-      .eq("id", routeRow.route_id)
-      .maybeSingle();
-
-    const { data: trackingRow } = await supabaseAdmin
-      .from("route_tracking")
-      .select(
-        "id, path, total_distance, average_speed, max_speed, route_compliance, start_time, end_time",
-      )
-      .eq("route_id", routeRow.route_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const pathPoints = extractGpsPoints(trackingRow?.path ?? []);
-    const actualDistanceKm =
-      typeof trackingRow?.total_distance === "number" &&
-      trackingRow.total_distance > 0
-        ? Number(trackingRow.total_distance)
-        : calculateDistanceKm(pathPoints);
-
-    const expectedDistanceKm =
-      typeof routeData?.coverage_km === "number" && routeData.coverage_km > 0
-        ? Number(routeData.coverage_km)
-        : routeData?.start_lat &&
-            routeData?.start_lng &&
-            routeData?.end_lat &&
-            routeData?.end_lng
-          ? haversineKm(
-              { lat: routeData.start_lat, lng: routeData.start_lng },
-              { lat: routeData.end_lat, lng: routeData.end_lng },
-            )
-          : 0;
-
-    const actualDurationMinutes = calculateDurationMinutes(
-      pathPoints,
-      trackingRow?.start_time ?? null,
-      trackingRow?.end_time ?? null,
-    );
-
-    const metrics = computeCompliance({
-      expectedDistanceKm,
-      actualDistanceKm,
-      estimatedDurationMinutes: routeData?.estimated_duration_minutes ?? null,
-      actualDurationMinutes,
-      averageSpeed: trackingRow?.average_speed ?? null,
-      maxSpeed: trackingRow?.max_speed ?? null,
-      storedCompliance: trackingRow?.route_compliance ?? null,
-    });
-
-    const { error: updateError } = await supabaseAdmin
-      .from("rider_route")
-      .update({
-        progress: metrics.overallScore,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", validatedData.routeId);
-
-    if (updateError) {
-      return { success: false, error: updateError.message };
-    }
-
-    if (trackingRow?.id) {
-      await supabaseAdmin
-        .from("route_tracking")
-        .update({ route_compliance: metrics.overallScore })
-        .eq("id", trackingRow.id);
-    }
-
-    revalidatePath("/routes");
-    return { success: true, compliance: metrics.overallScore };
-  } catch (error) {
-    console.error("Error recalculating compliance:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to recalculate compliance",
-    };
-  }
-}
-
-/**
  * Server action to get route GPS tracking data
  */
 export async function getRouteGPSTracking(
@@ -1522,7 +1249,7 @@ export async function getRouteGPSTracking(
   try {
     await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
-    const canonicalRouteId = await resolveCanonicalRouteId(
+    const scope = await resolveAssignmentScope(
       supabaseAdmin,
       routeId,
     );
@@ -1531,7 +1258,8 @@ export async function getRouteGPSTracking(
     const { data, error } = await supabaseAdmin
       .from("route_tracking")
       .select("path, created_at, updated_at")
-      .eq("route_id", canonicalRouteId)
+      .eq("route_id", scope.route_id)
+      .eq("rider_id", scope.rider_id)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -1563,72 +1291,16 @@ export async function getRouteComplianceBreakdown(
     await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
 
-    const { data: riderRoute, error } = await supabaseAdmin
-      .from("rider_route")
-      .select("route_id, progress")
-      .eq("id", routeId)
-      .single();
+    const scope = await resolveAssignmentScope(supabaseAdmin, routeId);
+    const { data, error } = await supabaseAdmin.from("ride_session")
+      .select("id,compliance_score,started_at")
+      .eq("rider_route_id", routeId).eq("rider_id", scope.rider_id)
+      .order("started_at", { ascending: false }).order("id", { ascending: false }).limit(1).maybeSingle();
+    if (error) throw new Error("Recorded compliance unavailable");
+    return { success: true, data: { sessionId: data?.id ?? null,
+      overallScore: data?.compliance_score == null ? null : Number(data.compliance_score) * 100,
+      waypointCoverage: null, routeDeviation: null, timeCompliance: null, speedCompliance: null } };
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    const { data: routeData } = await supabaseAdmin
-      .from("route")
-      .select(
-        "coverage_km, estimated_duration_minutes, start_lat, start_lng, end_lat, end_lng",
-      )
-      .eq("id", riderRoute.route_id)
-      .maybeSingle();
-
-    const { data: trackingRow } = await supabaseAdmin
-      .from("route_tracking")
-      .select(
-        "path, total_distance, average_speed, max_speed, route_compliance, start_time, end_time",
-      )
-      .eq("route_id", riderRoute.route_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const pathPoints = extractGpsPoints(trackingRow?.path ?? []);
-    const actualDistanceKm =
-      typeof trackingRow?.total_distance === "number" &&
-      trackingRow.total_distance > 0
-        ? Number(trackingRow.total_distance)
-        : calculateDistanceKm(pathPoints);
-
-    const expectedDistanceKm =
-      typeof routeData?.coverage_km === "number" && routeData.coverage_km > 0
-        ? Number(routeData.coverage_km)
-        : routeData?.start_lat &&
-            routeData?.start_lng &&
-            routeData?.end_lat &&
-            routeData?.end_lng
-          ? haversineKm(
-              { lat: routeData.start_lat, lng: routeData.start_lng },
-              { lat: routeData.end_lat, lng: routeData.end_lng },
-            )
-          : 0;
-
-    const actualDurationMinutes = calculateDurationMinutes(
-      pathPoints,
-      trackingRow?.start_time ?? null,
-      trackingRow?.end_time ?? null,
-    );
-
-    const breakdown = computeCompliance({
-      expectedDistanceKm,
-      actualDistanceKm,
-      estimatedDurationMinutes: routeData?.estimated_duration_minutes ?? null,
-      actualDurationMinutes,
-      averageSpeed: trackingRow?.average_speed ?? null,
-      maxSpeed: trackingRow?.max_speed ?? null,
-      storedCompliance:
-        trackingRow?.route_compliance ?? riderRoute.progress ?? null,
-    });
-
-    return { success: true, data: breakdown };
   } catch (error) {
     console.error("Error fetching compliance breakdown:", error);
     return {
@@ -1650,36 +1322,30 @@ export async function getRoutePointsAwarded(
   try {
     await requireCapability("routes.read");
     const supabaseAdmin = createSupabaseAdminClient();
-    const canonicalRouteId = await resolveCanonicalRouteId(
+    const scope = await resolveAssignmentScope(
       supabaseAdmin,
       routeId,
     );
 
-    const { data: trackingRows } = await supabaseAdmin
-      .from("route_tracking")
-      .select("id")
-      .eq("route_id", canonicalRouteId);
-
-    const trackingIds = (trackingRows ?? []).map((row) => row.id);
-
-    const { data, error } = trackingIds.length
-      ? await supabaseAdmin
-          .from(DB_TABLES.REWARD_TRANSACTIONS)
-          .select("*")
-          .in("route_tracking_id", trackingIds)
-      : { data: [], error: null };
-
-    if (error) {
-      console.error("Error fetching route points:", error);
-      return { success: false, error: error.message };
+    const sessionIds = new Set<string>(), trackingIds = new Set<string>();
+    for (const [table, ids] of [["ride_session", sessionIds], ["route_tracking", trackingIds]] as const) {
+      for (let offset=0;;offset+=500) {
+        const page=await supabaseAdmin.from(table).select("id").eq("route_id",scope.route_id).eq("rider_id",scope.rider_id).order("id").range(offset,offset+499);
+        if(page.error)throw new Error("Route evidence unavailable");
+        for(const row of page.data??[])ids.add(row.id);
+        if((page.data?.length??0)<500)break;
+      }
     }
-
-    const totalPoints =
-      data?.reduce(
-        (sum, transaction) =>
-          sum + (transaction.points_earned ?? transaction.points ?? 0),
-        0,
-      ) || 0;
+    const data: Array<{id:string;points_earned:number;metadata:Record<string,unknown>|null;route_tracking_id:string|null}> = [];
+    for(let offset=0;;offset+=500){
+      const page=await supabaseAdmin.from(DB_TABLES.REWARD_TRANSACTIONS)
+       .select("id,points_earned,source,metadata,created_at,route_tracking_id")
+       .eq("rider_id",scope.rider_id).order("id").range(offset,offset+499);
+      if(page.error)throw new Error("Committed route points unavailable");
+      data.push(...(page.data??[]).filter(row=>sessionIds.has(row.metadata?.rideSessionId)||trackingIds.has(row.route_tracking_id)));
+      if((page.data?.length??0)<500)break;
+    }
+    const totalPoints=data.reduce((sum,row)=>sum+Number(row.points_earned),0);
 
     return {
       success: true,
@@ -1711,7 +1377,7 @@ export async function getRouteTimeline(
     const { data: routeData, error: routeError } = await supabaseAdmin
       .from("rider_route")
       .select(
-        "route_id, assigned_at, started_at, completed_at, updated_at, status",
+        "route_id, rider_id, assigned_at, started_at, completed_at, updated_at, status",
       )
       .eq("id", routeId)
       .single();
@@ -1724,6 +1390,7 @@ export async function getRouteTimeline(
       .from("route_tracking")
       .select("start_time, end_time, created_at, updated_at")
       .eq("route_id", routeData.route_id)
+      .eq("rider_id", routeData.rider_id)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -1817,9 +1484,9 @@ export async function exportRouteData(
     // Fetch related data
     const [gpsData, complianceData, pointsData, timelineData] =
       await Promise.all([
-        getRouteGPSTracking(routeData.route_id ?? validatedData.routeId),
+        getRouteGPSTracking(validatedData.routeId),
         getRouteComplianceBreakdown(validatedData.routeId),
-        getRoutePointsAwarded(routeData.route_id ?? validatedData.routeId),
+        getRoutePointsAwarded(validatedData.routeId),
         getRouteTimeline(validatedData.routeId),
       ]);
 

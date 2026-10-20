@@ -67,15 +67,14 @@ export function createSupabaseRedemptionRepository(): RedemptionRepository &
 
     async listByRider(riderId) {
       const supabase = createSupabaseAdminClient();
-      const { data, error } = await supabase
-        .from("reward_redemptions")
-        .select(
-          "id, rider_id, reward_id, points_spent, status, requested_at, metadata, reward_title, reward_catalog:reward_id(thumbnail_url)",
-        )
-        .eq("rider_id", riderId)
-        .order("requested_at", { ascending: false });
-      throwOnError(error, "redemption.listByRider");
-      return (data ?? []).map(mapRedemptionRow);
+      const result: RewardRedemption[] = [];
+      for(let offset=0;;offset+=500){
+        const {data,error}=await supabase.from("reward_redemptions")
+         .select("id,rider_id,reward_id,points_spent,status,requested_at,metadata,reward_title,reward_catalog:reward_id(thumbnail_url)")
+         .eq("rider_id",riderId).order("requested_at",{ascending:false}).order("id",{ascending:false}).range(offset,offset+499);
+        throwOnError(error,"redemption.listByRider");result.push(...(data??[]).map(mapRedemptionRow));
+        if((data?.length??0)<500)return result;
+      }
     },
   };
 }

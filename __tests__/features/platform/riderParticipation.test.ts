@@ -47,9 +47,7 @@ it("forwards the verified request bearer to an anonymous-key client, without a s
       global: { headers: { Authorization: "Bearer rider-jwt" } },
     }),
   );
-  expect(() =>
-    createSupabaseRequestClient(new Request("https://example.com")),
-  ).toThrow();
+  expect(() => createSupabaseRequestClient(new Request("https://example.com"))).toThrow();
 });
 it.each([
   [optInToCampaign, "rider_campaign_opt_in"],
@@ -82,54 +80,44 @@ it("fails closed when community creator eligibility cannot be read", async () =>
     (
       await createCommunityRide(
         ctx,
-        { title: "Ride", scheduledAt: "2026-11-01" },
+        {
+          operationId: "11111111-1111-4111-8111-111111111111",
+          title: "Ride",
+          scheduledAt: "2099-11-01T09:00:00Z",
+        },
         client,
       )
     ).ok,
   ).toBe(false);
   expect(db.from).not.toHaveBeenCalled();
 });
-it("writes production community column names and binds the authenticated organizer", async () => {
-  db.rpc.mockResolvedValue({ data: true, error: null });
-  const query = {
-    insert: vi.fn(),
-    select: vi.fn(),
-    single: vi.fn(async () => ({ data: { id: "ride" }, error: null })),
-  };
-  query.insert.mockReturnValue(query);
-  query.select.mockReturnValue(query);
-  db.from.mockReturnValue(query);
+it("uses the idempotent canonical community creation command", async () => {
+  db.rpc.mockResolvedValue({ data: { id: "ride" }, error: null });
   expect(
     (
       await createCommunityRide(
         ctx,
-        { title: "Ride", scheduledAt: "2026-11-01", meetingPoint: "Station" },
+        {
+          operationId: "11111111-1111-4111-8111-111111111111",
+          title: "Ride",
+          scheduledAt: "2099-11-01T09:00:00Z",
+          meetingPoint: "Station",
+        },
         client,
       )
     ).ok,
   ).toBe(true);
-  expect(query.insert).toHaveBeenCalledWith(
+  expect(db.rpc).toHaveBeenCalledWith(
+    "create_my_community_ride",
     expect.objectContaining({
-      organizer_rider_id: "rider",
-      organizer_user_id: "user",
-      created_by_user_id: "user",
-      organizer_type: "rider",
-      meeting_point_name: "Station",
+      p_input: expect.objectContaining({ meetingPoint: "Station" }),
     }),
   );
+  expect(db.from).not.toHaveBeenCalled();
 });
-it("does not replace a failed rider campaign read with unrelated open campaigns", async () => {
-  const query = {
-    select: vi.fn(),
-    eq: vi.fn(),
-    limit: vi.fn(async () => ({
-      data: null,
-      error: { message: "unavailable" },
-    })),
-  };
-  query.select.mockReturnValue(query);
-  query.eq.mockReturnValue(query);
-  db.from.mockReturnValue(query);
-  expect((await listRiderCampaigns(ctx)).ok).toBe(false);
-  expect(db.from).toHaveBeenCalledTimes(1);
+it("fails closed on the canonical campaign catalog error without a fallback", async () => {
+  db.rpc.mockResolvedValue({ data: null, error: { message: "unavailable" } });
+  expect((await listRiderCampaigns(ctx, client)).ok).toBe(false);
+  expect(db.rpc).toHaveBeenCalledWith("get_my_campaign_catalog");
+  expect(db.from).not.toHaveBeenCalled();
 });

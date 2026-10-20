@@ -24,8 +24,7 @@ export async function getIncidents(): Promise<{
   } catch (error) {
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to load incidents",
+      error: error instanceof Error ? error.message : "Failed to load incidents",
     };
   }
 }
@@ -35,7 +34,7 @@ export async function getOpenIncidentCount(): Promise<number> {
     await requireCapability("incidents.read");
     return await countOpenIncidents();
   } catch {
-    return 0;
+    throw new Error("Incident count unavailable");
   }
 }
 
@@ -43,20 +42,16 @@ export async function createIncident(
   input: CreateIncidentInput,
 ): Promise<{ success: boolean; data?: Incident; error?: string }> {
   try {
-    const admin = await requireCapability("incidents.create", { mutation: true });
+    await requireCapability("incidents.create", { mutation: true });
     if (!input.title.trim()) {
       return { success: false, error: "Title is required" };
     }
-    const incident = await createIncidentRecord(
-      input,
-      admin.authUser.email ?? undefined,
-    );
+    const incident = await createIncidentRecord(input);
     return { success: true, data: incident };
   } catch (error) {
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create incident",
+      error: error instanceof Error ? error.message : "Failed to create incident",
     };
   }
 }
@@ -64,10 +59,17 @@ export async function createIncident(
 export async function setIncidentStatus(input: {
   id: string;
   status: IncidentStatus;
+  expectedVersion: number;
+  operationId: string;
 }): Promise<{ success: boolean; data?: Incident; error?: string }> {
   try {
     await requireCapability("incidents.manage", { mutation: true });
-    const updated = await updateIncidentStatus(input.id, input.status);
+    const updated = await updateIncidentStatus(
+      input.id,
+      input.status,
+      input.expectedVersion,
+      input.operationId,
+    );
     if (!updated) {
       return { success: false, error: "Incident not found" };
     }
@@ -75,8 +77,7 @@ export async function setIncidentStatus(input: {
   } catch (error) {
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to update incident",
+      error: error instanceof Error ? error.message : "Failed to update incident",
     };
   }
 }

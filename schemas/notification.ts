@@ -17,6 +17,7 @@ export const notificationStatusFilterSchema = z.enum(["all", "read", "unread"]);
 
 export const createNotificationSchema = z
   .object({
+    operationId: z.string().uuid(),
     title: z.string().min(1, "Title is required"),
     message: z.string().min(1, "Message is required"),
     type: notificationTypeSchema,
@@ -72,9 +73,7 @@ export const notificationStatsSchema = z.object({
 
 export type NotificationType = z.infer<typeof notificationTypeSchema>;
 export type NotificationTarget = z.infer<typeof notificationTargetSchema>;
-export type NotificationStatusFilter = z.infer<
-  typeof notificationStatusFilterSchema
->;
+export type NotificationStatusFilter = z.infer<typeof notificationStatusFilterSchema>;
 export type CreateNotificationInput = z.infer<typeof createNotificationSchema>;
 export type NotificationFilters = z.infer<typeof notificationFiltersSchema>;
 export type NotificationRecipient = z.infer<typeof notificationRecipientSchema>;

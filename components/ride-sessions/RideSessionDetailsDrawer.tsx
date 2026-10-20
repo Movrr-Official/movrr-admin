@@ -180,6 +180,7 @@ export function RideSessionDetailsDrawer({
             <VerificationStatusBadge status={session.verificationStatus} />
           </div>
 
+          <div className="rounded-xl border p-4 text-sm space-y-1"><p>Settlement: {session.settlement?.status ?? "Unavailable"}</p><p>Completeness: {session.settlement?.completeness ?? "Unavailable"}</p>{session.settlement?.reason_code && <p>Review: {session.settlement.reason_code.replaceAll("_", " ")}</p>}<p>Committed points are separate from completion of settlement.</p></div>
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-4 rounded-xl bg-muted/30 border border-border/50">

@@ -19,9 +19,7 @@ export type RiderSessionAuthFailure = {
   error: string;
 };
 
-export type RiderSessionAuthResult =
-  | RiderSessionAuthSuccess
-  | RiderSessionAuthFailure;
+export type RiderSessionAuthResult = RiderSessionAuthSuccess | RiderSessionAuthFailure;
 
 const extractBearerToken = (request: Request): string | null => {
   const authHeader = request.headers.get("authorization") ?? "";
@@ -63,13 +61,21 @@ export async function authenticateRiderSessionRequest(
     return { ok: false, status: 401, error: "Invalid or expired token" };
   }
 
-  const adminClient = createClient(
-    NEXT_PUBLIC_SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: { autoRefreshToken: false, persistSession: false },
-    },
-  );
+  const adminClient = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const account = await adminClient
+    .from("user")
+    .select("status")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (
+    account.error ||
+    !account.data ||
+    !["active", "pending"].includes(String(account.data.status).toLowerCase())
+  )
+    return { ok: false, status: 403, error: "Account access restricted" };
 
   const { data: session, error: sessionError } = await adminClient
     .from("ride_session")

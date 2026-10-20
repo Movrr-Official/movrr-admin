@@ -4,6 +4,7 @@ export type IncidentStatus = "open" | "investigating" | "resolved" | "closed";
 
 export type Incident = {
   id: string;
+  version: number;
   title: string;
   description: string;
   severity: IncidentSeverity;
@@ -14,6 +15,7 @@ export type Incident = {
 };
 
 export type CreateIncidentInput = {
+  operationId: string;
   title: string;
   description: string;
   severity: IncidentSeverity;

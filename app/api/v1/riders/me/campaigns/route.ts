@@ -1,3 +1,4 @@
+import { createSupabaseRequestClient } from "@/lib/supabase-request";
 import { platformRoute } from "@/lib/http/platformRoute";
 import { productionAuthDeps } from "@/features/platform/infrastructure/productionPlatformApi";
 import {
@@ -14,6 +15,6 @@ export async function GET(request: Request) {
     request,
     capability: "rewards.catalog.read",
     authDeps: productionAuthDeps,
-    handle: (ctx) => listRiderCampaigns(ctx),
+    handle: (ctx) => listRiderCampaigns(ctx, createSupabaseRequestClient(request)),
   });
 }

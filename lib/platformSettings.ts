@@ -86,7 +86,6 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
     maintenanceMessage:
       "The platform is temporarily unavailable for maintenance. Please check back shortly.",
     distanceUnit: "km" as const,
-    co2KgPerKm: 0.18,
   },
   onboarding: {
     riderOnboardingMode: "open",
@@ -121,7 +120,6 @@ export const DEFAULT_SETTINGS: AdminSettingsValues = {
   },
   impact: {
     distanceUnit: "km" as const,
-    co2KgPerKm: 0.18,
   },
   campaigns: {
     defaultMultiplier: 1,
@@ -395,7 +393,6 @@ export async function getPublicPlatformConfig() {
     // Impact & reporting
     impact: {
       distanceUnit: imp.distanceUnit,
-      co2KgPerKm: imp.co2KgPerKm,
     },
     // Operational state — mobile must check before starting any session
     operational: {
