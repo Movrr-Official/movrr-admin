@@ -5,10 +5,10 @@
   "milestones": [
     {
       "name": "Account-deletion request intake activation",
-      "status": "policy decision package prepared; essential Finance/accounting and backup/security decisions remain pending",
-      "work": "Fresh read-only production review: Disabled/version 0, 13 pending retention rules and 28 disallowed action rules. Owner confirms no approved backup/export recovery horizon or accountant-approved Wallet/redemption classification, period or clock. Existing owner product directions reused. Complete the consolidated category schedule and genuine evidence; preserve immutable v1 and use the controlled additive-policy publication process before the authorized MFA intake command. Independent case approvals, holds and managed-execution Disabled state remain intact.",
-      "evidence": "../verification/intake-impact-activation/policy-review.json",
-      "decisionPackage": "../operations/account-deletion-policy-decisions.md"
+      "status": "intake/execution separation prepared and tested; awaiting explicit approval of new production migrations",
+      "work": "Owner approves intake and 30-day original-request receipt credentials. Migrations 066/067 separate intake readiness from execution approvals, publish only the approved receipt scope as immutable policy v2, and route new requests to existing manual review. 87 isolated boundary assertions, 44 original intake assertions, 50 Admin authorization/recovery tests and TypeScript pass. Production remains Disabled/version 0 until approved migration application and the genuine MFA operating command. Accountant, partner and backup-retention decisions remain execution safeguards, not automatic intake prerequisites. Shop and managed execution remain Disabled.",
+      "evidence": "../verification/intake-execution-separation/baseline.json",
+      "decisionPackage": "../operations/deletion-intake-separation.md"
     },
     {
       "name": "Approved environmental-impact methodology",

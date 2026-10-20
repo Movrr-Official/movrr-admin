@@ -47,19 +47,25 @@ const scopes = ['personal.erase', 'external.erase', 'receipt.complete', 'restore
         AND p.proname IN ('set_account_deletion_intake','account_deletion_intake_status','account_deletion_contract_status',
         'ops_assert_capability','establish_account_deletion_barrier','request_verified_account_deletion',
         'request_verified_account_deletion_core','read_account_deletion_lifecycle','read_account_deletion_delivered_receipt',
-        'account_deletion_rule_allowed','account_deletion_activation_authorized') ORDER BY p.proname`,
+        'account_deletion_rule_allowed','account_deletion_activation_authorized','account_deletion_intake_ready') ORDER BY p.proname`,
       shop: await tx`SELECT redemption_enabled FROM public.shop_release_control`
     }));
     assert.equal(result.readOnly, 'on');
-    result.blockers = [];
+    result.executionBlockers = [];
     for (const key of ['catalog_digest_present','catalog_verified','catalog_review_reference_present','barrier_verified','disposition_verified'])
-      if (!result.gate[key]) result.blockers.push(key);
-    if (!result.policies.some(p => p.technical_status === 'approved')) result.blockers.push('technical_policy_approval');
-    for (const scope of scopes) if (!result.rules.some(r => r.scope === scope && r.allowed)) result.blockers.push('policy_rule:' + scope);
+      if (!result.gate[key]) result.executionBlockers.push(key);
+    for (const scope of scopes) if (!result.rules.some(r => r.scope === scope && r.allowed)) result.executionBlockers.push('policy_rule:' + scope);
+    result.separatedIntakeInstalled = result.functions.some(f => f.proname === 'account_deletion_intake_ready');
+    result.intakeReady = result.separatedIntakeInstalled ? (await db`SELECT public.account_deletion_intake_ready(${result.gate.active_policy_version}) ready`)[0].ready : false;
+    result.blockers = result.separatedIntakeInstalled
+      ? (result.intakeReady ? [] : ['intake_contract_and_approved_receipt_access_required'])
+      : ['deployed_intake_is_still_coupled_to_execution_approvals'];
     const command = result.functions.find(f => f.proname === 'set_account_deletion_intake');
-    const source = fs.readFileSync(path.join(__dirname, '060_account_deletion_intake_control.sql'), 'utf8');
-    const body = source.match(/CREATE FUNCTION public\.set_account_deletion_intake[\s\S]*?AS \$\$([\s\S]*?)\$\$;/)[1].trim();
-    result.deployedCommandMatchesSource = command.definition.split('$function$')[1].trim() === body;
+    const sourceFile = result.separatedIntakeInstalled ? '066_deletion_intake_execution_separation.sql' : '060_account_deletion_intake_control.sql';
+    const source = fs.readFileSync(path.join(__dirname, sourceFile), 'utf8');
+    const body = source.match(/CREATE (?:OR REPLACE )?FUNCTION public\.set_account_deletion_intake[\s\S]*?AS \$\$([\s\S]*?)\$\$;/)[1].replace(/\r/g, '').trim();
+    result.deployedCommandMatchesSource = command.definition.split('$function$')[1].replace(/\r/g, '').trim() === body;
+    result.operatingCommandSource = sourceFile;
     assert(result.deployedCommandMatchesSource, 'Deployed operating command differs from reviewed migration');
     const out = path.join(root, '.tmp/deletion-intake-activation'); fs.mkdirSync(out, { recursive: true });
     fs.writeFileSync(path.join(out, 'functions.json'), JSON.stringify(result.functions, null, 2) + '\n');

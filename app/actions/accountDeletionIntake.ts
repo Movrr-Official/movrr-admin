@@ -20,7 +20,7 @@ export async function changeDeletionIntake(input: z.infer<typeof command>) {
     const p = command.parse(input);
     if (p.accountId !== actor.authUser.id) return { error: "Account changed. Refresh intake state before submitting." };
     const { data, error } = await (await createSupabaseServerClient()).rpc("set_account_deletion_intake", { p_state: p.state, p_expected: p.expectedVersion, p_reason: p.reason, p_operation: p.operation });
-    if (error) return { error: error.code === "40001" ? "Another administrator changed intake. Refresh and review before submitting again." : error.code === "55000" ? "Existing deletion policy approvals and readiness evidence are required. Intake was not enabled." : "Change not confirmed. Refresh or retry the same operation." };
+    if (error) return { error: error.code === "40001" ? "Another administrator changed intake. Refresh and review before submitting again." : error.code === "55000" ? "The intake contract and approved receipt access are required. Intake was not enabled." : "Change not confirmed. Refresh or retry the same operation." };
     return { data: status.parse(data) };
   } catch { return { error: "A security administrator, current version and reason are required." }; }
 }

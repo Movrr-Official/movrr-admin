@@ -36,4 +36,8 @@ describe("Deletion intake action boundary", () => {
       mocks.rpc.mockResolvedValue({ data, error: null }); expect((await getDeletionIntakeControl()).error).toBeTruthy();
     }
   });
+  it("reports intake-specific readiness without requiring execution approval", async () => {
+    mocks.rpc.mockResolvedValue({ error: { code: "55000" }, data: null });
+    expect((await changeDeletionIntake(command)).error).toBe("The intake contract and approved receipt access are required. Intake was not enabled.");
+  });
 });

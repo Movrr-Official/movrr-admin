@@ -1,0 +1,48 @@
+{
+  "verifiedAt": "2026-10-20T17:22:21.979Z",
+  "productionProject": "kzdvunpuxaxlphqvmzxw",
+  "productionMigrationsApplied": false,
+  "activationAttempted": false,
+  "productionState": {
+    "intake": "disabled",
+    "operatingVersion": 0,
+    "activePolicyVersion": 1,
+    "managedExecution": false,
+    "publicShopRedemption": false
+  },
+  "results": [
+    {
+      "command": "node scripts/test-deletion-intake-separation.cjs",
+      "database": "isolated PostgreSQL 17",
+      "assertions": 87,
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/test-deletion-intake.cjs",
+      "assertions": 44,
+      "status": "passed"
+    },
+    {
+      "command": "vitest run accountDeletionIntake, accountDeletion, accountDeletionRecovery",
+      "tests": 50,
+      "status": "passed"
+    },
+    {
+      "command": "tsc --noEmit",
+      "repository": "movrr-admin",
+      "status": "passed"
+    }
+  ],
+  "migrationManifest": "../../../scripts/manual/deletion-intake/manifest.json",
+  "receiptPolicy": {
+    "approvedBy": "MOVRR owner in this session",
+    "scope": "minimal receipt-only access",
+    "durationDays": 30,
+    "start": "original request submission",
+    "deadlineExtensionOnReadOrRetry": false
+  },
+  "preservation": "No production business, request, receipt, policy or approval mutations performed. Existing completion/restore/execution controls unchanged in the prepared migrations.",
+  "mobileRuntimeChanged": false,
+  "edgeFunctionsChanged": false,
+  "productionApprovalStillRequired": true
+}

@@ -1,5 +1,7 @@
 # Account-deletion policy decisions — 20 October 2026
 
+**Later owner instruction:** [the intake/execution separation](deletion-intake-separation.md) supersedes this package's broad prerequisites for merely accepting a request. The owner approves intake and a 30-day receipt-only credential measured from original submission. The detailed accounting/partner/restore decisions below remain execution safeguards. The tested correction awaits explicit production migration approval; intake is not yet Enabled.
+
 **Intake remains Disabled, version 0.** Owner approval to enable intake is recorded in this session, subject to the existing safeguards. It is not approval of numerical retention periods, statutory accounting classifications or another person's independent case review. This document completes the decision analysis; it does not claim that unresolved policy values are final.
 
 This is the decision package for the [existing decision register](../../../movrr-mobile/docs/implementation/account-deletion-production-decision-register.json), not a new approval system. [Current production governance evidence](../verification/intake-impact-activation/policy-review.json) contains all 13 retention categories, 28 action rules, permissions, immutability controls and operating state. No private rider records were read. No production approval, policy, request, financial record or gate was changed.

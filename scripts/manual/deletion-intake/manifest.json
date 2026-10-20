@@ -1,0 +1,17 @@
+{
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "receiptApprovalReference": "MOVRR-owner-2026-10-20-receipt-access-30d",
+  "productionMigrationApproval": "required before application; not yet granted",
+  "migrations": [
+    {
+      "file": "066_deletion_intake_execution_separation.sql",
+      "version": "20261020171801",
+      "sha256": "343f9b15381d48a424e5aa777a362a457876ea84711c9ea2c21ad6224c2deef5"
+    },
+    {
+      "file": "067_deletion_intake_receipt_policy.sql",
+      "version": "20261020171802",
+      "sha256": "0e7cd1e314cd9c394f054fbe43de92808c01dd21b5b2825185eb9e8c9712fc6f"
+    }
+  ]
+}
