@@ -44,5 +44,16 @@
   "preservation": "No production business, request, receipt, policy or approval mutations performed. Existing completion/restore/execution controls unchanged in the prepared migrations.",
   "mobileRuntimeChanged": false,
   "edgeFunctionsChanged": false,
-  "productionApprovalStillRequired": true
+  "productionApprovalStillRequired": true,
+  "readOnlyProductionPreflight": {
+    "status": "passed",
+    "recordedAt": "2026-10-20T17:24:05.480Z",
+    "sourceRevision": "eb3feb0c9d83f3733b5662b6fd1a2c5df87f768a",
+    "committedSqlMatchesManifest": true,
+    "journalConflicts": 0,
+    "intakeState": "disabled",
+    "operatingVersion": "0",
+    "managedExecution": false,
+    "protectedTableFingerprintsRecorded": true
+  }
 }
