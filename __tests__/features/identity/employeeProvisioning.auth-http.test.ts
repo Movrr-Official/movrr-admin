@@ -127,12 +127,16 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
       expect(await db`select id from public."user" where email=${email}`).toHaveLength(0);
     }
   });
-  it("preserves ordinary signup through the real /signup contract", async () => {
+  it("preserves ordinary signup and password login through real Auth contracts", async () => {
     const signup = new GoTrueClient({ url: "http://127.0.0.1:55444", headers: { Authorization: `Bearer ${token}` }, autoRefreshToken: false, persistSession: false });
     const email = `${randomUUID()}@example.test`;
     const result = await signup.signUp({ email, password: "ordinary-rider-local-only-password", options: { data: { full_name: "Ordinary Rider", city: "Amsterdam", country: "NL" } } });
     expect(result.error).toBeNull();
     const id = result.data.user!.id;
+    const login = await signup.signInWithPassword({ email, password: "ordinary-rider-local-only-password" });
+    expect(login.error).toBeNull();
+    expect(login.data.user?.id).toBe(id);
+    expect(login.data.session?.access_token).toBeTruthy();
     expect((await db`select u.role,u.status,r.city,r.country from public."user" u join rider r on r.user_id=u.id where u.id=${id}`)[0]).toMatchObject({ role: "rider", status: "active", city: "Amsterdam", country: "NL" });
     expect(await db`select id from admin_users where user_id=${id}`).toHaveLength(0);
   });

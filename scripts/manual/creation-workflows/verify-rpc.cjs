@@ -1,0 +1,11 @@
+// Failure-only production RPC checks. Each request fails before any write.
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const repo=path.resolve(__dirname,'../../..');const env=Object.fromEntries(fs.readFileSync(path.join(repo,'.env'),'utf8').split(/\r?\n/).filter(l=>/^[A-Z_][A-Z_0-9]*=/.test(l)).map(l=>{const i=l.indexOf('=');return[l.slice(0,i),l.slice(i+1).replace(/^['"]|['"]$/g,'')]}));
+const base=env.NEXT_PUBLIC_SUPABASE_URL||env.SUPABASE_URL;assert.equal(new URL(base).hostname,'kzdvunpuxaxlphqvmzxw.supabase.co');
+(async()=>{const results=[];for(const [role,name,input,message] of [
+ ['service','provision_employee',{p_actor:null,p_input:{role:'partner_operations_manager'},p_phase:'reserve'},'Unauthorized employee role assignment'],
+ ['service','provision_product',{p_actor:null,p_id:'00000000-0000-0000-0000-000000000001',p_input:{role:'rider'},p_fingerprint:'failure-only',p_phase:'reserve'},'Unauthorized product provisioning'],
+ ['service','admin_create',{p_actor:null,p_operation:'00000000-0000-0000-0000-000000000001',p_kind:'workboard_bootstrap',p_input:{}},'Unauthorized creation command'],
+ ['anon','provision_employee',{p_actor:null,p_input:{},p_phase:'reserve'},null],
+ ]){const key=role==='service'?env.SUPABASE_SERVICE_ROLE_KEY:env.NEXT_PUBLIC_SUPABASE_ANON_KEY;assert(key);const r=await fetch(base+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'content-type':'application/json'},body:JSON.stringify(input),signal:AbortSignal.timeout(15000)});const body=await r.json();assert([401,403].includes(r.status),name+': '+r.status+' '+JSON.stringify(body));assert.equal(body.code,'42501');if(message)assert.equal(body.message,message);results.push({role,name,status:r.status,code:body.code,message:body.message});}
+ const report={verifiedAt:new Date().toISOString(),failureOnly:true,noIdentityOrMembershipCreated:true,results};fs.mkdirSync(require('node:path').resolve(__dirname,'../../../.tmp/admin-creation-rollout'),{recursive:true});fs.writeFileSync(require('node:path').resolve(__dirname,'../../../.tmp/admin-creation-rollout')+'/rpc-smoke.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));})().catch(e=>{console.error(e.message);process.exitCode=1});

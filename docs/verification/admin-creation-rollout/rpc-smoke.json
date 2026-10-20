@@ -1,0 +1,35 @@
+{
+  "verifiedAt": "2026-10-20T19:57:34.856Z",
+  "failureOnly": true,
+  "noIdentityOrMembershipCreated": true,
+  "results": [
+    {
+      "role": "service",
+      "name": "provision_employee",
+      "status": 403,
+      "code": "42501",
+      "message": "Unauthorized employee role assignment"
+    },
+    {
+      "role": "service",
+      "name": "provision_product",
+      "status": 403,
+      "code": "42501",
+      "message": "Unauthorized product provisioning"
+    },
+    {
+      "role": "service",
+      "name": "admin_create",
+      "status": 403,
+      "code": "42501",
+      "message": "Unauthorized creation command"
+    },
+    {
+      "role": "anon",
+      "name": "provision_employee",
+      "status": 401,
+      "code": "42501",
+      "message": "permission denied for function provision_employee"
+    }
+  ]
+}

@@ -106,6 +106,13 @@ Tests use synthetic, isolated databases and captured production contracts. They 
 
 ## Reproduction and rollout
 
+The approved 068 → 069 production rollout and exact Git-source deployment of
+`7d5d53753a1c68b10c49ec614e4360c580e8f9ce` completed on 2026-10-20. See
+[production evidence](../verification/admin-creation-rollout/README.md) for the
+journal checksums, deployment ID, preserved-state fingerprints, independent
+security checks and verification limits. The earlier verification results above
+describe the pre-rollout candidate; no incident-account repair was performed.
+
 Use dedicated localhost PostgreSQL 17 on port 55442 and PostgreSQL 17 with PostGIS on 55443, with test-only user `postgres` and password `isolated-local-test-only`. The real Auth suite starts/removes its own cached GoTrue container on localhost 55444. It never loads production `.env`.
 
 ```powershell

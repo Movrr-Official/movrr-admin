@@ -1,0 +1,324 @@
+{
+  "journal": [
+    {
+      "version": "20261020195301",
+      "name": "068_employee_provisioning",
+      "checksum": "ef473752c15d0406961d96375642378f96cd442744f45980e32216dbcce6528c"
+    },
+    {
+      "version": "20261020195302",
+      "name": "069_admin_creation_transactions",
+      "checksum": "f54359db7ebb47ab6068fc078136bf3ee8223ff67ba1c28a3de787eea543d4dc"
+    }
+  ],
+  "installed": {
+    "functions": [
+      {
+        "name": "guard_employee_auth_insert",
+        "signature": "guard_employee_auth_insert()",
+        "sourceSha256": "32f7d1c81e35c32143468eeace1198790d95084d3936359d5b6b8c92a854ad30",
+        "anon": true,
+        "authenticated": true,
+        "service": true
+      },
+      {
+        "name": "mark_employee_profile_pending",
+        "signature": "mark_employee_profile_pending()",
+        "sourceSha256": "66e1ad17357ea069dfcdaf11915c59ba21cf2f28b361e8b6a88a3966b7824ffd",
+        "anon": true,
+        "authenticated": true,
+        "service": true
+      },
+      {
+        "name": "provision_employee",
+        "signature": "provision_employee(uuid,jsonb,text)",
+        "sourceSha256": "22a166f48a0539fcc8cfe2c621639099474e7a6f1c4327e2ed70d22f5d1e06c4",
+        "anon": false,
+        "authenticated": false,
+        "service": true
+      },
+      {
+        "name": "assign_employee_role",
+        "signature": "assign_employee_role(uuid,uuid,text)",
+        "sourceSha256": "7e324a236aa1ebee2f2b10f39a96bb6de540e874025bbe7114a624a273193226",
+        "anon": false,
+        "authenticated": false,
+        "service": true
+      },
+      {
+        "name": "update_admin_user_profile",
+        "signature": "update_admin_user_profile(uuid,uuid,text,jsonb)",
+        "sourceSha256": "acc9041d99a90bc3895302a8c2067bb22f6a6a4185095e8bc4054cf5689f081c",
+        "anon": false,
+        "authenticated": false,
+        "service": true
+      },
+      {
+        "name": "provision_product",
+        "signature": "provision_product(uuid,uuid,jsonb,text,text)",
+        "sourceSha256": "77dc64e582a21dc8c4886e6f3f4469339cf02b8ae26f9c028361b6dd93289c4c",
+        "anon": false,
+        "authenticated": false,
+        "service": true
+      },
+      {
+        "name": "admin_insert_creation_record",
+        "signature": "admin_insert_creation_record(text,jsonb)",
+        "sourceSha256": "7a71d72ad436e7f65c371b7c79b92831fae0d5d353cac9946cbd142be1082414",
+        "anon": false,
+        "authenticated": false,
+        "service": false
+      },
+      {
+        "name": "admin_update_creation_record",
+        "signature": "admin_update_creation_record(text,uuid,uuid,jsonb)",
+        "sourceSha256": "165c06afd3f472f42831c97e02ec9df117cff0fa39f25742cbb273f18d8433a4",
+        "anon": false,
+        "authenticated": false,
+        "service": false
+      },
+      {
+        "name": "admin_catalog_partner",
+        "signature": "admin_catalog_partner(text,text)",
+        "sourceSha256": "8d57b00392bed2153b5477ca9af8cf0cd7211683dcac56309faafe8a8aa8687a",
+        "anon": false,
+        "authenticated": false,
+        "service": false
+      },
+      {
+        "name": "admin_save_catalog",
+        "signature": "admin_save_catalog(uuid,uuid,jsonb,text,text,timestamp with time zone)",
+        "sourceSha256": "0eacff6d954e171ceeb4b065201b8f3d5c03d166a3da70dba6dc3e69452d0549",
+        "anon": false,
+        "authenticated": false,
+        "service": true
+      },
+      {
+        "name": "admin_create",
+        "signature": "admin_create(uuid,uuid,text,jsonb)",
+        "sourceSha256": "b1c29917918504e94e11039bb5a471ca2330fb5afe2904c4e332bebe5b463070",
+        "anon": false,
+        "authenticated": false,
+        "service": true
+      },
+      {
+        "name": "assign_admin_route",
+        "signature": "assign_admin_route(uuid,uuid,uuid[])",
+        "sourceSha256": "7cd912bed74090b45624787002c6aea0ccb365aad174181c6faef4c7932c01bc",
+        "anon": false,
+        "authenticated": false,
+        "service": true
+      },
+      {
+        "name": "accept_workboard_platform_invitation",
+        "signature": "accept_workboard_platform_invitation(text,uuid,text)",
+        "sourceSha256": "cc8c81ec0c6418fd6f058672c6629a4cb82469388e1d3f5dbe6cff3928971f8f",
+        "anon": true,
+        "authenticated": true,
+        "service": true
+      }
+    ],
+    "tables": [
+      {
+        "relname": "admin_creation_operation",
+        "relrowsecurity": true,
+        "anon": false,
+        "authenticated": false
+      },
+      {
+        "relname": "employee_provisioning",
+        "relrowsecurity": true,
+        "anon": false,
+        "authenticated": false
+      },
+      {
+        "relname": "product_provisioning",
+        "relrowsecurity": true,
+        "anon": false,
+        "authenticated": false
+      }
+    ],
+    "enumLabels": [
+      {
+        "enumlabel": "super_admin"
+      },
+      {
+        "enumlabel": "admin"
+      },
+      {
+        "enumlabel": "moderator"
+      },
+      {
+        "enumlabel": "support"
+      },
+      {
+        "enumlabel": "advertiser"
+      },
+      {
+        "enumlabel": "rider"
+      },
+      {
+        "enumlabel": "gov"
+      }
+    ],
+    "partnerOperationsCapabilities": [
+      "dashboard.read",
+      "notifications.read",
+      "analytics.read",
+      "analytics.view",
+      "rewards.catalog.read",
+      "rewards.manage",
+      "fulfilment.read",
+      "fulfilment.validate",
+      "fulfilment.confirm",
+      "fulfilment.cancel",
+      "fulfilment.refund",
+      "resources.manage",
+      "wallet.read",
+      "partners.approve",
+      "rewards.approve",
+      "exports.execute",
+      "workboard.access",
+      "reports.read"
+    ],
+    "triggers": [
+      {
+        "tgname": "guard_employee_auth_insert",
+        "tgenabled": "O"
+      },
+      {
+        "tgname": "zz_mark_employee_profile_pending",
+        "tgenabled": "O"
+      }
+    ],
+    "ledgers": {
+      "employee_provisioning": [],
+      "product_provisioning": [],
+      "admin_creation_operation": []
+    }
+  },
+  "snapshot": {
+    "data": {
+      "user": {
+        "count": "17",
+        "digest": "0cbcef55ed42f399af04adf0342ccaf2"
+      },
+      "rider": {
+        "count": "15",
+        "digest": "4657fa8145f35ae5847f06027194c0d0"
+      },
+      "admin_users": {
+        "count": "4",
+        "digest": "8c12b9ae9d1fc8ec992e3fb563452d9b"
+      },
+      "organisation": {
+        "count": "10",
+        "digest": "84068da26d602f112f3d78c3cf8e4d69"
+      },
+      "organisation_membership": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "reward_transactions": {
+        "count": "34",
+        "digest": "4303fe12af68b78ab612156d51fa69b3"
+      },
+      "rider_reward_balance": {
+        "count": "15",
+        "digest": "b118929bc51294f835fe41ba84f2988c"
+      },
+      "reward_redemptions": {
+        "count": "2",
+        "digest": "ffedf21e34e8a641fc5c14ae1127a52f"
+      },
+      "fulfilment": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "ride_session": {
+        "count": "66",
+        "digest": "0c9d53123188fd76b995ac20ebe00c02"
+      },
+      "account_deletion_jobs": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "account_deletion_review": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "account_deletion_audit": {
+        "count": "23",
+        "digest": "1032dcc1b177a14321a66448e578d740"
+      },
+      "account_deletion_receipt_access": {
+        "count": "0",
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      }
+    },
+    "auth": {
+      "count": "17",
+      "digest": "84d10f0d1a8b3a9f3e180223136ae79a"
+    },
+    "account": [
+      {
+        "id": "007b5ab8-fea0-41f2-9068-055f154d7db0",
+        "auth_digest": "1cd20a7133d0f3f6b500dd540e385792",
+        "user_digest": "f0771e244aaa26460380ef3b5813e739",
+        "rider_digest": "6fe6a94299c56c37be9d8d7fcfc2ffed",
+        "role": "rider",
+        "status": "active",
+        "rider_status": "active",
+        "employee_role": null,
+        "memberships": 0
+      }
+    ],
+    "gates": {
+      "deletion": {
+        "requests_enabled": true,
+        "managed_resources_execution_enabled": false,
+        "operating_state": "enabled",
+        "active_policy_version": 2
+      },
+      "shop": {
+        "state": "disabled",
+        "redemption_enabled": false
+      }
+    }
+  },
+  "readOnlyDenials": [
+    {
+      "name": "No service claim",
+      "denied": true,
+      "message": "Service role required"
+    },
+    {
+      "name": "Missing employee actor",
+      "denied": true,
+      "message": "Unauthorized employee role assignment"
+    },
+    {
+      "name": "Missing creation actor",
+      "denied": true,
+      "message": "Unauthorized creation command"
+    },
+    {
+      "name": "Incident Rider cannot grant roles",
+      "denied": true,
+      "message": "Unauthorized employee role assignment"
+    },
+    {
+      "name": "Invalid employee role before reservation",
+      "denied": true,
+      "message": "Invalid employee provisioning contract"
+    },
+    {
+      "name": "Employee role with organisation scope rejected",
+      "denied": true,
+      "message": "Invalid employee provisioning contract"
+    }
+  ],
+  "sourceRevision": "7d5d53753a1c68b10c49ec614e4360c580e8f9ce",
+  "recordedAt": "2026-10-20T19:57:33.506Z",
+  "project": "kzdvunpuxaxlphqvmzxw"
+}

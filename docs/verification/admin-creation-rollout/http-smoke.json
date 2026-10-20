@@ -1,0 +1,64 @@
+{
+  "verifiedAt": "2026-10-20T19:57:34.366Z",
+  "domain": "admin.movrr.nl",
+  "deploymentId": "dpl_2Hvf87yio6ZWFxzzRprx4S6EA4xn",
+  "sourceRevision": "7d5d53753a1c68b10c49ec614e4360c580e8f9ce",
+  "noAuthenticatedOrIdentityMutatingRequests": true,
+  "results": [
+    {
+      "path": "/auth/signin",
+      "method": "GET",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "vercelId": "fra1::fra1::88fkw-1792526254160-b97a779ff53e"
+    },
+    {
+      "path": "/users/create",
+      "method": "GET",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Fusers%2Fcreate",
+      "contentType": "text/plain",
+      "vercelId": "fra1::88fkw-1792526254404-2babfdcbaab2"
+    },
+    {
+      "path": "/api/v1/campaigns",
+      "method": "GET",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Fcampaigns",
+      "contentType": "text/plain",
+      "vercelId": "fra1::rf9qc-1792526254475-7f018163d7ac"
+    },
+    {
+      "path": "/api/v1/campaigns",
+      "method": "POST",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Fcampaigns",
+      "contentType": "text/plain",
+      "vercelId": "fra1::88fkw-1792526254518-37ecd5830f32"
+    },
+    {
+      "path": "/api/suggested-routes",
+      "method": "POST",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Fapi%2Fsuggested-routes",
+      "contentType": "text/plain",
+      "vercelId": "fra1::rf9qc-1792526254582-655e858c36f0"
+    },
+    {
+      "path": "/api/v1/fulfilment/health",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "contentType": "application/json",
+      "vercelId": "fra1::fra1::tf5qb-1792526254615-c1d1d682733b",
+      "body": {
+        "error": {
+          "kind": "unauthenticated",
+          "message": "Missing authorization token"
+        },
+        "correlationId": null
+      }
+    }
+  ]
+}

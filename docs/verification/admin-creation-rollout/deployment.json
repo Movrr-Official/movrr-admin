@@ -1,0 +1,17 @@
+{
+    "verifiedAt":  "2026-10-20T19:56:30.9444216Z",
+    "url":  "movrr-admin-opzkwgeq9-movrrops-projects.vercel.app",
+    "id":  "dpl_2Hvf87yio6ZWFxzzRprx4S6EA4xn",
+    "readyState":  "READY",
+    "gitSource":  {
+                      "sha":  "7d5d53753a1c68b10c49ec614e4360c580e8f9ce",
+                      "ref":  "7d5d53753a1c68b10c49ec614e4360c580e8f9ce",
+                      "type":  "github",
+                      "repoId":  1084919487
+                  },
+    "buildSucceeded":  true,
+    "aliasAssigned":  true,
+    "target":  "production",
+    "productionDomain":  "admin.movrr.nl",
+    "approvedSourceRevision":  "7d5d53753a1c68b10c49ec614e4360c580e8f9ce"
+}
