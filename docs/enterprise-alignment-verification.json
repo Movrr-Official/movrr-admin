@@ -115,17 +115,13 @@
     }
   ],
   "externalAcceptance": [
-    "Explicit coordinated production rollout authorization",
-    "Existing account-deletion policy and operational activation gate",
-    "Environmental methodology product-policy approval",
-    "Staging/browser/provider acceptance on the released revisions",
-    "Mobile-owner triage of unchanged history timeout and obsolete offline Rewards test fixtures"
+    "Explicit authorization for the controlled production rollout; safe post-deployment acceptance is performed within that rollout"
   ],
   "focusedReleaseReadiness": {
     "date": "2026-10-20",
-    "decision": "NO-GO pending protected staging, coordinated cutover/recovery acceptance and rollout authorization",
+    "decision": "GO for informed controlled production rollout authorization; staging and recovery rehearsal deferred by owner",
     "deletionIntakeControl": "implemented in source; production remains disabled; no policy approvals bypassed",
-    "impactPolicy": "proposed, unapproved; no production calculations or awards changed",
+    "impactPolicy": "Product approved 2026-v1 verified distance and separately labelled 0.190 kg CO2e/vehicle-km average-car WTW comparison; runtime adoption not included in 055-060",
     "productionDeletionRequestsEnabled": false,
     "publicShopRedemptionEnabled": false,
     "productionCustodyConflicts": 0,
@@ -164,5 +160,128 @@
     },
     "deploymentsPerformed": false,
     "alignmentDatabaseRegressionAssertions": 88
+  },
+  "productionAcceptance": {
+    "decision": "GO for authorization; not deployed",
+    "verifiedDate": "2026-10-20",
+    "timezone": "Europe/Amsterdam",
+    "stagingRequired": false,
+    "recoveryRehearsalRequired": false,
+    "materialPredeploymentBlockers": [],
+    "productionPreflight": {
+      "inspectedAt": "2026-10-20T10:46:45.403Z",
+      "readOnly": "on",
+      "postgres": "17.4",
+      "requiredTables": 28,
+      "constraints": 141,
+      "indexes": 118,
+      "triggers": 84,
+      "policies": 72,
+      "migrationChecksums": "all seven match",
+      "contractDrift": "25 function definitions plus columns/enums match",
+      "newObjectCollisions": 0,
+      "custodyConflicts": 0,
+      "custodyOwnershipMismatches": 0,
+      "invalidPersistedIncidents": 0,
+      "missingLedgerWalletProjections": 0,
+      "invalidImpactInputs": {
+        "invalid_session_ids": 0,
+        "invalid_distances": 0
+      },
+      "deletionBarrierDigest": "8a739505e8466d09ee69fe2c05f9c6a97d5f931e5cadb19a7fdb93e513499c8d",
+      "deletionColumnExternalDependencies": 0,
+      "retiredCustodyForeignKeyDependents": 0,
+      "mfaRequired": true,
+      "applicationRolesCanCreatePublicObjects": false,
+      "blockers": []
+    },
+    "httpBoundaries": {
+      "checkedAt": "2026-10-20T10:42:32.634Z",
+      "authenticated": false,
+      "method": "GET only",
+      "result": [
+        {
+          "url": "https://admin.movrr.nl/api/v1/wallet/balance",
+          "status": 401,
+          "contentType": "application/json",
+          "location": null,
+          "errorCode": null
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/wallet/transactions",
+          "status": 401,
+          "contentType": "application/json",
+          "location": null,
+          "errorCode": null
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/rewards/catalog",
+          "status": 401,
+          "contentType": "application/json",
+          "location": null,
+          "errorCode": null
+        },
+        {
+          "url": "https://admin.movrr.nl/api/v1/riders/me/campaigns",
+          "status": 401,
+          "contentType": "application/json",
+          "location": null,
+          "errorCode": null
+        },
+        {
+          "url": "https://app.movrr.nl/dashboard",
+          "status": 307,
+          "contentType": "text/plain",
+          "location": "/auth/signin",
+          "errorCode": null
+        }
+      ]
+    },
+    "privacyOperations": {
+      "evidence": "Explicit operator confirmation in current conversation, 20 October 2026",
+      "channel": "privacy@movrr.nl",
+      "type": "existing Google Group",
+      "authorizedOperators": [
+        "MOVRR owner (current user)",
+        "MOVRR co-founder"
+      ],
+      "monitoringConfirmed": true,
+      "verificationLevel": "operator-confirmed; no independent mailbox inspection claimed",
+      "additionalMailboxVerificationRequired": false,
+      "selfServiceIntakeEnabled": false,
+      "activationRequirement": "Existing privacy workflow operationally verified and explicit activation authorization; identity/retention/legal/receipt safeguards remain intact"
+    },
+    "x13Policy": {
+      "status": "product-approved",
+      "approvalDate": "2026-10-20",
+      "approvalAuthority": "MOVRR owner, current release-readiness instruction",
+      "methodologyId": "MOVRR-NL-CAR-COMPARISON-2026-v1",
+      "observedMetric": "authoritative verified completed cycling distance",
+      "comparisonLabel": "Average car emissions for the same distance",
+      "factor": 0.19,
+      "unit": "kg CO2e per vehicle-km",
+      "scope": "WTW",
+      "factorEdition": 2026,
+      "emissionsReferenceYear": 2025,
+      "source": "https://co2emissiefactoren.nl/factoren/2026/38/147/personenvervoer-auto-gemiddelde-auto-brandstofsoort-onbekend/",
+      "sourceRechecked": "2026-10-20",
+      "actualAvoidedEmissionsClaimApproved": false,
+      "environmentalAwardsActivated": false,
+      "runtimeImplemented": false,
+      "frozenManifestRuntimeFactor": 0.18
+    },
+    "candidates": {
+      "adminApplication": "c9e1cc4a5b1cc11b95e6704ed152b85365d103aa",
+      "web": "ed33e875c4f069a75d0ff5bbb79d8f52a23bfd7d",
+      "mobileUnchanged": "d42129978ddd34cd38e0783c45ef22fe3c549beb",
+      "adminPlanOnlySuccessor": "May supersede Admin source pin without application/migration changes"
+    },
+    "containment": "Path-scoped hosting hold and affected staff-command pause; matching Admin then web; preserve credentials/receipts and fulfillment workers",
+    "recovery": "Rollback only uncommitted SQL; retain additive committed schema and forward-correct; aligned application candidates only",
+    "authenticatedProductionSessionAvailable": false,
+    "reusedRegressionEvidence": true,
+    "fullSuitesRepeated": false,
+    "productionChangesMade": false,
+    "publicShopRedemptionEnabled": false
   }
 }
