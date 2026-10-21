@@ -5,18 +5,29 @@
   "milestones": [
     {
       "name": "P1 Users dashboard production regression",
-      "status": "Approved 079 and pinned Admin deployed; production backend/data/security verified; authenticated browser acceptance pending",
+      "status": "Closed: deployed and backend-verified; authenticated UI acceptance tracked with existing User Details remediation",
       "work": "Replace revoked direct account_auth_sync read with one service-only pending-ID projection; remove Campaigns coupling and historical role enrichment; paginate projections; display loading/error/partial data states; report orphan Rider links without mutating records.",
       "evidence": "../verification/users-dashboard-p1/production.json",
       "release": "users-dashboard-p1.md",
       "productionCounts": "17 users/17 active; 13 distinct Rider users from 15 profiles (2 null-linked); 2 organisation users after independently audited concurrent membership addition; 5 Staff; 200% 30-day registration growth.",
       "validation": "Pinned source: 941 full tests. Post-release: 193 focused regressions and 4 actual production read-only handler/security checks; real RPC, search, filters, 17-account membership readback, MFA/tenant denial and independent Campaigns verified. Vercel production build READY.",
-      "acceptanceLimit": "Migration and deployment complete. No exposed authenticated production browser; live table interaction, UI pagination, Details rendering and membership writes remain unperformed. User-only fixtures verified locally; 11 actual Rider-only accounts are readable without organisations.",
+      "acceptanceLimit": "Production deployment and backend verification are complete. Authenticated UI acceptance remains pending for Users table rendering and pagination; search and filtering; User Details opening and data presentation; membership editing and revocation. Complete these together during the existing User Details remediation acceptance. An authenticated Admin session is open in Chrome but unavailable to browser tools; no connection retries, repeated deployment or separate audit task are required.",
       "preservedStates": "Deletion intake Enabled; irreversible deletion Disabled; public Shop redemption Disabled; parallel seven-account cleanup untouched.",
       "adminCommit": "083fe8ce749e012dea6812cafea10289bdd8a2eb",
       "adminDeployment": "dpl_8LSDe7hSSjpb2NgZjGC2sqjNFrrR",
       "migration": "20261021144000 / 079_users_dashboard_sync_read",
-      "preservation": "All rows across 184 public/Auth tables preserved inside migration. No User, Rider, Wallet or historical record changes after release. Separate canonical super-admin membership/audit addition and routine session/worker changes recorded without interference."
+      "preservation": "All rows across 184 public/Auth tables preserved inside migration. No User, Rider, Wallet or historical record changes after release. Separate canonical super-admin membership/audit addition and routine session/worker changes recorded without interference.",
+      "uiAcceptance": {
+        "status": "pending",
+        "trackedWith": "Existing User Details remediation acceptance",
+        "interactions": [
+          "Users table rendering and pagination",
+          "Search and filtering",
+          "User Details opening and data presentation",
+          "Membership editing and revocation"
+        ]
+      },
+      "closure": "Owner confirmed production deployment and backend verification complete on 2026-10-21. Preserve current release, parallel work and operating states; no new deployment or audit task."
     },
     {
       "name": "Owner-authorized exact seven synthetic account cleanup",

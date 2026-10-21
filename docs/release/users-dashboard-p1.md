@@ -1,5 +1,14 @@
 # P1 Users dashboard correction — 21 October 2026
 
+**P1 remediation closed as deployed and backend-verified (owner confirmation, 21 October 2026).** The current production release is preserved. Authenticated UI acceptance is pending and belongs to the existing User Details remediation acceptance, covering:
+
+- Users table rendering and pagination.
+- Search and filtering.
+- User Details opening and data presentation.
+- Membership editing and revocation.
+
+The owner's authenticated Admin session is open in Chrome but unavailable to browser tools. Do not retry browser connections, reopen deployment or create another audit/deployment task for that limitation. Preserve unrelated parallel work and operating states. The production evidence below remains valid; pending UI acceptance does not reopen the completed P1 backend remediation.
+
 **Approved migration 079 and Admin revision `083fe8c` are deployed.** The production target and `admin.movrr.nl` alias independently identify deployment `dpl_8LSDe7hSSjpb2NgZjGC2sqjNFrrR`. The [production receipt](../verification/users-dashboard-p1/production.json) records exact journal/ACL/data/handler verification. Authenticated production browser acceptance remains unperformed; backend verification is not represented as browser acceptance. The earlier [source receipt](../verification/users-dashboard-p1/verification.json) remains historical evidence.
 
 Fresh production reads and the corrected source handler reconcile to **17 Users, 17 active, 13 distinct Rider Users, 2 organisation Users, 5 Staff and 200% 30-day growth** at 14:47 UTC. Organisation Users increased from 1 after a concurrent super-administrator added an active reward-partner Owner membership through the canonical audited `users.role.approve` command at 14:45:16 UTC. This release did not initiate that write. No stale count was forced.
@@ -66,6 +75,6 @@ The controlled release followed this sequence; interactive authenticated accepta
 3. Apply exactly `079_users_dashboard_sync_read.sql` and its normal checksum journal entry atomically after approval. SHA256 UTF-8/LF: `6d29a01faa98716c0b6d073f8863bdd5154cfe6e89d65a24d47cfe09e9e1ee4b`. Recheck exact function definition, ACL, empty search path, direct-table denial, RLS and protected data fingerprints. This additive function needs no data backfill, identity mutation or path hold.
 4. Promote the pinned Admin candidate through the established release mechanism. Independently read back the production target and domain alias. Preserve firewall, MFA and tenant isolation.
 5. Using an available authorized production session, load `/users`, reconcile live values against a fresh read-only count, inspect actual records and Details, exercise search/combined filters/pagination/refresh and switch accounts. Confirm unauthorized role/tenant denial and the orphan Rider error state. Do not create test identities, change relationships or financial records for acceptance.
-6. Preserve final production evidence and update the roadmap only after live acceptance. If app rollback is necessary, retain the additive reader; reverting to the original application reintroduces the P1 and is not resolution.
+6. Preserve final production evidence and record the deployed/backend-verified P1 closure now. Complete the pending interactions together during existing User Details remediation acceptance; do not reopen deployment or create a separate audit task. If app rollback is necessary, retain the additive reader; reverting to the original application reintroduces the P1 and is not resolution.
 
 Deletion intake remains **Enabled**; irreversible deletion and public Shop redemption remain **Disabled**. There were no production identity/financial writes, cleanup changes or Mobile runtime modifications. The P1 backend correction is deployed; authenticated browser acceptance remains open. No User-only production identity exists, so that shape remains verified with isolated real SQL/HTTP fixtures. The 11 existing Rider-only Users are present without organisation requirements.
