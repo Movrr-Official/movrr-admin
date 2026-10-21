@@ -163,16 +163,18 @@ export const getUsersTableColumns = ({
     cell: ({ row }) => getStatusBadge(row.getValue("status")),
   },
   {
-    accessorKey: "lastActive",
+    id: "lastActive",
+    accessorFn: user => user.lastActive ? Date.parse(user.lastActive) : undefined,
+    sortUndefined: "last",
     header: "Last Active",
     cell: ({ row }) => {
-      const lastActive = row.getValue("lastActive") as string | undefined;
+      const lastActive = row.original.lastActive;
       if (!lastActive) {
         return (
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground/50" />
             <span className="text-muted-foreground text-sm font-medium">
-              Never
+              {row.original.activityAvailable === false ? "Unavailable" : "No recorded activity"}
             </span>
           </div>
         );

@@ -42,7 +42,7 @@ export async function provisionProduct(supabase: SupabaseClient, actor: string, 
       id, email: input.email, password: randomBytes(32).toString("base64url"),
       email_confirm: input.emailVerified ?? input.isVerified, ban_duration: "876000h",
       app_metadata: { admin_product_provisioning: { actor, fingerprint } },
-      user_metadata: { full_name: input.name, server_assigned_role: input.role,
+      user_metadata: { full_name: input.name,
         city: input.city, country: input.country, phone: input.phone,
         companyName: input.advertiserProfile?.companyName, language: input.languagePreference },
     });

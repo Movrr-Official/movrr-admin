@@ -40,10 +40,7 @@ import {
   getPlatformSecurityPolicy,
   isInviteDomainAllowed,
 } from "@/lib/platformSettings";
-import {
-  fetchLatestUserActivitySignalMap,
-  resolveLatestIsoTimestamp,
-} from "@/lib/activitySignals";
+import { fetchAccountActivityMap } from "@/lib/accountActivity";
 import { ADMIN_DASHBOARD_SESSION_AUDIT_ACTION } from "@/lib/adminAccessMonitoring";
 import {
   fetchUserActivityFeed,
@@ -313,7 +310,7 @@ export async function getUsers(
       for (const row of result.data) pendingAuthSync.add(row.user_id);
     }
     const warnings: string[] = [];
-    const lastActivitySignalMap = await fetchLatestUserActivitySignalMap(supabaseAdmin, userIds)
+    const lastActivitySignalMap = await fetchAccountActivityMap(supabaseAdmin, actor.authUser.id, userIds)
       .catch(error => {
         console.error("Users activity projection unavailable:", error);
         warnings.push("Recent activity is unavailable. Retry to refresh activity statistics.");
@@ -333,11 +330,8 @@ export async function getUsers(
       status: mapDbStatusToUi(row.status),
       createdAt: row.created_at ?? new Date().toISOString(),
       updatedAt: row.updated_at ?? new Date().toISOString(),
-      lastActive: resolveLatestIsoTimestamp(
-        lastActivitySignalMap.get(row.id),
-        row.last_active_at ?? undefined,
-        row.last_login ?? undefined,
-      ),
+      lastActive: lastActivitySignalMap.get(row.id),
+      activityAvailable: warnings.length === 0,
       lastLogin: row.last_login ?? undefined,
       avatarUrl: row.avatar_url ?? undefined,
       organization: row.organization ?? undefined,

@@ -32,6 +32,7 @@ export const userSchema = z.object({
   createdAt: z.string().datetime({ offset: true }),
   updatedAt: z.string().datetime({ offset: true }),
   lastActive: z.string().datetime({ offset: true }).optional(),
+  activityAvailable: z.boolean().optional(),
   lastLogin: z.string().datetime({ offset: true }).optional(),
   avatarUrl: z.string().url().optional(),
   organization: z.string().optional(),

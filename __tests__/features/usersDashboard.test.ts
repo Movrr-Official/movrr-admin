@@ -4,6 +4,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/admin", () => ({ requireCapability: state.authorize }));
 vi.mock("@/lib/supabase-admin", () => ({ createSupabaseAdminClient: () => ({ from: state.from, rpc: state.rpc }) }));
 vi.mock("@/lib/activitySignals", () => ({ fetchLatestUserActivitySignalMap: state.activity, resolveLatestIsoTimestamp: (...values: string[]) => values.find(Boolean) }));
+vi.mock("@/lib/accountActivity", () => ({ fetchAccountActivityMap: state.activity }));
 vi.mock("@/lib/env", () => ({ APP_URL: "https://example.test", FROM_EMAIL: "test@example.test", RESEND_API_KEY: "test-only" }));
 vi.mock("@/lib/platformSettings", () => ({}));
 import { getUsers } from "@/app/actions/users";
@@ -75,6 +76,17 @@ describe("Users dashboard authoritative handler", () => {
   it("marks partial activity failure without discarding real users or inventing activity", async () => {
     state.rows.user=[account("only")]; state.activity.mockRejectedValue(new Error("Auth offline"));
     const result=await getUsers(); expect(result.success).toBe(true); expect(result.data).toHaveLength(1); expect(result.data?.[0].lastActive).toBeUndefined(); expect(result.warnings).toHaveLength(1);
+  });
+  it("ignores legacy activity timestamps and a stale coarse Rider classification", async () => {
+    state.rows.user=[{...account("partner"),role:"rider",last_active_at:"2026-10-21T00:00:00Z",last_login:"2026-10-21T00:00:00Z"}];
+    state.rows.organisation_membership=[membership("partner","reward_partner","owner")];
+    const result=await getUsers();
+    expect(result.data?.[0]).toMatchObject({domains:["partner"],activityAvailable:true});
+    expect(result.data?.[0].lastActive).toBeUndefined();
+    expect((await getUsers({role:"rider"})).data).toEqual([]);
+    expect((await getUsers({role:"partner"})).data).toHaveLength(1);
+    state.activity.mockRejectedValue(new Error("unavailable"));
+    expect((await getUsers()).data?.[0]).toMatchObject({activityAvailable:false});
   });
   it("quotes literal search input instead of allowing PostgREST filter injection", async () => {
     await getUsers({searchQuery:'a,b%_"\\'});

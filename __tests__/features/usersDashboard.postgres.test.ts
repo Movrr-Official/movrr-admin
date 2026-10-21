@@ -29,7 +29,10 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_POSTGRES !== "1")("Users sync read: a
     END $$;
     CREATE SCHEMA auth;
     CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.role',true),''),nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'role') $$;
-    CREATE TABLE auth.users(id uuid PRIMARY KEY,deleted_at timestamptz,banned_until timestamptz);
+    CREATE TABLE auth.users(id uuid PRIMARY KEY,deleted_at timestamptz,banned_until timestamptz,last_sign_in_at timestamptz);
+    CREATE TABLE auth.sessions(user_id uuid,refreshed_at timestamp without time zone);
+    CREATE TABLE public.admin_dashboard_sessions(auth_user_id uuid,last_seen_at timestamptz);
+    CREATE TABLE public.user_activity(user_id uuid,actor_user_id uuid,source text,action text,description text,occurred_at timestamptz);
     CREATE TABLE public."user"(id uuid PRIMARY KEY,status text,name text,email text,created_at timestamptz DEFAULT now(),updated_at timestamptz DEFAULT now());
     CREATE TABLE public.admin_users(user_id uuid PRIMARY KEY,role text);
     CREATE TABLE public.rider(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id uuid REFERENCES public."user"(id),status text);
@@ -42,6 +45,7 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_POSTGRES !== "1")("Users sync read: a
     const active=readFileSync("scripts/071_external_account_domains.sql","utf8").match(/CREATE OR REPLACE FUNCTION public.account_identity_active\(p_user uuid\)[\s\S]*?\$\$;/)![0];
     await db.unsafe(authority); await db.unsafe(active);
     await db.unsafe(readFileSync("scripts/079_users_dashboard_sync_read.sql","utf8"));
+    await db.unsafe(readFileSync("scripts/080_authenticated_account_activity.sql","utf8"));
     for(const id of [reader,outsider,inactive,denied,pending,applied]) {
       await db`INSERT INTO auth.users(id) VALUES(${id})`;
       await db`INSERT INTO public."user"(id,status,name,email) VALUES(${id},${id===inactive?"suspended":"active"},${id},${id+'@example.test'})`;
@@ -91,12 +95,17 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_POSTGRES !== "1")("Users sync read: a
     await db`INSERT INTO public.account_auth_sync ${db(ids.slice(0,200).map(user_id=>({user_id,actor_id:reader,status:"active",version:1,state:"pending"})))}`;
     const org=(await db`INSERT INTO public.organisation(name,type) VALUES('Local partner','reward_partner') RETURNING id`)[0].id;
     await db`INSERT INTO public.organisation_membership ${db(ids.slice(1,1002).map(user_id=>({user_id,organisation_id:org,role:"viewer",status:"active"})))}`;
+    await db`UPDATE auth.users SET last_sign_in_at='2026-01-01T12:00:00Z' WHERE id=${ids[1206]}`;
     const result=await getUsers();expect(result.success).toBe(true);expect(result.data).toHaveLength(1213);
     expect(result.data?.filter(u=>u.riderStatus!==undefined)).toHaveLength(1001);
     expect(result.data?.filter(u=>u.memberships?.length)).toHaveLength(1001);
     expect(result.data?.find(u=>u.id===ids[1206])?.domains).toEqual([]);
     expect(result.data?.find(u=>u.id===pending)?.authSyncPending).toBe(true);
     expect(result.data?.filter(u=>u.authSyncPending)).toHaveLength(201);
+    expect(result.warnings).toEqual([]);
+    expect(result.data?.every(u=>u.activityAvailable)).toBe(true);
+    expect(result.data?.find(u=>u.id===ids[1206])?.lastActive).toBe('2026-01-01T12:00:00.000Z');
+    expect(result.data?.find(u=>u.id===ids[1205])?.lastActive).toBeUndefined();
     expect((await getUsers({searchQuery:'literal,a%_"\\'})).data?.map(u=>u.id)).toEqual([ids[1]]);
     expect((await getUsers({role:"rider",status:"pending"})).data?.map(u=>u.id)).toEqual([ids[0]]);
     expect((await getUsers({role:"partner"})).data).toHaveLength(1001);

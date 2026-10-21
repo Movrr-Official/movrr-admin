@@ -1,0 +1,433 @@
+{
+  "recordedAt": "2026-10-21T15:59:40.256Z",
+  "status": "Source implemented and verified; production migration, correction and deployment pending approval",
+  "productionInspection": {
+    "recordedAt": "2026-10-21T15:59:01.046Z",
+    "method": "Read-only PostgreSQL transactions, default_transaction_read_only=on; no production mutation or Auth impersonation",
+    "account": {
+      "id": "007b5ab8-fea0-41f2-9068-055f154d7db0",
+      "created_at": "2026-10-20T18:20:11.065Z",
+      "last_sign_in_at": null,
+      "legacy_role": "partner_operations_manager",
+      "role": "rider",
+      "status": "active",
+      "rider_id": "183c4512-228b-441a-9b4f-e1d97359773a",
+      "rider_status": "active"
+    },
+    "authIdentities": [
+      {
+        "provider": "email",
+        "created_at": "2026-10-20T18:20:11.223Z",
+        "updated_at": "2026-10-20T18:20:11.223Z",
+        "legacy_role": null
+      }
+    ],
+    "legacyActivity": [
+      {
+        "last_login": null,
+        "last_active_at": null
+      }
+    ],
+    "staff": [
+      {
+        "user_id": "007b5ab8-fea0-41f2-9068-055f154d7db0",
+        "role": null
+      }
+    ],
+    "provisioning": {
+      "employee_provisioning": [],
+      "product_provisioning": [],
+      "external_account_provisioning": []
+    },
+    "memberships": [
+      {
+        "id": "16773fed-3edd-493b-bce4-fc366beb2cea",
+        "organisation_id": "17be1d12-9e61-4654-afd0-fad0bf2d0278",
+        "user_id": "007b5ab8-fea0-41f2-9068-055f154d7db0",
+        "role": "owner",
+        "bundle_key": "org.owner",
+        "status": "active",
+        "created_at": "2026-10-21T14:45:16.313Z",
+        "updated_at": "2026-10-21T14:45:16.313Z",
+        "name": "Powerdon",
+        "type": "reward_partner"
+      }
+    ],
+    "riderFkDependencies": [
+      {
+        "child": "rider_bikes",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_badge_award",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "impression_events",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id)",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_daily_progress_summary",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "impression_events",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id)",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "community_ride_invites",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (inviter_rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "inviter_rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_route",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "campaign_assignment",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id)",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "reward_transactions",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "performance_stats",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id)",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "campaign_signup",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_reward_balance",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 1
+      },
+      {
+        "child": "route_tracking",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "campaign_assignment_events",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id)",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_availability_log",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id)",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_campaign_streak",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "reward_redemptions",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "community_ride",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (organizer_rider_id) REFERENCES rider(id) ON DELETE SET NULL",
+        "column": "organizer_rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_referrals",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (inviter_rider_id) REFERENCES rider(id)",
+        "column": "inviter_rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_referrals",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (invitee_rider_id) REFERENCES rider(id)",
+        "column": "invitee_rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_weekly_summary",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_campaign_contribution",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "community_ride_participant",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "ride_session",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_progress_event",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "fulfilment",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE RESTRICT",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_brand_preference",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_brand_preference_event",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "campaign_accessory_inventory_item",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (current_rider_id) REFERENCES rider(id) ON DELETE SET NULL",
+        "column": "current_rider_id",
+        "count": 0
+      },
+      {
+        "child": "rider_campaign_accessory_assignment",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id) ON DELETE CASCADE",
+        "column": "rider_id",
+        "count": 0
+      },
+      {
+        "child": "ride_reward_settlement",
+        "parent": "rider",
+        "definition": "FOREIGN KEY (rider_id) REFERENCES rider(id)",
+        "column": "rider_id",
+        "count": 0
+      }
+    ],
+    "riderNonFkProjections": [
+      {
+        "table_schema": "public",
+        "table_name": "rider_dashboard_stats",
+        "column_name": "rider_id",
+        "count": 1,
+        "relkind": "v"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "rider_campaign_accessory_overview",
+        "column_name": "rider_id",
+        "count": 0,
+        "relkind": "v"
+      }
+    ],
+    "rewardBalance": [
+      {
+        "record": {
+          "tier": null,
+          "rider_id": "183c4512-228b-441a-9b4f-e1d97359773a",
+          "updated_at": "2026-10-20T18:20:11.061538+00:00",
+          "points_balance": 0,
+          "daily_points_cap": 1000,
+          "weekly_points_cap": 600,
+          "tier_points_last30": 0,
+          "daily_points_earned": 0,
+          "weekly_points_earned": 0,
+          "lifetime_points_earned": 0
+        }
+      }
+    ],
+    "activity": [
+      {
+        "source": "account",
+        "action": "Account updated",
+        "self_actor": false,
+        "records": 2,
+        "latest": "2026-10-21T15:16:50.285Z"
+      }
+    ],
+    "activityPolicies": [
+      {
+        "policyname": "Admins can read all user activity",
+        "roles": [
+          "public"
+        ],
+        "cmd": "SELECT",
+        "qual": "identity_has_capability('riders.read'::text)",
+        "with_check": null
+      },
+      {
+        "policyname": "Users can read own activity",
+        "roles": [
+          "public"
+        ],
+        "cmd": "SELECT",
+        "qual": "(user_id = auth.uid())",
+        "with_check": null
+      },
+      {
+        "policyname": "identity_status_required",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "ALL",
+        "qual": "account_is_active()",
+        "with_check": "account_is_active()"
+      }
+    ],
+    "privileges": [
+      {
+        "current_user": "postgres",
+        "auth_session_trigger": true,
+        "auth_update": true,
+        "auth_session_owner": "supabase_auth_admin"
+      }
+    ],
+    "gates": {
+      "deletion": {
+        "requests_enabled": true,
+        "managed_resources_execution_enabled": false
+      },
+      "shop": {
+        "redemption_enabled": false
+      }
+    }
+  },
+  "cause": {
+    "identity": "Original Auth trigger casts unsupported partner_operations_manager to user_role, catches the enum error and provisions Rider. Signup trigger creates zero balance; later Partner membership did not remove it.",
+    "historicalEvidence": "scripts/fixtures/employee-provisioning/handle_new_user.sql; docs/architecture/enterprise-identity-findings.md",
+    "historicalTriggerSha256": "1191d503056eca667e06ddc709adfa278379fd458a423d7cbb1d03f7ead772de",
+    "liveTriggerSha256": "df44f298d745bf796fbb5f7f53e7bfc729282b7956886dbfdc0101eec048a6ec",
+    "uncertainty": "Original HTTP provisioning failure/response is unavailable. Current reservations contain no journal for this historical identity.",
+    "lastActive": "Account subject user_id was treated as actor activity; missing existing session projection, legacy public timestamp substitution and Never on unavailable compounded the defect."
+  },
+  "activityDefinition": "Maximum reliable recorded Auth sign-in, UTC Auth token refresh, existing authenticated Admin session touch and non-system activity attributed to actor_user_id. Automatic refresh is session activity, not proof of human interaction. Logout preserves the prior recorded timestamp, not deletion time. Account creation, subject edits, arbitrary updated_at and legacy public fields are excluded.",
+  "changes": [
+    "Remove managed Product server_assigned_role metadata writer; durable reservations remain authoritative.",
+    "Add bounded service-only activity RPC with account authority checks and session-delete retention; no new heartbeat or per-request writes.",
+    "Users uses only the canonical activity projection, explicit unavailable/null states and instant-based sorting before pagination.",
+    "Prepare exact fail-closed one-identity correction with Owner/history preservation and whole-database/other-account fingerprint assertions."
+  ],
+  "checks": {
+    "full": {
+      "command": "MOVRR_EMPLOYEE_POSTGRES=1 MOVRR_EMPLOYEE_AUTH_HTTP=1 npm test -- --maxWorkers=4 --testTimeout=15000",
+      "filesPassed": 87,
+      "testsPassed": 979,
+      "testsSkipped": 9,
+      "skippedReason": "Eight optional User Details PostgREST checks and one optional Users PostgREST handler check require their separate HTTP flags; existing concurrent User Details release evidence covers its flow."
+    },
+    "postgres": "Real local PostgreSQL 17. Activity timestamps/ACLs/future/system/null/session-deletion behavior; exact correction dependency/balance/schema refusal, Owner/history preservation, Rider-only denial, cross-organisation denial and replay. Existing suites cover domain provisioning, Mobile signup, legitimate multi-domain accounts, MFA, RLS and revocation.",
+    "auth": "Real local GoTrue v2.197.0: successful password login, token exchange and logout; existing real Auth provisioning checks all account domains, recovery and no accidental Rider.",
+    "ui": "Actual TanStack sorting/pagination and React rendering: offset timestamps, unknown-last both directions, relative-time changes, unavailable versus no recorded activity. Users handler verifies domain filters, stale Rider enum ignored, bounded projections and refresh.",
+    "reducedCapHttp": {
+      "command": "MOVRR_EMPLOYEE_POSTGRES=1 MOVRR_EMPLOYEE_AUTH_HTTP=1 MOVRR_USERS_HTTP=1 npm test -- __tests__/features/accountActivity.postgres.test.ts __tests__/features/accountActivity.auth-http.test.ts __tests__/features/usersDashboard.postgres.test.ts --maxWorkers=2 --testTimeout=15000",
+      "testsPassed": 15,
+      "details": "Final JSON-returning RPC verified through actual PostgREST at a 37-row cap: 1,213 Users, no activity warnings, correct known/null timestamps; no RPC row truncation. Includes final real GoTrue login/refresh/logout and SQL ACL checks."
+    },
+    "typecheck": "npm run typecheck: passed",
+    "lint": "npm run lint: passed (repository lint script runs TypeScript)",
+    "build": "npm run build: passed, Next.js 16.2.3 production build; existing Google Fonts fetched with network access",
+    "initialEnvironmentFailures": "Default five-second tests timed out under shared resource load; later shared PostgreSQL port 55443 disappeared with its owning task. Task-owned replacement plus 15-second limits produced final full pass. No test assertions weakened."
+  },
+  "approval": {
+    "activity": {
+      "file": "scripts/080_authenticated_account_activity.sql",
+      "sha256Utf8Lf": "45c86d41156b050f283035683fd68d65fc8a824c529b47e73d7603dabda2bf63",
+      "migrationVersion": "20261021160000",
+      "existingRowsChanged": 0
+    },
+    "correction": {
+      "file": "scripts/manual/rider-identity/correct-powerdon.sql",
+      "sha256Utf8Lf": "768e0852e82c2e05e6b6139c64149fc15c8fbabd88807d9fde83d3404302393f",
+      "deletedRows": 2,
+      "updatedRows": 2,
+      "deletions": [
+        "One specified unintended Rider",
+        "Its zero-valued balance"
+      ],
+      "updates": [
+        "Set specified public User role to NULL",
+        "Remove only specified Auth user_metadata.server_assigned_role"
+      ],
+      "temporaryAuthority": "ACCESS EXCLUSIVE public.user lock; disable/re-enable only immutable-role trigger inside same atomic transaction; all other security/deletion triggers remain enabled."
+    }
+  },
+  "preservation": {
+    "productionMutations": 0,
+    "mobileRuntimeChanged": false,
+    "cleanupExecutedOrRepinned": false,
+    "financialOrHistoricalRecordsChanged": false,
+    "deletionIntake": "Enabled",
+    "irreversibleDeletion": "Disabled",
+    "shopRedemption": "Disabled",
+    "automaticMainDeploy": "Disabled by existing vercel.json; source push is not production deployment"
+  },
+  "productionAcceptance": "Pending explicit approvals, migration/correction execution, independent readback, coordinated Admin deployment and authenticated browser acceptance. Definition of done is not yet met in production."
+}

@@ -785,7 +785,7 @@ export function UserDetailsDrawer({
                               new Date(user.lastActive),
                               "MMM d, yyyy 'at' h:mm a",
                             )
-                          : "Never"}
+                          : user.activityAvailable === false ? "Unavailable" : "No recorded activity"}
                       </p>
                     </div>
                   </div>

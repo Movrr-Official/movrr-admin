@@ -4,6 +4,16 @@
   "evidence": "../verification/final-dashboard-performance/production.json",
   "milestones": [
     {
+      "name": "P1 unintended Partner Rider identity and Last Active",
+      "status": "Source implemented and locally verified; exact activity migration and single-account correction await explicit production approval",
+      "work": "Remove redundant managed Product role metadata; read Last Active from authenticated actors and existing Auth/Admin sessions, preserve recorded session activity on logout, and distinguish unavailable from no recorded activity. Prepare guarded removal of the historical unintended Rider and zero balance for powerdonnl@gmail.com, preserving Partner Owner authority.",
+      "evidence": "../verification/rider-identity-activity/verification.json",
+      "release": "../../scripts/manual/rider-identity/README.md",
+      "validation": "979 tests pass with actual PostgreSQL and GoTrue enabled; 15 final focused SQL/Auth/PostgREST checks pass, including 1,213 Users at a 37-row API cap. TypeScript, configured lint and production build pass. Eight optional User Details HTTP checks are covered by the separate concurrent release evidence.",
+      "acceptanceLimit": "Production remains unchanged. Approve exact 080 activity SQL and exact correction SQL separately, install activity authority before deploying its reader, verify Partner-only access and actual production Users rendering/counts/filters. Do not execute or repin the parallel seven-account cleanup.",
+      "preservedStates": "Mobile runtime unchanged; Auth identity, Partner organisation/Owner membership and financial/audit history preserved. Deletion intake Enabled; irreversible deletion Disabled; Shop redemption Disabled."
+    },
+    {
       "name": "P1 User Details read-only presentation and canonical membership editing",
       "status": "Source corrected and isolated acceptance verified; exact Admin deployment approval and authenticated production acceptance pending",
       "work": "Keep View read-only with actual relationships inside Basic Information; use the existing Edit User form for explicit assignment, role Save and revocation. Serialize expected denials and disable sole-Owner removal without weakening canonical SQL safeguards.",
