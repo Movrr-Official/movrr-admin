@@ -1,5 +1,7 @@
 # Independent Users and relevant relationship controls
 
+Production release update (21 October 2026): 078 and the approved pinned applications are deployed. See the [production release and acceptance boundaries](user-relationships-production.md). The source/isolated evidence below remains historical; authenticated browser/provider acceptance is still open.
+
 The product model was documented before implementation in [User and independent relationships](../product/user-and-relationships.md), using the owner's rules, explicit Mobile decision, product requirements and actual signup/session journeys. User is the independent account. Rider, each external organisation membership and internal Staff are optional relationships.
 
 ## Permanent corrections

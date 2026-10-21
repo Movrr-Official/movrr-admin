@@ -5,16 +5,19 @@
   "milestones": [
     {
       "name": "Independent User accounts and optional relationships",
-      "status": "Source and isolated acceptance verified; 078 and application release await explicit approval",
+      "status": "Approved 078 and pinned Admin/web deployed; SQL/data/HTTP verified; external authenticated browser/provider acceptance pending",
       "work": "User is independent. Explicit User-only creation, optional Rider/external/Staff relationships, relevant Admin controls and independent web account authentication; intentional Mobile Rider signup preserved.",
-      "evidence": "../verification/user-relationships/verification.json",
+      "evidence": "../verification/user-relationships/production.json",
       "product": "../product/user-and-relationships.md",
-      "release": "user-relationships-simplification.md",
+      "release": "user-relationships-production.md",
       "validation": "887 Admin tests with real PostgreSQL/GoTrue, 91 web tests, actual DOM/server-component rendering, TypeScript/lint and both builds pass. Offline real-schema replay preserves 157 public tables and all functions outside the intended three.",
       "webCommit": "2d14d76fcfe4974626f96ec845f13f5ca061cfc0",
-      "adminCommit": "623114a02dd686e1206c6da0330c26940910eff7",
+      "adminCommit": "f3f0dec1bccf515cb53f48356bc1007b56e5eea1",
+      "adminDeployment": "dpl_CmD93XcJu3yxdh9iDYQoAbk2G9Y4",
+      "webDeployment": "dpl_5CbDEtdhy6Jk4Y53vXhFxXQbirVN",
+      "productionVerification": "Exact 078 journal/checksum, 34 SQL bodies, 11 role catalogs, 184 public/Auth tables preserved; existing Rider/Staff/Advertiser SQL contexts and 13 live HTTP probes passed. Both domain aliases/targets verified; scoped holds removed; gates preserved.",
       "migration": "078_independent_user_accounts",
-      "acceptanceLimit": "No production migration/deployment or authenticated production browser/provider acceptance by this task; no Mobile runtime or EAS build."
+      "acceptanceLimit": "Authenticated production browser/provider acceptance remains unexecuted; no existing User-only, Partner or Government identity contexts were fabricated; no Mobile runtime or EAS build."
     },
     {
       "name": "Enterprise identity domains, scoped memberships and Partner Operations Manager",
