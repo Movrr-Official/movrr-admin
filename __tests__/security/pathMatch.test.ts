@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  isRiderApiPath,
+  isPlatformBearerApiPath,
   matchesAnyPathPrefix,
   matchesPathPrefix,
 } from "@/lib/pathMatch";
@@ -35,12 +35,21 @@ describe("chrome hide path list", () => {
   });
 });
 
-describe("rider API JWT boundary", () => {
+describe("Platform API bearer boundary", () => {
   it.each([
     "/api/v1/wallet/balance",
     "/api/v1/wallet/transactions",
     "/api/v1/wallet/statement",
     "/api/v1/government/me",
+    "/api/v1/government/programmes",
+    "/api/v1/me/memberships",
+    "/api/v1/organisations",
+    "/api/v1/organisations/id/staff",
+    "/api/v1/organisations/id/invitations",
+    "/api/v1/campaigns/id/status",
+    "/api/v1/partners/analytics",
+    "/api/v1/fulfilment/health",
+    "/api/v1/fulfilment/exceptions",
     "/api/v1/rewards/redeem",
     "/api/v1/rewards/redemptions",
     "/api/v1/rewards/catalog/item",
@@ -54,7 +63,7 @@ describe("rider API JWT boundary", () => {
     "/api/v1/riders/me/campaigns/confirm",
     "/api/v1/community-rides/id/join",
   ])("allows %s to reach its JWT handler", (path) =>
-    expect(isRiderApiPath(path)).toBe(true),
+    expect(isPlatformBearerApiPath(path)).toBe(true),
   );
   it.each([
     "/api/v1/fulfilment/id/unsafe",
@@ -64,9 +73,8 @@ describe("rider API JWT boundary", () => {
     "/api/v1/wallet/balance/other",
     "/api/v1/wallet/statement/other",
     "/api/v1/government/me/other",
-    "/api/v1/government/programmes",
     "/riders",
   ])("keeps %s behind its existing dashboard gate", (path) =>
-    expect(isRiderApiPath(path)).toBe(false),
+    expect(isPlatformBearerApiPath(path)).toBe(false),
   );
 });

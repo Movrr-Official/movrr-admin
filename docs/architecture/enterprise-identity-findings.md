@@ -55,3 +55,35 @@ The exact approved production rollout stopped before mutations on 21 October 202
 - [movrr-app/services/advertiser.ts:99](https://github.com/Movrr-Official/movrr-app/blob/main/services/advertiser.ts#L99)
 - [movrr-app/app/actions/accountInvitations.ts:7](https://github.com/Movrr-Official/movrr-app/blob/main/app/actions/accountInvitations.ts#L7)
 - [movrr-app/services/partner.ts:231](https://github.com/Movrr-Official/movrr-app/blob/main/services/partner.ts#L231)
+
+## Production re-audit after amended approval
+
+This matrix supersedes the earlier release dispositions. Exact journal/checksum, deployment, RLS, data comparison and acceptance evidence: [production receipt](../verification/enterprise-identity/production.json) and [release report](../release/enterprise-identity-production.md). Original source references above remain the correction references. Production API ingress source: [lib/pathMatch.ts:19](../../lib/pathMatch.ts#L19), [proxy.ts:121](../../proxy.ts#L121), web [lib/platform/client.ts:100](https://github.com/Movrr-Official/movrr-app/blob/5e44a6fdc8a03ab2241b43faef5dd7e1a27cc5b0/lib/platform/client.ts#L100). ID-25 is High and remains a release blocker; it grants no access.
+
+| Finding | Independent final evidence / remaining acceptance | Disposition |
+| --- | --- | --- |
+| ID-01 | Pinned canonical form deployed; authenticated Create/Details acceptance open. | Partially Resolved |
+| ID-02 | Exact installed Auth trigger has no fallback; isolated actual GoTrue reproducer passes. | Fully Resolved |
+| ID-03 | Explicit membership projections deployed; authenticated Details/readback open. | Partially Resolved |
+| ID-04 | Distinct role and Staff/Viewer ceiling installed and locally exercised; ID-25 blocks external production flow. | Partially Resolved |
+| ID-05 | All 11 external role catalogs match; external API acceptance blocked by ID-25. | Partially Resolved |
+| ID-06 | Explicit tenant selector deployed; authenticated workspace journey blocked/open. | Partially Resolved |
+| ID-07 | Direct grant DML denied; canonical writer and ACLs verified exactly. | Fully Resolved |
+| ID-08 | Exact durable reservation/trigger bodies installed; real isolated failure/retry coverage passes; no synthetic production creation. | Partially Resolved |
+| ID-09 | Exact invitation lifecycle installed; real isolated acceptance passes; controlled provider/browser acceptance open. | Partially Resolved |
+| ID-10 | Exact durable account/Auth sync and active guards installed; production real-account status mutation not performed. | Partially Resolved |
+| ID-11 | Canonical current identity and staff/MFA predicates verified with existing identity contexts. | Fully Resolved |
+| ID-12 | 380 policies installed; broad predicates and retired owner helper absent; actual Advertiser own/cross-tenant context checked. | Fully Resolved |
+| ID-13 | Direct deletion source retired and security triggers installed; authenticated UI acceptance open. | Partially Resolved |
+| ID-14 | Canonical timestamp/save/list source deployed; full real isolated journeys pass; production UI readback open. | Partially Resolved |
+| ID-15 | Service-role fallback removed in deployed web; canonical API transport blocked by ID-25. | Partially Resolved |
+| ID-16 | Exactly one authorised new organisation, profile link, Owner and audit; no other grant. | Fully Resolved |
+| ID-17 | Removed false ABAC authority is in pinned deployed source; no replacement permissive evaluator. | Fully Resolved |
+| ID-18 | Exact canonical notification audience SQL installed; no provider sends used. | Fully Resolved |
+| ID-19 | Historical enum/data and legitimate Mobile readers retained; no enum expansion or active grant authority. | Not Actionable |
+| ID-20 | No connected authenticated browser or controlled provider acceptance. Release also has ID-25. | Still Open |
+| ID-21 | Correct domain email origin/error source deployed; provider acceptance not executed. | Partially Resolved |
+| ID-22 | Old signatures absent; anon/authenticated resend/expiry execution denied; exact actor/scope bodies match. | Fully Resolved |
+| ID-23 | 071 required FK/unique column installed; journal checksum matches corrected approved source. | Fully Resolved |
+| ID-24 | 075 installed successfully across all production policies; exact journal/body and no public.public predicate. | Fully Resolved |
+| ID-25 | Production canonical APIs return Admin-cookie redirects. Focused ingress correction passes 860 tests, real SQL/GoTrue, TypeScript and build; new Admin deployment approval pending. | Partially Resolved |

@@ -1,4 +1,4 @@
-import { isRiderApiPath } from "@/lib/pathMatch";
+import { isPlatformBearerApiPath } from "@/lib/pathMatch";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { applySecurityHeaders } from "@/lib/securityHeaders";
@@ -117,8 +117,8 @@ export async function proxy(request: NextRequest) {
     return applySecurityHeaders(supabaseResponse, request);
   }
 
-  // Rider mobile ingest — bearer JWT validated in route handlers
-  if (isRiderApiPath(pathname)) {
+  // Platform bearer identity, scope and capabilities are enforced by handlers.
+  if (isPlatformBearerApiPath(pathname)) {
     return applySecurityHeaders(supabaseResponse, request);
   }
 

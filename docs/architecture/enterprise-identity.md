@@ -1,3 +1,5 @@
+Current release: approved SQL and pinned Admin/web are deployed; ID-25 blocks complete external API acceptance. See [production release evidence](../release/enterprise-identity-production.md). Earlier preflight descriptions below are historical.
+
 # Enterprise identity remediation — 21 October 2026
 
 The approved production rollout subsequently stopped in read-only preflight. Revisions to 071 and 075 correct two installation defects; see the [stopped-rollout report](../release/enterprise-identity-rollout-stopped.md). Production acceptance is still outstanding; the original approval does not cover the revised SQL checksums.

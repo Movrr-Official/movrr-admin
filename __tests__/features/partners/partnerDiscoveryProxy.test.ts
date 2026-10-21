@@ -12,7 +12,7 @@ describe("Partner discovery proxy delegation", () => {
     expect(response.headers.get("location")).toBeNull();
     expect(auth.getUser).not.toHaveBeenCalled();
   });
-  it.each(["/api/v1/partners/locations/private", "/api/v1/partners/locations-other", "/api/v1/organisations/11111111-1111-4111-8111-111111111111/locations", "/organisations"])("retains dashboard protection for %s", async path => {
+  it.each(["/api/v1/partners/locations/private", "/api/v1/partners/locations-other", "/api/v1/organisations/11111111-1111-4111-8111-111111111111/locations/private", "/organisations"])("retains dashboard protection for %s", async path => {
     const response = await proxy(new NextRequest("http://localhost" + path));
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("/auth/signin");

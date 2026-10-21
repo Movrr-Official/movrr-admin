@@ -21,6 +21,9 @@ const q=s=>'"'+s.replaceAll('"','""')+'"',result={project:'kzdvunpuxaxlphqvmzxw'
  // Reference catalog is fixture metadata already captured in the committed
  // baseline, not production identity/financial rows exported by this script.
  for(const bundle of JSON.parse(fs.readFileSync(path.join(repo,'docs/verification/enterprise-identity/production-before.json'))).bundles)await local`INSERT INTO public.permission_bundle(key,name) VALUES(${bundle.key},${bundle.name})`;
+ // Non-personal reference rows drive existing deletion barrier triggers.
+ const barrier=JSON.parse(fs.readFileSync(path.join(out,'deletion-barrier-metadata.json')));
+ for(const [table,rows] of [['account_deletion_barrier_binding',barrier.bindings],['account_deletion_barrier_parent',barrier.parents]])for(const row of rows)await local.unsafe('INSERT INTO public.'+q(table)+' SELECT * FROM jsonb_populate_record(NULL::public.'+q(table)+',$1::jsonb)',[local.json(row)]);
  const actor=crypto.randomUUID(),user=crypto.randomUUID();
  await local.unsafe('ALTER TABLE auth.users DISABLE TRIGGER USER');
  for(const [id,email] of [[actor,'local-actor@example.test'],[user,'local-advertiser@example.test']]){await local`INSERT INTO auth.users(id,email) VALUES(${id},${email})`;await local`INSERT INTO public."user"(id,email,name,role,status) VALUES(${id},${email},'Local schema fixture','advertiser','active')`;}
@@ -32,7 +35,14 @@ const q=s=>'"'+s.replaceAll('"','""')+'"',result={project:'kzdvunpuxaxlphqvmzxw'
  try{await execute('original');throw Error('Expected original source failure was not reproduced');}catch(e){assert.equal(e.code,'42703');assert(e.message.includes('organisation_id'));result.originalRelease={reproduced:true,errorCode:e.code,message:'column ad.organisation_id does not exist; full batch rolled back'};}
  try{await execute('column-only');throw Error('Expected qualification failure was not reproduced');}catch(e){assert.equal(e.code,'0A000');assert(e.message.includes('public.public'));result.policyQualificationRegression={reproduced:true,errorCode:e.code,message:'qualified policy replacement produced public.public; full batch rolled back'};}
  assert.equal((await local`SELECT count(*)::int n FROM information_schema.columns WHERE table_schema='public' AND table_name='advertiser' AND column_name='organisation_id'`)[0].n,0);
+ // Match production's verified absent lazy write-guard for this local fixture.
+ await local`DELETE FROM public.account_deletion_write_guard WHERE user_id=${user}`;
+ const guardsBefore=await local`SELECT * FROM public.account_deletion_write_guard ORDER BY user_id`;
  await execute('corrected');
+ const guardsAfter=await local`SELECT * FROM public.account_deletion_write_guard ORDER BY user_id`;
+ assert.deepEqual(guardsAfter.filter(g=>g.user_id!==user),[...guardsBefore]);
+ const lazyGuard=guardsAfter.filter(g=>g.user_id===user);assert.equal(lazyGuard.length,1);assert.equal(lazyGuard[0].restricted,false);assert.equal(lazyGuard[0].job_id,null);
+ result.lazyDeletionGuard={reproduced:true,newGuards:1,onlyVerifiedBackfillSubject:true,existingGuardsUnchanged:true,restricted:false,jobCreated:false};
  const membership=await local`SELECT m.user_id,m.role,m.status,o.type FROM public.organisation_membership m JOIN public.organisation o ON o.id=m.organisation_id`;assert.equal(membership.length,1);assert.equal(membership[0].user_id,user);assert.equal(membership[0].role,'owner');assert.equal(membership[0].status,'active');assert.equal(membership[0].type,'advertiser');
  assert.equal((await local`SELECT count(*)::int n FROM pg_policies WHERE schemaname='public' AND (coalesce(qual,'')||coalesce(with_check,'')) ~ '\\m(is_admin|is_dashboard_admin)\\(\\)|user_owns_campaign'`)[0].n,0);
  result.correctedRelease={allSevenMigrationsPassed:true,actualProductionPublicAndAuthSchema:true,backfilledMemberships:1,unintendedRiders:(await local`SELECT count(*)::int n FROM public.rider`)[0].n,policies:(await local`SELECT count(*)::int n FROM pg_policies WHERE schemaname='public'`)[0].n};assert.equal(result.correctedRelease.unintendedRiders,0);

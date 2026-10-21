@@ -1,3 +1,5 @@
+Current release state: see [production release](enterprise-identity-production.md). Approved migrations are installed and pinned applications promoted. ID-25 requires a focused Admin ingress correction; do not replay migrations or backfill. The following requirements preserve the original reviewed procedure and historical preflight state.
+
 # Enterprise identity release requirements
 
 **Approved rollout stopped in preflight; amended SQL requires renewed approval.** The exact original release was authorized on 21 October 2026, but its missing Advertiser column and search-path-dependent policy rewrite failed verification before production changes. See [the stopped-rollout report](enterprise-identity-rollout-stopped.md) for corrected 071/075, exact backfill scope and evidence. Both application repositories disable automatic deployment from `main` in `vercel.json`. No deployment, migration, synthetic production account, role change or financial mutation has been performed for this remediation.

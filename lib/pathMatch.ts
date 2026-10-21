@@ -16,14 +16,21 @@ export function matchesAnyPathPrefix(
   return prefixes.some((prefix) => matchesPathPrefix(pathname, prefix));
 }
 
-export function isRiderApiPath(pathname: string): boolean {
+export function isPlatformBearerApiPath(pathname: string): boolean {
   // These exact Platform paths enforce bearer identity and capabilities in their
   // handlers. Partner commands additionally authorize the actual target in SQL.
   return (
     pathname === "/api/v1/wallet/statement" ||
     pathname === "/api/v1/government/me" ||
+    pathname === "/api/v1/government/programmes" ||
+    pathname === "/api/v1/me/memberships" ||
+    /^\/api\/v1\/organisations(?:\/[^/]+(?:\/(?:staff|invitations|locations))?)?$/.test(pathname) ||
+    /^\/api\/v1\/campaigns(?:\/[^/]+(?:\/status)?)?$/.test(pathname) ||
+    pathname === "/api/v1/partners/analytics" ||
+    pathname === "/api/v1/fulfilment/health" ||
+    pathname === "/api/v1/fulfilment/exceptions" ||
     pathname.startsWith("/api/sessions/") ||
-    /^\/api\/v1\/(?:partners\/(?:locations|me|resources|validate|collections\/confirm|fulfilments\/pending|rewards(?:\/[^/]+)?|settings|staff)|wallet\/(?:balance|transactions)|rewards\/(?:catalog(?:\/[^/]+)?|redeem|redemptions(?:\/[^/]+)?)|riders\/me\/(?:rides|achievements|accessories|brands|impact)|riders\/me\/campaigns(?:\/(?:opt-in|withdraw|confirm))?|community-rides(?:\/[^/]+(?:\/(?:join|leave|cancel))?)?|fulfilment(?:\/tokens\/consume|\/[^/]+(?:\/(?:timeline|token|cancel|refund|confirm-collection|retry))?)?)$/.test(
+    /^\/api\/v1\/(?:partners\/(?:locations|me|resources|validate|collections\/confirm|fulfilments\/pending|rewards(?:\/[^/]+)?|settings|staff)|wallet\/(?:balance|transactions)|rewards\/(?:catalog(?:\/[^/]+)?|redeem|redemptions(?:\/[^/]+(?:\/cancel)?)?)|riders\/me\/(?:rides|achievements|accessories|brands|impact)|riders\/me\/campaigns(?:\/(?:opt-in|withdraw|confirm))?|community-rides(?:\/[^/]+(?:\/(?:join|leave|cancel))?)?|fulfilment(?:\/tokens\/consume|\/[^/]+(?:\/(?:timeline|token|cancel|refund|confirm-collection|retry))?)?)$/.test(
       pathname,
     )
   );
