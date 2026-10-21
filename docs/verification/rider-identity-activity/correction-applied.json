@@ -1,0 +1,1497 @@
+{
+  "mode": "--correction",
+  "file": "scripts/manual/rider-identity/correct-powerdon.sql",
+  "sha256": "768e0852e82c2e05e6b6139c64149fc15c8fbabd88807d9fde83d3404302393f",
+  "recordedAt": "2026-10-21T16:20:06.404Z",
+  "before": {
+    "auth.audit_log_entries": {
+      "records": 3041,
+      "digest": "daaf1fa06ba7b87b11b62e61bb3bed7f"
+    },
+    "auth.custom_oauth_providers": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.flow_state": {
+      "records": 14,
+      "digest": "e388c0f4173b6eb5e1c228775c9dbf89"
+    },
+    "auth.identities": {
+      "records": 12,
+      "digest": "10647ec9baca52fbd258781873f92e13"
+    },
+    "auth.instances": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.mfa_amr_claims": {
+      "records": 54,
+      "digest": "c7641bbabf009e5843511236537be2dd"
+    },
+    "auth.mfa_challenges": {
+      "records": 70,
+      "digest": "f60d209577105e61876d2f96f0f220ff"
+    },
+    "auth.mfa_factors": {
+      "records": 1,
+      "digest": "a897d4b041863385e5289051faf3044b"
+    },
+    "auth.mfa_recovery_code_sets": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.mfa_recovery_codes": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.oauth_authorizations": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.oauth_client_states": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.oauth_clients": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.oauth_consents": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.one_time_tokens": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.refresh_tokens": {
+      "records": 135,
+      "digest": "69f9e7340bebf654a41679618e6a9b00"
+    },
+    "auth.saml_providers": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.saml_relay_states": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.schema_migrations": {
+      "records": 82,
+      "digest": "7def01dcf385b28a0b3a2a5f01825c29"
+    },
+    "auth.scim_tokens": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.scim_users": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.sessions": {
+      "records": 39,
+      "digest": "dc101fd14eb25e0c7bda0ae2c4f43c9b"
+    },
+    "auth.sso_domains": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.sso_providers": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.users": {
+      "records": 11,
+      "digest": "a9d9a2aaa69baf987f925bd5a41858cd"
+    },
+    "auth.webauthn_challenges": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.webauthn_credentials": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_auth_sync": {
+      "records": 1,
+      "digest": "3489aeae2b61ec6a89b44d71a71eed7b"
+    },
+    "public.account_deletion_action_rule": {
+      "records": 56,
+      "digest": "d363cce805485b1eed5ab52d8df18c73"
+    },
+    "public.account_deletion_alias": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_audit": {
+      "records": 29,
+      "digest": "5975eff14dd800b4a1051a682d03a71b"
+    },
+    "public.account_deletion_authorship_shape": {
+      "records": 9,
+      "digest": "da4fa9c7a1ce3781b90de804f2e68db1"
+    },
+    "public.account_deletion_barrier_binding": {
+      "records": 83,
+      "digest": "7fd86939d59f9d94104bd5ccba54d5aa"
+    },
+    "public.account_deletion_barrier_parent": {
+      "records": 16,
+      "digest": "5151e1a4f92d6c010cc5a027d06920d9"
+    },
+    "public.account_deletion_campaign_carry": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_campaign_checkpoint": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_case": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_completion_receipt": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_contract_gate": {
+      "records": 1,
+      "digest": "6629c3d4115c532046ea9bb63359b80f"
+    },
+    "public.account_deletion_equipment_case": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_evidence": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_external_resource": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_hold": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_imported_suppression": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_inventory": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_jobs": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_journal_expiry": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_journal_expiry_permit": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_managed_write": {
+      "records": 5,
+      "digest": "31851313e4735bf8f8ad6bcc35aef68d"
+    },
+    "public.account_deletion_operation": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_operator_proposal": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_policy_version": {
+      "records": 2,
+      "digest": "e4be75762ea3852b2aef37f198dac099"
+    },
+    "public.account_deletion_receipt_access": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_residual_check": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_restoration_manifest": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_restore_run": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_restore_suppression": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_retention_rule": {
+      "records": 26,
+      "digest": "567a307bccd1db6cd679784b5390874d"
+    },
+    "public.account_deletion_review": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_subject_inventory": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_suppression_key": {
+      "records": 1,
+      "digest": "abb7a975ed32aa36b922580e140ad072"
+    },
+    "public.account_deletion_write_guard": {
+      "records": 7,
+      "digest": "fbc98a58733d6535d4c4684b31368df7"
+    },
+    "public.account_deletion_write_permit": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.admin_creation_operation": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.admin_dashboard_sessions": {
+      "records": 2,
+      "digest": "9452bc41aa344912bccc094e4558be93"
+    },
+    "public.admin_users": {
+      "records": 3,
+      "digest": "f84b958c52660488539bf54cde6d08bf"
+    },
+    "public.advertiser": {
+      "records": 1,
+      "digest": "1febc297c1c5412bf7854145d3874e6a"
+    },
+    "public.audit_log": {
+      "records": 148,
+      "digest": "6f6f95c4c27768fe7fd611849086f676"
+    },
+    "public.auth_provider_credentials": {
+      "records": 1,
+      "digest": "3cd47bdbf0a68f89e89eb16b16b5e2b9"
+    },
+    "public.auth_provider_proofs": {
+      "records": 1,
+      "digest": "b6cd5927b68b684503dd1ede116fb331"
+    },
+    "public.brand": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.brand_campaign": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.bundle_capability": {
+      "records": 31,
+      "digest": "52730b030260c9827b8c6b1f86ec8085"
+    },
+    "public.campaign": {
+      "records": 3,
+      "digest": "3d11632b838d5c2584fd2f8578f761b3"
+    },
+    "public.campaign_accessory_inventory_item": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.campaign_accessory_requirement": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.campaign_accessory_type": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.campaign_assignment": {
+      "records": 3,
+      "digest": "ff26c51637eadd691df0bd94d8c5c235"
+    },
+    "public.campaign_assignment_events": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.campaign_hot_zone": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.campaign_signup": {
+      "records": 1,
+      "digest": "67e040f8083944326ae34a226c5ef110"
+    },
+    "public.campaign_zone": {
+      "records": 3,
+      "digest": "3406ca8a7da9c446b8ee4463300952a3"
+    },
+    "public.campaign_zone_backup": {
+      "records": 136,
+      "digest": "5224385a71b4a254ba77b41914b44ddd"
+    },
+    "public.community_ride": {
+      "records": 3,
+      "digest": "6b4a528dde9e07cab0db09c6d44330c7"
+    },
+    "public.community_ride_change_log": {
+      "records": 1,
+      "digest": "13b6e8970027a7638a19989c76ea4c02"
+    },
+    "public.community_ride_creator_grant": {
+      "records": 2,
+      "digest": "c62b2d7824fdbef4212a9c9571ba3b4b"
+    },
+    "public.community_ride_invites": {
+      "records": 5,
+      "digest": "56fe44c40a2a2f8f4949e223d19c74c3"
+    },
+    "public.community_ride_participant": {
+      "records": 3,
+      "digest": "8412e85ee651731b7c80f92a83edba04"
+    },
+    "public.corridor_compliance": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.employee_provisioning": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.export_history": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.external_account_provisioning": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.fulfilment": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.fulfilment_event": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.fulfilment_resource": {
+      "records": 38,
+      "digest": "df2608f89d7b837dc5ec955f37c6b843"
+    },
+    "public.fulfilment_resource_allocation": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.fulfilment_resource_item": {
+      "records": 25,
+      "digest": "823d32b14d24e77c6706b3a22b366fa1"
+    },
+    "public.fulfilment_token": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.geocode_cache": {
+      "records": 4,
+      "digest": "d3eb4ffe62429af303410f7358610261"
+    },
+    "public.held_ride_recovery_approval": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.impact_methodology": {
+      "records": 2,
+      "digest": "bd2c5161edfc3fef143bd7267eeac1f8"
+    },
+    "public.impression_events": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.notifications": {
+      "records": 21,
+      "digest": "1737dcf48ad03636dec5fa828318ecc4"
+    },
+    "public.ops_command_receipt": {
+      "records": 1,
+      "digest": "b3b952fb9eacdde9c249fabbf3655ce7"
+    },
+    "public.ops_incident": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.ops_notification_recipient": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.ops_notification_send": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.organisation": {
+      "records": 11,
+      "digest": "2b7b316bf42c97a6faf7c32ac2895f5e"
+    },
+    "public.organisation_membership": {
+      "records": 2,
+      "digest": "83de29ebf04fa0981c988d550572af8e"
+    },
+    "public.partner_business_category": {
+      "records": 8,
+      "digest": "39fe8450b71598d1c1908dcec33f7a38"
+    },
+    "public.partner_location_audit": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.partner_validation": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.performance_stats": {
+      "records": 5,
+      "digest": "fe52acd461aa4150e7a9782ac66a497a"
+    },
+    "public.permission_bundle": {
+      "records": 6,
+      "digest": "69932f0e93b043f119eb26ff7a0309c7"
+    },
+    "public.platform_audit_record": {
+      "records": 157,
+      "digest": "d75a361bc650b73c5921d6a5e2fbf0cc"
+    },
+    "public.platform_consumed_jti": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.platform_idempotency_key": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.platform_invitations": {
+      "records": 3,
+      "digest": "33872c9750442702aac661c9d788e27d"
+    },
+    "public.platform_rate_limit_counter": {
+      "records": 4,
+      "digest": "48a3a0fd6b3151bbe9f60412d7170e03"
+    },
+    "public.platform_settings": {
+      "records": 13,
+      "digest": "1351171be1b8524a974f0e61ae70700e"
+    },
+    "public.post": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.pro_tips": {
+      "records": 16,
+      "digest": "c670e8397117abbaff5f58cd1d7312ff"
+    },
+    "public.product_provisioning": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.reward_catalog": {
+      "records": 38,
+      "digest": "c3f14591ec90686435cd6233dd930d1b"
+    },
+    "public.reward_catalog_location": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.reward_catalog_sync_log": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.reward_partner": {
+      "records": 10,
+      "digest": "7d7cdf456a96cf8cc2c0f1ca3cdc7ddb"
+    },
+    "public.reward_partner_location": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.reward_redemptions": {
+      "records": 1,
+      "digest": "def4baec112ec1b195758608a04a2a48"
+    },
+    "public.reward_transactions": {
+      "records": 32,
+      "digest": "e4a4aa71a8568f14c02aa2446b1b8609"
+    },
+    "public.ride_gps_point": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.ride_reward_basis_contract": {
+      "records": 2,
+      "digest": "e7ec14bd2a1e87abf27715237bfba3bb"
+    },
+    "public.ride_reward_configuration_snapshot": {
+      "records": 5,
+      "digest": "02c4fc8306824e3a3d18395a716698f2"
+    },
+    "public.ride_reward_execution_permit": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.ride_reward_execution_receipt": {
+      "records": 2,
+      "digest": "a3395030775075da90c42abd15195066"
+    },
+    "public.ride_reward_settlement": {
+      "records": 3,
+      "digest": "e77a3dcdaba50bb1757d50be1d889e40"
+    },
+    "public.ride_session": {
+      "records": 66,
+      "digest": "0c9d53123188fd76b995ac20ebe00c02"
+    },
+    "public.rider": {
+      "records": 10,
+      "digest": "bf9b69078fbe0ff2c8c629953f2744b1"
+    },
+    "public.rider_availability_log": {
+      "records": 33,
+      "digest": "956dc91754daf1599971268ce09f35c3"
+    },
+    "public.rider_badge_award": {
+      "records": 6,
+      "digest": "b9f0866ad0b324931a5265c561efe801"
+    },
+    "public.rider_badge_definition": {
+      "records": 12,
+      "digest": "c18bf323b2920fd2dafebb926ff6ba28"
+    },
+    "public.rider_bikes": {
+      "records": 2,
+      "digest": "e211c8d2d42546029af129f12330e1f9"
+    },
+    "public.rider_brand_preference": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.rider_brand_preference_event": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.rider_campaign_accessory_assignment": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.rider_campaign_accessory_event": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.rider_campaign_contribution": {
+      "records": 3,
+      "digest": "ac200ab86b89c7f3886d29e4a4330341"
+    },
+    "public.rider_campaign_streak": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.rider_daily_progress_summary": {
+      "records": 13,
+      "digest": "e71bfa3468238ec7d0141955be6f8a9c"
+    },
+    "public.rider_progress_event": {
+      "records": 47,
+      "digest": "7e4f72f8a854615b6872248124e7f357"
+    },
+    "public.rider_referrals": {
+      "records": 2,
+      "digest": "898ee673b3fe4f22c043e1eae7c58515"
+    },
+    "public.rider_reward_balance": {
+      "records": 10,
+      "digest": "c8c0d16c74c183d6ddca58650fecc0f7"
+    },
+    "public.rider_route": {
+      "records": 3,
+      "digest": "180af5eb87b1fd33d0642ca4b8af16a9"
+    },
+    "public.rider_weekly_summary": {
+      "records": 18,
+      "digest": "e8dfb20d2da022f60672b1cc2add0bef"
+    },
+    "public.route": {
+      "records": 3,
+      "digest": "b7c0f740df125566055fe923abd982a3"
+    },
+    "public.route_intelligence_logs": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.route_optimizer_decisions": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.route_optimizer_runs": {
+      "records": 2,
+      "digest": "df521cc8b0f618e4719397c5b733617b"
+    },
+    "public.route_stop": {
+      "records": 9,
+      "digest": "534bc05d279811d62dea7f9b89cb35da"
+    },
+    "public.route_tracking": {
+      "records": 71,
+      "digest": "2a553dd64dcf39861cb039839d8489cb"
+    },
+    "public.scheduled_exports": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.session_flag": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_catalog_editor": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_credential": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_outbox": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_readiness_evidence": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_recovery": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_release_control": {
+      "records": 1,
+      "digest": "b3e26f7066869ea7f3d62b9bc6f33019"
+    },
+    "public.shop_scheduler_state": {
+      "records": 1,
+      "digest": "5df3a1c2e320dd8cdf6675293a1b62b6"
+    },
+    "public.shop_worker_health": {
+      "records": 1,
+      "digest": "1264597e8e56381041f8400eed85059a"
+    },
+    "public.spatial_ref_sys": {
+      "records": 8500,
+      "digest": "77de68fa557f47decc7f208eccf388d7"
+    },
+    "public.suggested_routes": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.support_message": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.support_ticket": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.user": {
+      "records": 11,
+      "digest": "16553c9bd144deeaa613c2d8fde5555f"
+    },
+    "public.user_activity": {
+      "records": 141,
+      "digest": "10d8c618e7e302fab8bf0607f76f7513"
+    },
+    "public.user_preferences": {
+      "records": 3,
+      "digest": "4e17f730fcf8926dfed917f23a293d09"
+    },
+    "public.user_push_tokens": {
+      "records": 22,
+      "digest": "c2cf5e5a449d5c4623ae9019b81af3cb"
+    },
+    "public.waitlist": {
+      "records": 42,
+      "digest": "9acc82813359f8ae77abb3a929f22a33"
+    },
+    "public.workboard_boards": {
+      "records": 5,
+      "digest": "dfffbf3c6b1e88499ff950c4cac3fa1a"
+    },
+    "public.workboard_cards": {
+      "records": 6,
+      "digest": "3eca0c678d531be62dcf26985acff510"
+    },
+    "public.workboard_team_members": {
+      "records": 1,
+      "digest": "cfc50cf7e03beedd1bbcfc4764d16987"
+    },
+    "public.workboard_teams": {
+      "records": 1,
+      "digest": "ab046362ab860256ad1f2c2682502e1d"
+    },
+    "public.zone_visit": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  },
+  "after": {
+    "auth.audit_log_entries": {
+      "records": 3041,
+      "digest": "daaf1fa06ba7b87b11b62e61bb3bed7f"
+    },
+    "auth.custom_oauth_providers": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.flow_state": {
+      "records": 14,
+      "digest": "e388c0f4173b6eb5e1c228775c9dbf89"
+    },
+    "auth.identities": {
+      "records": 12,
+      "digest": "10647ec9baca52fbd258781873f92e13"
+    },
+    "auth.instances": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.mfa_amr_claims": {
+      "records": 54,
+      "digest": "c7641bbabf009e5843511236537be2dd"
+    },
+    "auth.mfa_challenges": {
+      "records": 70,
+      "digest": "f60d209577105e61876d2f96f0f220ff"
+    },
+    "auth.mfa_factors": {
+      "records": 1,
+      "digest": "a897d4b041863385e5289051faf3044b"
+    },
+    "auth.mfa_recovery_code_sets": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.mfa_recovery_codes": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.oauth_authorizations": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.oauth_client_states": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.oauth_clients": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.oauth_consents": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.one_time_tokens": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.refresh_tokens": {
+      "records": 135,
+      "digest": "69f9e7340bebf654a41679618e6a9b00"
+    },
+    "auth.saml_providers": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.saml_relay_states": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.schema_migrations": {
+      "records": 82,
+      "digest": "7def01dcf385b28a0b3a2a5f01825c29"
+    },
+    "auth.scim_tokens": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.scim_users": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.sessions": {
+      "records": 39,
+      "digest": "dc101fd14eb25e0c7bda0ae2c4f43c9b"
+    },
+    "auth.sso_domains": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.sso_providers": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.users": {
+      "records": 11,
+      "digest": "6c744aafb031b3fdfe95f8cd65bd2a93"
+    },
+    "auth.webauthn_challenges": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "auth.webauthn_credentials": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_auth_sync": {
+      "records": 1,
+      "digest": "3489aeae2b61ec6a89b44d71a71eed7b"
+    },
+    "public.account_deletion_action_rule": {
+      "records": 56,
+      "digest": "d363cce805485b1eed5ab52d8df18c73"
+    },
+    "public.account_deletion_alias": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_audit": {
+      "records": 29,
+      "digest": "5975eff14dd800b4a1051a682d03a71b"
+    },
+    "public.account_deletion_authorship_shape": {
+      "records": 9,
+      "digest": "da4fa9c7a1ce3781b90de804f2e68db1"
+    },
+    "public.account_deletion_barrier_binding": {
+      "records": 83,
+      "digest": "7fd86939d59f9d94104bd5ccba54d5aa"
+    },
+    "public.account_deletion_barrier_parent": {
+      "records": 16,
+      "digest": "5151e1a4f92d6c010cc5a027d06920d9"
+    },
+    "public.account_deletion_campaign_carry": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_campaign_checkpoint": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_case": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_completion_receipt": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_contract_gate": {
+      "records": 1,
+      "digest": "6629c3d4115c532046ea9bb63359b80f"
+    },
+    "public.account_deletion_equipment_case": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_evidence": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_external_resource": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_hold": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_imported_suppression": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_inventory": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_jobs": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_journal_expiry": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_journal_expiry_permit": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_managed_write": {
+      "records": 5,
+      "digest": "31851313e4735bf8f8ad6bcc35aef68d"
+    },
+    "public.account_deletion_operation": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_operator_proposal": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_policy_version": {
+      "records": 2,
+      "digest": "e4be75762ea3852b2aef37f198dac099"
+    },
+    "public.account_deletion_receipt_access": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_residual_check": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_restoration_manifest": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_restore_run": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_restore_suppression": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_retention_rule": {
+      "records": 26,
+      "digest": "567a307bccd1db6cd679784b5390874d"
+    },
+    "public.account_deletion_review": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_subject_inventory": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.account_deletion_suppression_key": {
+      "records": 1,
+      "digest": "abb7a975ed32aa36b922580e140ad072"
+    },
+    "public.account_deletion_write_guard": {
+      "records": 7,
+      "digest": "fbc98a58733d6535d4c4684b31368df7"
+    },
+    "public.account_deletion_write_permit": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.admin_creation_operation": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.admin_dashboard_sessions": {
+      "records": 2,
+      "digest": "9452bc41aa344912bccc094e4558be93"
+    },
+    "public.admin_users": {
+      "records": 3,
+      "digest": "f84b958c52660488539bf54cde6d08bf"
+    },
+    "public.advertiser": {
+      "records": 1,
+      "digest": "1febc297c1c5412bf7854145d3874e6a"
+    },
+    "public.audit_log": {
+      "records": 148,
+      "digest": "6f6f95c4c27768fe7fd611849086f676"
+    },
+    "public.auth_provider_credentials": {
+      "records": 1,
+      "digest": "3cd47bdbf0a68f89e89eb16b16b5e2b9"
+    },
+    "public.auth_provider_proofs": {
+      "records": 1,
+      "digest": "b6cd5927b68b684503dd1ede116fb331"
+    },
+    "public.brand": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.brand_campaign": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.bundle_capability": {
+      "records": 31,
+      "digest": "52730b030260c9827b8c6b1f86ec8085"
+    },
+    "public.campaign": {
+      "records": 3,
+      "digest": "3d11632b838d5c2584fd2f8578f761b3"
+    },
+    "public.campaign_accessory_inventory_item": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.campaign_accessory_requirement": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.campaign_accessory_type": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.campaign_assignment": {
+      "records": 3,
+      "digest": "ff26c51637eadd691df0bd94d8c5c235"
+    },
+    "public.campaign_assignment_events": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.campaign_hot_zone": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.campaign_signup": {
+      "records": 1,
+      "digest": "67e040f8083944326ae34a226c5ef110"
+    },
+    "public.campaign_zone": {
+      "records": 3,
+      "digest": "3406ca8a7da9c446b8ee4463300952a3"
+    },
+    "public.campaign_zone_backup": {
+      "records": 136,
+      "digest": "5224385a71b4a254ba77b41914b44ddd"
+    },
+    "public.community_ride": {
+      "records": 3,
+      "digest": "6b4a528dde9e07cab0db09c6d44330c7"
+    },
+    "public.community_ride_change_log": {
+      "records": 1,
+      "digest": "13b6e8970027a7638a19989c76ea4c02"
+    },
+    "public.community_ride_creator_grant": {
+      "records": 2,
+      "digest": "c62b2d7824fdbef4212a9c9571ba3b4b"
+    },
+    "public.community_ride_invites": {
+      "records": 5,
+      "digest": "56fe44c40a2a2f8f4949e223d19c74c3"
+    },
+    "public.community_ride_participant": {
+      "records": 3,
+      "digest": "8412e85ee651731b7c80f92a83edba04"
+    },
+    "public.corridor_compliance": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.employee_provisioning": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.export_history": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.external_account_provisioning": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.fulfilment": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.fulfilment_event": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.fulfilment_resource": {
+      "records": 38,
+      "digest": "df2608f89d7b837dc5ec955f37c6b843"
+    },
+    "public.fulfilment_resource_allocation": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.fulfilment_resource_item": {
+      "records": 25,
+      "digest": "823d32b14d24e77c6706b3a22b366fa1"
+    },
+    "public.fulfilment_token": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.geocode_cache": {
+      "records": 4,
+      "digest": "d3eb4ffe62429af303410f7358610261"
+    },
+    "public.held_ride_recovery_approval": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.impact_methodology": {
+      "records": 2,
+      "digest": "bd2c5161edfc3fef143bd7267eeac1f8"
+    },
+    "public.impression_events": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.notifications": {
+      "records": 21,
+      "digest": "1737dcf48ad03636dec5fa828318ecc4"
+    },
+    "public.ops_command_receipt": {
+      "records": 1,
+      "digest": "b3b952fb9eacdde9c249fabbf3655ce7"
+    },
+    "public.ops_incident": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.ops_notification_recipient": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.ops_notification_send": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.organisation": {
+      "records": 11,
+      "digest": "2b7b316bf42c97a6faf7c32ac2895f5e"
+    },
+    "public.organisation_membership": {
+      "records": 2,
+      "digest": "83de29ebf04fa0981c988d550572af8e"
+    },
+    "public.partner_business_category": {
+      "records": 8,
+      "digest": "39fe8450b71598d1c1908dcec33f7a38"
+    },
+    "public.partner_location_audit": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.partner_validation": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.performance_stats": {
+      "records": 5,
+      "digest": "fe52acd461aa4150e7a9782ac66a497a"
+    },
+    "public.permission_bundle": {
+      "records": 6,
+      "digest": "69932f0e93b043f119eb26ff7a0309c7"
+    },
+    "public.platform_audit_record": {
+      "records": 157,
+      "digest": "d75a361bc650b73c5921d6a5e2fbf0cc"
+    },
+    "public.platform_consumed_jti": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.platform_idempotency_key": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.platform_invitations": {
+      "records": 3,
+      "digest": "33872c9750442702aac661c9d788e27d"
+    },
+    "public.platform_rate_limit_counter": {
+      "records": 4,
+      "digest": "48a3a0fd6b3151bbe9f60412d7170e03"
+    },
+    "public.platform_settings": {
+      "records": 13,
+      "digest": "1351171be1b8524a974f0e61ae70700e"
+    },
+    "public.post": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.pro_tips": {
+      "records": 16,
+      "digest": "c670e8397117abbaff5f58cd1d7312ff"
+    },
+    "public.product_provisioning": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.reward_catalog": {
+      "records": 38,
+      "digest": "c3f14591ec90686435cd6233dd930d1b"
+    },
+    "public.reward_catalog_location": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.reward_catalog_sync_log": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.reward_partner": {
+      "records": 10,
+      "digest": "7d7cdf456a96cf8cc2c0f1ca3cdc7ddb"
+    },
+    "public.reward_partner_location": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.reward_redemptions": {
+      "records": 1,
+      "digest": "def4baec112ec1b195758608a04a2a48"
+    },
+    "public.reward_transactions": {
+      "records": 32,
+      "digest": "e4a4aa71a8568f14c02aa2446b1b8609"
+    },
+    "public.ride_gps_point": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.ride_reward_basis_contract": {
+      "records": 2,
+      "digest": "e7ec14bd2a1e87abf27715237bfba3bb"
+    },
+    "public.ride_reward_configuration_snapshot": {
+      "records": 5,
+      "digest": "02c4fc8306824e3a3d18395a716698f2"
+    },
+    "public.ride_reward_execution_permit": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.ride_reward_execution_receipt": {
+      "records": 2,
+      "digest": "a3395030775075da90c42abd15195066"
+    },
+    "public.ride_reward_settlement": {
+      "records": 3,
+      "digest": "e77a3dcdaba50bb1757d50be1d889e40"
+    },
+    "public.ride_session": {
+      "records": 66,
+      "digest": "0c9d53123188fd76b995ac20ebe00c02"
+    },
+    "public.rider": {
+      "records": 9,
+      "digest": "249f109c3b8817dc0d6d94f5d086aadb"
+    },
+    "public.rider_availability_log": {
+      "records": 33,
+      "digest": "956dc91754daf1599971268ce09f35c3"
+    },
+    "public.rider_badge_award": {
+      "records": 6,
+      "digest": "b9f0866ad0b324931a5265c561efe801"
+    },
+    "public.rider_badge_definition": {
+      "records": 12,
+      "digest": "c18bf323b2920fd2dafebb926ff6ba28"
+    },
+    "public.rider_bikes": {
+      "records": 2,
+      "digest": "e211c8d2d42546029af129f12330e1f9"
+    },
+    "public.rider_brand_preference": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.rider_brand_preference_event": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.rider_campaign_accessory_assignment": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.rider_campaign_accessory_event": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.rider_campaign_contribution": {
+      "records": 3,
+      "digest": "ac200ab86b89c7f3886d29e4a4330341"
+    },
+    "public.rider_campaign_streak": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.rider_daily_progress_summary": {
+      "records": 13,
+      "digest": "e71bfa3468238ec7d0141955be6f8a9c"
+    },
+    "public.rider_progress_event": {
+      "records": 47,
+      "digest": "7e4f72f8a854615b6872248124e7f357"
+    },
+    "public.rider_referrals": {
+      "records": 2,
+      "digest": "898ee673b3fe4f22c043e1eae7c58515"
+    },
+    "public.rider_reward_balance": {
+      "records": 9,
+      "digest": "17a6d0fbb66e804da42d15becec60afc"
+    },
+    "public.rider_route": {
+      "records": 3,
+      "digest": "180af5eb87b1fd33d0642ca4b8af16a9"
+    },
+    "public.rider_weekly_summary": {
+      "records": 18,
+      "digest": "e8dfb20d2da022f60672b1cc2add0bef"
+    },
+    "public.route": {
+      "records": 3,
+      "digest": "b7c0f740df125566055fe923abd982a3"
+    },
+    "public.route_intelligence_logs": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.route_optimizer_decisions": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.route_optimizer_runs": {
+      "records": 2,
+      "digest": "df521cc8b0f618e4719397c5b733617b"
+    },
+    "public.route_stop": {
+      "records": 9,
+      "digest": "534bc05d279811d62dea7f9b89cb35da"
+    },
+    "public.route_tracking": {
+      "records": 71,
+      "digest": "2a553dd64dcf39861cb039839d8489cb"
+    },
+    "public.scheduled_exports": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.session_flag": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_catalog_editor": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_credential": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_outbox": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_readiness_evidence": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_recovery": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.shop_release_control": {
+      "records": 1,
+      "digest": "b3e26f7066869ea7f3d62b9bc6f33019"
+    },
+    "public.shop_scheduler_state": {
+      "records": 1,
+      "digest": "5df3a1c2e320dd8cdf6675293a1b62b6"
+    },
+    "public.shop_worker_health": {
+      "records": 1,
+      "digest": "1264597e8e56381041f8400eed85059a"
+    },
+    "public.spatial_ref_sys": {
+      "records": 8500,
+      "digest": "77de68fa557f47decc7f208eccf388d7"
+    },
+    "public.suggested_routes": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.support_message": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.support_ticket": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "public.user": {
+      "records": 11,
+      "digest": "f28947a70bc799e6e101f4618984356c"
+    },
+    "public.user_activity": {
+      "records": 141,
+      "digest": "10d8c618e7e302fab8bf0607f76f7513"
+    },
+    "public.user_preferences": {
+      "records": 3,
+      "digest": "4e17f730fcf8926dfed917f23a293d09"
+    },
+    "public.user_push_tokens": {
+      "records": 22,
+      "digest": "c2cf5e5a449d5c4623ae9019b81af3cb"
+    },
+    "public.waitlist": {
+      "records": 42,
+      "digest": "9acc82813359f8ae77abb3a929f22a33"
+    },
+    "public.workboard_boards": {
+      "records": 5,
+      "digest": "dfffbf3c6b1e88499ff950c4cac3fa1a"
+    },
+    "public.workboard_cards": {
+      "records": 6,
+      "digest": "3eca0c678d531be62dcf26985acff510"
+    },
+    "public.workboard_team_members": {
+      "records": 1,
+      "digest": "cfc50cf7e03beedd1bbcfc4764d16987"
+    },
+    "public.workboard_teams": {
+      "records": 1,
+      "digest": "ab046362ab860256ad1f2c2682502e1d"
+    },
+    "public.zone_visit": {
+      "records": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  },
+  "changed": [
+    "auth.users",
+    "public.rider",
+    "public.rider_reward_balance",
+    "public.user"
+  ],
+  "gates": {
+    "deletion": {
+      "requests_enabled": true,
+      "managed_resources_execution_enabled": false
+    },
+    "shop": {
+      "redemption_enabled": false
+    }
+  }
+}

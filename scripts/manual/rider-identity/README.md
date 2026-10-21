@@ -1,9 +1,13 @@
 # Partner identity and authenticated activity correction
 
-Production execution requires explicit owner approval of each exact SQL file.
-Source publication alone does not authorize these operations. Run the activity
-migration before deploying the Admin activity reader. Until installed, the reader
-explicitly reports unavailable activity rather than using a legacy date.
+Owner-approved production rollout completed on 21 October 2026. Migration 080 is
+installed as `20261021160000`; the exact single-account correction is committed;
+Admin `eb32272596cb4d91765af822e19c1557176d101b` is READY/PROMOTED as
+`dpl_fac81Hhr7wWpNKEyzfj8fwDfdjuu` at `admin.movrr.nl`. See
+`docs/verification/rider-identity-activity/production.json` for exact source
+checksums, before/after integrity and remaining authenticated browser limitations.
+The reviewed SQL below is historical execution evidence, not authorization to
+reapply either operation or recreate the removed Rider.
 
 ## Confirmed cause
 
@@ -29,7 +33,7 @@ last redundant `server_assigned_role` writer in managed Product creation is remo
 the existing Product reservation supplies its canonical account domain. No Mobile
 runtime changes or broad RBAC redesign are needed.
 
-## Exact production scopes pending approval
+## Exact reviewed production scopes
 
 1. `scripts/080_authenticated_account_activity.sql`: add one service-only bounded
    activity read RPC, one private trigger function, and DELETE triggers on
@@ -126,3 +130,27 @@ claim production completion from local tests. Roll back application source if
 needed; remove only the two new triggers/functions to roll back 080. Retained
 session activity remains audit evidence. Do not recreate the unintended Rider as
 an automatic rollback; inspect and obtain separate approval for any restoration.
+
+## Completed production verification
+
+The account's actual production DTO and relationship renderer yield
+`Partner · Powerdon · Owner`. Both Rider lookups and Rider-only capabilities are
+denied. Partner Owner RLS and scoped permissions succeed; other-tenant selection
+is denied. Auth ID/provider identity, active status, null Staff role and exact
+Owner membership remain unchanged. Auth has no sign-in for this account and the
+two staff updates remain audit evidence; Last Active is correctly unrecorded.
+
+Migration changed zero existing rows. Correction changed only the four reviewed
+records across Auth User, public User, Rider and zero balance; other accounts and
+all financial/history tables were preserved. The role guard is enabled. Across
+184 public/Auth tables, post-release changes are limited to unrelated routine Shop
+scheduler/worker health. Production Users stay at 11; Rider profiles decrease
+10→9 and distinct Rider accounts 8→7; organisation memberships stay at two.
+
+Five read-only production handler checks pass, including exact labels, role
+filters/counts, genuine activity/null/refresh, Owner/Rider/tenant authorization,
+MFA and sorting/pagination over actual data. Eighteen focused activity/cache/UI
+checks pass again; configured lint/TypeScript pass. Live browser login, logout,
+account switching and visual acceptance were not performed because Chrome
+DevTools was unavailable and the browser inventory was empty. No production
+credentials, sessions, synthetic identities or financial transactions were created.

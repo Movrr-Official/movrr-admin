@@ -1,0 +1,1422 @@
+{
+  "recordedAt": "2026-10-21T16:18:38.975Z",
+  "phase": "before",
+  "readOnly": true,
+  "journal": [
+    {
+      "version": "20261021144000",
+      "name": "079_users_dashboard_sync_read",
+      "checksum": "6d29a01faa98716c0b6d073f8863bdd5154cfe6e89d65a24d47cfe09e9e1ee4b"
+    }
+  ],
+  "functions": [
+    {
+      "proname": "account_identity_active",
+      "signature": "account_identity_active(uuid)",
+      "prosecdef": true,
+      "provolatile": "s",
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "owner": "postgres",
+      "checksum": "c3df35663fb926d9c14af42c575ce889731ada53a4becb85fb10ccbfdff41137"
+    },
+    {
+      "proname": "handle_new_user",
+      "signature": "handle_new_user()",
+      "prosecdef": true,
+      "provolatile": "v",
+      "proconfig": [
+        "search_path=public"
+      ],
+      "owner": "postgres",
+      "checksum": "df44f298d745bf796fbb5f7f53e7bfc729282b7956886dbfdc0101eec048a6ec"
+    },
+    {
+      "proname": "ops_employee_capabilities",
+      "signature": "ops_employee_capabilities(text)",
+      "prosecdef": false,
+      "provolatile": "i",
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "owner": "postgres",
+      "checksum": "f7b0daed45aed2f75a2eb79c39552821d336f0c67042cd3888ccd507ac21dd34"
+    }
+  ],
+  "triggers": [
+    {
+      "relation": "\"user\"",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.\"user\" FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "\"user\"",
+      "tgname": "enforce_user_role_immutable_for_clients",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER enforce_user_role_immutable_for_clients BEFORE UPDATE ON public.\"user\" FOR EACH ROW EXECUTE FUNCTION enforce_user_role_immutable_for_clients()"
+    },
+    {
+      "relation": "\"user\"",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.\"user\" FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "account_deletion_action_rule",
+      "tgname": "account_deletion_action_rule_immutable",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_action_rule_immutable BEFORE DELETE OR UPDATE ON public.account_deletion_action_rule FOR EACH ROW EXECUTE FUNCTION account_deletion_immutable()"
+    },
+    {
+      "relation": "account_deletion_audit",
+      "tgname": "account_deletion_audit_immutable",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_audit_immutable BEFORE DELETE OR UPDATE ON public.account_deletion_audit FOR EACH ROW EXECUTE FUNCTION account_deletion_immutable()"
+    },
+    {
+      "relation": "account_deletion_case",
+      "tgname": "account_deletion_equipment_pointer_expiry",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_equipment_pointer_expiry BEFORE DELETE ON public.account_deletion_case FOR EACH ROW EXECUTE FUNCTION account_deletion_expire_equipment_pointer()"
+    },
+    {
+      "relation": "account_deletion_case",
+      "tgname": "account_deletion_equipment_resolution",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_equipment_resolution BEFORE UPDATE OF state ON public.account_deletion_case FOR EACH ROW EXECUTE FUNCTION account_deletion_require_resolved_equipment_case()"
+    },
+    {
+      "relation": "account_deletion_evidence",
+      "tgname": "account_deletion_evidence_allowlist",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_evidence_allowlist BEFORE INSERT OR UPDATE ON public.account_deletion_evidence FOR EACH ROW EXECUTE FUNCTION check_account_deletion_evidence()"
+    },
+    {
+      "relation": "account_deletion_hold",
+      "tgname": "account_deletion_hold_expiry_lock",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_hold_expiry_lock BEFORE INSERT OR DELETE OR UPDATE ON public.account_deletion_hold FOR EACH ROW EXECUTE FUNCTION account_deletion_lock_hold_job()"
+    },
+    {
+      "relation": "account_deletion_inventory",
+      "tgname": "account_deletion_inventory_immutable",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_inventory_immutable BEFORE DELETE OR UPDATE ON public.account_deletion_inventory FOR EACH ROW EXECUTE FUNCTION account_deletion_immutable()"
+    },
+    {
+      "relation": "account_deletion_jobs",
+      "tgname": "account_deletion_completion_gate",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_completion_gate BEFORE INSERT OR UPDATE ON public.account_deletion_jobs FOR EACH ROW EXECUTE FUNCTION guard_account_deletion_completion()"
+    },
+    {
+      "relation": "account_deletion_jobs",
+      "tgname": "account_deletion_queue_barrier",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_queue_barrier AFTER INSERT ON public.account_deletion_jobs FOR EACH ROW EXECUTE FUNCTION account_deletion_queue_barrier()"
+    },
+    {
+      "relation": "account_deletion_policy_version",
+      "tgname": "account_deletion_policy_immutable",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_policy_immutable BEFORE DELETE OR UPDATE ON public.account_deletion_policy_version FOR EACH ROW EXECUTE FUNCTION account_deletion_immutable()"
+    },
+    {
+      "relation": "account_deletion_retention_rule",
+      "tgname": "account_deletion_retention_immutable",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_retention_immutable BEFORE DELETE OR UPDATE ON public.account_deletion_retention_rule FOR EACH ROW EXECUTE FUNCTION account_deletion_immutable()"
+    },
+    {
+      "relation": "account_deletion_write_permit",
+      "tgname": "account_deletion_permit_end",
+      "tgenabled": "O",
+      "definition": "CREATE CONSTRAINT TRIGGER account_deletion_permit_end AFTER INSERT OR UPDATE ON public.account_deletion_write_permit DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION account_deletion_expire_transaction_permit()"
+    },
+    {
+      "relation": "admin_dashboard_sessions",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.admin_dashboard_sessions FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "admin_dashboard_sessions",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.admin_dashboard_sessions FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "admin_users",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.admin_users FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "admin_users",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.admin_users FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "advertiser",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.advertiser FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "advertiser",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.advertiser FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "audit_log",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.audit_log FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "audit_log",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.audit_log FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "auth_provider_credentials",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.auth_provider_credentials FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "auth_provider_credentials",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.auth_provider_credentials FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "auth_provider_proofs",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.auth_provider_proofs FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "auth_provider_proofs",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.auth_provider_proofs FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "auth.users",
+      "tgname": "account_deletion_restore_barrier",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_restore_barrier BEFORE INSERT OR UPDATE ON auth.users FOR EACH ROW EXECUTE FUNCTION account_deletion_restore_barrier()"
+    },
+    {
+      "relation": "brand",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.brand FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "brand",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.brand FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "brand_campaign",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.brand_campaign FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "brand_campaign",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.brand_campaign FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "bundle_capability",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.bundle_capability FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "bundle_capability",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.bundle_capability FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "campaign",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.campaign FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "campaign",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.campaign FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "campaign_accessory_inventory_item",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.campaign_accessory_inventory_item FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "campaign_accessory_inventory_item",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.campaign_accessory_inventory_item FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "campaign_accessory_requirement",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.campaign_accessory_requirement FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "campaign_accessory_requirement",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.campaign_accessory_requirement FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "campaign_accessory_type",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.campaign_accessory_type FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "campaign_accessory_type",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.campaign_accessory_type FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "campaign_assignment",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.campaign_assignment FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "campaign_assignment",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.campaign_assignment FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "campaign_assignment_events",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.campaign_assignment_events FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "campaign_assignment_events",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.campaign_assignment_events FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "campaign_hot_zone",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.campaign_hot_zone FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "campaign_hot_zone",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.campaign_hot_zone FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "campaign_signup",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.campaign_signup FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "campaign_signup",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.campaign_signup FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "campaign_zone",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.campaign_zone FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "campaign_zone",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.campaign_zone FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "campaign_zone_backup",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.campaign_zone_backup FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "campaign_zone_backup",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.campaign_zone_backup FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "community_ride",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.community_ride FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "community_ride",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.community_ride FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "community_ride_change_log",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.community_ride_change_log FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "community_ride_change_log",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.community_ride_change_log FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "community_ride_creator_grant",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.community_ride_creator_grant FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "community_ride_creator_grant",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.community_ride_creator_grant FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "community_ride_invites",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.community_ride_invites FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "community_ride_invites",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.community_ride_invites FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "community_ride_participant",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.community_ride_participant FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "community_ride_participant",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.community_ride_participant FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "corridor_compliance",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.corridor_compliance FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "corridor_compliance",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.corridor_compliance FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "export_history",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.export_history FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "export_history",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.export_history FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "fulfilment",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.fulfilment FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "fulfilment",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.fulfilment FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "fulfilment_event",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.fulfilment_event FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "fulfilment_event",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.fulfilment_event FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "fulfilment_resource",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.fulfilment_resource FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "fulfilment_resource",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.fulfilment_resource FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "fulfilment_resource_allocation",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.fulfilment_resource_allocation FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "fulfilment_resource_allocation",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.fulfilment_resource_allocation FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "fulfilment_resource_item",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.fulfilment_resource_item FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "fulfilment_resource_item",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.fulfilment_resource_item FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "fulfilment_token",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.fulfilment_token FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "fulfilment_token",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.fulfilment_token FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "geocode_cache",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.geocode_cache FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "geocode_cache",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.geocode_cache FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "impression_events",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.impression_events FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "impression_events",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.impression_events FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "notifications",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.notifications FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "notifications",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.notifications FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "organisation",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.organisation FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "organisation",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.organisation FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "organisation_membership",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.organisation_membership FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "organisation_membership",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.organisation_membership FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "partner_location_audit",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.partner_location_audit FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "partner_location_audit",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.partner_location_audit FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "partner_validation",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.partner_validation FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "partner_validation",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.partner_validation FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "performance_stats",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.performance_stats FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "performance_stats",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.performance_stats FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "permission_bundle",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.permission_bundle FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "permission_bundle",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.permission_bundle FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "platform_audit_record",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.platform_audit_record FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "platform_audit_record",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.platform_audit_record FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "platform_consumed_jti",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.platform_consumed_jti FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "platform_consumed_jti",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.platform_consumed_jti FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "platform_idempotency_key",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.platform_idempotency_key FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "platform_idempotency_key",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.platform_idempotency_key FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "platform_invitations",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.platform_invitations FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "platform_invitations",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.platform_invitations FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "platform_rate_limit_counter",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.platform_rate_limit_counter FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "platform_rate_limit_counter",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.platform_rate_limit_counter FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "platform_settings",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.platform_settings FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "platform_settings",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.platform_settings FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "post",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.post FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "post",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.post FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "pro_tips",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.pro_tips FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "pro_tips",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.pro_tips FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "reward_catalog",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.reward_catalog FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "reward_catalog",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.reward_catalog FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "reward_catalog_location",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.reward_catalog_location FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "reward_catalog_location",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.reward_catalog_location FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "reward_catalog_sync_log",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.reward_catalog_sync_log FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "reward_catalog_sync_log",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.reward_catalog_sync_log FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "reward_partner",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.reward_partner FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "reward_partner",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.reward_partner FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "reward_partner_location",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.reward_partner_location FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "reward_partner_location",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.reward_partner_location FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "reward_redemptions",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.reward_redemptions FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "reward_redemptions",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.reward_redemptions FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "reward_transactions",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.reward_transactions FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "reward_transactions",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.reward_transactions FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "ride_gps_point",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.ride_gps_point FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "ride_gps_point",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.ride_gps_point FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "ride_reward_configuration_snapshot",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.ride_reward_configuration_snapshot FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "ride_reward_configuration_snapshot",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.ride_reward_configuration_snapshot FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "ride_reward_execution_receipt",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.ride_reward_execution_receipt FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "ride_reward_settlement",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.ride_reward_settlement FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "ride_reward_settlement",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.ride_reward_settlement FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "ride_session",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.ride_session FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "ride_session",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.ride_session FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_availability_log",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_availability_log FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_availability_log",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_availability_log FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_badge_award",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_badge_award FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_badge_award",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_badge_award FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_badge_definition",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_badge_definition FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_badge_definition",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_badge_definition FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_bikes",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_bikes FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_bikes",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_bikes FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_brand_preference",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_brand_preference FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_brand_preference",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_brand_preference FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_brand_preference_event",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_brand_preference_event FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_brand_preference_event",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_brand_preference_event FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_campaign_accessory_assignment",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_campaign_accessory_assignment FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_campaign_accessory_assignment",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_campaign_accessory_assignment FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_campaign_accessory_event",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_campaign_accessory_event FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_campaign_accessory_event",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_campaign_accessory_event FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_campaign_contribution",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_campaign_contribution FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_campaign_contribution",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_campaign_contribution FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_campaign_streak",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_campaign_streak FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_campaign_streak",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_campaign_streak FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_daily_progress_summary",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_daily_progress_summary FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_daily_progress_summary",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_daily_progress_summary FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_progress_event",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_progress_event FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_progress_event",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_progress_event FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_referrals",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_referrals FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_referrals",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_referrals FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_reward_balance",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_reward_balance FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_reward_balance",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_reward_balance FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_route",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_route FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_route",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_route FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "rider_weekly_summary",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.rider_weekly_summary FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "rider_weekly_summary",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.rider_weekly_summary FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "route",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.route FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "route",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.route FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "route_intelligence_logs",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.route_intelligence_logs FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "route_intelligence_logs",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.route_intelligence_logs FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "route_optimizer_decisions",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.route_optimizer_decisions FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "route_optimizer_decisions",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.route_optimizer_decisions FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "route_optimizer_runs",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.route_optimizer_runs FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "route_optimizer_runs",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.route_optimizer_runs FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "route_stop",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.route_stop FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "route_stop",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.route_stop FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "route_tracking",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.route_tracking FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "route_tracking",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.route_tracking FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "scheduled_exports",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.scheduled_exports FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "scheduled_exports",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.scheduled_exports FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "session_flag",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.session_flag FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "session_flag",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.session_flag FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "storage.objects",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON storage.objects FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "storage.objects",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON storage.objects FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "storage.s3_multipart_uploads",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON storage.s3_multipart_uploads FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "storage.s3_multipart_uploads",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON storage.s3_multipart_uploads FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "storage.s3_multipart_uploads_parts",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON storage.s3_multipart_uploads_parts FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "storage.s3_multipart_uploads_parts",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON storage.s3_multipart_uploads_parts FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "suggested_routes",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.suggested_routes FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "suggested_routes",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.suggested_routes FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "support_message",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.support_message FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "support_message",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.support_message FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "support_ticket",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.support_ticket FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "support_ticket",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.support_ticket FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "user_activity",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.user_activity FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "user_activity",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.user_activity FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "user_preferences",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.user_preferences FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "user_preferences",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.user_preferences FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "user_push_tokens",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.user_push_tokens FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "user_push_tokens",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.user_push_tokens FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "waitlist",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.waitlist FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "waitlist",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.waitlist FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "workboard_boards",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.workboard_boards FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "workboard_boards",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.workboard_boards FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "workboard_cards",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.workboard_cards FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "workboard_cards",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.workboard_cards FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "workboard_team_members",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.workboard_team_members FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "workboard_team_members",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.workboard_team_members FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "workboard_teams",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.workboard_teams FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "workboard_teams",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.workboard_teams FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "zone_visit",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.zone_visit FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "zone_visit",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.zone_visit FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    }
+  ],
+  "account": {
+    "id": "007b5ab8-fea0-41f2-9068-055f154d7db0",
+    "email": "powerdonnl@gmail.com",
+    "last_sign_in_at": null,
+    "deleted_at": null,
+    "banned_until": null,
+    "role": "rider",
+    "status": "active",
+    "riders": 1,
+    "balances": 1,
+    "metadata_role": "partner_operations_manager",
+    "auth_other_fields": "77c3f78854fdbf663ee3bedf52a8a719",
+    "other_metadata": "da0f519559968e861794c38af5a12ee6",
+    "user_other_fields": "f0b108a1cb60df7078fa8efc7526fc0d"
+  },
+  "memberships": [
+    {
+      "id": "16773fed-3edd-493b-bce4-fc366beb2cea",
+      "organisation_id": "17be1d12-9e61-4654-afd0-fad0bf2d0278",
+      "user_id": "007b5ab8-fea0-41f2-9068-055f154d7db0",
+      "role": "owner",
+      "bundle_key": "org.owner",
+      "status": "active",
+      "created_at": "2026-10-21T14:45:16.313Z",
+      "updated_at": "2026-10-21T14:45:16.313Z",
+      "name": "Powerdon",
+      "type": "reward_partner"
+    }
+  ],
+  "staff": [
+    {
+      "user_id": "007b5ab8-fea0-41f2-9068-055f154d7db0",
+      "role": null
+    }
+  ],
+  "gates": {
+    "deletion": {
+      "requests_enabled": true,
+      "managed_resources_execution_enabled": false
+    },
+    "shop": {
+      "redemption_enabled": false
+    }
+  },
+  "identity": {
+    "active": true,
+    "permissions": [
+      "staff.manage",
+      "resources.manage",
+      "rewards.manage",
+      "rewards.catalog.read",
+      "fulfilment.validate",
+      "fulfilment.confirm",
+      "fulfilment.read",
+      "fulfilment.cancel",
+      "fulfilment.refund",
+      "analytics.view"
+    ],
+    "auth_provider_identity_digest": "be849bf8b5bffa62532c7e0e5913abda"
+  },
+  "counts": {
+    "users": 11,
+    "rider_profiles": 10,
+    "rider_users": 8,
+    "memberships": 2
+  },
+  "activity": null,
+  "activityAcl": null,
+  "authorization": [],
+  "claimsAreOnlyReadOnlySqlContexts": true,
+  "authSessionAndBrowserLoginNotFabricated": true
+}

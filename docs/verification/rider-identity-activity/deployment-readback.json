@@ -1,0 +1,40 @@
+{
+  "admin-runtime.json": {
+    "id": "dpl_fac81Hhr7wWpNKEyzfj8fwDfdjuu",
+    "url": "movrr-admin-m87qc6b6n-movrrops-projects.vercel.app",
+    "gitSource": {
+      "sha": "eb32272596cb4d91765af822e19c1557176d101b",
+      "ref": "eb32272596cb4d91765af822e19c1557176d101b",
+      "type": "github",
+      "repoId": 1084919487
+    },
+    "readyState": "READY",
+    "readySubstate": "PROMOTED",
+    "autoAssignCustomDomains": false
+  },
+  "admin-project-final.json": {
+    "id": "prj_VdWMMAnBPo7u5G9RPmlA6t9hMgCT",
+    "targets": {
+      "production": {
+        "id": "dpl_fac81Hhr7wWpNKEyzfj8fwDfdjuu"
+      }
+    }
+  },
+  "admin-alias-final.json": {
+    "deployment": {
+      "id": "dpl_fac81Hhr7wWpNKEyzfj8fwDfdjuu"
+    }
+  },
+  "admin-alias-before.json": {
+    "deployment": {
+      "id": "dpl_8LSDe7hSSjpb2NgZjGC2sqjNFrrR"
+    }
+  },
+  "admin-firewall-final.json": {
+    "firewallEnabled": true,
+    "rules": []
+  },
+  "admin-firewall-before.json": {
+    "rules": []
+  }
+}

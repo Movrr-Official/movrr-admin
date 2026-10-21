@@ -1,0 +1,391 @@
+{
+  "method": "Actual approved source handlers/adapters against production GET and read-only RPC, with controlled actor/token verification ports; no production authenticated browser session or account login fabricated",
+  "productionWrites": 0,
+  "target": {
+    "id": "007b5ab8-fea0-41f2-9068-055f154d7db0",
+    "email": "powerdonnl@gmail.com",
+    "name": "Mike Okpara",
+    "phone": "",
+    "employeeRole": null,
+    "domains": [
+      "partner"
+    ],
+    "authSyncPending": false,
+    "memberships": [
+      {
+        "id": "16773fed-3edd-493b-bce4-fc366beb2cea",
+        "organisationId": "17be1d12-9e61-4654-afd0-fad0bf2d0278",
+        "organisationName": "Powerdon",
+        "domain": "partner",
+        "role": "owner",
+        "status": "active",
+        "updatedAt": "2026-10-21T14:45:16.313107+00:00"
+      }
+    ],
+    "status": "active",
+    "createdAt": "2026-10-20T18:20:11.061538+00:00",
+    "updatedAt": "2026-10-21T15:16:49.713231+00:00",
+    "activityAvailable": true,
+    "organization": "",
+    "isVerified": true,
+    "languagePreference": "en",
+    "accountNotes": ""
+  },
+  "relationshipHtml": "<div class=\"flex flex-wrap items-center gap-2\"><span class=\"text-xs\">Partner · Powerdon · Owner</span></div>",
+  "counts": {
+    "total": 11,
+    "riders": 7
+  },
+  "searchAndFilters": true,
+  "authIdentityReadback": true,
+  "activityAccountCount": 11,
+  "activityMatchesAuthoritativeRpc": true,
+  "targetHasNoRecordedActivity": true,
+  "readRefreshDidNotAdvanceActivity": true,
+  "partnerOwnerGrants": true,
+  "riderOnlyDenied": true,
+  "otherOrganisationDenied": true,
+  "legacyNullStaffGrantsNothing": true,
+  "deniedActivityReaderActor": true,
+  "mfaBoundary": true,
+  "actualProductionDataSortingAndPagination": true,
+  "recordedAt": "2026-10-21T16:24:22.419Z",
+  "requests": [
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rpc/read_user_auth_sync_pending",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/rpc/read_account_activity",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rpc/read_user_auth_sync_pending",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/rpc/read_account_activity",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rpc/read_user_auth_sync_pending",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/rpc/read_account_activity",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rpc/read_user_auth_sync_pending",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/rpc/read_account_activity",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rpc/read_user_auth_sync_pending",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/rpc/read_account_activity",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/rpc/read_account_activity",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rpc/read_user_auth_sync_pending",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/rpc/read_account_activity",
+      "method": "POST"
+    },
+    {
+      "path": "/auth/v1/admin/users/007b5ab8-fea0-41f2-9068-055f154d7db0",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rpc/read_account_activity",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rpc/read_user_auth_sync_pending",
+      "method": "POST"
+    },
+    {
+      "path": "/rest/v1/rpc/read_account_activity",
+      "method": "POST"
+    }
+  ]
+}
