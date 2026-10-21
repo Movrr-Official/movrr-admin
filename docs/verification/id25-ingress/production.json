@@ -1,0 +1,887 @@
+{
+  "recordedAt": "2026-10-21T12:10:43.904Z",
+  "status": "ID-25 ingress correction deployed and boundary verified; authenticated production acceptance remains outstanding",
+  "source": {
+    "approvedRevision": "75105bd8c7ab29323803987e334403f12b918b86",
+    "initialLocalAndRemoteMain": "e0572d3527725fab08209ab6ea215c6703b6d1c5",
+    "applicationDeltaFromPreviousDeployment": [
+      "lib/pathMatch.ts",
+      "proxy.ts"
+    ],
+    "gitSourceDeployment": true,
+    "localWorkingTreeUploaded": false,
+    "parallelIdentityChangesExcluded": true,
+    "migration078Deployed": false,
+    "mobileModified": false
+  },
+  "deployment": {
+    "id": "dpl_4NKHidcv6wEUzewztKniP5Wny6pm",
+    "url": "https://movrr-admin-h47j6m539-movrrops-projects.vercel.app",
+    "domain": "admin.movrr.nl",
+    "projectId": "prj_VdWMMAnBPo7u5G9RPmlA6t9hMgCT",
+    "readyState": "READY",
+    "readySubstate": "PROMOTED",
+    "gitSource": {
+      "sha": "75105bd8c7ab29323803987e334403f12b918b86",
+      "ref": "75105bd8c7ab29323803987e334403f12b918b86",
+      "type": "github",
+      "repoId": 1084919487
+    },
+    "aliasUpdatedAt": 1792584440370,
+    "productionTargetVerified": true,
+    "customDomainVerified": true,
+    "previous": {
+      "id": "dpl_Cpxc7H62VD3zLpCdVot4MzGYFe8X",
+      "revision": "8d7320ea96325bbc9adbc67f7e4b820baba9c5e1"
+    },
+    "stagedBeforePromotion": true,
+    "promotionResponse": "empty body; success independently verified; no repeated promotion",
+    "buildEvidence": [
+      {
+        "type": "stdout",
+        "text": "Deployment completed"
+      },
+      {
+        "type": "stderr",
+        "text": "Build Completed in .vercel/build-output [2m]"
+      },
+      {
+        "type": "stdout",
+        "text": "  Finished TypeScript in 38.7s ..."
+      },
+      {
+        "type": "stdout",
+        "text": "✓ Compiled successfully in 55s"
+      }
+    ]
+  },
+  "web": {
+    "domain": "app.movrr.nl",
+    "deploymentId": "dpl_FgZDgMTfSM3Zaaaov2VSc2xdCp35",
+    "unchanged": true
+  },
+  "regression": {
+    "focused": {
+      "testFiles": 6,
+      "tests": 160,
+      "passed": true,
+      "files": [
+        "__tests__/security/platformIngress.test.ts",
+        "__tests__/security/pathMatch.test.ts",
+        "__tests__/features/api/v1.authz.matrix.test.ts",
+        "__tests__/features/identity/authenticateRequest.test.ts",
+        "__tests__/features/authorization/employeeAuthorization.test.ts",
+        "__tests__/features/organisations/authorisation.test.ts"
+      ]
+    },
+    "previousApprovedCorrectionEvidence": {
+      "testFiles": 72,
+      "tests": 860,
+      "postgresAndGoTrue": true,
+      "receipt": "docs/verification/enterprise-identity/production.json",
+      "rerunAgainstMovingSharedTree": false
+    },
+    "parallelWorkObservation": "Shared-tree typecheck observed a transient missing initialMemberships prop in unfinished identity work; left untouched. Immutable production build independently passed TypeScript."
+  },
+  "http": {
+    "before": {
+      "at": "2026-10-21T12:05:57.711Z",
+      "base": "https://admin.movrr.nl",
+      "requests": "GET only; no valid credentials or identity mutations",
+      "results": [
+        {
+          "route": "/api/v1/me/memberships",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Fme%2Fmemberships",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::klzzz-1792584354684-82f3580d4965",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/organisations",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::w7k49-1792584354784-1c5cbd0f9525",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations%2F00000000-0000-0000-0000-000000000001",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::49csj-1792584354824-167ad39648f4",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/staff",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations%2F00000000-0000-0000-0000-000000000001%2Fstaff",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::w7k49-1792584354866-3d84e523a0aa",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/invitations",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations%2F00000000-0000-0000-0000-000000000001%2Finvitations",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::4frx9-1792584354904-b042c33d1539",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/locations",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations%2F00000000-0000-0000-0000-000000000001%2Flocations",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::fjblp-1792584354955-c5212406af12",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/campaigns",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Fcampaigns",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::p2qkt-1792584355017-ace5e32af8f1",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/government/programmes",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Fgovernment%2Fprogrammes",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::2ldgs-1792584355081-9f3a6d985edf",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/partners/analytics",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Fpartners%2Fanalytics",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::c55gs-1792584355128-daa13de43b3e",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/fulfilment/health",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::nbgvn-1792584355190-f8cc8c41a8da",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/fulfilment/exceptions",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::49csj-1792584356056-181936a7c4b2",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/me/memberships",
+          "authentication": "invalid",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Fme%2Fmemberships",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::2s6z7-1792584356157-c905471f0205",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/organisations",
+          "authentication": "invalid",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::rz7zv-1792584356200-4ea3ca2cb2a3",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001",
+          "authentication": "invalid",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations%2F00000000-0000-0000-0000-000000000001",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::2s6z7-1792584356245-e45d403b9a76",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/staff",
+          "authentication": "invalid",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations%2F00000000-0000-0000-0000-000000000001%2Fstaff",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::dggkt-1792584356282-29437118517a",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/invitations",
+          "authentication": "invalid",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations%2F00000000-0000-0000-0000-000000000001%2Finvitations",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::klzzz-1792584356319-c9a4e360fb2e",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/locations",
+          "authentication": "invalid",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations%2F00000000-0000-0000-0000-000000000001%2Flocations",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::rz7zv-1792584356383-f0926d1a07f2",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/campaigns",
+          "authentication": "invalid",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Fcampaigns",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::lkx4x-1792584356421-490246892ccf",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/government/programmes",
+          "authentication": "invalid",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Fgovernment%2Fprogrammes",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::c55gs-1792584356463-75c80e902f9c",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/partners/analytics",
+          "authentication": "invalid",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Fpartners%2Fanalytics",
+          "contentType": "text/plain",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "vercelId": "fra1::6v6m6-1792584356500-775adb4aab2c",
+          "body": "Redirecting...\n"
+        },
+        {
+          "route": "/api/v1/fulfilment/health",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::sczkl-1792584356562-786cfc4845ad",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/fulfilment/exceptions",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::6v6m6-1792584356813-f8aea08d1464",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/users",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fusers",
+          "contentType": "text/plain",
+          "vercelId": "fra1::jpcpq-1792584356941-a7c21490a63d"
+        },
+        {
+          "route": "/settings",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fsettings",
+          "contentType": "text/plain",
+          "vercelId": "fra1::2ldgs-1792584356981-4fb6d19bb8c6"
+        },
+        {
+          "route": "/api/users",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fusers",
+          "contentType": "text/plain",
+          "vercelId": "fra1::wg2fv-1792584357012-1e29d3d266c3"
+        },
+        {
+          "route": "/api/v1/organisations/id/staff/unsafe",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations%2Fid%2Fstaff%2Funsafe",
+          "contentType": "text/plain",
+          "vercelId": "fra1::fjblp-1792584357052-682b6a7b9f21"
+        },
+        {
+          "route": "/auth/signin",
+          "authentication": "none",
+          "status": 200,
+          "location": null,
+          "contentType": "text/html; charset=utf-8",
+          "vercelId": "fra1::fra1::c55gs-1792584357104-8c4ae7093ba8"
+        }
+      ]
+    },
+    "staged": {
+      "vercelDeploymentProtectionRetained": true,
+      "vercelCliAccessUsed": true,
+      "results": [
+        {
+          "statusLine": "HTTP/1.1 401 Unauthorized",
+          "matchedPath": "/api/v1/me/memberships",
+          "location": null,
+          "vercelId": "fra1::fra1::m64wk-1792584403836-b8e95c830798",
+          "body": "{\"kind\":\"unauthenticated\",\"message\":\"Active account required\"}"
+        },
+        {
+          "statusLine": "HTTP/1.1 401 Unauthorized",
+          "matchedPath": "/api/v1/organisations",
+          "location": null,
+          "vercelId": "fra1::fra1::bzgkm-1792584409986-7d4026c2e509",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "statusLine": "HTTP/1.1 307 Temporary Redirect",
+          "matchedPath": null,
+          "location": "/auth/signin?redirectTo=%2Fusers",
+          "vercelId": "fra1::9gs4l-1792584416071-7fe2043c547a",
+          "body": "Redirecting..."
+        }
+      ]
+    },
+    "production": {
+      "at": "2026-10-21T12:08:37.419Z",
+      "base": "https://admin.movrr.nl",
+      "requests": "GET plus missing/invalid-token POST {} to POST-only invitations; no valid credentials or identity mutations",
+      "results": [
+        {
+          "route": "/api/v1/me/memberships",
+          "method": "GET",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::8pbfs-1792584514495-d1f0104a6949",
+          "body": "{\"kind\":\"unauthenticated\",\"message\":\"Active account required\"}"
+        },
+        {
+          "route": "/api/v1/organisations",
+          "method": "GET",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::v7998-1792584514662-a6c4d1089fe7",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001",
+          "method": "GET",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::skpkz-1792584514728-82ba98b52a19",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/staff",
+          "method": "GET",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::4stzh-1792584514794-bf2f184b84b0",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/invitations",
+          "method": "POST",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::4rphl-1792584514880-91f53ed6227b",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/locations",
+          "method": "GET",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::rz7zv-1792584514942-8398d7920183",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/campaigns",
+          "method": "GET",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::p2pt6-1792584515010-edd9f8cd1e4d",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/government/programmes",
+          "method": "GET",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::vkzs9-1792584515067-b7f9c128c9e1",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/partners/analytics",
+          "method": "GET",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::4rphl-1792584515135-890d61be8014",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/fulfilment/health",
+          "method": "GET",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::52k68-1792584515198-6ddcf8c636e9",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/fulfilment/exceptions",
+          "method": "GET",
+          "authentication": "none",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::dz5cm-1792584515281-37a25c06c7f9",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Missing authorization token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/me/memberships",
+          "method": "GET",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::rshr8-1792584515362-bcb16bcc5a96",
+          "body": "{\"kind\":\"unauthenticated\",\"message\":\"Active account required\"}"
+        },
+        {
+          "route": "/api/v1/organisations",
+          "method": "GET",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::xjzlx-1792584515533-eb1b6d9ec364",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001",
+          "method": "GET",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::6rr5c-1792584515690-a51eb590ef3a",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/staff",
+          "method": "GET",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::wslwg-1792584516231-9886baa2f5bb",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/invitations",
+          "method": "POST",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::52k68-1792584516335-75b7f5c37817",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/organisations/00000000-0000-0000-0000-000000000001/locations",
+          "method": "GET",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::zd89b-1792584516440-cc55ad9a99e6",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/campaigns",
+          "method": "GET",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::v7998-1792584516658-8ef5a69376c3",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/government/programmes",
+          "method": "GET",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::zd89b-1792584516790-52e62392c9a5",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/partners/analytics",
+          "method": "GET",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::6rr5c-1792584516909-3cbaed53241b",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/fulfilment/health",
+          "method": "GET",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::4rphl-1792584517079-f6ab9b600ec1",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/api/v1/fulfilment/exceptions",
+          "method": "GET",
+          "authentication": "invalid",
+          "status": 401,
+          "location": null,
+          "contentType": "application/json",
+          "cacheControl": "no-store",
+          "vercelId": "fra1::fra1::qr67p-1792584517285-8b0bc4e3263e",
+          "body": "{\"error\":{\"kind\":\"unauthenticated\",\"message\":\"Invalid or expired token\"},\"correlationId\":null}"
+        },
+        {
+          "route": "/users",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fusers",
+          "contentType": "text/plain",
+          "vercelId": "fra1::fmdq8-1792584517386-4df4a2940855"
+        },
+        {
+          "route": "/settings",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fsettings",
+          "contentType": "text/plain",
+          "vercelId": "fra1::8jxtr-1792584517432-8445b1dd1ba0"
+        },
+        {
+          "route": "/api/users",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fusers",
+          "contentType": "text/plain",
+          "vercelId": "fra1::nbgvn-1792584517480-201aae28ab6f"
+        },
+        {
+          "route": "/api/v1/organisations/id/staff/unsafe",
+          "authentication": "none",
+          "status": 307,
+          "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations%2Fid%2Fstaff%2Funsafe",
+          "contentType": "text/plain",
+          "vercelId": "fra1::8v2ns-1792584517529-a1dde7fa6833"
+        },
+        {
+          "route": "/auth/signin",
+          "authentication": "none",
+          "status": 200,
+          "location": null,
+          "contentType": "text/html; charset=utf-8",
+          "vercelId": "fra1::fra1::tgqdn-1792584517597-c7868395c2b3"
+        }
+      ]
+    },
+    "initialInvitationGet": "405 because invitations route is POST only; final missing/invalid-token POST {} returned 401"
+  },
+  "database": {
+    "productionMutations": 0,
+    "migrationsReplayed": false,
+    "backfillReplayed": false,
+    "beforeVerifiedAt": "2026-10-21T12:04:28.162Z",
+    "afterVerifiedAt": "2026-10-21T12:07:53.574Z",
+    "migrations": [
+      {
+        "version": "20261021110700",
+        "name": "077_invitation_authority_boundaries",
+        "checksum": "e0958f74b88c9aeec0f1dd93752a235833667c33b39e80e74b99c1ff1107be68"
+      },
+      {
+        "version": "20261021110600",
+        "name": "076_identity_notification_audiences",
+        "checksum": "4e55c0a5b543f97d02eecfc27b3eaae651a3ff20208151749b40930d00f89d69"
+      },
+      {
+        "version": "20261021110500",
+        "name": "075_identity_rls_capability_boundaries",
+        "checksum": "6c1531254028c098700ed6c6f1b90f23dfe9512d171d20b7b33561260a72f7ec"
+      },
+      {
+        "version": "20261021110400",
+        "name": "074_identity_consumer_authorization",
+        "checksum": "59c8d8402513b3ad0630154a593d7209a5e09f7b151a4fe43e18017edc460869"
+      },
+      {
+        "version": "20261021110300",
+        "name": "073_account_status_and_staff_commands",
+        "checksum": "9d77f314eaed0e5ed4bfc59f49dcdf0c4c06684d15400ef552c5c2ae3f480d33"
+      },
+      {
+        "version": "20261021110200",
+        "name": "072_organisation_invitations",
+        "checksum": "b44aea79133868b94092791f8489cf15f56c31b6af275a2987199e6ca1b77ac0"
+      },
+      {
+        "version": "20261021110100",
+        "name": "071_external_account_domains",
+        "checksum": "b1857e697755ca0d37644659ce45eb73ba7166cf8aa321f01f723e1f5031a088"
+      }
+    ],
+    "journalUnchanged": true,
+    "securityMetadataUnchanged": true,
+    "exactFunctionBodies": 34,
+    "domainRoleCatalogChecks": 11,
+    "directGrantDmlDenied": true,
+    "publicResendDenied": true,
+    "retiredSignaturesAbsent": true,
+    "broadPolicyPredicatesAbsent": true,
+    "operatingStates": {
+      "deletion": {
+        "requests_enabled": true,
+        "managed_resources_execution_enabled": false,
+        "operating_state": "enabled",
+        "active_policy_version": 2
+      },
+      "shop": {
+        "state": "disabled",
+        "redemption_enabled": false
+      }
+    },
+    "protectedFingerprints": {
+      "tablesCompared": 158,
+      "unchangedExceptRoutineOperationalTables": true,
+      "changed": [
+        {
+          "table": "shop_scheduler_state",
+          "before": {
+            "records": 1,
+            "digest": "f75ce66d9dd8f04ebbbd8abfbe06db62"
+          },
+          "after": {
+            "records": 1,
+            "digest": "8f449d89786eb8838312a396e15b5c1d"
+          }
+        },
+        {
+          "table": "shop_worker_health",
+          "before": {
+            "records": 1,
+            "digest": "36b754619168a40d4f8bed2a07682140"
+          },
+          "after": {
+            "records": 1,
+            "digest": "df83497c9e42abec542546bede58d86b"
+          }
+        }
+      ]
+    },
+    "access": {
+      "method": "existing identity contexts in read-only PostgreSQL; not browser sign-in",
+      "productionMutations": 0,
+      "backfill": {
+        "organizationsCreated": 1,
+        "existingProfileLinksUpdated": 1,
+        "ownerMembershipsCreated": 1,
+        "authorizationAudits": 1,
+        "verifiedExistingIdentity": true
+      },
+      "postTrafficOperationalChanges": [
+        {
+          "table": "admin_dashboard_sessions",
+          "migrationSnapshot": {
+            "records": 2,
+            "digest": "40e9f0cabfa0f058a9b891049ed96123"
+          },
+          "laterSnapshot": {
+            "records": 2,
+            "digest": "2ddd708920fb0733b383a50ac2649ac7"
+          },
+          "initiatedByAcceptance": false
+        },
+        {
+          "table": "shop_scheduler_state",
+          "migrationSnapshot": {
+            "records": 1,
+            "digest": "6c471b7ac320f59f78bfd6609069a766"
+          },
+          "laterSnapshot": {
+            "records": 1,
+            "digest": "8f449d89786eb8838312a396e15b5c1d"
+          },
+          "initiatedByAcceptance": false
+        },
+        {
+          "table": "shop_worker_health",
+          "migrationSnapshot": {
+            "records": 1,
+            "digest": "dc5e312e1dce33d2beb8979b53442e6a"
+          },
+          "laterSnapshot": {
+            "records": 1,
+            "digest": "df83497c9e42abec542546bede58d86b"
+          },
+          "initiatedByAcceptance": false
+        }
+      ],
+      "deletionWriteGuard": {
+        "existingRowsUnchanged": true,
+        "createdForVerifiedBackfillIdentity": true,
+        "restricted": false,
+        "jobCreated": false
+      },
+      "protectedRecords": {
+        "tablesCompared": 150,
+        "allUnrelatedMigrationRecordsUnchanged": true,
+        "authUsersUnchanged": true,
+        "riderWalletAndRideHistoryUnchanged": true
+      },
+      "advertiserContext": {
+        "ownCampaignAndStaffCapabilities": true,
+        "crossTenantDenied": true,
+        "internalRoleApprovalDenied": true,
+        "rlsProfileVisible": true
+      },
+      "staff": {
+        "checked": 5,
+        "allowed": 5,
+        "denied": 0,
+        "privilegedMfaEnforced": true
+      },
+      "riderContexts": {
+        "checked": 5,
+        "currentIdentityPreserved": true,
+        "advertiserTenantDenied": true
+      },
+      "partnerOperations": {
+        "distinctScopedRole": true,
+        "staffViewerCeilingExactInstalledBody": true,
+        "noOwnerManagerOrPeerAdministration": true,
+        "localRealSqlJourneyPreviouslyPassed": true,
+        "productionPartnerMutationExecuted": false
+      },
+      "readOnlyDenials": [
+        "unauthenticated membership grant",
+        "unauthenticated external provisioning"
+      ],
+      "recordedAt": "2026-10-21T12:07:55.278Z"
+    }
+  },
+  "firewall": {
+    "enabled": true,
+    "version": 8,
+    "rules": [],
+    "unchanged": true
+  },
+  "productionActions": {
+    "usersCreated": 0,
+    "membershipsChanged": 0,
+    "financialTransactions": 0,
+    "invitationsCreated": 0,
+    "emailsSent": 0
+  },
+  "acceptance": {
+    "legitimateBearerHttpExecuted": false,
+    "authenticatedCrossTenantHttpExecuted": false,
+    "authenticatedAdminCookieJourneyExecuted": false,
+    "mfaBrowserJourneyExecuted": false,
+    "readOnlySqlContextsExecuted": true,
+    "reason": "The user confirmed authorised Admin and organisation Chrome sessions exist, but this agent's browser environment cannot access them. Authenticated journeys remain pending external browser acceptance.",
+    "status": "pending external browser acceptance",
+    "pendingExternalBrowserAcceptance": [
+      "Successful bearer-authenticated organisation API access",
+      "Cross-organisation denial using distinct authorised identities",
+      "Admin cookie/MFA browser navigation"
+    ],
+    "deploymentTaskClosure": {
+      "status": "closed with external browser acceptance pending",
+      "date": "2026-10-21",
+      "basis": "Explicit user instruction; preserve deployment and completed evidence without further connection attempts, credential requests, token extraction, redeployment or interference with parallel identity work"
+    },
+    "definitionOfDoneFullyVerified": false
+  }
+}
