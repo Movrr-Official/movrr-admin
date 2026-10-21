@@ -503,7 +503,7 @@ export function UserDetailsDrawer({
                             </FormItem>
                           )}
                         />
-                        {(canAssignStaff || canApproveStaff) && !user.employeeRole && !showStaffAccess && <Button type="button" variant="outline" onClick={() => setShowStaffAccess(true)}>Add internal staff access</Button>}
+                        {(canAssignStaff || canApproveStaff) && !user.employeeRole && !showStaffAccess && <Button type="button" variant="outline" onClick={() => setShowStaffAccess(true)}>Assign Staff Role</Button>}
                         {(canAssignStaff || canApproveStaff) && (user.employeeRole || showStaffAccess) && <>
                         <FormField
                           control={form.control}
@@ -511,7 +511,7 @@ export function UserDetailsDrawer({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-sm font-semibold">
-                                Internal Staff role
+                                Internal Staff Role
                               </FormLabel>
                               <Select
                                 onValueChange={(value) => field.onChange(value === "none" ? null : value)}

@@ -60,15 +60,15 @@ export function AccountMemberships({ userId, initialMemberships, onChange }: { u
     finally { setBusy(false); }
   }
   return <div className="space-y-4">
-    {(memberships.some(member => member.status !== "revoked") || showHistory || showAdd) && <h3 className="font-semibold">Organisation access</h3>}
+    {(memberships.some(member => member.status !== "revoked") || showHistory || showAdd) && <h3 className="font-semibold">Organisation Memberships</h3>}
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-    {canManage && !showAdd && <Button type="button" variant="outline" onClick={() => { setOrganisationId(""); setRole("viewer"); setShowAdd(true); }}>Add organisation access</Button>}
-    {memberships.some(member => member.status === "revoked") && <Button type="button" variant="ghost" onClick={() => setShowHistory(value => !value)}>{showHistory ? "Hide access history" : "Show access history"}</Button>}
+    {canManage && !showAdd && <Button type="button" variant="outline" onClick={() => { setOrganisationId(""); setRole("viewer"); setShowAdd(true); }}>Assign to Organisation</Button>}
+    {memberships.some(member => member.status === "revoked") && <Button type="button" variant="ghost" aria-expanded={showHistory} onClick={() => setShowHistory(value => !value)}>Access History</Button>}
     {invitationUrl && <div className="space-y-2"><Label>Invitation link · expires in 7 days</Label><Input readOnly value={invitationUrl} onFocus={event => event.target.select()} /><p className="text-xs text-muted-foreground">Share with the invited account holder. This link requires their verified sign-in.</p></div>}
     {memberships.filter(member => showHistory || member.status !== "revoked").map(member => <div key={member.id} className="rounded-xl border p-4 space-y-3">
       <p className="font-medium">{member.organisationName} · {accountRoleLabel(member.domain as AccountDomain, member.role)}{member.status !== "active" ? ` · ${member.status === "invited" ? "Invited" : "Revoked"}` : ""}</p>
       {canManage && (member.role !== "owner" || canApprove) && <>
-      <Label>Role</Label>
+      <Label>Organisation Role</Label>
       <Select disabled={busy || member.status === "revoked"} value={member.role}
         onValueChange={value => void save(member.organisationId, value, member.status as "active" | "invited", member)}>
         <SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{rolesForDomain(member.domain as AccountDomain).filter(value => value !== "owner" || canApprove).map(value =>
@@ -95,11 +95,12 @@ export function AccountMemberships({ userId, initialMemberships, onChange }: { u
         <SelectContent>{organisations.filter(org => !memberships.some(member => member.organisationId === org.id)).map(org =>
           <SelectItem key={org.id} value={org.id}>{org.name} · {org.type === "reward_partner" ? "Partner" : org.type}</SelectItem>)}</SelectContent>
       </Select>
+      <Label>Organisation Role</Label>
       <Select value={role} onValueChange={value => setRole(value as typeof role)} disabled={busy}>
         <SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{rolesForDomain((organisations.find(org => org.id === organisationId)?.type === "government" ? "government" : organisations.find(org => org.id === organisationId)?.type === "advertiser" ? "advertiser" : "partner")).filter(value => value !== "owner" || canApprove).map(value =>
           <SelectItem key={value} value={value}>{accountRoleLabel((organisations.find(org => org.id === organisationId)?.type === "reward_partner" ? "partner" : "advertiser"), value)}</SelectItem>)}</SelectContent>
       </Select>
-      <Button type="button" disabled={busy || !organisationId} onClick={() => void save(organisationId, role, "active")}>Add access</Button>
+      <Button type="button" disabled={busy || !organisationId} onClick={() => void save(organisationId, role, "active")}>Save Assignment</Button>
       <Button type="button" variant="outline" disabled={busy || !organisationId} onClick={() => void invite(organisationId, role)}>Invite to organisation</Button>
       <Button type="button" variant="ghost" disabled={busy} onClick={() => setShowAdd(false)}>Cancel</Button>
     </div>}

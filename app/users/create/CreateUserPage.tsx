@@ -269,13 +269,13 @@ export default function CreateUserPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <FormField control={form.control} name="domain" render={({ field }) => (
-                    <FormItem><FormLabel>Create account with</FormLabel>
+                    <FormItem><FormLabel>Account Type</FormLabel>
                       <Select value={field.value} onValueChange={value => {
                         field.onChange(value); form.setValue("organisationId", undefined);
                         form.setValue("role", value === "user" ? undefined : value === "rider" ? "rider" : value === "staff" ? "support_agent" : "viewer");
                         form.setValue("city", ""); form.setValue("country", "");
                       }}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>{ACCOUNT_CREATION_OPTIONS.map(domain => <SelectItem key={domain} value={domain}>{domain === "user" ? "User only" : domain === "staff" ? "Internal MOVRR Staff" : roleLabel(domain)}</SelectItem>)}</SelectContent>
+                        <SelectContent>{ACCOUNT_CREATION_OPTIONS.map(domain => <SelectItem key={domain} value={domain}>{domain === "user" ? "Unassigned" : domain === "staff" ? "Internal Staff" : roleLabel(domain)}</SelectItem>)}</SelectContent>
                       </Select><FormMessage />
                     </FormItem>)} />
                   {["partner", "advertiser", "government"].includes(watchedValues.domain) && <FormField control={form.control} name="organisationId" render={({ field }) => (
@@ -436,7 +436,7 @@ export default function CreateUserPage() {
                       render={({ field }) => (
                         <FormItem className="content-start">
                           <FormLabel className="text-sm font-semibold flex items-center gap-2">
-                            {watchedValues.domain === "staff" ? "Internal Staff role" : "Organisation role"}{" "}
+                            {watchedValues.domain === "staff" ? "Internal Staff Role" : "Organisation Role"}{" "}
                             <span className="text-destructive">*</span>
                           </FormLabel>
                           <Select
@@ -706,10 +706,10 @@ export default function CreateUserPage() {
                     </div>}
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-muted-foreground">
-                        Account setup
+                        Account Type
                       </p>
                       <Badge variant="outline" className="capitalize">
-                        {watchedValues.domain === "user" ? "User only" : watchedValues.domain === "rider" ? "Rider" : `${roleLabel(watchedValues.domain)} · ${watchedValues.role ? accountRoleLabel(watchedValues.domain, watchedValues.role) : ""}`}
+                        {watchedValues.domain === "user" ? "Unassigned" : watchedValues.domain === "rider" ? "Rider" : `${watchedValues.domain === "staff" ? "Internal Staff" : roleLabel(watchedValues.domain)} · ${watchedValues.role ? accountRoleLabel(watchedValues.domain, watchedValues.role) : ""}`}
                       </Badge>
                     </div>
                     <div className="space-y-2">

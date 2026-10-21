@@ -165,7 +165,7 @@ export default function UsersOverview() {
             />
 
             <StatsCard
-              title="Relationships"
+              title="Account Breakdown"
               value=""
               icon={Shield}
               metrics={[
@@ -176,13 +176,13 @@ export default function UsersOverview() {
                   iconColor: "text-primary",
                 },
                 {
-                  label: "Organisation access",
+                  label: "Organisation Users",
                   value: organisationUsersCount,
                   icon: Building2,
                   iconColor: "text-primary",
                 },
                 {
-                  label: "MOVRR Staff",
+                  label: "Internal Staff",
                   value: staffCount,
                   icon: Shield,
                   iconColor: "text-warning",

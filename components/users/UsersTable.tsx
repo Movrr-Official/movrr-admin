@@ -33,15 +33,15 @@ export function UsersTable({
     membershipSearch: (user.memberships ?? []).map(member => `${member.domain} ${member.organisationName} ${member.role} ${member.status}`).join(" "),
   })), [users]);
   const filterConfig: FilterConfig[] = [
-    { id: "domains", label: "Relationships", type: "multi-select", key: "domains", primary: true,
-      options: [{ value: "user", label: "User only" }, ...ACCOUNT_DOMAINS.map(domain => ({ value: domain, label: domain === "staff" ? "MOVRR Staff" : accountRoleLabel(domain, domain) }))] },
+    { id: "domains", label: "Account Type", type: "multi-select", key: "domains", primary: true,
+      options: [{ value: "user", label: "Unassigned" }, ...ACCOUNT_DOMAINS.map(domain => ({ value: domain, label: domain === "staff" ? "Internal Staff" : accountRoleLabel(domain, domain) }))] },
     {
       id: "scopedRoles",
-      label: "Scoped role",
+      label: "Role",
       type: "multi-select",
       key: "scopedRoles",
       primary: true,
-      options: ACCOUNT_DOMAINS.flatMap(domain => rolesForDomain(domain).map(role => ({ value: `${domain}:${role}`, label: `${domain === "staff" ? "MOVRR Staff" : accountRoleLabel(domain, domain)}: ${accountRoleLabel(domain, role)}` }))),
+      options: ACCOUNT_DOMAINS.flatMap(domain => rolesForDomain(domain).map(role => ({ value: `${domain}:${role}`, label: `${domain === "staff" ? "Internal Staff" : accountRoleLabel(domain, domain)}: ${accountRoleLabel(domain, role)}` }))),
     },
     {
       id: "status",

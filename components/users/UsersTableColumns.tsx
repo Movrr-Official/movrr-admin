@@ -153,8 +153,8 @@ export const getUsersTableColumns = ({
   },
   {
     id: "relationships",
-    accessorFn: user => [user.riderStatus ? "Rider" : "", user.employeeRole ?? "", ...(user.memberships ?? []).filter(member => member.status !== "revoked").map(member => `${member.organisationName} ${member.role}`)].filter(Boolean).join(" ") || "User",
-    header: "Relationships",
+    accessorFn: user => [user.riderStatus ? "Rider" : "", user.employeeRole ?? "", ...(user.memberships ?? []).filter(member => member.status !== "revoked").map(member => `${member.organisationName} ${member.role}`)].filter(Boolean).join(" ") || "Unassigned",
+    header: "Account Types & Roles",
     cell: ({ row }) => <UserRelationships user={row.original} />,
   },
   {
@@ -237,7 +237,7 @@ export const getUsersTableColumns = ({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onManageAccess?.(user)}>
               <Shield className="mr-2 h-4 w-4" />
-              Manage access
+              Manage Access
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onResetPassword?.(user)}>
