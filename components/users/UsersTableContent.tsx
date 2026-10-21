@@ -68,14 +68,8 @@ export default function UsersTableContent({
       return;
     }
 
-    const hasChanged =
-      latestUser.updatedAt !== selectedUser.updatedAt ||
-      latestUser.status !== selectedUser.status ||
-      latestUser.role !== selectedUser.role ||
-      latestUser.name !== selectedUser.name ||
-      latestUser.email !== selectedUser.email;
-
-    if (hasChanged) {
+    // Relationship and recovery changes need not update the account timestamp.
+    if (latestUser !== selectedUser) {
       setSelectedUser(latestUser);
     }
   }, [users, selectedUser, isDrawerOpen, setSelectedId]);
@@ -127,8 +121,8 @@ export default function UsersTableContent({
     }
   };
 
-  const handleRoleChange = (user: User) => {
-    // Role change is handled in the UserDetailsDrawer
+  const handleManageAccess = (user: User) => {
+    // Independent access relationships are managed in User Details
     openUserDrawer(user);
   };
 
@@ -180,7 +174,7 @@ export default function UsersTableContent({
       getUsersTableColumns({
         onEdit: handleEdit,
         onStatusChange: handleStatusChange,
-        onRoleChange: handleRoleChange,
+        onManageAccess: handleManageAccess,
         onResetPassword: handleResetPassword,
         onExportData: handleExportData,
       }),

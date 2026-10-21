@@ -59,49 +59,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DASHBOARD_COUNTS_QUERY_KEY } from "@/providers/CountProvider";
 
 import { getAccountOrganisations } from "@/app/actions/accountMemberships";
-import { ACCOUNT_DOMAINS, accountDomainSchema, rolesForDomain, accountRoleLabel, ORGANISATION_TYPES, type AccountDomain } from "@/features/identity/domain/accountDomains";
-import { accountCreationRoleSchema } from "@/schemas/user";
+import { ACCOUNT_CREATION_OPTIONS, rolesForDomain, accountRoleLabel, ORGANISATION_TYPES, type AccountDomain } from "@/features/identity/domain/accountDomains";
+import { accountCreationSchema } from "@/features/identity/domain/accountCreation";
 import { CANONICAL_EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
 
-const createUserFormSchema = z.object({
-  email: z.string().email("Invalid email address").min(1, "Email is required"),
-  name: z
-    .string()
-    .min(1, "Full name is required")
-    .max(100, "Name must be less than 100 characters"),
-  phone: z.string().optional(),
-  role: accountCreationRoleSchema,
-  domain: accountDomainSchema,
-  organisationId: z.string().uuid().optional(),
-  membershipStatus: z.enum(["active", "invited"]).default("active"),
-  status: z.enum(["active", "inactive", "pending"]),
-  organization: z.string().optional(),
-  languagePreference: z.string().default("en"),
-  isVerified: z.boolean().default(false),
-  accountNotes: z.string().optional(),
-  sendWelcomeEmail: z.boolean().default(true),
-  city: z.string().optional(),
-  country: z.string().optional(),
-}).superRefine((value, ctx) => {
-  if (!rolesForDomain(value.domain).includes(value.role)) ctx.addIssue({ code: "custom", message: "Select a valid scoped role", path: ["role"] });
-  if (["partner", "advertiser", "government"].includes(value.domain) && !value.organisationId) ctx.addIssue({ code: "custom", message: "Organisation is required", path: ["organisationId"] });
-  if (value.role === "rider") {
-    if (!value.city?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "City is required for rider accounts",
-        path: ["city"],
-      });
-    }
-    if (!value.country?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Country is required for rider accounts",
-        path: ["country"],
-      });
-    }
-  }
-});
+const createUserFormSchema = accountCreationSchema;
 
 type CreateUserFormData = z.infer<typeof createUserFormSchema>;
 
@@ -159,7 +121,7 @@ export default function CreateUserPage() {
     // Preserve an explicitly requested role for validation. An invalid role must
     // not silently turn an employee creation link into a Rider request.
     if (requestedRole) return requestedRole as CreateUserFormData["role"];
-    return "rider";
+    return undefined;
   }, [searchParams]);
 
   const form = useForm<CreateUserFormData>({
@@ -169,7 +131,7 @@ export default function CreateUserPage() {
       name: "",
       phone: "",
       role: initialRole,
-      domain: CANONICAL_EMPLOYEE_ROLES.some(role => role === initialRole) ? "staff" : "rider",
+      domain: CANONICAL_EMPLOYEE_ROLES.some(role => role === initialRole) ? "staff" : initialRole === "rider" ? "rider" : "user",
       membershipStatus: "active",
       status: "active",
       organization: "",
@@ -186,7 +148,12 @@ export default function CreateUserPage() {
   const watchedValues = form.watch();
   const [organisations, setOrganisations] = useState<Awaited<ReturnType<typeof getAccountOrganisations>>>([]);
   const [organisationError, setOrganisationError] = useState("");
-  useEffect(() => { getAccountOrganisations().then(setOrganisations).catch(error => setOrganisationError(error.message)); }, []);
+  useEffect(() => {
+    if (!["partner", "advertiser", "government"].includes(watchedValues.domain)) return;
+    let cancelled = false;
+    getAccountOrganisations().then(rows => { if (!cancelled) setOrganisations(rows); }).catch(error => { if (!cancelled) setOrganisationError(error.message); });
+    return () => { cancelled = true; };
+  }, [watchedValues.domain]);
 
   const onSubmit = async (data: CreateUserFormData) => {
     setIsLoading(true);
@@ -222,7 +189,9 @@ export default function CreateUserPage() {
     }
   };
 
-  const selectedRoleDescription = roleDescriptions[watchedValues.role] || "";
+  const selectedRoleDescription = watchedValues.domain === "partner" && watchedValues.role === "partner_operations_manager"
+    ? "Manage this partner's rewards, locations, fulfilment and operational staff."
+    : roleDescriptions[watchedValues.role ?? ""] || "";
   const isRiderRole = watchedValues.role === "rider";
 
   return (
@@ -300,12 +269,13 @@ export default function CreateUserPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <FormField control={form.control} name="domain" render={({ field }) => (
-                    <FormItem><FormLabel>Account domain</FormLabel>
+                    <FormItem><FormLabel>Create account with</FormLabel>
                       <Select value={field.value} onValueChange={value => {
                         field.onChange(value); form.setValue("organisationId", undefined);
-                        form.setValue("role", value === "rider" ? "rider" : value === "staff" ? "support_agent" : "viewer");
+                        form.setValue("role", value === "user" ? undefined : value === "rider" ? "rider" : value === "staff" ? "support_agent" : "viewer");
+                        form.setValue("city", ""); form.setValue("country", "");
                       }}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>{ACCOUNT_DOMAINS.map(domain => <SelectItem key={domain} value={domain}>{domain === "staff" ? "Internal MOVRR Staff" : roleLabel(domain)}</SelectItem>)}</SelectContent>
+                        <SelectContent>{ACCOUNT_CREATION_OPTIONS.map(domain => <SelectItem key={domain} value={domain}>{domain === "user" ? "User only" : domain === "staff" ? "Internal MOVRR Staff" : roleLabel(domain)}</SelectItem>)}</SelectContent>
                       </Select><FormMessage />
                     </FormItem>)} />
                   {["partner", "advertiser", "government"].includes(watchedValues.domain) && <FormField control={form.control} name="organisationId" render={({ field }) => (
@@ -388,28 +358,6 @@ export default function CreateUserPage() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="organization"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-semibold">
-                            Organization
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Company or organization name"
-                              className="rounded-xl border-border/50 bg-background/60"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription className="text-xs">
-                            Optional organization affiliation
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
                   {isRiderRole && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -463,7 +411,7 @@ export default function CreateUserPage() {
               </Card>
             )}
 
-            {/* Role & Access Section */}
+            {/* Account settings Section */}
             {(formStep === "details" || formStep === "review") && (
               <Card
                 className="border-border animate-slide-up"
@@ -475,19 +423,20 @@ export default function CreateUserPage() {
                       Role & Access
                     </CardTitle>
                     <CardDescription>
-                      Define user role and access permissions
+                      Status and any selected access
                     </CardDescription>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4">
+                    {!["user", "rider"].includes(watchedValues.domain) && <>
                     <FormField
                       control={form.control}
                       name="role"
                       render={({ field }) => (
                         <FormItem className="content-start">
                           <FormLabel className="text-sm font-semibold flex items-center gap-2">
-                            User Role{" "}
+                            {watchedValues.domain === "staff" ? "Internal Staff role" : "Organisation role"}{" "}
                             <span className="text-destructive">*</span>
                           </FormLabel>
                           <Select
@@ -496,7 +445,7 @@ export default function CreateUserPage() {
                           >
                             <FormControl>
                               <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
-                                <SelectValue placeholder="Select role">{accountRoleLabel(watchedValues.domain, field.value)}</SelectValue>
+                                <SelectValue placeholder="Select role">{field.value ? accountRoleLabel(watchedValues.domain, field.value) : ""}</SelectValue>
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -512,6 +461,7 @@ export default function CreateUserPage() {
                         </FormItem>
                       )}
                     />
+                    </>}
                     <FormField
                       control={form.control}
                       name="status"
@@ -750,20 +700,16 @@ export default function CreateUserPage() {
                         {watchedValues.phone || "—"}
                       </p>
                     </div>
+                    {watchedValues.organisationId && <div className="space-y-2">
+                      <p className="text-sm font-semibold text-muted-foreground">Organisation</p>
+                      <p className="text-base font-medium">{organisations.find(organisation => organisation.id === watchedValues.organisationId)?.name}</p>
+                    </div>}
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-muted-foreground">
-                        Organization
-                      </p>
-                      <p className="text-base font-medium">
-                        {organisations.find(organisation => organisation.id === watchedValues.organisationId)?.name || watchedValues.organization || "—"}
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold text-muted-foreground">
-                        Role
+                        Account setup
                       </p>
                       <Badge variant="outline" className="capitalize">
-                        {roleLabel(watchedValues.domain)} · {accountRoleLabel(watchedValues.domain, watchedValues.role)}
+                        {watchedValues.domain === "user" ? "User only" : watchedValues.domain === "rider" ? "Rider" : `${roleLabel(watchedValues.domain)} · ${watchedValues.role ? accountRoleLabel(watchedValues.domain, watchedValues.role) : ""}`}
                       </Badge>
                     </div>
                     <div className="space-y-2">

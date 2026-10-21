@@ -19,8 +19,10 @@ vi.mock("@/lib/supabase-admin", () => ({ createSupabaseAdminClient: () => client
 import { notifyAccountSetup } from "@/lib/services/accountSetupNotification";
 import { sendPasswordResetEmail } from "@/app/actions/users";
 beforeEach(() => { state.employeeRole = null; state.failDelivery = false; state.sent = []; state.redirects = []; });
-it.each(["rider", "partner", "advertiser", "government", "staff"])("routes %s account setup to its valid authentication surface", async domain => {
-  const warning = await notifyAccountSetup(client as unknown as SupabaseClient, { id: "target", name: "Target", email: "target@example.test", domain, role: domain === "staff" ? "partner_operations_manager" : domain });
+it.each(["user", "rider", "partner", "advertiser", "government", "staff"] as const)("routes %s account setup to its valid authentication surface", async domain => {
+  // The same role string can name independent internal/external responsibilities.
+  const account = { id: "target", name: "Target", email: "target@example.test", domain, role: ["staff", "partner"].includes(domain) ? "partner_operations_manager" : domain };
+  const warning = await notifyAccountSetup(client as unknown as SupabaseClient, account);
   expect(warning).toBeUndefined();
   expect(new URL(state.redirects[0]).origin).toBe(domain === "staff" ? "https://admin.example.test" : "https://app.example.test");
 });

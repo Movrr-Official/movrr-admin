@@ -162,6 +162,7 @@ describe.skipIf(!integration)("external account domains: actual services and Pos
       GRANT SELECT,INSERT,UPDATE ON public.platform_invitations TO service_role;`);
     await db.unsafe(readFileSync("scripts/fixtures/enterprise-identity/resend-functions.sql", "utf8"));
     await db.begin(tx => tx.unsafe(readFileSync("scripts/077_invitation_authority_boundaries.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
+    await db.begin(tx => tx.unsafe(readFileSync("scripts/078_independent_user_accounts.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
     await db.unsafe(`CREATE FUNCTION fail_external_membership() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
       IF current_setting('test.fail_member',true)='on' THEN RAISE EXCEPTION 'Injected membership persistence failure'; END IF; RETURN NEW; END $$;
       CREATE TRIGGER fail_external_membership BEFORE INSERT ON public.organisation_membership FOR EACH ROW EXECUTE FUNCTION fail_external_membership();`);

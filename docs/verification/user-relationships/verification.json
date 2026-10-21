@@ -1,0 +1,115 @@
+{
+  "recordedAt": "2026-10-21T12:49:09.151Z",
+  "status": "Source and isolated acceptance passed; production migration/deployment approval pending",
+  "sourceCommits": {
+    "admin": "pending source receipt",
+    "web": "2d14d76fcfe4974626f96ec845f13f5ca061cfc0"
+  },
+  "productModel": "User is independent; Rider, each external organisation membership and internal Staff are optional explicit relationships",
+  "mobileDecision": "Preserve existing intentional Mobile Rider signup; no new marker or runtime change",
+  "migration": {
+    "path": "scripts/078_independent_user_accounts.sql",
+    "sha256Utf8Lf": "4508df3709a058777661d3aff6cff1e834e4d855acb42abb7a2cda910514d516",
+    "functions": [
+      "guard_employee_auth_insert",
+      "handle_new_user",
+      "provision_product"
+    ],
+    "newTables": 0,
+    "newRoleAliases": 0,
+    "dataBackfills": 0,
+    "requiresInstalled": "077 and existing canonical contracts",
+    "productionApplied": false,
+    "prior071Through077ChecksumsUnchanged": true
+  },
+  "validation": {
+    "admin": {
+      "testFiles": 74,
+      "tests": 887,
+      "skipped": 0,
+      "realPostgresAndGoTrue": true,
+      "actualGoTrueTests": 21,
+      "externalPostgresTests": 19,
+      "employeePostgresTests": 39,
+      "actualDomTests": 13,
+      "sharedCreationSchemaTests": 8,
+      "typecheckAndLint": "passed",
+      "build": "passed"
+    },
+    "web": {
+      "testFiles": 14,
+      "tests": 91,
+      "typecheck": "passed",
+      "lint": "passed; one pre-existing unused-variable warning in unchanged lib/notifications.ts",
+      "build": "passed",
+      "explicitBuildApiOrigin": "https://admin.movrr.nl/api"
+    },
+    "catalogDriftCheck": "passed",
+    "fullSchema": {
+      "recordedAt": "2026-10-21T12:39:05.326Z",
+      "offline": true,
+      "productionConnections": 0,
+      "productionRowsExported": 0,
+      "actualPublicAndAuthSchema": true,
+      "allPublicTablesPreservedByMigration": 157,
+      "onlyThreeFunctionsChanged": true,
+      "userOnly": {
+        "activeIdentity": true,
+        "legacyRole": null,
+        "riderProfiles": 0,
+        "staffGrants": 0,
+        "organisationMemberships": 0,
+        "internalPrivileges": false
+      },
+      "organisationFinancialRideAndInvitationFingerprintsUnchanged": true,
+      "localOnly": true
+    }
+  },
+  "journeys": [
+    "User-only Create/Save/Reload/Edit/Save/suspend and real password login",
+    "Valid User-only JWT denied operational Wallet access with 403",
+    "Intentional Mobile/public Rider signup and password login with no organisation",
+    "Partner, Advertiser and Government creation with exact explicit organisation/role",
+    "Internal Staff creation with no Rider",
+    "Rider plus optional Partner Operations Manager assignment and revocation preserves Rider",
+    "User-only explicit invitation creation/acceptance without Rider or internal Staff",
+    "Scope, escalation, role change/revocation and active-session status guards",
+    "Failure after Auth creation, persistence response loss and concurrent User-only retries",
+    "User-only/Rider-only/Staff-only/multi-relationship rendering; Status column; actual User Details edit",
+    "No default organisation form or healthy recovery action; authorised read-only presentation",
+    "Relationship/recovery refresh without account timestamp change; invitation link survives readback",
+    "User-only authenticated web landing, explicit workspace selection and revoked-selection denial",
+    "POST sign-out uses 303 and retains cross-origin denial",
+    "Setup origins use explicit creation choice, including external/internal Partner Operations Manager name collision"
+  ],
+  "production": {
+    "inspectionAt": "2026-10-21T12:24:46.813Z",
+    "readOnly": "on",
+    "latestMigration": {
+      "version": "20261021110700",
+      "name": "077_invitation_authority_boundaries"
+    },
+    "migration078Installed": false,
+    "requestsEnabled": true,
+    "irreversibleExecutionEnabled": false,
+    "publicShopRedemptionEnabled": false,
+    "mutationsByThisTask": 0,
+    "syntheticUsersByThisTask": 0,
+    "financialTestTransactionsByThisTask": 0,
+    "providerEmailsByThisTask": 0,
+    "deploymentsByThisTask": 0
+  },
+  "fixtureFingerprints": {
+    "production-schema-only.sql": "94065a644a445e59044e2541e087c130c625820c87ddd9bddfedfd0100cdd07b",
+    "production-schema-prerequisites.json": "64152b3ca41d7c10a165e2b3e05b887db36252aa28322ca5431a2d9b0875901e",
+    "deletion-barrier-metadata.json": "d564dcdba0974f4de8e06d5d4b41ca8c7199839819f1ad685e934813987821f2"
+  },
+  "acceptanceLimits": [
+    "No production migration or deployment of these corrections was executed.",
+    "No authenticated production browser journey or controlled external email/provider acceptance is claimed.",
+    "Real GoTrue/PostgreSQL and DOM/server-component tests are isolated source acceptance.",
+    "No Mobile runtime or EAS build changed.",
+    "Unrelated parallel-session ID-25 evidence and tooling were left untouched."
+  ],
+  "fixtureHashEncoding": "raw file bytes SHA256; migration checksum is separately UTF-8/LF"
+}

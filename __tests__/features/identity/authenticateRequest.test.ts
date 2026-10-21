@@ -167,7 +167,7 @@ describe("authenticateRequest", () => {
     expect(result.kind).toBe("unauthenticated");
   });
 
-  it("fails when user has no recognised principal records", async () => {
+  it("denies operational access to a valid User with no relationships", async () => {
     const deps = createDeps();
 
     const result = await authenticateRequest(
@@ -177,7 +177,7 @@ describe("authenticateRequest", () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.kind).toBe("unrecognised_principal");
+    expect(result.kind).toBe("permission_denied");
   });
 
   it("ignores client-declared principal type and resolves from DB only", async () => {

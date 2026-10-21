@@ -1,3 +1,5 @@
+Product model authority: a User exists independently, with no required Rider profile, organisation membership or internal Staff grant. See [User and independent relationships](../product/user-and-relationships.md) and [source remediation / 078 release requirements](../release/user-relationships-simplification.md). Dated release statements below are historical evidence, not account requirements.
+
 Current release: approved SQL and pinned Admin/web are deployed; ID-25 blocks complete external API acceptance. See [production release evidence](../release/enterprise-identity-production.md). Earlier preflight descriptions below are historical.
 
 # Enterprise identity remediation — 21 October 2026
@@ -11,6 +13,7 @@ Source implementation and isolated acceptance are separate from production accep
 | Concept | Authority | Meaning |
 | --- | --- | --- |
 | Authentication | `auth.users` | One sign-in identity, verified email, MFA factors, Auth bans/deletion |
+| User account | Matching `auth.users.id` and `public.user.id` | Independent account; zero Rider profiles, external memberships and Staff grants is valid. User-only has no product role. |
 | Account status | `public.user.status` plus Auth state | Only active, nondeleted, unbanned identities authorize requests |
 | Rider domain | Explicit `rider.user_id` profile and `rider.status` | Personal services, never internal operations |
 | External domains | `organisation.type` and `organisation_membership` | Partner (`reward_partner`), Advertiser or Government; exact tenant, role and active/invited/revoked status |
@@ -20,7 +23,7 @@ Source implementation and isolated acceptance are separate from production accep
 
 An identity can have an independently granted Rider profile, staff grant and multiple external memberships. Revoking one membership preserves the others and all history. Account suspension denies every domain; Rider suspension denies Rider services independently. Current staff capabilities authorize platform operations globally. Former department/assignment/organisation scope metadata was descriptive only: the unused always-allow “future ABAC” evaluator has been removed, and diagnostics now report the actual global staff scope. External organisation authorization always checks the exact tenant. Role labels or departments do not create an unimplemented staff assignment boundary.
 
-Canonical request evaluation is: verified Auth identity → current active account → explicitly selected domain/tenant → active profile or membership → valid role in that domain → required capability → resource scope and command constraints. Unknown domains, roles, missing/ambiguous memberships and stale versions deny. A tenant selector never falls through to internal staff authority. Rider-owned APIs continue to resolve the actual Rider. Staff Admin guards retain MFA; direct staff RLS capabilities require AAL2 as well.
+Operational request evaluation is: verified Auth identity → current active account → relevant selected domain/tenant → active profile or membership → valid scoped role → required capability → resource scope and command constraints. Unknown roles, missing/ambiguous required relationships and stale versions deny that operation, not the existence of the User. Ordinary account authentication does not require a product relationship. A tenant selector never falls through to internal staff authority. Rider-owned APIs continue to resolve the actual Rider. Staff Admin guards retain MFA; direct staff RLS capabilities require AAL2 as well.
 
 ## Role and capability inventory
 

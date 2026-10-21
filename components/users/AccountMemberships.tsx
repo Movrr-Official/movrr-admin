@@ -1,37 +1,50 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { getAccountMemberships, getAccountOrganisations, changeAccountMembership, issueAccountInvitation, getAccountInvitations, revokeAccountInvitation, retryAccountAuthSynchronization } from "@/app/actions/accountMemberships";
+import { getAccountMemberships, getAccountOrganisations, changeAccountMembership, issueAccountInvitation, getAccountInvitations, revokeAccountInvitation } from "@/app/actions/accountMemberships";
 import { MEMBERSHIP_ROLES, rolesForDomain, accountRoleLabel, type AccountDomain } from "@/features/identity/domain/accountDomains";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { useCapability } from "@/hooks/useAdminUser";
 import { Input } from "@/components/ui/input";
 
 type Membership = Awaited<ReturnType<typeof getAccountMemberships>>[number];
-export function AccountMemberships({ userId, onChange }: { userId: string; onChange?: () => void }) {
-  const [memberships, setMemberships] = useState<Membership[]>([]);
+export function AccountMemberships({ userId, initialMemberships, onChange }: { userId: string; initialMemberships: Membership[]; onChange?: () => void }) {
+  const [memberships, setMemberships] = useState<Membership[]>(initialMemberships);
   const [organisations, setOrganisations] = useState<Awaited<ReturnType<typeof getAccountOrganisations>>>([]);
   const [organisationId, setOrganisationId] = useState("");
   const [role, setRole] = useState<(typeof MEMBERSHIP_ROLES)[number]>("viewer");
+  const canAssign = useCapability("users.role.assign");
+  const canApprove = useCapability("users.role.approve");
+  const canManage = canAssign || canApprove;
+  const [showAdd, setShowAdd] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [invitations, setInvitations] = useState<Awaited<ReturnType<typeof getAccountInvitations>>>([]);
   const [invitationUrl, setInvitationUrl] = useState("");
   const invitationTokens = useRef(new Map<string, string>());
   const reload = async () => { setMemberships(await getAccountMemberships(userId)); setInvitations(await getAccountInvitations(userId)); };
+  useEffect(() => { setMemberships(initialMemberships); }, [initialMemberships]);
+  useEffect(() => { setShowAdd(false); setShowHistory(false); setInvitationUrl(""); setError(""); }, [userId]);
   useEffect(() => {
+    if (!showAdd || !canManage) return;
     let cancelled = false;
-    Promise.all([getAccountMemberships(userId), getAccountOrganisations(), getAccountInvitations(userId)]).then(([rows, orgs, invites]) => {
-      if (!cancelled) { setMemberships(rows); setOrganisations(orgs); setInvitations(invites); setInvitationUrl(""); }
-    }).catch(e => { if (!cancelled) setError(e.message); });
+    getAccountOrganisations().then(rows => { if (!cancelled) setOrganisations(rows); }).catch(e => { if (!cancelled) setError(e.message); });
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [showAdd, canManage]);
+  useEffect(() => {
+    if (!memberships.some(member => member.status === "invited")) { setInvitations([]); return; }
+    let cancelled = false;
+    getAccountInvitations(userId).then(rows => { if (!cancelled) setInvitations(rows); }).catch(e => { if (!cancelled) setError(e.message); });
+    return () => { cancelled = true; };
+  }, [userId, memberships]);
   async function save(orgId: string, nextRole: string, status: "active" | "invited" | "revoked", current?: Membership) {
-    setBusy(true); setError("");
+    setBusy(true); setError(""); setInvitationUrl("");
     try {
       await changeAccountMembership({ userId, organisationId: orgId,
         role: nextRole as typeof role, status, expectedUpdatedAt: current?.updatedAt ?? null });
-      await reload(); onChange?.();
+      await reload(); setShowAdd(false); onChange?.();
     } catch (e) { setError(e instanceof Error ? e.message : "Membership update failed"); }
     finally { setBusy(false); }
   }
@@ -47,22 +60,18 @@ export function AccountMemberships({ userId, onChange }: { userId: string; onCha
     finally { setBusy(false); }
   }
   return <div className="space-y-4">
-    <div><h3 className="font-semibold">Organisation memberships</h3>
-      <p className="text-sm text-muted-foreground">Each role applies only to its named organisation. Rider and internal staff access are managed separately.</p></div>
+    {(memberships.some(member => member.status !== "revoked") || showHistory || showAdd) && <h3 className="font-semibold">Organisation access</h3>}
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-    <Button type="button" variant="outline" disabled={busy} onClick={async () => {
-      setBusy(true); setError("");
-      try { await retryAccountAuthSynchronization(userId); onChange?.(); }
-      catch (failure) { setError(failure instanceof Error ? failure.message : "Synchronization failed"); }
-      finally { setBusy(false); }
-    }}>Retry pending account activation or suspension</Button>
+    {canManage && !showAdd && <Button type="button" variant="outline" onClick={() => { setOrganisationId(""); setRole("viewer"); setShowAdd(true); }}>Add organisation access</Button>}
+    {memberships.some(member => member.status === "revoked") && <Button type="button" variant="ghost" onClick={() => setShowHistory(value => !value)}>{showHistory ? "Hide access history" : "Show access history"}</Button>}
     {invitationUrl && <div className="space-y-2"><Label>Invitation link · expires in 7 days</Label><Input readOnly value={invitationUrl} onFocus={event => event.target.select()} /><p className="text-xs text-muted-foreground">Share with the invited account holder. This link requires their verified sign-in.</p></div>}
-    {memberships.map(member => <div key={member.id} className="rounded-xl border p-4 space-y-3">
-      <p className="font-medium">{member.organisationName} · {member.domain} · {member.status}</p>
-      <Label>Scoped role</Label>
+    {memberships.filter(member => showHistory || member.status !== "revoked").map(member => <div key={member.id} className="rounded-xl border p-4 space-y-3">
+      <p className="font-medium">{member.organisationName} · {accountRoleLabel(member.domain as AccountDomain, member.role)}{member.status !== "active" ? ` · ${member.status === "invited" ? "Invited" : "Revoked"}` : ""}</p>
+      {canManage && (member.role !== "owner" || canApprove) && <>
+      <Label>Role</Label>
       <Select disabled={busy || member.status === "revoked"} value={member.role}
         onValueChange={value => void save(member.organisationId, value, member.status as "active" | "invited", member)}>
-        <SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{rolesForDomain(member.domain as AccountDomain).map(value =>
+        <SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{rolesForDomain(member.domain as AccountDomain).filter(value => value !== "owner" || canApprove).map(value =>
           <SelectItem key={value} value={value}>{accountRoleLabel(member.domain as AccountDomain, value)}</SelectItem>)}</SelectContent>
       </Select>
       <Button type="button" variant="outline" disabled={busy} onClick={() => void save(member.organisationId, member.role, member.status === "revoked" ? "active" : "revoked", member)}>
@@ -77,20 +86,22 @@ export function AccountMemberships({ userId, onChange }: { userId: string; onCha
           catch (failure) { setError(failure instanceof Error ? failure.message : "Revocation failed"); }
           finally { setBusy(false); }
         }}>Revoke invitation</Button>)}
+      </>}
     </div>)}
-    <div className="rounded-xl border p-4 space-y-3">
-      <Label>Add an explicit membership</Label>
-      <Select value={organisationId} onValueChange={setOrganisationId} disabled={busy}>
+    {showAdd && canManage && <div className="rounded-xl border p-4 space-y-3">
+      <Label>Organisation</Label>
+      <Select value={organisationId} onValueChange={value => { setOrganisationId(value); setRole("viewer"); }} disabled={busy}>
         <SelectTrigger><SelectValue placeholder="Select organisation" /></SelectTrigger>
         <SelectContent>{organisations.filter(org => !memberships.some(member => member.organisationId === org.id)).map(org =>
           <SelectItem key={org.id} value={org.id}>{org.name} · {org.type === "reward_partner" ? "Partner" : org.type}</SelectItem>)}</SelectContent>
       </Select>
       <Select value={role} onValueChange={value => setRole(value as typeof role)} disabled={busy}>
-        <SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{rolesForDomain((organisations.find(org => org.id === organisationId)?.type === "government" ? "government" : organisations.find(org => org.id === organisationId)?.type === "advertiser" ? "advertiser" : "partner")).map(value =>
+        <SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{rolesForDomain((organisations.find(org => org.id === organisationId)?.type === "government" ? "government" : organisations.find(org => org.id === organisationId)?.type === "advertiser" ? "advertiser" : "partner")).filter(value => value !== "owner" || canApprove).map(value =>
           <SelectItem key={value} value={value}>{accountRoleLabel((organisations.find(org => org.id === organisationId)?.type === "reward_partner" ? "partner" : "advertiser"), value)}</SelectItem>)}</SelectContent>
       </Select>
-      <Button type="button" disabled={busy || !organisationId} onClick={() => void save(organisationId, role, "active")}>Save membership</Button>
+      <Button type="button" disabled={busy || !organisationId} onClick={() => void save(organisationId, role, "active")}>Add access</Button>
       <Button type="button" variant="outline" disabled={busy || !organisationId} onClick={() => void invite(organisationId, role)}>Invite to organisation</Button>
-    </div>
+      <Button type="button" variant="ghost" disabled={busy} onClick={() => setShowAdd(false)}>Cancel</Button>
+    </div>}
   </div>;
 }

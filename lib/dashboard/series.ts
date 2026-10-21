@@ -5,7 +5,7 @@ export interface TimeBucket {
 }
 
 interface UserLike {
-  role?: string | null;
+  domains?: string[];
   createdAt?: string | null;
 }
 
@@ -35,7 +35,7 @@ export function buildCumulativeUserSeries(
   return buckets.reduce<Array<{ name: string; value: number }>>(
     (acc, bucket) => {
       const createdCount = users.filter((user) => {
-        if (user.role !== role) return false;
+        if (!user.domains?.includes(role)) return false;
         const createdAt = parseDate(user.createdAt);
         return createdAt
           ? createdAt >= bucket.start && createdAt <= bucket.end

@@ -17,6 +17,7 @@
 
 | Feature | Status | Document |
 |---------|--------|----------|
+| User and independent relationships | Authoritative product model | [user-and-relationships.md](./user-and-relationships.md) |
 | Employee Authorization | Shipped | [employee-authorization.md](./employee-authorization.md) |
 | Partner operations & organisations | Active | [partner-operations-and-organisations.md](./partner-operations-and-organisations.md) |
 | Reward fulfilment engine | Active | [reward-fulfilment-engine.md](./reward-fulfilment-engine.md) |

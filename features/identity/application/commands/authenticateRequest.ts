@@ -21,7 +21,7 @@ import { capabilitiesForRider } from "@/features/organisations/domain/Capability
  * 1. AdminPrincipal if a canonical employee membership exists
  * 2. OrganisationPrincipal if organisation membership hit
  * 3. RiderPrincipal if rider profile hit
- * 4. Otherwise unrecognised_principal failure
+ * 4. A valid independent User without operational relationships is denied access.
  */
 export async function authenticateRequest(
   input: AuthenticateRequestInput,
@@ -114,8 +114,8 @@ export async function authenticateRequest(
   }
 
   return fail(
-    "unrecognised_principal",
-    "Authenticated user has no recognised principal",
+    "permission_denied",
+    "This action requires an authorized relationship",
   );
 }
 

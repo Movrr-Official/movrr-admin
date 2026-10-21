@@ -1,3 +1,4 @@
+import { UserRelationships } from "@/components/users/UserRelationships";
 import {
   MoreHorizontal,
   Shield,
@@ -33,40 +34,6 @@ import {
 import { User } from "@/schemas";
 import { getEmployeeRoleLabel } from "@/features/authorization/roleOptions";
 
-const getRoleBadge = (role: string) => {
-  switch (role) {
-    case "super_admin":
-    case "security_admin":
-    case "operations_manager":
-      return (
-        <Badge variant="warning">
-          <Shield className="h-3 w-3 mr-1" />
-          {getEmployeeRoleLabel(role)}
-        </Badge>
-      );
-    case "advertiser":
-      return (
-        <Badge variant="info">
-          <Building2 className="h-3 w-3 mr-1" />
-          Advertiser
-        </Badge>
-      );
-    case "rider":
-      return (
-        <Badge variant="default">
-          <Bike className="h-3 w-3 mr-1" />
-          Rider
-        </Badge>
-      );
-    default:
-      return (
-        <Badge variant="secondary" className="font-medium">
-          {getEmployeeRoleLabel(role)}
-        </Badge>
-      );
-  }
-};
-
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "active":
@@ -98,7 +65,7 @@ const getStatusBadge = (status: string) => {
 interface UsersTableColumnsProps {
   onEdit?: (user: User) => void;
   onStatusChange?: (user: User) => void;
-  onRoleChange?: (user: User) => void;
+  onManageAccess?: (user: User) => void;
   onResetPassword?: (user: User) => void;
   onExportData?: (user: User) => void;
 }
@@ -106,7 +73,7 @@ interface UsersTableColumnsProps {
 export const getUsersTableColumns = ({
   onEdit,
   onStatusChange,
-  onRoleChange,
+  onManageAccess,
   onResetPassword,
   onExportData,
 }: UsersTableColumnsProps = {}): ColumnDef<User>[] => [
@@ -185,17 +152,10 @@ export const getUsersTableColumns = ({
     ),
   },
   {
-    accessorKey: "role",
-    header: "Domains and roles",
-    cell: ({ row }) => <div className="space-y-1">
-      {row.original.role !== "unassigned" && getRoleBadge(row.original.role)}
-      {row.original.domains?.includes("rider") && row.original.employeeRole && getRoleBadge("rider")}
-      {row.original.riderStatus && <span className="text-xs text-muted-foreground">Rider: {row.original.riderStatus}</span>}
-      {row.original.memberships?.map(membership => <div key={membership.id} className="text-xs">
-        {membership.organisationName} · {membership.domain} · {membership.role} · {membership.status}
-      </div>)}
-      {row.original.role === "unassigned" && !row.original.memberships?.length && "No active membership"}
-    </div>,
+    id: "relationships",
+    accessorFn: user => [user.riderStatus ? "Rider" : "", user.employeeRole ?? "", ...(user.memberships ?? []).filter(member => member.status !== "revoked").map(member => `${member.organisationName} ${member.role}`)].filter(Boolean).join(" ") || "User",
+    header: "Relationships",
+    cell: ({ row }) => <UserRelationships user={row.original} />,
   },
   {
     accessorKey: "status",
@@ -275,9 +235,9 @@ export const getUsersTableColumns = ({
                 </>
               )}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onRoleChange?.(user)}>
+            <DropdownMenuItem onClick={() => onManageAccess?.(user)}>
               <Shield className="mr-2 h-4 w-4" />
-              Change Role
+              Manage access
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onResetPassword?.(user)}>

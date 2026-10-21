@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { UserRelationships } from "@/components/users/UserRelationships";
+import { AccountStatusRecovery } from "@/components/users/AccountStatusRecovery";
+import { useCapability } from "@/hooks/useAdminUser";
 import { AccountMemberships } from "@/components/users/AccountMemberships";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -111,6 +114,10 @@ export function UserDetailsDrawer({
   onUserUpdate,
 }: UserDetailsDrawerProps) {
   const { toast } = useToast();
+  const canAssignStaff = useCapability("users.role.assign");
+  const canApproveStaff = useCapability("users.role.approve");
+  const [showStaffAccess, setShowStaffAccess] = useState(false);
+  const hasRider = !!user && user.riderStatus !== undefined;
   const [isEditMode, setIsEditMode] = useState(false);
   const [showResetPasswordConfirmation, setShowResetPasswordConfirmation] =
     useState(false);
@@ -162,6 +169,7 @@ export function UserDetailsDrawer({
   useEffect(() => {
     if (!open) {
       setIsEditMode(false);
+      setShowStaffAccess(false);
       setShowResetPasswordConfirmation(false);
     }
   }, [open]);
@@ -193,10 +201,10 @@ export function UserDetailsDrawer({
           pointsResult,
         ] = await Promise.all([
           getUserActivityLogs(user.id),
-          getUserRoutes(user.id),
-          getUserCampaigns(user.id),
-          getUserRewardTransactions(user.id),
-          getUserPointsBalance(user.id),
+          hasRider ? getUserRoutes(user.id) : Promise.resolve({ success: true, data: [] }),
+          hasRider ? getUserCampaigns(user.id) : Promise.resolve({ success: true, data: [] }),
+          hasRider ? getUserRewardTransactions(user.id) : Promise.resolve({ success: true, data: [] }),
+          hasRider ? getUserPointsBalance(user.id) : Promise.resolve({ success: true, data: null }),
         ]);
 
         if (!isMounted) return;
@@ -234,7 +242,7 @@ export function UserDetailsDrawer({
     return () => {
       isMounted = false;
     };
-  }, [open, user, isEditMode]);
+  }, [open, user, isEditMode, hasRider]);
 
   const handleSave = async (data: EditUserFormData) => {
     if (!user) return;
@@ -346,34 +354,6 @@ export function UserDetailsDrawer({
   };
 
   if (!user) return null;
-
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case "super_admin":
-        return (
-          <Badge variant="warning">
-            <Shield className="h-3 w-3 mr-1" />
-            Super Admin
-          </Badge>
-        );
-      case "advertiser":
-        return (
-          <Badge variant="info">
-            <Building2 className="h-3 w-3 mr-1" />
-            Advertiser
-          </Badge>
-        );
-      case "rider":
-        return (
-          <Badge variant="default">
-            <Bike className="h-3 w-3 mr-1" />
-            Rider
-          </Badge>
-        );
-      default:
-        return <Badge variant="secondary">{role}</Badge>;
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -523,15 +503,16 @@ export function UserDetailsDrawer({
                             </FormItem>
                           )}
                         />
+                        {(canAssignStaff || canApproveStaff) && !user.employeeRole && !showStaffAccess && <Button type="button" variant="outline" onClick={() => setShowStaffAccess(true)}>Add internal staff access</Button>}
+                        {(canAssignStaff || canApproveStaff) && (user.employeeRole || showStaffAccess) && <>
                         <FormField
                           control={form.control}
                           name="employeeRole"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-sm font-semibold">
-                                Employee role
+                                Internal Staff role
                               </FormLabel>
-                              <p className="text-sm text-muted-foreground">Internal MOVRR staff access is an independent grant. Organisation memberships appear separately below.</p>
                               <Select
                                 onValueChange={(value) => field.onChange(value === "none" ? null : value)}
                                 value={field.value ?? "none"}
@@ -550,6 +531,7 @@ export function UserDetailsDrawer({
                             </FormItem>
                           )}
                         />
+                        </>}
                         <FormField
                           control={form.control}
                           name="status"
@@ -665,12 +647,11 @@ export function UserDetailsDrawer({
                       )}
                     </div>
                     <div className="flex items-center gap-2 mb-3">
-                      {user.role !== "unassigned" && getRoleBadge(user.role)}
-                      {user.domains?.includes("rider") && user.employeeRole && getRoleBadge("rider")}
-                      {user.riderStatus && <span className="text-sm text-muted-foreground">Rider membership: {user.riderStatus}</span>}
+                      <UserRelationships user={user} organisations={false} />
                       {getStatusBadge(user.status)}
                     </div>
-                    <AccountMemberships userId={user.id} onChange={onUserUpdate} />
+                    <AccountStatusRecovery userId={user.id} pending={user.authSyncPending} onChange={onUserUpdate} />
+                    <AccountMemberships userId={user.id} initialMemberships={user.memberships ?? []} onChange={onUserUpdate} />
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Mail className="h-4 w-4" />
@@ -804,27 +785,27 @@ export function UserDetailsDrawer({
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="activity" className="w-full">
-                    <TabsList className="grid w-full grid-cols-5">
+                    <TabsList className={`grid w-full ${hasRider ? "grid-cols-5" : "grid-cols-1"}`}>
                       <TabsTrigger value="activity">
                         <History className="h-4 w-4 mr-2" />
                         Activity
                       </TabsTrigger>
-                      <TabsTrigger value="routes">
+                      {hasRider && <TabsTrigger value="routes">
                         <Route className="h-4 w-4 mr-2" />
                         Routes ({routes.length})
-                      </TabsTrigger>
-                      <TabsTrigger value="campaigns">
+                      </TabsTrigger>}
+                      {hasRider && <TabsTrigger value="campaigns">
                         <Megaphone className="h-4 w-4 mr-2" />
                         Campaigns ({campaigns.length})
-                      </TabsTrigger>
-                      <TabsTrigger value="rewards">
+                      </TabsTrigger>}
+                      {hasRider && <TabsTrigger value="rewards">
                         <Gift className="h-4 w-4 mr-2" />
                         Rewards
-                      </TabsTrigger>
-                      <TabsTrigger value="points">
+                      </TabsTrigger>}
+                      {hasRider && <TabsTrigger value="points">
                         <Coins className="h-4 w-4 mr-2" />
                         Points
-                      </TabsTrigger>
+                      </TabsTrigger>}
                     </TabsList>
 
                     <TabsContent value="activity" className="mt-4">
@@ -869,7 +850,7 @@ export function UserDetailsDrawer({
                       )}
                     </TabsContent>
 
-                    <TabsContent value="routes" className="mt-4">
+                    {hasRider && <TabsContent value="routes" className="mt-4">
                       {isLoadingAdditionalData ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -909,9 +890,9 @@ export function UserDetailsDrawer({
                           <p className="text-sm">No routes found</p>
                         </div>
                       )}
-                    </TabsContent>
+                    </TabsContent>}
 
-                    <TabsContent value="campaigns" className="mt-4">
+                    {hasRider && <TabsContent value="campaigns" className="mt-4">
                       {isLoadingAdditionalData ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -951,9 +932,9 @@ export function UserDetailsDrawer({
                           <p className="text-sm">No campaigns found</p>
                         </div>
                       )}
-                    </TabsContent>
+                    </TabsContent>}
 
-                    <TabsContent value="rewards" className="mt-4">
+                    {hasRider && <TabsContent value="rewards" className="mt-4">
                       {isLoadingAdditionalData ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -1002,9 +983,9 @@ export function UserDetailsDrawer({
                           </p>
                         </div>
                       )}
-                    </TabsContent>
+                    </TabsContent>}
 
-                    <TabsContent value="points" className="mt-4">
+                    {hasRider && <TabsContent value="points" className="mt-4">
                       {isLoadingAdditionalData ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -1047,7 +1028,7 @@ export function UserDetailsDrawer({
                           <p className="text-sm">No points balance found</p>
                         </div>
                       )}
-                    </TabsContent>
+                    </TabsContent>}
                   </Tabs>
                 </CardContent>
               </Card>

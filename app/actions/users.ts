@@ -1,11 +1,12 @@
 "use server";
 
-import { provisionProduct, advertiserProvisioningSchema } from "@/features/identity/application/productProvisioning";
+import { provisionProduct } from "@/features/identity/application/productProvisioning";
+import { accountCreationSchema } from "@/features/identity/domain/accountCreation";
 import { notifyAccountSetup } from "@/lib/services/accountSetupNotification";
 import { provisionEmployee } from "@/features/identity/application/employeeProvisioning";
 import { provisionExternalAccount } from "@/features/identity/application/externalAccountProvisioning";
 import { synchronizeAccountAuthStatus } from "@/features/identity/application/accountAuthStatus";
-import { accountDomainSchema, rolesForDomain, type AccountDomain } from "@/features/identity/domain/accountDomains";
+import { type AccountCreationDomain } from "@/features/identity/domain/accountDomains";
 import { isEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
 import {
   capabilityRequiredToAssignRole,
@@ -20,7 +21,6 @@ import {
   toggleUserStatusSchema,
   userRoleSchema,
   employeeRoleSchema,
-  accountCreationRoleSchema,
   userStatusSchema,
   RewardTransaction,
 } from "@/schemas";
@@ -60,59 +60,6 @@ const mapDbStatusToUi = (status: string | null | undefined) => {
   return status;
 };
 
-const createUserSchema = z
-  .object({
-    email: z.string().email("Invalid email address"),
-    name: z.string().min(1, "Full name is required").max(100),
-    phone: z.string().optional(),
-    role: accountCreationRoleSchema,
-    domain: accountDomainSchema,
-    organisationId: z.string().uuid().optional(),
-    membershipStatus: z.enum(["active", "invited"]).default("active"),
-    advertiserProfile: advertiserProvisioningSchema.optional(),
-    status: userStatusSchema.default("active"),
-    organization: z.string().optional(),
-    languagePreference: z.string().default("en"),
-    isVerified: z.boolean().default(false),
-    accountNotes: z.string().optional(),
-    sendWelcomeEmail: z.boolean().default(true),
-    city: z.string().optional(),
-    country: z.string().optional(),
-  })
-  .strict()
-  .superRefine((value, ctx) => {
-    if (!rolesForDomain(value.domain).includes(value.role)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          "Role does not belong to the selected account domain.",
-        path: ["role"],
-      });
-    }
-    if (["partner", "advertiser", "government"].includes(value.domain) && !value.organisationId &&
-        !(value.domain === "advertiser" && value.role === "owner" && value.advertiserProfile)) {
-      ctx.addIssue({ code: "custom", message: "Organisation is required", path: ["organisationId"] });
-    }
-    if (["rider", "staff"].includes(value.domain) && value.organisationId) {
-      ctx.addIssue({ code: "custom", message: "This domain does not use an organisation membership", path: ["organisationId"] });
-    }
-    if (value.role === "rider") {
-      if (!value.city?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "City is required for rider accounts",
-          path: ["city"],
-        });
-      }
-      if (!value.country?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Country is required for rider accounts",
-          path: ["country"],
-        });
-      }
-    }
-  });
 
 const updateUserSchema = z.object({
   id: z.string(),
@@ -360,6 +307,9 @@ export async function getUsers(
       membershipsByUser.set(membership.user_id, current);
     }
 
+    const { data: authSyncRows, error: authSyncError } = await supabaseAdmin.from("account_auth_sync").select("user_id").eq("state", "pending");
+    if (authSyncError) return { success: false, error: authSyncError.message };
+    const pendingAuthSync = new Set((authSyncRows ?? []).map(row => row.user_id));
     const userIds = (data ?? []).map((row) => row.id);
     const lastActivitySignalMap = await fetchLatestUserActivitySignalMap(
       supabaseAdmin,
@@ -371,10 +321,10 @@ export async function getUsers(
       email: row.email,
       name: row.name,
       phone: row.phone ?? undefined,
-      role: isEmployeeRole(employeeRoles.get(row.id)) ? employeeRoles.get(row.id) : riderStatuses.has(row.id) ? "rider" : membershipsByUser.get(row.id)?.some(member => member.domain === "advertiser" && member.status !== "revoked") ? "advertiser" : "unassigned",
       employeeRole: isEmployeeRole(employeeRoles.get(row.id)) ? employeeRoles.get(row.id) : null,
-      domains: [...new Set([...(riderStatuses.has(row.id) ? ["rider"] : []), ...(isEmployeeRole(employeeRoles.get(row.id)) ? ["staff"] : []), ...(membershipsByUser.get(row.id) ?? []).map(member => member.domain)])],
+      domains: [...new Set([...(riderStatuses.has(row.id) ? ["rider"] : []), ...(isEmployeeRole(employeeRoles.get(row.id)) ? ["staff"] : []), ...(membershipsByUser.get(row.id) ?? []).filter(member => member.status !== "revoked").map(member => member.domain)])],
       riderStatus: riderStatuses.get(row.id),
+      authSyncPending: pendingAuthSync.has(row.id),
       memberships: membershipsByUser.get(row.id) ?? [],
       status: mapDbStatusToUi(row.status),
       createdAt: row.created_at ?? new Date().toISOString(),
@@ -393,13 +343,15 @@ export async function getUsers(
     })) as User[];
 
     if (filters?.role) {
-      users = users.filter((user) => user.role === filters.role || user.domains?.some(domain => domain === filters.role) || user.memberships?.some(membership => membership.role === filters.role && membership.status !== "revoked"));
+      users = users.filter(user => filters.role === "unassigned"
+        ? !user.riderStatus && !user.employeeRole && !user.memberships?.some(member => member.status !== "revoked")
+        : user.employeeRole === filters.role || user.domains?.some(domain => domain === filters.role) || user.memberships?.some(member => member.role === filters.role && member.status !== "revoked"));
     }
 
     if (selectedAdvertiserIds.length > 0) {
       users = users.filter(
         (user) =>
-          user.role !== "advertiser" || selectedAdvertiserIds.includes(user.id),
+          !user.memberships?.some(member => member.domain === "advertiser" && member.status !== "revoked") || selectedAdvertiserIds.includes(user.id),
       );
     }
 
@@ -417,12 +369,12 @@ export async function getUsers(
  * Server action to create a new user
  */
 export async function createUser(
-  data: z.infer<typeof createUserSchema>,
-): Promise<{ success: boolean; error?: string; warning?: string; data?: { id: string; domain: AccountDomain; role: string; organisationId?: string; status: string } }> {
+  data: z.input<typeof accountCreationSchema>,
+): Promise<{ success: boolean; error?: string; warning?: string; data?: { id: string; domain: AccountCreationDomain; role?: string; organisationId?: string; status: string } }> {
   try {
     const auth = await requireCapability("users.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
-    const validatedData = createUserSchema.parse(data);
+    const validatedData = accountCreationSchema.parse(data);
     const policies = await getPlatformOperationalPolicies();
 
     if (
@@ -440,7 +392,13 @@ export async function createUser(
 
     const canonicalRole = validatedData.domain === "staff" && isEmployeeRole(validatedData.role) ? validatedData.role : undefined;
     let account;
-    if (canonicalRole) {
+    if (validatedData.domain === "user") {
+      account = await provisionProduct(supabaseAdmin, auth.authUser.id, {
+        email: validatedData.email, name: validatedData.name, role: null, status: validatedData.status,
+        phone: validatedData.phone, languagePreference: validatedData.languagePreference,
+        isVerified: validatedData.isVerified, accountNotes: validatedData.accountNotes,
+      });
+    } else if (canonicalRole) {
       await requireCapability(capabilityRequiredToAssignRole(canonicalRole), { mutation: true });
       account = await provisionEmployee(supabaseAdmin, auth.authUser.id, {
         email: validatedData.email, name: validatedData.name, role: canonicalRole,
@@ -474,10 +432,10 @@ export async function createUser(
       });
     }
     else throw new Error("Unsupported account domain or scoped role");
-    const warning = validatedData.sendWelcomeEmail ? await notifyAccountSetup(supabaseAdmin, account) : undefined;
+    const warning = validatedData.sendWelcomeEmail ? await notifyAccountSetup(supabaseAdmin, { ...account, domain: validatedData.domain }) : undefined;
     await writeUserActivity(supabaseAdmin, {
       user_id: account.id, actor_user_id: auth.authUser.id, source: "account", action: "Account created",
-      description: `Account provisioned with role ${account.role}.`, related_entity_type: "user", related_entity_id: account.id,
+      description: account.role ? `Account created with ${account.role} access.` : "User account created.", related_entity_type: "user", related_entity_id: account.id,
       metadata: { role: account.role, status: account.status },
     }).catch(() => undefined);
     revalidatePath("/users");

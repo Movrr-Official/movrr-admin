@@ -26,7 +26,6 @@ export type PlatformRouteConfig<T> = {
 export function applicationResultToHttpStatus(kind: string): number {
   switch (kind) {
     case "unauthenticated":
-    case "unrecognised_principal":
       return 401;
     case "rate_limited":
       return 429;

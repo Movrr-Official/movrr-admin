@@ -1,5 +1,7 @@
 # Partner Operations & Organisations — Product Intent & Responsibility Specification
 
+Scope clarification: organisation tenancy describes institutional operations, not a prerequisite for every MOVRR User or Rider. See [User and independent relationships](user-and-relationships.md). Internal Staff access is also independent of external organisation membership.
+
 **Audience:** product managers, designers, engineers, operations, support, QA, and future team members  
 **Scope:** product intent, responsibility boundaries, and operator mental models for two MOVRR Admin surfaces under Fulfilment  
 **Not in scope:** UI redesign, wireframes, implementation plans, API contracts, or database schema changes  

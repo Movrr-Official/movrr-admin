@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { UserFiltersSchema, UserRole } from "@/schemas";
+import { UserFiltersSchema } from "@/schemas";
 import { useUsersData } from "@/hooks/useUsersData";
 
 export const useUserStats = (filters?: UserFiltersSchema) => {
@@ -27,13 +27,11 @@ export const useUserStats = (filters?: UserFiltersSchema) => {
       const total = filteredUsers.length;
       const active = filteredUsers.filter((u) => u.status === "active").length;
 
-      const roleCounts = filteredUsers.reduce(
-        (acc, user) => {
-          acc[user.role as UserRole] = (acc[user.role as UserRole] || 0) + 1;
-          return acc;
-        },
-        {} as Record<UserRole, number>,
-      );
+      const relationships = {
+        riders: filteredUsers.filter(user => user.riderStatus !== undefined).length,
+        organisations: filteredUsers.filter(user => user.memberships?.some(member => member.status !== "revoked")).length,
+        staff: filteredUsers.filter(user => !!user.employeeRole).length,
+      };
 
       const latestUser = [...filteredUsers].sort(
         (a, b) =>
@@ -43,8 +41,8 @@ export const useUserStats = (filters?: UserFiltersSchema) => {
       return {
         total,
         active,
-        inactive: total - active,
-        roleCounts,
+        inactive: filteredUsers.filter(user => user.status === "inactive").length,
+        relationships,
         latestCreated: latestUser ? new Date(latestUser.createdAt) : null,
       };
   }, [query.data, filters?.dateRange?.from, filters?.dateRange?.to]);

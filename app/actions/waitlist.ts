@@ -91,7 +91,7 @@ async function updateWaitlistStatusInternal(
         languagePreference: "en", isVerified: false, emailVerified: true, city: waitlist.city ?? undefined,
         country: waitlist.country_code ?? undefined, waitlistId: id, waitlistReason: reason,
       });
-      warning = await notifyAccountSetup(supabaseAdmin, account);
+      warning = await notifyAccountSetup(supabaseAdmin, { ...account, domain: "rider" });
       updatedWaitlist = { ...waitlist, status: "approved", converted_to_user: true, provisioning_user_id: account.id };
     } else {
       const { data: nextWaitlist, error: updateError } = await supabase

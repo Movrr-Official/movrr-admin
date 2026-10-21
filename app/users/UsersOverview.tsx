@@ -39,11 +39,9 @@ export default function UsersOverview() {
   const inactiveUsers = stats?.inactive ?? 0;
   const pendingUsers = users?.filter((u) => u.status === "pending").length ?? 0;
 
-  const ridersCount = stats?.roleCounts?.rider ?? 0;
-  const advertisersCount = stats?.roleCounts?.advertiser ?? 0;
-  const adminsCount = stats?.roleCounts?.operations_manager ?? 0;
-  const moderatorsCount = stats?.roleCounts?.product_operations ?? 0;
-  const supportCount = stats?.roleCounts?.support_agent ?? 0;
+  const ridersCount = stats?.relationships.riders ?? 0;
+  const organisationUsersCount = stats?.relationships.organisations ?? 0;
+  const staffCount = stats?.relationships.staff ?? 0;
 
   // Calculate users in the last 7 days
   const sevenDaysAgo = new Date();
@@ -167,7 +165,7 @@ export default function UsersOverview() {
             />
 
             <StatsCard
-              title="Role Distribution"
+              title="Relationships"
               value=""
               icon={Shield}
               metrics={[
@@ -178,14 +176,14 @@ export default function UsersOverview() {
                   iconColor: "text-primary",
                 },
                 {
-                  label: "Advertisers",
-                  value: advertisersCount,
+                  label: "Organisation access",
+                  value: organisationUsersCount,
                   icon: Building2,
                   iconColor: "text-primary",
                 },
                 {
-                  label: "Admins",
-                  value: adminsCount + moderatorsCount + supportCount,
+                  label: "MOVRR Staff",
+                  value: staffCount,
                   icon: Shield,
                   iconColor: "text-warning",
                 },

@@ -1,17 +1,11 @@
+import { advertiserProvisioningSchema } from "@/features/identity/domain/accountCreation";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const advertiserProvisioningSchema = z.object({
-  companyName: z.string().trim().min(2), website: z.string().optional(),
-  logoUrl: z.string().url().optional(), industry: z.string().optional(),
-  language: z.string().default("en"), timezone: z.string().default("UTC"),
-  budget: z.number().nonnegative().default(0),
-  emailNotifications: z.boolean().default(true), campaignUpdates: z.boolean().default(true),
-}).strict();
 export const productProvisioningSchema = z.object({
   email: z.string().trim().email().transform(v => v.toLowerCase()),
-  name: z.string().trim().min(1).max(100), role: z.enum(["rider", "advertiser"]),
+  name: z.string().trim().min(1).max(100), role: z.enum(["rider", "advertiser"]).nullable(),
   status: z.enum(["active", "inactive", "pending"]),
   phone: z.string().optional(), organization: z.string().optional(),
   languagePreference: z.string(), isVerified: z.boolean(), emailVerified: z.boolean().optional(), accountNotes: z.string().optional(),
@@ -20,6 +14,7 @@ export const productProvisioningSchema = z.object({
 }).strict().superRefine((v, ctx) => {
   if (v.role === "advertiser" && !v.advertiserProfile) ctx.addIssue({ code: "custom", message: "Advertiser profile required" });
   if (v.role === "rider" && v.advertiserProfile) ctx.addIssue({ code: "custom", message: "Rider cannot receive advertiser profile" });
+  if (v.role === null && (v.advertiserProfile || v.city || v.country || v.waitlistId)) ctx.addIssue({ code: "custom", message: "User-only creation cannot add a product profile" });
   if (v.waitlistId && v.role !== "rider") ctx.addIssue({ code: "custom", message: "Waitlist conversion requires Rider" });
   if (v.role === "rider" && !v.waitlistId && (!v.city?.trim() || !v.country?.trim())) ctx.addIssue({ code: "custom", message: "Rider city and country required" });
 });

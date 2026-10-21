@@ -28,12 +28,13 @@ export function UsersTable({
   isRefetching = false,
 }: UsersTableProps) {
   const tableUsers = React.useMemo(() => users.map(user => ({ ...user,
-    scopedRoles: [...(user.domains?.includes("rider") ? ["rider:rider"] : []), ...(user.employeeRole ? [`staff:${user.employeeRole}`] : []), ...(user.memberships ?? []).map(member => `${member.domain}:${member.role}`)],
+    domains: user.domains?.length ? user.domains : ["user"],
+    scopedRoles: [...(user.domains?.includes("rider") ? ["rider:rider"] : []), ...(user.employeeRole ? [`staff:${user.employeeRole}`] : []), ...(user.memberships ?? []).filter(member => member.status !== "revoked").map(member => `${member.domain}:${member.role}`)],
     membershipSearch: (user.memberships ?? []).map(member => `${member.domain} ${member.organisationName} ${member.role} ${member.status}`).join(" "),
   })), [users]);
   const filterConfig: FilterConfig[] = [
-    { id: "domains", label: "Account domain", type: "multi-select", key: "domains", primary: true,
-      options: ACCOUNT_DOMAINS.map(domain => ({ value: domain, label: domain === "staff" ? "MOVRR Staff" : accountRoleLabel(domain, domain) })) },
+    { id: "domains", label: "Relationships", type: "multi-select", key: "domains", primary: true,
+      options: [{ value: "user", label: "User only" }, ...ACCOUNT_DOMAINS.map(domain => ({ value: domain, label: domain === "staff" ? "MOVRR Staff" : accountRoleLabel(domain, domain) }))] },
     {
       id: "scopedRoles",
       label: "Scoped role",

@@ -10,8 +10,9 @@ vi.mock("@/lib/userActivity", () => ({ writeUserActivity: async () => {}, fetchU
 vi.mock("@/lib/env", () => ({ APP_URL: "http://localhost:3000", CUSTOMER_APP_URL: "http://localhost:3001", FROM_EMAIL: "test@example.test", RESEND_API_KEY: "" }));
 import { createUser as createAccountAction, updateUser as updateAccountAction } from "@/app/actions/users";
 import { changeAccountMembership } from "@/app/actions/accountMemberships";
+import { platformRoute } from "@/lib/http/platformRoute";
 import postgres from "postgres";
-import { createHmac, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { GoTrueAdminApi, GoTrueClient } from "@supabase/auth-js";
@@ -32,7 +33,7 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
   const body = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ role: "service_role", exp: Math.floor(Date.now()/1000)+3600, aud: "authenticated" })}`;
   const token = `${body}.${createHmac("sha256", secret).update(body).digest("base64url")}`;
   const admin = new GoTrueAdminApi({ url: "http://127.0.0.1:55444", headers: { Authorization: `Bearer ${token}` } });
-  let started = false, actor: string, failGrant = false;
+  let started = false, actor: string, failGrant = false, failProductPersist = false, loseProductPersistResponse = false;
   const client = { auth: { admin }, rpc: async (name: string, args: Record<string, unknown>) => {
     try {
       const data = await db.begin(async tx => {
@@ -43,8 +44,13 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
         if (name === "account_auth_sync_state") return (await tx`select account_auth_sync_state(${String(args.p_actor)}::uuid,${String(args.p_user)}::uuid,${args.p_version as number | null},${Boolean(args.p_ack)}) value`)[0].value;
         if (name === "provision_external_account") return (await tx`select provision_external_account(${String(args.p_actor)}::uuid,${tx.json(args.p_input as never)},${String(args.p_phase)}) value`)[0].value;
         if (name === "provision_employee") return (await tx`select public.provision_employee(${String(args.p_actor)}::uuid,${tx.json(args.p_input as never)},${String(args.p_phase)}) value`)[0].value;
+        if (failProductPersist && args.p_phase === "persist") throw new Error("Injected User-only persistence failure");
         return (await tx`select public.provision_product(${String(args.p_actor)}::uuid,${String(args.p_id)}::uuid,${tx.json(args.p_input as never)},${String(args.p_fingerprint)},${String(args.p_phase)}) value`)[0].value;
       });
+      if (loseProductPersistResponse && name === "provision_product" && args.p_phase === "persist") {
+        loseProductPersistResponse = false;
+        return { data: null, error: { message: "Lost User-only persistence response" } };
+      }
       return { data, error: null };
     } catch (error) { return { data: null, error: { message: (error as Error).message } }; }
   } } as unknown as SupabaseClient;
@@ -111,6 +117,7 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
     await db.unsafe(`CREATE FUNCTION fail_external_grant() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF current_setting('test.fail_member',true)='on' THEN RAISE EXCEPTION 'Injected external membership failure'; END IF; RETURN NEW; END $$;
       CREATE TRIGGER fail_external_grant BEFORE INSERT ON organisation_membership FOR EACH ROW EXECUTE FUNCTION fail_external_grant();`);
     await db.begin(tx => tx.unsafe(readFileSync("scripts/073_account_status_and_staff_commands.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
+    await db.begin(tx => tx.unsafe(readFileSync("scripts/078_independent_user_accounts.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
     await db.unsafe(`CREATE FUNCTION fail_employee_grant() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF current_setting('test.fail_member',true)='on' THEN RAISE EXCEPTION 'Injected real Auth grant failure'; END IF; RETURN NEW; END $$;
       CREATE TRIGGER fail_employee_grant BEFORE INSERT ON admin_users FOR EACH ROW EXECUTE FUNCTION fail_employee_grant();`);
   }, 45000);
@@ -181,6 +188,82 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
     expect((await db`select u.role,u.status,r.city,r.country from public."user" u join rider r on r.user_id=u.id where u.id=${id}`)[0]).toMatchObject({ role: "rider", status: "active", city: "Amsterdam", country: "NL" });
     expect(await db`select id from admin_users where user_id=${id}`).toHaveLength(0);
   });
+  it("authenticates a deliberately User-only account with no Rider, organisation or Staff authority", async () => {
+    const email = `${randomUUID()}@example.test`;
+    const result = await createAccountAction({ domain: "user", email, name: "Independent User", status: "active", isVerified: true, languagePreference: "en", sendWelcomeEmail: false });
+    expect(result.success, result.error).toBe(true);
+    const id = result.data!.id;
+    expect((await db`select role,status from public."user" where id=${id}`)[0]).toMatchObject({ role: null, status: "active" });
+    expect(await db`select id from rider where user_id=${id}`).toHaveLength(0);
+    expect(await db`select id from admin_users where user_id=${id}`).toHaveLength(0);
+    expect(await db`select id from organisation_membership where user_id=${id}`).toHaveLength(0);
+    expect((await db`select is_movrr_admin(${id}) allowed`)[0].allowed).toBe(false);
+    await admin.updateUserById(id, { password: "local-independent-account-only-password" });
+    const authClient = new GoTrueClient({ url: "http://127.0.0.1:55444", headers: { Authorization: `Bearer ${token}` }, autoRefreshToken: false, persistSession: false });
+    const signedIn = await authClient.signInWithPassword({ email, password: "local-independent-account-only-password" });
+    expect(signedIn.error).toBeNull(); expect(signedIn.data.user?.id).toBe(id); expect(signedIn.data.session?.access_token).toBeTruthy();
+    const response = await platformRoute({ request: new Request("http://localhost/api/v1/wallet/balance", { headers: { Authorization: `Bearer ${signedIn.data.session!.access_token}` } }), capability: "wallet.read",
+      authDeps: {
+        verifyAccessToken: async accessToken => {
+          const verified = await authClient.getUser(accessToken);
+          if (verified.error || !verified.data.user) return null;
+          const active = (await db`select account_identity_active(${verified.data.user.id}) allowed`)[0].allowed;
+          return active ? { userId: verified.data.user.id, email: verified.data.user.email ?? null } : null;
+        },
+        findAdminUser: async userId => { const row = (await db`select id,role from admin_users where user_id=${userId} and role is not null`)[0]; return row ? { id: row.id, role: row.role, userId, email: null } : null; },
+        findRiderProfile: async userId => { const row = (await db`select id from rider where user_id=${userId} and status='active'`)[0]; return row ? {id:row.id,userId} : null; },
+        findOrganisationMembership: async userId => { const row = (await db`select id,organisation_id,role from organisation_membership where user_id=${userId} and status='active'`)[0]; return row ? {id:row.id,organisationId:row.organisation_id,role:row.role,userId} : null; },
+      }, handle: async () => { throw new Error("User-only account must not reach Wallet operations"); } });
+    expect(response.status).toBe(403);
+  });
+  it("recovers User-only creation after Auth/persistence failure and lost responses without inventing access", async () => {
+    const input = { domain: "user" as const, email: `${randomUUID()}@example.test`, name: "User recovery", status: "active" as const, isVerified: true, languagePreference: "en", sendWelcomeEmail: false };
+    failProductPersist = true;
+    expect((await createAccountAction(input)).success).toBe(false);
+    failProductPersist = false;
+    const pending = (await db`select id,banned_until>now() banned from auth.users where email=${input.email}`)[0];
+    expect(pending.banned).toBe(true);
+    expect(await db`select id from rider where user_id=${pending.id}`).toHaveLength(0);
+    loseProductPersistResponse = true;
+    expect((await createAccountAction(input)).success).toBe(false);
+    const retries = await Promise.all(Array.from({length:4}, () => createAccountAction(input)));
+    expect(retries.every(result => result.success && result.data?.id === pending.id)).toBe(true);
+    expect((await db`select count(*)::int n from auth.users where email=${input.email}`)[0].n).toBe(1);
+    expect(await db`select id from organisation_membership where user_id=${pending.id}`).toHaveLength(0);
+    expect(await db`select id from admin_users where user_id=${pending.id}`).toHaveLength(0);
+  });
+  it("adds and revokes optional Partner access without changing the independent Rider", async () => {
+    const result = await createAccountAction({ domain: "rider", role: "rider", email: `${randomUUID()}@example.test`, name: "Rider with optional partner access", city: "Amsterdam", country: "NL", status: "active", isVerified: true, languagePreference: "en", sendWelcomeEmail: false });
+    expect(result.success, result.error).toBe(true);
+    const id = result.data!.id, original = (await db`select to_jsonb(r) value from rider r where user_id=${id}`)[0].value;
+    const org = (await db`insert into organisation(name,type) values('Optional Partner','reward_partner') returning id`)[0].id;
+    await changeAccountMembership({ userId: id, organisationId: org, role: "partner_operations_manager", status: "active", expectedUpdatedAt: null });
+    const member = (await db`select to_jsonb(m) value from organisation_membership m where user_id=${id}`)[0].value;
+    await changeAccountMembership({ userId: id, organisationId: org, role: member.role, status: "revoked", expectedUpdatedAt: member.updated_at });
+    expect((await db`select to_jsonb(r) value from rider r where user_id=${id}`)[0].value).toEqual(original);
+    expect((await db`select role,status from public."user" where id=${id}`)[0]).toMatchObject({ role: "rider", status: "active" });
+    expect((await db`select status from organisation_membership where user_id=${id}`)[0].status).toBe("revoked");
+  });
+  it("accepts an explicit organisation invitation on a User-only account without adding Rider or internal Staff", async () => {
+    const created = await createAccountAction({ domain: "user", email: `${randomUUID()}@example.test`, name: "Invited independent User", status: "active", isVerified: true, languagePreference: "en", sendWelcomeEmail: false });
+    expect(created.success, created.error).toBe(true);
+    const id = created.data!.id, hash = createHash("sha256").update(randomUUID()).digest("hex");
+    const org = (await db`insert into organisation(name,type) values('Explicit invitation','reward_partner') returning id`)[0].id;
+    expect(await db`select id from organisation_membership where user_id=${id}`).toHaveLength(0);
+    await db.begin(async tx => {
+      await tx`select set_config('request.jwt.claim.role','service_role',true)`;
+      await tx`select issue_organisation_invitation(${actor},${id},${org},'viewer',${hash},NULL)`;
+    });
+    expect((await db`select status from organisation_membership where user_id=${id}`)[0].status).toBe("invited");
+    await db.begin(async tx => {
+      await tx`select set_config('request.jwt.claim.role','service_role',true)`;
+      await tx`select accept_organisation_invitation(${id},${hash})`;
+    });
+    expect((await db`select role,status from organisation_membership where user_id=${id}`)[0]).toMatchObject({role:"viewer",status:"active"});
+    expect((await db`select role from public."user" where id=${id}`)[0].role).toBeNull();
+    expect(await db`select id from rider where user_id=${id}`).toHaveLength(0);
+    expect(await db`select id from admin_users where user_id=${id}`).toHaveLength(0);
+  });
   it("handles simultaneous real Auth provisioning requests without duplicate users or grants", async () => {
     const payload = input();
     const results = await Promise.all(Array.from({length:5},()=>provisionEmployee(client,actor,payload)));
@@ -211,11 +294,11 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
     expect(await db`select id from rider where user_id=${pending.id}`).toHaveLength(0);
     expect((await provisionExternalAccount(client, actor, payload)).id).toBe(pending.id);
   });
-  it.each(["rider", "partner", "advertiser", "government", "staff"] as const)("actual %s actions: Create → Save → Reload → Edit → Save → Revoke", async domain => {
+  it.each(["user", "rider", "partner", "advertiser", "government", "staff"] as const)("actual %s actions: Create → Save → Reload → Edit → Save → Revoke", async domain => {
     const external = ["partner", "advertiser", "government"].includes(domain);
     const org = external ? (await db`insert into organisation(name,type) values('Actual handler organisation',${domain === "partner" ? "reward_partner" : domain}) returning id`)[0].id : undefined;
     const result = await createAccountAction({ domain, organisationId: org,
-      role: domain === "staff" ? "partner_operations_manager" : domain === "rider" ? "rider" : domain === "government" ? "viewer" : domain === "partner" ? "partner_operations_manager" : "manager",
+      role: domain === "user" ? undefined : domain === "staff" ? "partner_operations_manager" : domain === "rider" ? "rider" : domain === "government" ? "viewer" : domain === "partner" ? "partner_operations_manager" : "manager",
       email: `${randomUUID()}@example.test`, name: "Actual action account", status: "active", membershipStatus: "active",
       isVerified: true, languagePreference: "en", sendWelcomeEmail: false, city: "Amsterdam", country: "NL" });
     expect(result.success, result.error).toBe(true);

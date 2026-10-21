@@ -1,4 +1,5 @@
 import "server-only";
+import type { AccountCreationDomain } from "@/features/identity/domain/accountDomains";
 import { Resend } from "resend";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import AccountSetupEmail, { accountSetupText } from "@/emails/account-setup";
@@ -6,14 +7,14 @@ import { APP_URL, CUSTOMER_APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env
 import { getPlatformOperationalPolicies } from "@/lib/platformSettings";
 
 // Notification failure cannot roll back an already committed identity.
-export async function notifyAccountSetup(client: SupabaseClient, account: { id: string; email: string; name: string; domain?: string; role?: string }) {
+export async function notifyAccountSetup(client: SupabaseClient, account: { id: string; email: string; name: string; domain: AccountCreationDomain }) {
   try {
     const policy = await getPlatformOperationalPolicies();
     if (policy.security.allowAccountSetupLinks === false || policy.notifications.onboardingSetupNotificationsEnabled === false) {
       throw new Error("Setup notifications are disabled by policy.");
     }
     if (!RESEND_API_KEY) throw new Error("Setup email is not configured.");
-    const origin = (account.domain && account.domain !== "staff") || account.role === "rider" || account.role === "advertiser" ? CUSTOMER_APP_URL : APP_URL;
+    const origin = account.domain === "staff" ? APP_URL : CUSTOMER_APP_URL;
     const { data, error } = await client.auth.admin.generateLink({ type: "recovery", email: account.email,
       options: { redirectTo: new URL("/auth/callback?next=/auth/reset-password", origin).toString() } });
     if (error || !data?.properties?.hashed_token) throw new Error(error?.message || "Setup link unavailable.");
