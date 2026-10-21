@@ -4,6 +4,27 @@
   "evidence": "../verification/final-dashboard-performance/production.json",
   "milestones": [
     {
+      "name": "Owner-authorized exact seven synthetic account cleanup",
+      "status": "Blocked atomically by canonical protected-redemption cleanup contract; zero production writes",
+      "work": "Seven Auth/public User identities, six Riders, three Staff memberships and 173 dependent records across 23 tables are pinned and freshly reverified. Owner confirms all targeted activity is synthetic, including the 520-point redemption. The stricter no-partial-cleanup boundary is enforced; no identity, grant, Wallet, ledger, shared record or unrelated account was modified.",
+      "blocker": "One protected reward_redemptions row requires the canonical fenced deletion permit. Its authorization function rejects while general irreversible deletion remains Disabled; no supported exact-test exception was found. Do not forge permits/jobs/leases, manually set internal Shop flags, alter security safeguards or enable general deletion.",
+      "evidenceRepository": "movrr-mobile-app (private)",
+      "evidence": "docs/operations/seven-account-cleanup-2026-10-21/execution/summary.json",
+      "validation": "Ten local exact-identity/count/atomic refusal checks pass. Read-only before/after evidence preserves all 173 target record digests. All 233 live FKs are validated; canonical Shop guard remains enabled. Concurrent unrelated changes are recorded separately.",
+      "preservedStates": "Deletion intake Enabled; general irreversible deletion Disabled; public Shop redemption Disabled.",
+      "acceptanceLimit": "Cleanup has not executed. All seven identities and their dependent records remain intact until a supported exact-case atomic contract satisfies the existing safeguards."
+    },
+    {
+      "name": "Historical Wallet debit and legacy reservation reconciliation",
+      "status": "Separate historical financial-integrity follow-up; unrelated balance corrections not authorized",
+      "work": "Synthetic ledger +480 and stored zero balance reproduce the deployed formula max(0,480-520). A legacy negative debit and reservation correlate to the same synthetic spend. All 15 Wallets match the reservation-aware formula; one unrelated Wallet has another pairing candidate requiring independent evidence review. No balancing transactions or production balance corrections were made.",
+      "issue": "WALLET-LEGACY-DOUBLE-RESERVATION",
+      "evidenceRepository": "movrr-mobile-app (private)",
+      "evidence": "docs/operations/wallet-legacy-double-reservation.md",
+      "validation": "Seven isolated assertions use the projection body matching production, covering historical mixed accounting, valid reservation-only behavior and v2 debit-without-double-reservation.",
+      "acceptanceLimit": "Do not replace every Wallet with raw ledger sum or infer refunds solely from amount matches. Any unrelated historical correction requires its own verified exact-record authorization."
+    },
+    {
       "name": "Independent User accounts and optional relationships",
       "status": "Approved 078 and pinned Admin/web deployed; SQL/data/HTTP verified; external authenticated browser/provider acceptance pending",
       "work": "User is independent. Explicit User-only creation, optional Rider/external/Staff relationships, relevant Admin controls and independent web account authentication; intentional Mobile Rider signup preserved.",
