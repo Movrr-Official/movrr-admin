@@ -2,7 +2,7 @@
   "recordedAt": "2026-10-21T11:07:01.683Z",
   "status": "Rollout stopped before production mutations; corrected 071/075 require explicit amended approval",
   "project": "kzdvunpuxaxlphqvmzxw",
-  "correctedSourceRevision": "pending source commit receipt",
+  "correctedSourceRevision": "43b15cd46c8aaf56fcba427bacbf145a75777ba7",
   "approvedApplicationRevisions": {
     "admin": "8d7320ea96325bbc9adbc67f7e4b820baba9c5e1",
     "web": "5e44a6fdc8a03ab2241b43faef5dd7e1a27cc5b0"
@@ -183,5 +183,14 @@
     "inputSchemaSha256": "94065a644a445e59044e2541e087c130c625820c87ddd9bddfedfd0100cdd07b",
     "inputDirectory": ".tmp/enterprise-identity-rollout-20261021",
     "command": "node scripts/manual/enterprise-identity/rehearse-production-schema.cjs --schema-file=.tmp/enterprise-identity-rollout-20261021/production-schema-only.sql"
+  },
+  "correctedReadOnlyPreflight": {
+    "passed": true,
+    "recordedAt": "2026-10-21T11:15:20.326Z",
+    "revision": "43b15cd46c8aaf56fcba427bacbf145a75777ba7",
+    "productionMutations": 0,
+    "functionsAndPoliciesMatchBaseline": true,
+    "expectedNewOrganizations": 1,
+    "expectedNewOwnerMemberships": 1
   }
 }

@@ -13,7 +13,8 @@
       "acceptanceLimit": "Original SQL omitted advertiser.organisation_id and mishandled qualified policy identifiers. Corrected checksums require approval; backfill must explicitly include one new organization for the verified existing Advertiser. Production remains at 070; authenticated UI/provider acceptance open.",
       "validation": "793 Admin tests, 82 PostGIS assertions and full production public/Auth schema replay passed locally after two source corrections. Original failures reproduced. No production mutations or deployments.",
       "webCommit": "5e44a6fdc8a03ab2241b43faef5dd7e1a27cc5b0",
-      "adminCommit": "8d7320ea96325bbc9adbc67f7e4b820baba9c5e1"
+      "adminCommit": "8d7320ea96325bbc9adbc67f7e4b820baba9c5e1",
+      "correctionCommit": "43b15cd46c8aaf56fcba427bacbf145a75777ba7"
     },
     {
       "name": "Account-deletion request intake activation",
