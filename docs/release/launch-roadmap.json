@@ -20,15 +20,15 @@
     },
     {
       "name": "Owner-authorized exact seven synthetic account cleanup",
-      "status": "Exact-case authorization extension verified; explicit production migration and execution approval pending",
-      "work": "The existing seven synthetic identities and 173-record inventory remain pinned. A temporary exact-scope authorization contract is implemented and regression-tested against actual Shop/account-deletion contracts in isolated PostgreSQL. No production migration, cleanup, role change, operating-state change or application deployment was performed.",
-      "blocker": "Owner must explicitly approve the reviewed case-only migration and destructive operation. Execution also requires genuine fresh MFA security-admin authorization and unchanged exact target hashes/dependencies. Any drift aborts the complete atomic cleanup; general irreversible deletion remains Disabled.",
+      "status": "Owner directed six-account cleanup; revised exact migration verified; production approval and fresh MFA pending",
+      "work": "Preserve the seventh synthetic identity and its sole-owner membership. Six exact identities now have 158 reviewed records: 156 deletes and two retained original audits; no shared-journal minimization. Seventeen excluded-account records are explicitly protected. Original seven-account source remains unchanged and unapplied.",
+      "blocker": "Revised migration 20261021180000 has different exact bytes and operation identity; original approval named the seven-account migration. Obtain approval of the committed reduced scope and genuine fresh security-admin MFA. Ownership continuity remains deferred for the preserved seventh account and does not block the six-account plan.",
       "evidenceRepository": "movrr-mobile-app (private)",
-      "evidence": "docs/operations/seven-account-cleanup-2026-10-21/extension-verification.json",
-      "validation": "37 isolated PostgreSQL checks cover authorization, exact permit binding, denial, replay, concurrency, rollback, shared references, all 233 FKs, 191 protected-table comparisons, independent read-only verification and full retirement. Ten existing scope checks and seven Wallet projection assertions also pass. Schema-only parity confirms 1,139 function definitions; fixture owner/collation adaptations are explicit.",
+      "evidence": "docs/operations/seven-account-cleanup-2026-10-21/execution/six-account-verification.json",
+      "validation": "40 isolated actual PostgreSQL checks passed: exact six-account execution, all 17 excluded-record hashes unchanged, membership drift refusal, authorization/replay/concurrency, full rollback, shared Community/referrals, unrelated financial integrity, all 233 FKs, independent verification and complete retirement. Read-only production preflight confirms six mappings, 158 reviewed and 17 protected hashes and no unexpected dependency.",
       "preservedStates": "Deletion intake Enabled; general irreversible deletion Disabled; public Shop redemption Disabled.",
-      "acceptanceLimit": "Source readiness is not production deletion acceptance. The exact migration and cleanup await owner approval. Require independent post-deletion verification, preservation of unrelated data and retirement of all temporary case authority before marking complete.",
-      "next": "Approve exact migration and execution; apply with business-data preservation proof; genuine MFA authorization; atomic exact-scope cleanup; independent verification; restore original Shop guard and remove temporary authorization; verify again."
+      "acceptanceLimit": "Production deletion has not occurred: zero writes, deleted or minimized rows. Neither case migration is applied and no temporary authority is installed. No fresh eligible AAL2 session was available at the recorded preflight. All original audits, shared organisations and unrelated records remain intact.",
+      "next": "Approve revised exact six-account migration; acquire genuine MFA; refresh baseline; apply with zero business mutations; authorize and execute atomic six-account cleanup; independently verify protected records; fully retire temporary authority. Leave excluded identity and memberships unchanged."
     },
     {
       "name": "Historical Wallet debit and legacy reservation reconciliation",
