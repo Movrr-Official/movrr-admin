@@ -50,16 +50,19 @@
       "closure": "Owner confirmed production deployment and backend verification complete on 2026-10-21. Preserve current release, parallel work and operating states; no new deployment or audit task."
     },
     {
-      "name": "Owner-authorized exact seven synthetic account cleanup",
-      "status": "Six-account cleanup authorized; migration attempt rolled back before installation; exact corrected source and changed excluded-record pins require review",
-      "work": "Owner approved the six-account operation, preserving the seventh identity and membership. All 158 reviewed records for six accounts remain unchanged: intended 156 deletes and two retained audits. Zero production deletes or minimizations. The approved migration stopped before DDL because the managed role cannot write-lock four unrelated system metadata tables.",
-      "blocker": "Corrected exact migration remains unapplied and needs approval. Three excluded-account fingerprints changed externally in Auth User, public User and Staff; preflight correctly refuses stale pins. Preserve these current records and review the protection baseline without broadening deletion. Genuine MFA authorization remains required; owner reports authenticated Chrome is open but inaccessible to browser tools, with no further connection retries.",
+      "name": "Owner-authorized six synthetic account cleanup; seventh explicitly excluded",
+      "status": "Complete: production deletion independently verified; all temporary authority retired",
+      "work": "Exactly six pinned synthetic Auth/public accounts and 156 reviewed disposable records removed atomically. The excluded seventh identity, its organisation ownership and all 17 reviewed preservation records remain unchanged. No shared-journal minimization or unrelated financial correction. Four transient target barriers were created and removed inside the same transaction.",
+      "blocker": "None for the authorized six-account cleanup. The seventh account was explicitly excluded by the owner and was not modified.",
       "evidenceRepository": "movrr-mobile-app (private)",
-      "evidence": "docs/operations/seven-account-cleanup-2026-10-21/execution/six-account-install-attempt.json",
-      "validation": "41 isolated actual PostgreSQL checks passed under a non-superuser, production-matching role model, including managed-table permission refusal, exact execution, excluded-record preservation, shared references, replay/concurrency/rollback, all 233 FKs and retirement. Rolled-back production lock-only probe verified 187 write-conflicting locks plus ACCESS SHARE on four SELECT-only metadata tables, with all protected fingerprints unchanged.",
+      "evidence": "docs/operations/seven-account-cleanup-2026-10-21/execution/six-account-completion.json",
+      "validation": "22 actual isolated PostgreSQL maintenance checks passed. Independent production verification confirms six absent identities, exact deleted rows, all 233 validated FKs with zero non-null orphan references, and matching unrelated-data fingerprints across all 191 tables. All 157 platform audits, shared Community rides/referrals, memberships and unrelated Wallets/ledger entries preserved.",
       "preservedStates": "Deletion intake Enabled; general irreversible deletion Disabled; public Shop redemption Disabled.",
-      "acceptanceLimit": "No migration journal, temporary schema/endpoints or deletion authorization remains; original Shop guard independently matches its checksum. Six Auth/public identities and all 158 reviewed hashes remain unchanged. Fourteen of 17 pinned excluded records are unchanged; three external metadata changes correctly block execution. Production release and gates are preserved.",
-      "next": "Review changed excluded-record protection baseline and exact corrected migration; use genuine MFA through an authorized available channel; refresh checks; install with zero business mutations; atomically delete only the six approved identities; independently verify and retire temporary authority. Do not retry Chrome, create another P1 audit task, or modify the excluded identity."
+      "acceptanceLimit": "Production deletion is complete. All temporary private functions/control/permit were removed before commit; no public cleanup endpoint was created. Original Shop guard/security catalog restored. Actual retired function calls fail with absent-schema SQLSTATE 3F000. Three existing-log events truthfully identify the database maintenance principal; no human/JWT identity was impersonated.",
+      "next": "Cleanup closed. Preserve completion evidence and original blocked/migration history. Historical Wallet debit/reservation investigation remains its existing independent follow-up; no unrelated balance correction is authorized.",
+      "migration": "20261021180000",
+      "migrationSha256": "76eb4bd3715da0b6c1aa9a0517a7e355cadf0ee99dd08b63f3be02ec0d2c96df",
+      "executionSourceCommit": "514a37a68be306f347d2756ae1a1ad08808e6a66"
     },
     {
       "name": "Historical Wallet debit and legacy reservation reconciliation",
