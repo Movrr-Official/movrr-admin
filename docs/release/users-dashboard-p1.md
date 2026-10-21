@@ -1,12 +1,20 @@
 # P1 Users dashboard correction — 21 October 2026
 
-Source is corrected and verified. **Production remains affected until the proposed 079 reader and a pinned Admin release receive explicit approval and are deployed.** The [verification receipt](../verification/users-dashboard-p1/verification.json) separates observed production evidence from expected corrected dashboard values. Authenticated production browser acceptance has not been performed.
+**Approved migration 079 and Admin revision `083fe8c` are deployed.** The production target and `admin.movrr.nl` alias independently identify deployment `dpl_8LSDe7hSSjpb2NgZjGC2sqjNFrrR`. The [production receipt](../verification/users-dashboard-p1/production.json) records exact journal/ACL/data/handler verification. Authenticated production browser acceptance remains unperformed; backend verification is not represented as browser acceptance. The earlier [source receipt](../verification/users-dashboard-p1/verification.json) remains historical evidence.
+
+Fresh production reads and the corrected source handler reconcile to **17 Users, 17 active, 13 distinct Rider Users, 2 organisation Users, 5 Staff and 200% 30-day growth** at 14:47 UTC. Organisation Users increased from 1 after a concurrent super-administrator added an active reward-partner Owner membership through the canonical audited `users.role.approve` command at 14:45:16 UTC. This release did not initiate that write. No stale count was forced.
+
+079 committed at 14:41:14 UTC under journal version `20261021144000`, checksum `6d29a01faa98716c0b6d073f8863bdd5154cfe6e89d65a24d47cfe09e9e1ee4b`. It added one stable service-only reader and preserved all rows across 184 public/Auth tables inside the transaction. Existing functions, RLS, table grants, columns, constraints, triggers and release gates remained unchanged. Post-release record differences are limited to the independently audited membership/audit addition and routine session/worker activity; User, Rider, Wallet and historical records match.
+
+Four read-only production handler/security checks pass, including actual records, literal search, combined filters, 17-account membership readback, the live guarded RPC, MFA denial at AAL1 and external-tenant denial. Campaigns still succeed when the harness injects a failed User read, and that failure returns no fabricated data. Another 193 focused regressions pass; the pinned source retains the earlier 941-test full SQL/PostgREST/GoTrue acceptance. The Vercel production build reached READY. Direct receipt-table SELECT remains denied; only the guarded RPC succeeds.
+
+A concurrent approved terminology release changed the live alias to `0999175` during the candidate build. Promotion stopped, its exact source was reviewed as an ancestor of `083fe8c`, and promotion resumed while preserving all approved terminology changes. No other session files or cleanup work were reset, overwritten or deployed from the working tree.
 
 ## Root cause and authoritative counts
 
 The production alias identifies `dpl_CmD93XcJu3yxdh9iDYQoAbk2G9Y4`, revision `f3f0dec1bccf515cb53f48356bc1007b56e5eea1`. Read-only PostgreSQL and Supabase GET probes independently reproduce `42501: permission denied for table account_auth_sync`. Migration 073 intentionally revoked direct receipt-table access from **all** API roles, including `service_role`. `getUsers()` still selected that private table after successfully reading all accounts and relationships, then returned failure. `UsersOverview` ignored its query error and rendered zero defaults and an empty table. The old early return did not log this Users error.
 
-At `2026-10-21T14:20:38Z`, production has:
+The historical pre-release snapshot at `2026-10-21T14:20:38Z` was:
 
 | Metric | Observed / expected corrected display |
 | --- | ---: |
@@ -49,9 +57,9 @@ Production evidence is read-only: actual counts, exact 071–078 journals, relev
 
 ## Approval and release sequence
 
-Explicit approval is required for **both** the proposed 079 migration (including EXECUTE on the new service-only function) and an Admin production deployment. No production migration, permission change or deployment has occurred for this correction. Automatic main deployments remain disabled.
+The owner explicitly approved **both** exact migration 079 (including EXECUTE on the new service-only function) and pinned Admin revision `083fe8c`. Both are now deployed and independently verified. Automatic main deployments remain disabled. The first apply attempt stopped before DDL because the release verifier compared PostgreSQL Result objects with JSON arrays; normalization was corrected, the absent journal was reverified and the atomic retry passed.
 
-Use the existing pinned Git-source release process after approval:
+The controlled release followed this sequence; interactive authenticated acceptance in step 5 remains outstanding:
 
 1. Pin the correction commit on remote `main`; build the Admin candidate without assigning the live domain and verify READY, source SHA and project. No web or Mobile release is required.
 2. Re-run the read-only production verifier. Confirm schema journals and release gates have not drifted; compare any concurrent identity/financial changes with their owning work. Do not replay, revert or interfere with the seven-account cleanup.
@@ -60,4 +68,4 @@ Use the existing pinned Git-source release process after approval:
 5. Using an available authorized production session, load `/users`, reconcile live values against a fresh read-only count, inspect actual records and Details, exercise search/combined filters/pagination/refresh and switch accounts. Confirm unauthorized role/tenant denial and the orphan Rider error state. Do not create test identities, change relationships or financial records for acceptance.
 6. Preserve final production evidence and update the roadmap only after live acceptance. If app rollback is necessary, retain the additive reader; reverting to the original application reintroduces the P1 and is not resolution.
 
-Deletion intake remains **Enabled**; irreversible deletion and public Shop redemption remain **Disabled**. There were no production identity/financial writes, cleanup changes or Mobile runtime modifications. The P1 remains open pending approved release and authenticated acceptance.
+Deletion intake remains **Enabled**; irreversible deletion and public Shop redemption remain **Disabled**. There were no production identity/financial writes, cleanup changes or Mobile runtime modifications. The P1 backend correction is deployed; authenticated browser acceptance remains open. No User-only production identity exists, so that shape remains verified with isolated real SQL/HTTP fixtures. The 11 existing Rider-only Users are present without organisation requirements.
