@@ -102,10 +102,10 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
       CREATE TABLE public.permission_bundle(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),key text UNIQUE,name text);
       CREATE TABLE public.bundle_capability(bundle_id uuid,capability text);
       INSERT INTO public.permission_bundle(key) VALUES('org.owner'),('org.manager'),('org.staff'),('org.viewer');
-      ALTER TABLE public.advertiser ADD COLUMN organisation_id uuid REFERENCES public.organisation(id);
       ALTER TABLE public.organisation_membership ADD COLUMN organisation_id uuid REFERENCES public.organisation(id),ADD COLUMN role text,
         ADD COLUMN status text DEFAULT 'active',ADD COLUMN bundle_key text REFERENCES public.permission_bundle(key),
         ADD COLUMN created_at timestamptz DEFAULT now(),ADD COLUMN updated_at timestamptz DEFAULT now(),ADD UNIQUE(organisation_id,user_id);`);
+    expect((await db`select count(*)::int n from information_schema.columns where table_schema='public' and table_name='advertiser' and column_name='organisation_id'`)[0].n).toBe(0);
     await db.begin(tx => tx.unsafe(readFileSync("scripts/071_external_account_domains.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
     await db.begin(tx => tx.unsafe(readFileSync("scripts/072_organisation_invitations.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
     await db.unsafe(`CREATE FUNCTION fail_external_grant() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF current_setting('test.fail_member',true)='on' THEN RAISE EXCEPTION 'Injected external membership failure'; END IF; RETURN NEW; END $$;

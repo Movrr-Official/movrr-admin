@@ -45,8 +45,8 @@ async function fixture(){
  const canonical=fs.readFileSync(path.join(__dirname,'070_employee_rbac_authority.sql'),'utf8');
  await db.unsafe(canonical.slice(canonical.indexOf('CREATE OR REPLACE FUNCTION public.accept_workboard_platform_invitation'),canonical.indexOf('CREATE OR REPLACE FUNCTION public.join_community_ride')));
  for(const id of [actor,outsider]){await db`insert into auth.users(id) values(${id})`;await db`insert into public."user" values(${id},'active')`;await db`insert into admin_users values(${id},'super_admin')`;}
- await db.unsafe('ALTER TABLE advertiser ADD COLUMN IF NOT EXISTS user_id uuid,ADD COLUMN IF NOT EXISTS organisation_id uuid');
  const identitySql=fs.readFileSync(path.join(__dirname,'071_external_account_domains.sql'),'utf8');
+ await db.unsafe(identitySql.slice(identitySql.indexOf('-- BEGIN ADVERTISER ORGANISATION DEPENDENCY'),identitySql.indexOf('-- END ADVERTISER ORGANISATION DEPENDENCY')));
  await db.unsafe(identitySql.slice(identitySql.indexOf('CREATE OR REPLACE FUNCTION public.ops_organisation_capabilities('),identitySql.indexOf('-- END GENERATED ORGANISATION CAPABILITIES')));
  const identityMigration=await db.reserve();try{await identityMigration.unsafe(fs.readFileSync(path.join(__dirname,'074_identity_consumer_authorization.sql'),'utf8'));}finally{identityMigration.release();}
 }

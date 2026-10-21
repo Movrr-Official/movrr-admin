@@ -128,11 +128,11 @@ describe.skipIf(!integration)("external account domains: actual services and Pos
       CREATE TABLE public.permission_bundle(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),key text UNIQUE,name text);
       CREATE TABLE public.bundle_capability(bundle_id uuid,capability text);
       INSERT INTO public.permission_bundle(key) VALUES('org.owner'),('org.manager'),('org.staff'),('org.viewer');
-      ALTER TABLE public.advertiser ADD COLUMN organisation_id uuid REFERENCES public.organisation(id);
       ALTER TABLE public.organisation_membership ADD COLUMN organisation_id uuid REFERENCES public.organisation(id),ADD COLUMN role text,
         ADD COLUMN status text DEFAULT 'active',ADD COLUMN bundle_key text REFERENCES public.permission_bundle(key),
         ADD COLUMN created_at timestamptz DEFAULT now(),ADD COLUMN updated_at timestamptz DEFAULT now(),ADD UNIQUE(organisation_id,user_id);`);
     const externalMigration = await db.reserve();
+    expect((await db`select count(*)::int n from information_schema.columns where table_schema='public' and table_name='advertiser' and column_name='organisation_id'`)[0].n).toBe(0);
     try { await externalMigration.unsafe(readFileSync("scripts/071_external_account_domains.sql", "utf8")); }
     catch (error) { const e = error as { position?: string; internal_position?: string; internal_query?: string }; console.error(e.position, e.internal_position, e.internal_query); throw error; }
     finally { externalMigration.release(); }
@@ -148,7 +148,12 @@ describe.skipIf(!integration)("external account domains: actual services and Pos
       await db.unsafe(`ALTER TABLE public.${quote(policy.tablename)} ENABLE ROW LEVEL SECURITY`);
       await db.unsafe(`CREATE POLICY ${quote(policy.policyname)} ON public.${quote(policy.tablename)} AS ${policy.permissive} FOR ${policy.cmd} TO ${policy.roles.map(quote).join(",")} ${policy.qual ? `USING (${policy.qual})` : ""} ${policy.with_check ? `WITH CHECK (${policy.with_check})` : ""}`);
     }
-    await db.begin(tx => tx.unsafe(readFileSync("scripts/075_identity_rls_capability_boundaries.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
+    await db.begin(async tx => {
+      // pg_policies deparses schema-qualified function names in this context.
+      // Exercise the same context used by a full pg_dump schema restoration.
+      await tx`select set_config('search_path','',true)`;
+      await tx.unsafe(readFileSync("scripts/075_identity_rls_capability_boundaries.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, ""));
+    });
     await db.unsafe(`CREATE TABLE public.user_preferences(user_id uuid PRIMARY KEY,notifications boolean);
       CREATE TABLE public.platform_settings(key text,value jsonb);`);
     await db.unsafe(readFileSync("scripts/fixtures/enterprise-identity/notification-functions.sql", "utf8"));
@@ -179,6 +184,12 @@ describe.skipIf(!integration)("external account domains: actual services and Pos
   const externalInput = (domain: "partner" | "advertiser" | "government", organisationId: string) => ({
     email: `${randomUUID()}@example.test`, name: "External operator", domain, organisationId,
     role: domain === "government" ? "viewer" as const : domain === "partner" ? "partner_operations_manager" as const : "manager" as const, status: "active" as const, isVerified: false, languagePreference: "en",
+  });
+  it("installs the Advertiser organization dependency from 071, enforcing a real foreign key and one profile per organization", async () => {
+    const org = await organisation("advertiser");
+    await db`insert into advertiser(organisation_id) values(${org})`;
+    await expect(db`insert into advertiser(organisation_id) values(${org})`).rejects.toThrow(/advertiser_organisation_id_key/);
+    await expect(db`insert into advertiser(organisation_id) values(${randomUUID()})`).rejects.toThrow(/advertiser_organisation_id_fkey/);
   });
   it.each(["partner", "advertiser", "government"] as const)("%s Create → Save → Reload → Edit → Save → Revoke preserves exact scope", async domain => {
     const org = await organisation(domain), payload = externalInput(domain, org);

@@ -1,6 +1,6 @@
 # Enterprise identity release requirements
 
-**Awaiting explicit production approval.** Source push is authorized; production schema/permission changes and deployment are not. Both application repositories disable automatic deployment from `main` in `vercel.json`. No deployment, migration, synthetic production account, role change or financial mutation has been performed for this remediation.
+**Approved rollout stopped in preflight; amended SQL requires renewed approval.** The exact original release was authorized on 21 October 2026, but its missing Advertiser column and search-path-dependent policy rewrite failed verification before production changes. See [the stopped-rollout report](enterprise-identity-rollout-stopped.md) for corrected 071/075, exact backfill scope and evidence. Both application repositories disable automatic deployment from `main` in `vercel.json`. No deployment, migration, synthetic production account, role change or financial mutation has been performed for this remediation.
 
 Source and isolated acceptance: [architecture](../architecture/enterprise-identity.md), [findings matrix](../architecture/enterprise-identity-findings.md), [verification](../verification/enterprise-identity/verification.json). Exact source commits and migration SHA256 values are recorded in the verification receipt. Checksums use UTF-8 source normalized to LF; compare that representation before execution. The existing launch roadmap retains unrelated completed milestones.
 

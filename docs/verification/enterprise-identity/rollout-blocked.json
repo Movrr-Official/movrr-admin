@@ -1,0 +1,187 @@
+{
+  "recordedAt": "2026-10-21T11:07:01.683Z",
+  "status": "Rollout stopped before production mutations; corrected 071/075 require explicit amended approval",
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "correctedSourceRevision": "pending source commit receipt",
+  "approvedApplicationRevisions": {
+    "admin": "8d7320ea96325bbc9adbc67f7e4b820baba9c5e1",
+    "web": "5e44a6fdc8a03ab2241b43faef5dd7e1a27cc5b0"
+  },
+  "production": {
+    "migrationsApplied": 0,
+    "backfillChanges": 0,
+    "deploymentChanges": 0,
+    "firewallChanges": 0,
+    "emailsSent": 0,
+    "syntheticUsersCreated": 0,
+    "financialMutations": 0,
+    "latestMigration": {
+      "version": "20261021071500",
+      "name": "070_employee_rbac_authority",
+      "checksum": "185617e57be2f3f33f926dc0c19380b793f3bd7aff4f079b406021d85d0f2728"
+    },
+    "requestedMigrationsInstalled": 0,
+    "authorizedActors": 1,
+    "unchanged": {
+      "functions": true,
+      "policies": true,
+      "columns": true,
+      "constraints": true,
+      "triggers": true,
+      "enumDependencies": true,
+      "bundles": true,
+      "membershipCounts": true,
+      "accounts": true,
+      "grants": true,
+      "migrations": true,
+      "gate": true,
+      "shop": true
+    },
+    "deployments": {
+      "admin": {
+        "project": "movrr-admin",
+        "deploymentId": "dpl_83NGcnrxQAu6CSShrAS4sAoCBcey",
+        "sourceRevision": "89c3a0b7f874af7e3a68a343a22bed8bc244f142",
+        "state": "READY",
+        "changed": false
+      },
+      "web": {
+        "project": "movrr-app",
+        "deploymentId": "dpl_DCANL9GvEimQYDn8SKY4L6WTv2cB",
+        "sourceRevision": "e5cf27b58199f2f274069503d4e35ce8ef7ed99e",
+        "state": "READY",
+        "changed": false
+      }
+    },
+    "gates": {
+      "accountDeletionIntake": true,
+      "irreversibleDeletion": false,
+      "publicShopRedemption": false
+    }
+  },
+  "findings": [
+    {
+      "id": "ID-23",
+      "severity": "Critical",
+      "disposition": "Partially Resolved",
+      "originalError": "42703: column ad.organisation_id does not exist",
+      "correction": "071 creates the missing FK/unique organization link; fixtures no longer supply it outside the migration"
+    },
+    {
+      "id": "ID-24",
+      "severity": "High",
+      "disposition": "Partially Resolved",
+      "originalError": "0A000: policy rewrite produces public.public.identity_has_capability with a qualified predicate",
+      "correction": "075 consumes optional schema qualifiers; tests run migration with empty search_path"
+    }
+  ],
+  "backfillPreflight": {
+    "existingActiveAdvertiserProfiles": 1,
+    "authAndPublicIdentityMatch": true,
+    "existingCanonicalOrganizationLink": false,
+    "matchingExistingAdvertiserOrganizations": 0,
+    "activeAuthorizedSuperAdministrators": 1,
+    "proposed": {
+      "newCanonicalOrganizations": 1,
+      "existingAdvertiserProfileLinkUpdates": 1,
+      "newOwnerMemberships": 1,
+      "authorizationAudits": 1
+    },
+    "ownershipSource": "explicit advertiser.user_id foreign-key relationship; legacy user_role not used",
+    "actualProductionChanges": 0,
+    "requiresExplicitScopeConfirmation": true,
+    "advertiserFingerprint": "3f481e07440856cadcd83860d9c0ee752e9530828266c7cb11ddf7564c7b9932",
+    "identityFingerprint": "5dc5916ce7b8da37caa1346edf0bf46d3de7b4931fb92c87f46959fd691ac222",
+    "actorFingerprint": "59ca98d0e6f4febcf6acb1c4ce3d9eead0ce88e26a86b6ae4b1395fdd9052f70"
+  },
+  "correctedMigrations": [
+    {
+      "path": "scripts/071_external_account_domains.sql",
+      "sha256Utf8Lf": "b1857e697755ca0d37644659ce45eb73ba7166cf8aa321f01f723e1f5031a088"
+    },
+    {
+      "path": "scripts/072_organisation_invitations.sql",
+      "sha256Utf8Lf": "b44aea79133868b94092791f8489cf15f56c31b6af275a2987199e6ca1b77ac0"
+    },
+    {
+      "path": "scripts/073_account_status_and_staff_commands.sql",
+      "sha256Utf8Lf": "9d77f314eaed0e5ed4bfc59f49dcdf0c4c06684d15400ef552c5c2ae3f480d33"
+    },
+    {
+      "path": "scripts/074_identity_consumer_authorization.sql",
+      "sha256Utf8Lf": "59c8d8402513b3ad0630154a593d7209a5e09f7b151a4fe43e18017edc460869"
+    },
+    {
+      "path": "scripts/075_identity_rls_capability_boundaries.sql",
+      "sha256Utf8Lf": "6c1531254028c098700ed6c6f1b90f23dfe9512d171d20b7b33561260a72f7ec"
+    },
+    {
+      "path": "scripts/076_identity_notification_audiences.sql",
+      "sha256Utf8Lf": "4e55c0a5b543f97d02eecfc27b3eaae651a3ff20208151749b40930d00f89d69"
+    },
+    {
+      "path": "scripts/077_invitation_authority_boundaries.sql",
+      "sha256Utf8Lf": "e0958f74b88c9aeec0f1dd93752a235833667c33b39e80e74b99c1ff1107be68"
+    }
+  ],
+  "changedMigrationPaths": [
+    "scripts/071_external_account_domains.sql",
+    "scripts/075_identity_rls_capability_boundaries.sql"
+  ],
+  "unchangedMigrationPaths": [
+    "scripts/072_organisation_invitations.sql",
+    "scripts/073_account_status_and_staff_commands.sql",
+    "scripts/074_identity_consumer_authorization.sql",
+    "scripts/076_identity_notification_audiences.sql",
+    "scripts/077_invitation_authority_boundaries.sql"
+  ],
+  "rehearsal": {
+    "project": "kzdvunpuxaxlphqvmzxw",
+    "productionReadOnly": true,
+    "productionRowsExported": 0,
+    "localOnly": true,
+    "schemaSha256": "94065a644a445e59044e2541e087c130c625820c87ddd9bddfedfd0100cdd07b",
+    "originalRelease": {
+      "reproduced": true,
+      "errorCode": "42703",
+      "message": "column ad.organisation_id does not exist; full batch rolled back"
+    },
+    "policyQualificationRegression": {
+      "reproduced": true,
+      "errorCode": "0A000",
+      "message": "qualified policy replacement produced public.public; full batch rolled back"
+    },
+    "correctedRelease": {
+      "allSevenMigrationsPassed": true,
+      "actualProductionPublicAndAuthSchema": true,
+      "backfilledMemberships": 1,
+      "unintendedRiders": 0,
+      "policies": 380
+    },
+    "recordedAt": "2026-10-21T11:03:22.127Z"
+  },
+  "regressions": {
+    "adminTestsPassed": 793,
+    "testFilesPassed": 71,
+    "realPostgresAndGoTrue": true,
+    "postgisAssertions": 82,
+    "catalogCheck": "passed",
+    "typecheckAndLint": "passed",
+    "applicationRuntimeSourcesChanged": false
+  },
+  "acceptance": {
+    "authenticatedBrowserExecuted": false,
+    "chromeDevTools": "No connected Chrome debugging session",
+    "externalEmailProviderExecuted": false,
+    "providerEmailSent": false,
+    "productionAuthorizationAcceptance": false
+  },
+  "offlineReproduction": {
+    "tested": true,
+    "productionConnectionUsed": false,
+    "productionRowsExported": 0,
+    "inputSchemaSha256": "94065a644a445e59044e2541e087c130c625820c87ddd9bddfedfd0100cdd07b",
+    "inputDirectory": ".tmp/enterprise-identity-rollout-20261021",
+    "command": "node scripts/manual/enterprise-identity/rehearse-production-schema.cjs --schema-file=.tmp/enterprise-identity-rollout-20261021/production-schema-only.sql"
+  }
+}

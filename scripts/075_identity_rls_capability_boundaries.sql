@@ -53,8 +53,10 @@ BEGIN
    WHEN 'organisation' THEN CASE WHEN item.cmd='SELECT' THEN 'users.read' ELSE 'resources.manage' END
    ELSE CASE WHEN item.cmd='SELECT' THEN 'riders.read' ELSE 'riders.manage' END
   END;
-  predicate:=regexp_replace(item.qual,'\m(is_admin|is_dashboard_admin)\(\)',format('public.identity_has_capability(%L)',capability),'g');
-  check_predicate:=regexp_replace(item.with_check,'\m(is_admin|is_dashboard_admin)\(\)',format('public.identity_has_capability(%L)',capability),'g');
+  -- pg_policies qualifies functions when public is absent from search_path.
+  -- Consume that qualifier too, so replacement never produces public.public.
+  predicate:=regexp_replace(item.qual,'\m(public\.)?(is_admin|is_dashboard_admin)\(\)',format('public.identity_has_capability(%L)',capability),'g');
+  check_predicate:=regexp_replace(item.with_check,'\m(public\.)?(is_admin|is_dashboard_admin)\(\)',format('public.identity_has_capability(%L)',capability),'g');
   EXECUTE format('ALTER POLICY %I ON public.%I%s%s',item.policyname,item.tablename,
    CASE WHEN predicate IS NULL THEN '' ELSE ' USING ('||predicate||')' END,
    CASE WHEN check_predicate IS NULL THEN '' ELSE ' WITH CHECK ('||check_predicate||')' END);
@@ -62,8 +64,8 @@ BEGIN
  FOR item IN SELECT * FROM pg_policies WHERE schemaname='public'
   AND (coalesce(qual,'')||coalesce(with_check,'')) LIKE '%user_owns_campaign(%'
  LOOP
-  predicate:=replace(item.qual,'user_owns_campaign(campaign_id)', 'public.identity_campaign_capability(campaign_id,''campaigns.read'')');
-  check_predicate:=replace(item.with_check,'user_owns_campaign(campaign_id)', 'public.identity_campaign_capability(campaign_id,''campaigns.read'')');
+  predicate:=regexp_replace(item.qual,'\m(public\.)?user_owns_campaign\(campaign_id\)', 'public.identity_campaign_capability(campaign_id,''campaigns.read'')','g');
+  check_predicate:=regexp_replace(item.with_check,'\m(public\.)?user_owns_campaign\(campaign_id\)', 'public.identity_campaign_capability(campaign_id,''campaigns.read'')','g');
   EXECUTE format('ALTER POLICY %I ON public.%I%s%s',item.policyname,item.tablename,
    CASE WHEN predicate IS NULL THEN '' ELSE ' USING ('||predicate||')' END,
    CASE WHEN check_predicate IS NULL THEN '' ELSE ' WITH CHECK ('||check_predicate||')' END);

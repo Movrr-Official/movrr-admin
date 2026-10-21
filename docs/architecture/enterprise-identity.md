@@ -1,5 +1,7 @@
 # Enterprise identity remediation — 21 October 2026
 
+The approved production rollout subsequently stopped in read-only preflight. Revisions to 071 and 075 correct two installation defects; see the [stopped-rollout report](../release/enterprise-identity-rollout-stopped.md). Production acceptance is still outstanding; the original approval does not cover the revised SQL checksums.
+
 Source implementation and isolated acceptance are separate from production acceptance. Migrations 071–076 and the changed applications have **not** been released. The production snapshot still ends at migration 070. No production identity, membership, financial record, permission or operating gate was changed during this investigation.
 
 ## Canonical model

@@ -1,5 +1,11 @@
 -- Production execution requires explicit approval. Preserve historical enum data.
 BEGIN;
+-- BEGIN ADVERTISER ORGANISATION DEPENDENCY
+-- Historical Advertiser profiles predate canonical organisation membership.
+-- Add the nullable link before provisioning, backfill and tenant RLS use it.
+ALTER TABLE public.advertiser ADD COLUMN organisation_id uuid REFERENCES public.organisation(id);
+CREATE UNIQUE INDEX advertiser_organisation_id_key ON public.advertiser(organisation_id);
+-- END ADVERTISER ORGANISATION DEPENDENCY
 -- BEGIN GENERATED ORGANISATION CAPABILITIES
 CREATE OR REPLACE FUNCTION public.ops_organisation_capabilities(p_type text,p_role text) RETURNS jsonb
 LANGUAGE sql IMMUTABLE SET search_path='' AS $cap$ SELECT coalesce('{"reward_partner":{"owner":["staff.manage","resources.manage","rewards.manage","rewards.catalog.read","fulfilment.validate","fulfilment.confirm","fulfilment.read","fulfilment.cancel","fulfilment.refund","analytics.view"],"manager":["resources.manage","rewards.manage","rewards.catalog.read","fulfilment.validate","fulfilment.confirm","fulfilment.read","fulfilment.cancel","fulfilment.refund","analytics.view"],"partner_operations_manager":["resources.manage","rewards.manage","rewards.catalog.read","fulfilment.validate","fulfilment.confirm","fulfilment.read","fulfilment.cancel","fulfilment.refund","analytics.view","staff.manage"],"staff":["fulfilment.validate","fulfilment.confirm","fulfilment.read","analytics.view","rewards.catalog.read"],"viewer":["fulfilment.read","analytics.view","rewards.catalog.read"]},"advertiser":{"owner":["campaigns.read","campaigns.write","campaigns.launch","campaigns.pause","analytics.view","billing.read","staff.manage","org.settings"],"manager":["campaigns.read","campaigns.write","campaigns.launch","campaigns.pause","analytics.view"],"staff":["campaigns.read","campaigns.write","analytics.view"],"viewer":["campaigns.read","analytics.view"]},"government":{"owner":["programmes.read","compliance.read","impact.read","org.settings","analytics.view","staff.manage"],"viewer":["programmes.read","compliance.read","impact.read","analytics.view"]}}'::jsonb->p_type->p_role,'[]'::jsonb) $cap$;
