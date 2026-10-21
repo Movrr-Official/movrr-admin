@@ -5,14 +5,15 @@
   "milestones": [
     {
       "name": "Owner-authorized exact seven synthetic account cleanup",
-      "status": "Blocked atomically by canonical protected-redemption cleanup contract; zero production writes",
-      "work": "Seven Auth/public User identities, six Riders, three Staff memberships and 173 dependent records across 23 tables are pinned and freshly reverified. Owner confirms all targeted activity is synthetic, including the 520-point redemption. The stricter no-partial-cleanup boundary is enforced; no identity, grant, Wallet, ledger, shared record or unrelated account was modified.",
-      "blocker": "One protected reward_redemptions row requires the canonical fenced deletion permit. Its authorization function rejects while general irreversible deletion remains Disabled; no supported exact-test exception was found. Do not forge permits/jobs/leases, manually set internal Shop flags, alter security safeguards or enable general deletion.",
+      "status": "Exact-case authorization extension verified; explicit production migration and execution approval pending",
+      "work": "The existing seven synthetic identities and 173-record inventory remain pinned. A temporary exact-scope authorization contract is implemented and regression-tested against actual Shop/account-deletion contracts in isolated PostgreSQL. No production migration, cleanup, role change, operating-state change or application deployment was performed.",
+      "blocker": "Owner must explicitly approve the reviewed case-only migration and destructive operation. Execution also requires genuine fresh MFA security-admin authorization and unchanged exact target hashes/dependencies. Any drift aborts the complete atomic cleanup; general irreversible deletion remains Disabled.",
       "evidenceRepository": "movrr-mobile-app (private)",
-      "evidence": "docs/operations/seven-account-cleanup-2026-10-21/execution/summary.json",
-      "validation": "Ten local exact-identity/count/atomic refusal checks pass. Read-only before/after evidence preserves all 173 target record digests. All 233 live FKs are validated; canonical Shop guard remains enabled. Concurrent unrelated changes are recorded separately.",
+      "evidence": "docs/operations/seven-account-cleanup-2026-10-21/extension-verification.json",
+      "validation": "37 isolated PostgreSQL checks cover authorization, exact permit binding, denial, replay, concurrency, rollback, shared references, all 233 FKs, 191 protected-table comparisons, independent read-only verification and full retirement. Ten existing scope checks and seven Wallet projection assertions also pass. Schema-only parity confirms 1,139 function definitions; fixture owner/collation adaptations are explicit.",
       "preservedStates": "Deletion intake Enabled; general irreversible deletion Disabled; public Shop redemption Disabled.",
-      "acceptanceLimit": "Cleanup has not executed. All seven identities and their dependent records remain intact until a supported exact-case atomic contract satisfies the existing safeguards."
+      "acceptanceLimit": "Source readiness is not production deletion acceptance. The exact migration and cleanup await owner approval. Require independent post-deletion verification, preservation of unrelated data and retirement of all temporary case authority before marking complete.",
+      "next": "Approve exact migration and execution; apply with business-data preservation proof; genuine MFA authorization; atomic exact-scope cleanup; independent verification; restore original Shop guard and remove temporary authorization; verify again."
     },
     {
       "name": "Historical Wallet debit and legacy reservation reconciliation",
