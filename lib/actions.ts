@@ -18,11 +18,11 @@ const resolveOperationalAlertRoles = (
 ) => {
   switch (alertRouting) {
     case "support_only":
-      return ["support"];
+      return ["support_agent", "support_lead"];
     case "admin_only":
-      return ["admin", "super_admin"];
+      return ["operations_manager", "super_admin"];
     default:
-      return ["support", "admin", "super_admin"];
+      return ["support_agent", "support_lead", "operations_manager", "super_admin"];
   }
 };
 

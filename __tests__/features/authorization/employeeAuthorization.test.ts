@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import {
   capabilitiesForEmployeeRole,
   CANONICAL_EMPLOYEE_ROLES,
-  resolveCanonicalEmployeeRole,
+  isEmployeeRole,
   employeeHasCapability,
 } from "@/features/organisations/domain/employeeRoleTemplates";
 import { mapAdminRoleToCapabilities } from "@/features/organisations/application/adminCapabilityMapper";
@@ -20,23 +20,10 @@ import {
 } from "@/features/authorization/dashboardRegistry";
 
 describe("employee role templates", () => {
-  it("maps legacy admin to operations_manager capabilities", () => {
-    expect(resolveCanonicalEmployeeRole("admin")).toBe("operations_manager");
-    const legacy = mapAdminRoleToCapabilities("admin");
-    const canonical = capabilitiesForEmployeeRole("operations_manager");
-    expect(legacy).toEqual(canonical);
-  });
-
-  it("maps legacy compliance_officer to compliance_analyst", () => {
-    expect(resolveCanonicalEmployeeRole("compliance_officer")).toBe(
-      "compliance_analyst",
-    );
-    expect(employeeHasCapability("compliance_officer", "programmes.read")).toBe(
-      true,
-    );
-    expect(employeeHasCapability("compliance_officer", "settings.manage")).toBe(
-      false,
-    );
+  it.each(["admin","moderator","support","compliance_officer","government","SUPPORT_AGENT","support-agent"])("rejects obsolete or noncanonical employee role %s", role => {
+    expect(isEmployeeRole(role)).toBe(false);
+    expect(mapAdminRoleToCapabilities(role)).toEqual([]);
+    expect(capabilitiesForEmployeeRole(role)).toEqual([]);
   });
 
   it("denies executive_viewer write capabilities", () => {
@@ -191,8 +178,8 @@ describe("role simulator coverage", () => {
 });
 
 describe("approved Support Users/Riders boundaries", () => {
-  it.each(["support", "support_agent"])("%s has entity read access without account administration", (role) => {
-    expect(resolveCanonicalEmployeeRole(role)).toBe("support_agent");
+  it.each(["support_agent"])("%s has entity read access without account administration", (role) => {
+    expect(isEmployeeRole(role)).toBe(true);
     const caps = capabilitiesForEmployeeRole(role);
     expect(mapAdminRoleToCapabilities(role)).toEqual(caps);
     for (const capability of ["users.read", "riders.read", "rides.read"]) expect(employeeHasCapability(role, capability)).toBe(true);
@@ -214,11 +201,11 @@ describe("approved Support Users/Riders boundaries", () => {
 
 describe("specific Users page authorization", () => {
   it("does not inherit list read permission for create pages or their nested paths", () => {
-    const readOnly = capabilitiesForEmployeeRole("support");
+    const readOnly = capabilitiesForEmployeeRole("support_agent");
     for (const pathname of ["/users/create", "/users/create/", "/users/create/nested"]) expect(canAccessPage(pathname, readOnly)).toBe(false);
     expect(canAccessPage("/users", readOnly)).toBe(true);
     expect(canAccessPage("/users/details", readOnly)).toBe(true);
-    expect(canAccessPage("/users/create", capabilitiesForEmployeeRole("admin"))).toBe(true);
+    expect(canAccessPage("/users/create", capabilitiesForEmployeeRole("operations_manager"))).toBe(true);
     expect(canAccessPage("/users/create", capabilitiesForEmployeeRole("super_admin"))).toBe(true);
   });
 });

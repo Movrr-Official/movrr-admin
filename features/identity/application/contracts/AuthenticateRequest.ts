@@ -61,6 +61,10 @@ export type AuthenticateRequestDeps = {
 export type AuthenticateRequestInput = {
   accessToken: string | null | undefined;
   correlationIdHeader?: string | null;
+  /** Set by an owned-resource handler, never read from client headers or claims. */
+  preferRider?: boolean;
+  /** Server-owned operation capability; never accepted from a client payload. */
+  requiredCapability?: string;
 };
 
 export type AuthenticateRequest = (

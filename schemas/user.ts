@@ -9,34 +9,8 @@ import {
 
 export const accountCreationRoleSchema = z.enum(["rider", "advertiser", ...CANONICAL_EMPLOYEE_ROLES]);
 
-export const userRoleSchema = z.enum([
-  // Product principals
-  "advertiser",
-  "rider",
-  // Canonical employee operating roles
-  "super_admin",
-  "security_admin",
-  "operations_manager",
-  "platform_operator",
-  "campaign_manager",
-  "partner_operations_manager",
-  "fraud_analyst",
-  "trust_safety_analyst",
-  "support_agent",
-  "support_lead",
-  "finance_operator",
-  "compliance_analyst",
-  "programme_operations_manager",
-  "executive_viewer",
-  "product_operations",
-  "engineering_operations",
-  // Legacy employee aliases (DB / migration compatibility)
-  "admin",
-  "moderator",
-  "support",
-  "compliance_officer",
-  "government",
-]);
+export const employeeRoleSchema = z.enum(CANONICAL_EMPLOYEE_ROLES);
+export const userRoleSchema = z.enum(["rider", "advertiser", "unassigned", ...CANONICAL_EMPLOYEE_ROLES]);
 
 export const userStatusSchema = z.enum(["active", "inactive", "pending"]);
 
@@ -46,6 +20,8 @@ export const userSchema = z.object({
   name: z.string().min(1, "Full name is required"),
   phone: z.string().optional(),
   role: userRoleSchema,
+  employeeRole: employeeRoleSchema.nullable().optional(),
+  accountType: z.enum(["rider", "advertiser", "employee"]).optional(),
   status: userStatusSchema,
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -78,8 +54,8 @@ export const profileSchema = userSchema
 
 export const updateUserRoleSchema = z.object({
   userId: z.string(),
-  role: userRoleSchema,
-});
+  role: employeeRoleSchema.nullable(),
+}).strict();
 
 export const toggleUserStatusSchema = z.object({
   userId: z.string(),

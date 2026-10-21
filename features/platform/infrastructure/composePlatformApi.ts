@@ -200,6 +200,8 @@ export async function createPlatformApiForTests(
       authDeps,
       authorisation,
       handle,
+      preferRider: (capability === "wallet.read" && !new URL(request.url).searchParams.has("riderId")) ||
+        /^\/api\/v1\/rewards(?:\/|$)/.test(new URL(request.url).pathname),
     });
 
   return {

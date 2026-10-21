@@ -35,7 +35,6 @@ import { getEmployeeRoleLabel } from "@/features/authorization/roleOptions";
 
 const getRoleBadge = (role: string) => {
   switch (role) {
-    case "admin":
     case "super_admin":
     case "security_admin":
     case "operations_manager":
@@ -57,27 +56,6 @@ const getRoleBadge = (role: string) => {
         <Badge variant="default">
           <Bike className="h-3 w-3 mr-1" />
           Rider
-        </Badge>
-      );
-    case "moderator":
-      return (
-        <Badge variant="accent">
-          <Shield className="h-3 w-3 mr-1" />
-          Moderator
-        </Badge>
-      );
-    case "support":
-      return (
-        <Badge variant="success">
-          <Shield className="h-3 w-3 mr-1" />
-          Support
-        </Badge>
-      );
-    case "government":
-      return (
-        <Badge variant="info">
-          <Shield className="h-3 w-3 mr-1" />
-          Government
         </Badge>
       );
     default:

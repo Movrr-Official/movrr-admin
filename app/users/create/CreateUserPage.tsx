@@ -99,7 +99,6 @@ const createUserFormSchema = z.object({
 type CreateUserFormData = z.infer<typeof createUserFormSchema>;
 
 const roleDescriptions: Record<string, string> = {
-  admin: "Legacy administrator alias (maps to Operations Manager)",
   super_admin: "Unrestricted platform authority including security break-glass",
   security_admin: "Privileged role approval and security settings",
   operations_manager: "Broad operational ownership without security admin powers",
@@ -116,10 +115,6 @@ const roleDescriptions: Record<string, string> = {
   executive_viewer: "Executive read-only analytics and reports",
   product_operations: "Routes, workboard, and product workflows",
   engineering_operations: "Platform reliability and feature flags",
-  moderator: "Legacy alias for Product Operations",
-  support: "Legacy alias for Support Agent",
-  compliance_officer: "Legacy alias for Compliance Analyst",
-  government: "Legacy alias for Programme Operations Manager",
   rider: "Rider with route and campaign participation",
   advertiser: "Advertiser product account",
 };

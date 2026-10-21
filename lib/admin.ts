@@ -8,7 +8,6 @@ import { createSupabaseAdminClient } from "./supabase-admin";
 import { headers } from "next/headers";
 import {
   isReadOnlyAdminRole,
-  hasAdminPermission,
   getCapabilitiesForRole,
 } from "@/lib/authPermissions";
 import {
@@ -24,13 +23,13 @@ import {
   type AuthenticatedUser,
   type AdminRole,
 } from "@/types/auth";
-import { EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
+import { CANONICAL_EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
 import type { KnownCapability } from "@/features/organisations/domain/CapabilityCatalog";
 import { canAccessPage } from "@/features/authorization/dashboardRegistry";
 import { mergeTemporaryCapabilities } from "@/features/authorization/securityElevations";
 import { matchesAnyPathPrefix } from "@/lib/pathMatch";
 
-const VALID_ADMIN_ROLES: AdminRole[] = [...EMPLOYEE_ROLES];
+const VALID_ADMIN_ROLES: AdminRole[] = [...CANONICAL_EMPLOYEE_ROLES];
 
 const EXCLUDED_PATHS = ["/auth", "/unauthorized"] as const;
 const ADMIN_SESSION_BOOTSTRAP_GRACE_MS = 10 * 60_000;
@@ -514,7 +513,7 @@ export const getAuthenticatedUser = cache(async (): Promise<AuthenticatedUser | 
     }
 
     // Validate role
-    const role = adminRow.role.toLowerCase() as AdminRole;
+    const role = adminRow.role as AdminRole;
     const isValidRole = VALID_ADMIN_ROLES.includes(role);
 
     if (!isValidRole) {
@@ -568,41 +567,6 @@ export async function requireAdmin(): Promise<AuthenticatedUser> {
   }
 
   return user;
-}
-
-/**
- * @deprecated Prefer requireCapability / requireAnyCapability.
- * Retained for gradual migration of call sites that still pass role arrays.
- */
-export async function requireAdminRoles(
-  allowedRoles: readonly string[],
-  options?: { mutation?: boolean; permission?: string },
-): Promise<AuthenticatedUser> {
-  const user = await requireAdmin();
-
-  if (!allowedRoles.includes(user.adminUser.role)) {
-    throw new AdminAuthError("NOT_AUTHORIZED", "Not authorized");
-  }
-
-  if (options?.permission && !hasAdminPermission(user.adminUser.role, options.permission)) {
-    throw new AdminAuthError("NOT_AUTHORIZED", "Missing required permission.");
-  }
-
-  if (options?.mutation && isReadOnlyAdminRole(user.adminUser.role)) {
-    throw new AdminAuthError(
-      "NOT_AUTHORIZED",
-      "Read-only admin role cannot perform this action.",
-    );
-  }
-
-  return user;
-}
-
-/** Alias for mutating server actions — blocks read-only dashboard roles. */
-export async function requireMutatingAdminRoles(
-  allowedRoles: readonly string[],
-): Promise<AuthenticatedUser> {
-  return requireAdminRoles(allowedRoles, { mutation: true });
 }
 
 export type RequireCapabilityOptions = {

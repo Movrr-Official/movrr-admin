@@ -3,7 +3,7 @@
 import { dashboardRead } from "@/lib/dashboard/readTransport";
 import { useQuery } from "@tanstack/react-query";
 import useShouldHideComponent from "@/hooks/useShouldHideComponent";
-import { hasAdminPermission, hasCapability } from "@/lib/authPermissions";
+import { hasCapability } from "@/lib/authPermissions";
 
 export const ADMIN_USER_QUERY_KEY = ["adminUser"] as const;
 
@@ -18,19 +18,6 @@ export function useAdminUser(options?: { enabled?: boolean }) {
     refetchOnWindowFocus: false,
     enabled: !shouldHideComponent && (options?.enabled ?? true),
   });
-}
-
-/** Capability-first permission hook (also accepts legacy `module:action` strings). */
-export function usePermission(permission: string) {
-  const { data: adminUser, isFetched } = useAdminUser();
-  // Keep SSR and the first client paint aligned — deny until the query settles.
-  if (!isFetched || !adminUser?.role) return false;
-
-  if (permission.includes(".")) {
-    return hasCapability(adminUser.role, permission);
-  }
-
-  return hasAdminPermission(adminUser.role, permission);
 }
 
 /** Direct capability check for UI gating. */

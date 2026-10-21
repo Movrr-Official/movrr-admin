@@ -12,7 +12,7 @@ import {
   ROUTE_OPTIMIZER_TOKEN,
 } from "@/lib/env";
 
-import { EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
+import { CANONICAL_EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
 
 const PUBLIC_PATHS = [
   "/auth/signin",
@@ -32,7 +32,7 @@ const INTERNAL_API_PREFIX = "/api/internal/";
 const INTERNAL_V1_JOBS_PREFIX = "/api/v1/internal/";
 
 /** Edge login gate — all employee roles from the canonical template set. */
-const DASHBOARD_ACCESS_ROLES = new Set<string>(EMPLOYEE_ROLES);
+const DASHBOARD_ACCESS_ROLES = new Set<string>(CANONICAL_EMPLOYEE_ROLES);
 
 function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith(PUBLIC_API_PREFIX)) return true;

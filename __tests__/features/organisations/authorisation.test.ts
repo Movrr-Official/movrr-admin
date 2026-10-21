@@ -171,7 +171,7 @@ describe("rider and admin capability mapping", () => {
   });
 
   it("maps admin role to platform capabilities", () => {
-    const permissions = resolvePermissions(adminPrincipal("admin"));
+    const permissions = resolvePermissions(adminPrincipal("operations_manager"));
     const ctx = ctxFor(adminPrincipal("admin"), permissions);
 
     expect(assertCapability(ctx, "fulfilment.override").ok).toBe(true);
@@ -181,7 +181,7 @@ describe("rider and admin capability mapping", () => {
 
   it("maps read-only admin roles without write capabilities", () => {
     const permissions = resolvePermissions(
-      adminPrincipal("compliance_officer"),
+      adminPrincipal("compliance_analyst"),
     );
     const ctx = ctxFor(adminPrincipal("compliance_officer"), permissions);
 

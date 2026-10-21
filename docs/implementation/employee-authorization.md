@@ -4,8 +4,8 @@
 |--|--|
 | **Purpose** | How capability-first employee AuthZ is realised in movrr-admin |
 | **Audience** | Engineers |
-| **Status** | Shipped |
-| **Last updated** | 2026-07-30 |
+| **Status** | Canonical source verified; migration 070 production approval pending |
+| **Last updated** | 2026-10-21 |
 | **Owner** | Admin Engineering |
 | **Slug** | `employee-authorization` |
 
@@ -45,7 +45,7 @@ Admin authorization is **capability-first**. Employee roles in `admin_users.role
 | Area | Path | Role |
 |------|------|------|
 | Capability vocabulary | `features/organisations/domain/CapabilityCatalog.ts` | Product + employee `KnownCapability` |
-| Employee templates | `features/organisations/domain/employeeRoleTemplates.ts` | Roles, bundles, aliases, SoD assignable sets |
+| Employee templates | `features/organisations/domain/employeeRoleTemplates.ts` | Canonical roles, bundles, SoD assignable sets |
 | Admin → caps mapper | `features/organisations/application/adminCapabilityMapper.ts` | Platform principal grants |
 | Authorisation service | `features/organisations/application/commands/authorisationService.ts` | Platform assert / resolve |
 | Dashboard registry | `features/authorization/dashboardRegistry.ts` | Surfaces matrix |
@@ -64,7 +64,7 @@ Admin authorization is **capability-first**. Employee roles in `admin_users.role
 | Exports | `lib/export.ts` + `app/actions/exportAudit.ts` | Serialize → audit → download |
 | Diagnostics UI | `app/authorization/` | Simulator |
 | Edge login | `proxy.ts` | Next 16 proxy; employee role set |
-| Schema | `schemas/user.ts`, `types/auth.ts` | Role enums include canonical + legacy |
+| Schema | `schemas/user.ts`, `types/auth.ts` | Canonical employee assignments; separate account classification |
 
 ---
 
@@ -72,7 +72,7 @@ Admin authorization is **capability-first**. Employee roles in `admin_users.role
 
 | Surface | Strategy |
 |---------|----------|
-| Login | `proxy.ts` requires `admin_users.role ∈ EMPLOYEE_ROLES` |
+| Login | `proxy.ts` requires a canonical employee membership |
 | Layout role | `getAdminRoleForLayout` → Sidebar capabilities |
 | Pages | `AuthWrapper capability=…` / `capabilities={[…]}` |
 | Actions | `await requireCapability("…", { mutation: true })` |
@@ -91,11 +91,11 @@ Admin authorization is **capability-first**. Employee roles in `admin_users.role
 
 | Concern | Behaviour |
 |---------|-----------|
-| Existing `admin` / `moderator` / `support` / `compliance_officer` / `government` | Alias → canonical template; no DB rewrite required |
-| `admin_users.role` | Text — stores canonical or legacy strings |
-| `public.user.role` | Remains product enum; employee sync collapses staff to `admin` / `super_admin` where needed |
-| SQL migration | **Not required** for AuthZ day-1 |
-| Deprecated helpers | `requireAdminRoles`, role arrays in `authPermissions` kept as shims; **no live feature callers** |
+| Existing historical employee values | Migration 070 converts once with an authorized actor and audit evidence |
+| `admin_users.role` | Canonical text or NULL for revoked access; staff row IDs retained |
+| `public.user.role` | Account classification only; employee assignment never changes existing account type |
+| SQL migration | 070 and matching Admin source require coordinated approval and release |
+| Deprecated helpers | Removed; callers use canonical capability assertions |
 | Enum expansion | **Not recommended now** — see product FAQ / ADR |
 
 ---
@@ -131,7 +131,7 @@ npx vitest run __tests__/features/authorization __tests__/ui/sidebarNavigation.t
 | Diagnostics UI | Done |
 | ABAC enforcement | Deferred (foundation only) |
 | Persisted break-glass / delegation | Deferred (runtime merge ready) |
-| DB migration | Not required |
+| DB migration | 070 locally verified; production approval pending |
 
 Verification artefacts: Implementation Verification Report + Post-Implementation Re-Audit under `docs/security/`.
 

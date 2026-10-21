@@ -12,10 +12,13 @@ import {
   type ApplicationResult,
 } from "@/lib/result/ApplicationResult";
 import { getOrCreateCorrelationId } from "@/lib/http/correlationId";
+import { isEmployeeRole, employeeHasCapability } from "@/features/organisations/domain/employeeRoleTemplates";
+import { capabilitiesForRider } from "@/features/organisations/domain/CapabilityCatalog";
 
 /**
  * Principal resolution priority (from DB records only; clients never declare type):
- * 1. AdminPrincipal if `admin_users` hit
+ * Owned Rider handlers select the active Rider profile first.
+ * 1. AdminPrincipal if a canonical employee membership exists
  * 2. OrganisationPrincipal if organisation membership hit
  * 3. RiderPrincipal if rider profile hit
  * 4. Otherwise unrecognised_principal failure
@@ -37,8 +40,22 @@ export async function authenticateRequest(
   const { userId, email } = verified;
   const correlationId = getOrCreateCorrelationId(input.correlationIdHeader);
 
+  // A legitimate employee membership does not replace the same identity's Rider
+  // profile. Owned-resource handlers use that profile and only Rider grants.
+  if (input.preferRider) {
+    const rider = await deps.findRiderProfile(userId);
+    if (rider) return ok(buildContext({ type: "rider", userId, email, riderId: rider.id }, correlationId));
+  }
+
   const admin = await deps.findAdminUser(userId);
-  if (admin) {
+  if (admin && isEmployeeRole(admin.role)) {
+    // Shared read endpoints still enforce resource ownership for Rider contexts.
+    // An unrelated employee role cannot remove existing self-service access.
+    if (input.requiredCapability && !employeeHasCapability(admin.role,input.requiredCapability) &&
+        capabilitiesForRider().some(capability => capability === input.requiredCapability)) {
+      const rider=await deps.findRiderProfile(userId);
+      if(rider) return ok(buildContext({type:"rider",userId,email,riderId:rider.id},correlationId));
+    }
     return ok(
       buildContext(
         {

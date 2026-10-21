@@ -65,7 +65,7 @@ module.exports = async ({ db, user, rider, other, otherRider, operator, campaign
         "--publish",
         "127.0.0.1:55440:3000",
         "--env",
-        `PGRST_DB_URI=postgres://postgres:isolated-local-test-only@host.docker.internal:55439/${db.options.database}`,
+        `PGRST_DB_URI=postgres://postgres:isolated-local-test-only@host.docker.internal:${db.options.port}/${db.options.database}`,
         "--env",
         "PGRST_DB_ANON_ROLE=anon",
         "--env",

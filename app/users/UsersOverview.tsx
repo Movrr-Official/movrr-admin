@@ -41,9 +41,9 @@ export default function UsersOverview() {
 
   const ridersCount = stats?.roleCounts?.rider ?? 0;
   const advertisersCount = stats?.roleCounts?.advertiser ?? 0;
-  const adminsCount = stats?.roleCounts?.admin ?? 0;
-  const moderatorsCount = stats?.roleCounts?.moderator ?? 0;
-  const supportCount = stats?.roleCounts?.support ?? 0;
+  const adminsCount = stats?.roleCounts?.operations_manager ?? 0;
+  const moderatorsCount = stats?.roleCounts?.product_operations ?? 0;
+  const supportCount = stats?.roleCounts?.support_agent ?? 0;
 
   // Calculate users in the last 7 days
   const sevenDaysAgo = new Date();

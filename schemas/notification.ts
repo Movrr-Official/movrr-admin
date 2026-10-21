@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { userRoleSchema } from "./user";
+import { userRoleSchema, accountCreationRoleSchema } from "./user";
 
 export const notificationTypeSchema = z.enum([
   "campaign_assigned",
@@ -23,7 +23,7 @@ export const createNotificationSchema = z
     type: notificationTypeSchema,
     metadata: z.record(z.any()).optional().default({}),
     target: notificationTargetSchema,
-    role: userRoleSchema.optional(),
+    role: accountCreationRoleSchema.optional(),
     userIds: z.array(z.string()).optional(),
     respectPreferences: z.boolean().default(true),
   })

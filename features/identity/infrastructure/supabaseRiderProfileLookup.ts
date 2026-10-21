@@ -9,11 +9,14 @@ import type { FindRiderProfile } from "@/features/identity/application/contracts
  */
 export const findRiderProfile: FindRiderProfile = async (userId: string) => {
   const supabase = createSupabaseAdminClient();
+  const account = await supabase.from("user").select("status").eq("id", userId).maybeSingle();
+  if (account.error || account.data?.status !== "active") return null;
 
   const { data, error } = await supabase
     .from("rider")
     .select("id, user_id")
     .eq("user_id", userId)
+    .eq("status", "active")
     .maybeSingle();
 
   if (error || !data) {

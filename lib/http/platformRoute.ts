@@ -16,6 +16,7 @@ export type PlatformRouteConfig<T> = {
   ) => Promise<ApplicationResult<T>>;
   authenticate?: typeof authenticateRequest;
   authorisation?: AuthorisationService;
+  preferRider?: boolean;
 };
 
 /**
@@ -91,7 +92,7 @@ export async function platformRoute<T>(
   const correlationIdHeader = config.request.headers.get("x-correlation-id");
 
   const auth = await authenticate(
-    { accessToken, correlationIdHeader },
+    { accessToken, correlationIdHeader, requiredCapability: config.capability, ...(config.preferRider ? { preferRider: true } : {}) },
     config.authDeps,
   );
   if (!auth.ok) {

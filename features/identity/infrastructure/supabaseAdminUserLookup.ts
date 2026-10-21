@@ -1,4 +1,5 @@
 import "server-only";
+import { isEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import type { FindAdminUser } from "@/features/identity/application/contracts/AuthenticateRequest";
@@ -18,7 +19,7 @@ export const findAdminUser: FindAdminUser = async (userId: string) => {
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (error || !data) {
+  if (error || !data || !isEmployeeRole(data.role)) {
     return null;
   }
 

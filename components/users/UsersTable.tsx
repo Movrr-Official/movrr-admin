@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { EMPLOYEE_ROLE_OPTIONS, PRODUCT_ROLE_OPTIONS } from "@/features/authorization/roleOptions";
 
 import { FilterConfig } from "@/lib/applyFilters";
 import { DataTableContainer } from "@/context/DataTableContext";
@@ -33,14 +34,7 @@ export function UsersTable({
       type: "multi-select",
       key: "role",
       primary: true,
-      options: [
-        { value: "rider", label: "Rider" },
-        { value: "advertiser", label: "Advertiser" },
-        { value: "admin", label: "Admin" },
-        { value: "super_admin", label: "Super Admin" },
-        { value: "moderator", label: "Moderator" },
-        { value: "support", label: "Support" },
-      ],
+      options: [...PRODUCT_ROLE_OPTIONS, ...EMPLOYEE_ROLE_OPTIONS, { value: "unassigned", label: "No employee access" }],
     },
     {
       id: "status",

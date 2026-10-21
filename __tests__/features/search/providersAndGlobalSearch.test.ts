@@ -133,7 +133,7 @@ describe("globalSearch result contract", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     requireCapability.mockResolvedValue({
-      adminUser: { role: "admin" },
+      adminUser: { role: "operations_manager" },
     });
   });
 
@@ -177,7 +177,7 @@ describe("globalSearch result contract", () => {
 
   it("returns no hits when permitted providers have no matches", async () => {
     requireCapability.mockResolvedValue({
-      adminUser: { role: "government" },
+      adminUser: { role: "programme_operations_manager" },
     });
     createSupabaseAdminClient.mockReturnValue({
       from: vi.fn(() => createThenableBuilder({ data: [], error: null })),
@@ -191,7 +191,7 @@ describe("globalSearch result contract", () => {
 
 describe("Support search security contract", () => {
   beforeEach(() => vi.clearAllMocks());
-  it.each(["support", "support_agent"])("%s receives bounded identity hits and authorized drawer destinations only", async (role) => {
+  it.each(["support_agent"])("%s receives bounded identity hits and authorized drawer destinations only", async (role) => {
     requireCapability.mockResolvedValue({ adminUser: { role } });
     const row = { id: "11111111-1111-1111-1111-111111111111", name: "Ada", email: "ada@example.com", avatar_url: null, status: "active", password_hash: "private", account_notes: "private", mfa_secret: "private" };
     const users = createThenableBuilder({ data: [row], error: null });

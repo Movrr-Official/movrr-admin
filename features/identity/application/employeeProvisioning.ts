@@ -50,7 +50,7 @@ export async function provisionEmployee(
         email_confirm: payload.isVerified,
         ban_duration: "876000h",
         app_metadata: { employee_provisioning_id: reservation.user_id },
-        user_metadata: { full_name: payload.name, server_assigned_role: "admin" },
+        user_metadata: { full_name: payload.name },
       });
       identity = created.data?.user;
       // An error or lost response may follow a committed Auth insert. Only

@@ -1,4 +1,5 @@
 "use client";
+import { isReadOnlyEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -127,9 +128,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const { data: settings, isLoading, error } = useSettingsData();
   const { data: adminUser } = useAdminUser();
-  const isReadOnlyRole =
-    adminUser?.role === "compliance_officer" ||
-    adminUser?.role === "government";
+  const isReadOnlyRole = isReadOnlyEmployeeRole(adminUser?.role);
   const [isSaving, setIsSaving] = useState(false);
   const [isRecheckingIntegrations, setIsRecheckingIntegrations] =
     useState(false);

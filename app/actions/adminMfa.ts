@@ -49,7 +49,7 @@ const getTargetAdminByUserIdOrEmail = async (input: {
   const supabaseAdmin = createSupabaseAdminClient();
   let query = supabaseAdmin
     .from("admin_users")
-    .select("id, user_id, email, role");
+    .select("id, user_id, email, role").not("role", "is", null);
 
   if (input.userId) {
     query = query.eq("user_id", input.userId);

@@ -6,7 +6,7 @@ const postgres = require("postgres"),
   crypto = require("node:crypto");
 const options = {
   host: "127.0.0.1",
-  port: 55439,
+  port: Number(process.env.MOVRR_ALIGNMENT_PORT || 55439),
   username: "postgres",
   password: "isolated-local-test-only",
   max: 16,
@@ -87,6 +87,11 @@ async function fixture(db) {
     "utf8",
   );
   await db.unsafe(functions);
+  // Replace the pre-065 Community fixture predicate with the deployed approval
+  // contract. A retained/revoked staff record must never grant creator access.
+  await db.unsafe('CREATE VIEW auth.users AS SELECT id,NULL::timestamptz deleted_at,NULL::timestamptz banned_until FROM public."user"');
+  const communityApproval=fs.readFileSync(path.join(__dirname,"065_community_approved_rider_authorization.sql"),"utf8");
+  await db.unsafe(communityApproval.slice(communityApproval.indexOf("CREATE OR REPLACE FUNCTION public.community_rider_account_active"),communityApproval.indexOf("-- Runs even inside")));
   for (const file of [
     "055_alignment_security.sql",
     "../../movrr-mobile/scripts/093_alignment_accessory_custody.sql",
@@ -109,6 +114,13 @@ async function fixture(db) {
       throw e;
     }
   }
+  // The final role projection and role-targeted audience query replace the
+  // historical baseline after its prerequisites have been installed.
+  const canonical = fs.readFileSync(path.join(__dirname,"070_employee_rbac_authority.sql"),"utf8");
+  await db.unsafe(canonical.slice(canonical.indexOf("CREATE OR REPLACE FUNCTION public.ops_employee_capabilities"),canonical.indexOf("-- END GENERATED EMPLOYEE CAPABILITIES")));
+  await db.unsafe(canonical.slice(canonical.indexOf("CREATE OR REPLACE FUNCTION public.is_dashboard_admin"),canonical.indexOf("-- Coarse account roles")));
+  await db.unsafe(canonical.slice(canonical.indexOf("CREATE OR REPLACE FUNCTION public.join_community_ride"),canonical.indexOf("CREATE OR REPLACE FUNCTION public.ops_queue_notifications")));
+  await db.unsafe(canonical.slice(canonical.indexOf("CREATE OR REPLACE FUNCTION public.ops_queue_notifications"),canonical.indexOf("-- END GENERATED PROVISIONING AND BOOTSTRAP")));
   await db.unsafe(
     `GRANT SELECT,INSERT,UPDATE,DELETE ON rider,ride_session,user_preferences,reward_transactions TO authenticated;ALTER TABLE rider ENABLE ROW LEVEL SECURITY;ALTER TABLE ride_session ENABLE ROW LEVEL SECURITY;CREATE POLICY owner_rider ON rider TO authenticated USING(user_id=auth.uid()) WITH CHECK(user_id=auth.uid());CREATE POLICY owner_ride ON ride_session TO authenticated USING(rider_id IN (SELECT id FROM rider WHERE user_id=auth.uid()));GRANT EXECUTE ON FUNCTION current_rider_id(),get_my_ride_summary(uuid,boolean),get_lifetime_impact_summary(),rider_campaign_opt_in(uuid),rider_campaign_confirm(uuid),rider_campaign_withdraw(uuid) TO authenticated;`,
   );
@@ -394,6 +406,17 @@ async function main() {
     `INSERT INTO "user"(id,email,status,role,name) SELECT gen_random_uuid(),'fixture-'||g||'@isolated.test','active','rider','Fixture' FROM generate_series(1,1100) g`,
   );
   await db`INSERT INTO user_preferences(user_id,notifications) VALUES(${other},false)`;
+  // Employee recipient selection uses membership, independently of Rider kind.
+  await db`INSERT INTO admin_users(user_id,role) VALUES(${user},'partner_operations_manager')`;
+  const employeeAudience={title:"Employee audience",message:"Isolated",type:"system",target:"role",role:"partner_operations_manager",respectPreferences:false};
+  const employeeSend=id();
+  await rpc(operator,"ops_queue_notifications",[employeeSend,employeeAudience]);
+  equal((await db`SELECT user_id FROM ops_notification_recipient WHERE operation=${employeeSend}`)[0].user_id,user);
+  equal((await db`SELECT role FROM "user" WHERE id=${user}`)[0].role,'rider');
+  await db`UPDATE admin_users SET role=NULL WHERE user_id=${user}`;
+  const revokedSend=id();await rpc(operator,"ops_queue_notifications",[revokedSend,employeeAudience]);
+  equal((await db`SELECT count(*)::int n FROM ops_notification_recipient WHERE operation=${revokedSend}`)[0].n,0);
+  await deny(()=>rpc(operator,"ops_queue_notifications",[id(),{...employeeAudience,role:"admin"}]),/Canonical recipient role/);
   const send = id(),
     payload = {
       title: "Test batch",
@@ -636,6 +659,10 @@ async function main() {
   equal(new Set(created.map((x) => x.id)).size, 1);
   equal((await db`SELECT count(*)::int n FROM community_ride`)[0].n, 1);
   const community = created[0];
+  // Staff record existence, including a revoked membership, grants no ability
+  // to act as a different Rider through the actual join RPC.
+  equal((await rpc(user,"join_community_ride",[community.id,otherRider])).error,"not_authorized");
+  equal((await rpc(other,"join_community_ride",[community.id,rider])).error,"not_authorized");
   await deny(
     () => rpc(other, "cancel_my_community_ride", [community.id, community.updated_at]),
     /Organizer access required/,

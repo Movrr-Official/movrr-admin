@@ -8,7 +8,7 @@ const actor=randomUUID(), outsider=randomUUID();
 async function fixture(){
  await db.unsafe(`CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;CREATE SEQUENCE workboard_card_seq;
  DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon;END IF;IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN CREATE ROLE authenticated;END IF;IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN CREATE ROLE service_role;END IF;END $$;
- CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY,email text);
+ CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,deleted_at timestamptz,banned_until timestamptz);
  CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$ SELECT current_setting('request.jwt.claim.role',true) $$;
  CREATE TABLE public."user"(id uuid PRIMARY KEY,status text);CREATE TABLE public.admin_users(user_id uuid PRIMARY KEY,role text);
  CREATE TABLE public.rider(id uuid PRIMARY KEY,user_id uuid);
@@ -42,6 +42,8 @@ async function fixture(){
  await db.unsafe(baselineInvite);
 
  const tx=await db.reserve();try{await tx.unsafe(fs.readFileSync(path.join(__dirname,'069_admin_creation_transactions.sql'),'utf8'));}finally{await tx.release();}
+ const canonical=fs.readFileSync(path.join(__dirname,'070_employee_rbac_authority.sql'),'utf8');
+ await db.unsafe(canonical.slice(canonical.indexOf('CREATE OR REPLACE FUNCTION public.accept_workboard_platform_invitation'),canonical.indexOf('CREATE OR REPLACE FUNCTION public.join_community_ride')));
  for(const id of [actor,outsider]){await db`insert into auth.users(id) values(${id})`;await db`insert into public."user" values(${id},'active')`;await db`insert into admin_users values(${id},'super_admin')`;}
 }
 async function command(kind,input,operation=randomUUID(),who=actor){return db.begin(async tx=>{await tx`select set_config('request.jwt.claim.role','service_role',true)`;return(await tx`select admin_create(${who},${operation},${kind},${tx.json(input)}) result`)[0].result;});}
@@ -128,6 +130,13 @@ async function main(){
  equal((await db`select status from platform_invitations where id=${inviteId}`)[0].status,'pending');
 
  const accept=()=>db`select * from accept_workboard_platform_invitation(${hash},${invitee},'employee-invite@example.test')`;
+ await db`update admin_users set role=null where user_id=${invitee}`;
+ equal((await accept())[0].error_code,'ineligible_role');
+ await db`update admin_users set role='partner_operations_manager' where user_id=${invitee}`;
+ await db`update auth.users set banned_until=now()+interval '1 day' where id=${invitee}`;
+ equal((await accept())[0].error_code,'ineligible_role');
+ await db`update auth.users set banned_until=null where id=${invitee}`;
+ equal((await db`select status from platform_invitations where id=${inviteId}`)[0].status,'pending');
  await db.unsafe(`CREATE FUNCTION fail_invitation_member() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'Injected invitation member failure';END $$;CREATE TRIGGER fail_invitation_member BEFORE INSERT ON workboard_team_members FOR EACH ROW EXECUTE FUNCTION fail_invitation_member();`);
  equal((await accept())[0].success,false);equal((await db`select status from platform_invitations where id=${inviteId}`)[0].status,'pending');equal((await db`select count(*)::int n from workboard_team_members where user_id=${invitee}`)[0].n,0);
  await db.unsafe('DROP TRIGGER fail_invitation_member ON workboard_team_members');

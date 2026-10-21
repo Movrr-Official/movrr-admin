@@ -14,7 +14,7 @@ describe.skipIf(!integration)("employee provisioning: actual service + isolated 
   const root = postgres({ ...opts, database: "postgres" });
   const database = `employee_test_${process.pid}`;
   const db = postgres({ ...opts, database });
-  const actor = randomUUID(), restrictedActor = randomUUID(), incidentId = randomUUID();
+  const actor = randomUUID(), restrictedActor = randomUUID(), incidentId = randomUUID(), legacyId = randomUUID();
   const input = (extra = {}) => ({ email: `${randomUUID()}@example.test`, name: "Test Employee", role: "partner_operations_manager" as const, status: "active" as const, isVerified: false, languagePreference: "en", sendWelcomeEmail: false, ...extra });
   let failPersist = false, loseAuthResponse = false, losePersistResponse = false, failActivation = false;
   const rpc = async (name: string, args: Record<string, unknown>) => {
@@ -29,7 +29,7 @@ describe.skipIf(!integration)("employee provisioning: actual service + isolated 
           if (args.p_phase === "persist" && failPersist) await tx`select set_config('test.fail_product','on',true)`;
           return (await tx`select public.provision_product(${String(args.p_actor)}::uuid,${String(args.p_id)}::uuid,${tx.json(args.p_input as never)}::jsonb,${String(args.p_fingerprint)},${String(args.p_phase)}) result`)[0].result;
         }
-        return (await tx`select public.assign_employee_role(${String(args.p_actor)}::uuid,${String(args.p_user)}::uuid,${String(args.p_role)}) result`)[0].result;
+        return (await tx`select public.assign_employee_role(${String(args.p_actor)}::uuid,${String(args.p_user)}::uuid,${args.p_role === null ? null : String(args.p_role)}) result`)[0].result;
       });
       if (args.p_phase === "persist" && losePersistResponse) { losePersistResponse = false; throw new Error("Lost persistence response"); }
       return { data: value, error: null };
@@ -69,8 +69,9 @@ describe.skipIf(!integration)("employee provisioning: actual service + isolated 
       IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN CREATE ROLE service_role; END IF;
     END $$;
     CREATE SCHEMA auth;
+    CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$ SELECT current_setting('request.jwt.claim.role',true) $$;
-    CREATE TABLE auth.users(id uuid PRIMARY KEY,email text UNIQUE NOT NULL,raw_user_meta_data jsonb DEFAULT '{}',raw_app_meta_data jsonb DEFAULT '{}',banned_until timestamptz,created_at timestamptz DEFAULT now());
+    CREATE TABLE auth.users(id uuid PRIMARY KEY,email text UNIQUE NOT NULL,raw_user_meta_data jsonb DEFAULT '{}',raw_app_meta_data jsonb DEFAULT '{}',banned_until timestamptz,deleted_at timestamptz,created_at timestamptz DEFAULT now());
     CREATE TYPE public.user_role AS ENUM('super_admin','admin','moderator','support','advertiser','rider','gov');
     CREATE TYPE public.user_status AS ENUM('active','suspended','pending','deleted');
     CREATE TYPE public.rider_status AS ENUM('active','inactive','suspended');
@@ -89,9 +90,30 @@ describe.skipIf(!integration)("employee provisioning: actual service + isolated 
     await db`insert into auth.users(id,email,raw_user_meta_data) values(${incidentId},'original-defect@example.test','{"server_assigned_role":"partner_operations_manager"}')`;
     await db`insert into auth.users(id,email,raw_user_meta_data) values(${restrictedActor},'ops@example.test','{"server_assigned_role":"admin"}')`;
     await db`insert into public.admin_users(user_id,role) values(${restrictedActor},'operations_manager')`;
+    await db`insert into auth.users(id,email) values(${legacyId},'preserved-rider-employee@example.test')`;
+    await db`insert into public.admin_users(user_id,email,role) values(${legacyId},'preserved-rider-employee@example.test','admin')`;
+    await db.unsafe(`CREATE TABLE staff_reference(id uuid PRIMARY KEY,staff_id uuid REFERENCES admin_users(id));
+      CREATE TABLE reward_transactions(id uuid PRIMARY KEY,rider_id uuid REFERENCES rider(id),points_earned integer);
+      CREATE TABLE ride_history(id uuid PRIMARY KEY,rider_id uuid REFERENCES rider(id));
+      CREATE TABLE scheduled_exports(id uuid PRIMARY KEY); ALTER TABLE scheduled_exports ENABLE ROW LEVEL SECURITY;
+      CREATE POLICY employee_exports ON scheduled_exports FOR SELECT TO authenticated USING(EXISTS(SELECT 1 FROM admin_users au WHERE au.user_id=auth.uid()));
+      GRANT USAGE ON SCHEMA auth TO authenticated; GRANT SELECT ON scheduled_exports TO authenticated;`);
+    await db`insert into staff_reference select ${randomUUID()},id from admin_users where user_id=${legacyId}`;
+    await db`insert into reward_transactions select ${randomUUID()},id,123 from rider where user_id=${legacyId}`;
+    await db`insert into ride_history select ${randomUUID()},id from rider where user_id=${legacyId}`;
+    await db`insert into organisation_membership values(${randomUUID()},${legacyId})`;
+    await db`insert into scheduled_exports values(${randomUUID()})`;
     const migration = await db.reserve();
     try { await migration.unsafe(readFileSync("scripts/068_employee_provisioning.sql", "utf8")); }
     finally { await migration.release(); }
+    const invitationSchema = readFileSync("scripts/050_platform_invitations.sql", "utf8");
+    await db.unsafe(invitationSchema.slice(0, invitationSchema.indexOf("CREATE INDEX")));
+    const notificationSchema=readFileSync("scripts/057_alignment_operations.sql","utf8");
+    await db.unsafe(notificationSchema.slice(notificationSchema.indexOf("CREATE TABLE public.ops_notification_send"),notificationSchema.indexOf("CREATE FUNCTION public.ops_notification_status")));
+    await db.begin(async tx => {
+      await tx`select set_config('movrr.migration_actor',${actor},true)`;
+      await tx.unsafe(readFileSync("scripts/070_employee_rbac_authority.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, ""));
+    });
     await db.unsafe(`CREATE FUNCTION fail_employee_membership() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
       IF current_setting('test.fail_member',true)='on' THEN RAISE EXCEPTION 'Injected employee grant persistence failure'; END IF; RETURN NEW; END $$;
       CREATE TRIGGER fail_employee_membership BEFORE INSERT ON public.admin_users FOR EACH ROW EXECUTE FUNCTION fail_employee_membership();`);
@@ -118,6 +140,78 @@ describe.skipIf(!integration)("employee provisioning: actual service + isolated 
     expect(await state(p.email)).toMatchObject({ user_id: result.id, state: "complete", banned_until: null, role: "admin", status: "active", employee_role: p.role, riders: 0, memberships: 0 });
     expect(capabilitiesForEmployeeRole(p.role)).toContain("partners.approve");
     expect(capabilitiesForEmployeeRole(p.role)).not.toContain("users.role.assign");
+  });
+  it("canonicalizes historical employee membership once without touching Rider identity, references or financial evidence", async () => {
+    expect((await db`select role from admin_users where user_id=${legacyId}`)[0].role).toBe("operations_manager");
+    expect((await db`select role from public."user" where id=${legacyId}`)[0].role).toBe("rider");
+    expect((await db`select points_earned from reward_transactions`)[0].points_earned).toBe(123);
+    expect(await db`select id from ride_history`).toHaveLength(1);
+    expect(await db`select id from organisation_membership where user_id=${legacyId}`).toHaveLength(1);
+    expect(await db`select id from staff_reference`).toHaveLength(1);
+    expect(await db`select reason from platform_audit_record where reason='070_employee_role_canonicalization'`).toHaveLength(1);
+  });
+  it("revokes and restores only employee access, preserving the same staff ID and all owned records", async () => {
+    const staffId=(await db`select id from admin_users where user_id=${legacyId}`)[0].id;
+    const exportsForRider=()=>db.begin(async tx=>{
+      await tx`select set_config('request.jwt.claim.sub',${legacyId},true)`;
+      await tx.unsafe('SET LOCAL ROLE authenticated');
+      return tx`select id from scheduled_exports`;
+    });
+    expect(await exportsForRider()).toHaveLength(1);
+    const revoke=()=>rpc("assign_employee_role",{p_actor:actor,p_user:legacyId,p_role:null});
+    expect((await revoke()).error).toBeNull(); expect((await revoke()).error).toBeNull();
+    expect((await db`select id,role from admin_users where user_id=${legacyId}`)[0]).toMatchObject({id:staffId,role:null});
+    expect(await exportsForRider()).toHaveLength(0);
+    expect((await rpc("assign_employee_role",{p_actor:actor,p_user:legacyId,p_role:"partner_operations_manager"})).error).toBeNull();
+    expect((await db`select id from admin_users where user_id=${legacyId}`)[0].id).toBe(staffId);
+    expect((await db`select role from public."user" where id=${legacyId}`)[0].role).toBe("rider");
+    expect(await exportsForRider()).toHaveLength(1);
+    expect(await db`select id from staff_reference`).toHaveLength(1);
+    expect(await db`select id from organisation_membership where user_id=${legacyId}`).toHaveLength(1);
+    expect((await db`select sum(points_earned)::int points from reward_transactions`)[0].points).toBe(123);
+    expect(await db`select id from ride_history`).toHaveLength(1);
+  });
+  it("serializes duplicate assignments into one grant and one role audit", async () => {
+    const before=(await db`select count(*)::int n from platform_audit_record where target_entity_id=${incidentId} and reason='employee_membership.change'`)[0].n;
+    const results=await Promise.all(Array.from({length:8},()=>rpc("assign_employee_role",{p_actor:actor,p_user:incidentId,p_role:"partner_operations_manager"})));
+    expect(results.every(r=>r.error===null)).toBe(true);
+    expect((await db`select count(*)::int n from admin_users where user_id=${incidentId}`)[0].n).toBe(1);
+    expect((await db`select count(*)::int n from platform_audit_record where target_entity_id=${incidentId} and reason='employee_membership.change'`)[0].n).toBe(before+1);
+    expect((await db`select role from public."user" where id=${incidentId}`)[0].role).toBe("rider");
+  });
+  it("denies obsolete roles, account conversion, privileged demotion and status-restricted assignment", async () => {
+    for(const role of ["admin","moderator","support","government","compliance_officer","rider","advertiser","owner","manager"]){
+      expect((await rpc("assign_employee_role",{p_actor:actor,p_user:legacyId,p_role:role})).error?.message).toContain("Canonical employee role");
+    }
+    await expect(db`update admin_users set role='admin' where user_id=${legacyId}`).rejects.toThrow(/check constraint/);
+    expect((await rpc("assign_employee_role",{p_actor:restrictedActor,p_user:actor,p_role:"support_agent"})).error?.message).toContain("Unauthorized");
+    await db`update auth.users set banned_until=now()+interval '1 day' where id=${restrictedActor}`;
+    try {expect((await rpc("assign_employee_role",{p_actor:restrictedActor,p_user:legacyId,p_role:"support_agent"})).error?.message).toContain("Unauthorized");}
+    finally {await db`update auth.users set banned_until=null where id=${restrictedActor}`;}
+    await db`update public."user" set status='suspended' where id=${legacyId}`;
+    try {expect((await rpc("assign_employee_role",{p_actor:actor,p_user:legacyId,p_role:"support_agent"})).error?.message).toContain("Active account");}
+    finally {await db`update public."user" set status='active' where id=${legacyId}`;}
+    expect((await db`select to_regprocedure('public.update_admin_user_profile(uuid,uuid,text,jsonb)') old`)[0].old).toBeNull();
+    expect((await db`select to_regprocedure('public.get_user_role()') old`)[0].old).toBeNull();
+    expect((await db`select to_regprocedure('public.mark_employee_profile_pending()') old`)[0].old).toBeNull();
+  });
+  it("rechecks actor authorization after a concurrent revocation commits", async () => {
+    const operator=await provisionEmployee(client,actor,input({role:"operations_manager"}));
+    let pending:ReturnType<typeof rpc>;
+    await db.begin(async tx=>{
+      await tx`select set_config('request.jwt.claim.role','service_role',true)`;
+      await tx`select assign_employee_role(${actor},${operator.id},null)`;
+      pending=rpc("assign_employee_role",{p_actor:operator.id,p_user:legacyId,p_role:"support_agent"});
+    });
+    expect((await pending!).error?.message).toContain("Unauthorized");
+    expect((await db`select role from admin_users where user_id=${legacyId}`)[0].role).toBe("partner_operations_manager");
+  });
+  it("preserves the last active super administrator and rolls back a failed combined profile grant", async () => {
+    expect((await rpc("assign_employee_role",{p_actor:actor,p_user:actor,p_role:null})).error?.message).toContain("last active super");
+    const before=(await db`select name from public."user" where id=${legacyId}`)[0].name;
+    expect((await rpc("update_admin_user_profile",{p_actor:restrictedActor,p_user:legacyId,p_patch:{name:"Must not persist",employee_role:"super_admin"}})).error).not.toBeNull();
+    expect((await db`select name from public."user" where id=${legacyId}`)[0].name).toBe(before);
+    expect((await db`select role from admin_users where user_id=${legacyId}`)[0].role).toBe("partner_operations_manager");
   });
   it("rejects invalid and organisation-domain roles before reservations or Auth side effects", async () => {
     for (const extra of [{ role: "unknown" }, { role: "owner" }, { organisationId: randomUUID() }, { membershipRole: "manager" }]) {
@@ -194,22 +288,24 @@ describe.skipIf(!integration)("employee provisioning: actual service + isolated 
       expect(result.banned_until).not.toBeNull(); expect(result.riders).toBe(0);
     }
   });
-  it("assigns roles atomically and blocks converting a Rider", async () => {
+  it("assigns employee membership without converting an underlying Rider", async () => {
     const p = input(); const created = await provisionEmployee(client, actor, p);
     const result = await rpc("assign_employee_role", { p_actor: actor, p_user: created.id, p_role: "support_agent" });
     expect(result.error).toBeNull(); expect((await state(p.email)).employee_role).toBe("support_agent");
     const rider = (await db`select id from public."user" where email='rider-signup@example.test'`)[0].id;
-    expect((await rpc("assign_employee_role", { p_actor: actor, p_user: rider, p_role: "support_agent" })).error?.message).toMatch(/Product identities/);
+    expect((await rpc("assign_employee_role", { p_actor: actor, p_user: rider, p_role: "partner_operations_manager" })).error).toBeNull();
+    expect((await db`select role from public."user" where id=${rider}`)[0].role).toBe("rider");
+    expect(await db`select id from rider where user_id=${rider}`).toHaveLength(1);
   });
   it("rolls back the employee role when a combined profile edit fails and preserves it on ordinary edits", async () => {
     const p = input(), created = await provisionEmployee(client, actor, p);
     const edit = (role: string | null, patch: Record<string, unknown>) => db.begin(async tx => {
       await tx`select set_config('request.jwt.claim.role','service_role',true)`;
-      await tx`select update_admin_user_profile(${actor}::uuid,${created.id}::uuid,${role},${tx.json(patch as never)})`;
+      await tx`select update_admin_user_profile(${actor}::uuid,${created.id}::uuid,${tx.json((role ? { ...patch, employee_role: role } : patch) as never)})`;
     });
     await expect(edit("support_agent", { email: "actor@example.test" })).rejects.toThrow(/unique constraint/);
     expect((await state(p.email)).employee_role).toBe("partner_operations_manager");
-    expect((await db`select count(*)::int n from platform_audit_record where target_entity_id=${created.id} and reason='admin_employee_role_assignment_v1'`)[0].n).toBe(0);
+    expect((await db`select count(*)::int n from platform_audit_record where target_entity_id=${created.id} and reason='employee_membership.change'`)[0].n).toBe(1);
     await edit(null, { name: "Updated name" });
     expect((await state(p.email)).employee_role).toBe("partner_operations_manager");
     expect((await db`select name from public."user" where id=${created.id}`)[0].name).toBe("Updated name");

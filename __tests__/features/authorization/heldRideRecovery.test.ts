@@ -16,7 +16,7 @@ describe("one-job recovery capability boundary",()=>{
  it("separates operational request from financial/operations review without root promotion",()=>{
   expect(employeeHasCapability("engineering_operations","rides.settlement.recovery.request")).toBe(true);
   expect(employeeHasCapability("engineering_operations","rides.settlement.recovery.review")).toBe(false);
-  for(const role of ["finance_operator","operations_manager","admin"]){expect(employeeHasCapability(role,"rides.settlement.recovery.review")).toBe(true);expect(employeeHasCapability(role,"rides.settlement.recovery.request")).toBe(false);}
+  for(const role of ["finance_operator","operations_manager"]){expect(employeeHasCapability(role,"rides.settlement.recovery.review")).toBe(true);expect(employeeHasCapability(role,"rides.settlement.recovery.request")).toBe(false);}
   for(const role of ["support_agent","security_admin","campaign_manager","executive_viewer","unknown"])expect(employeeHasCapability(role,"rides.settlement.recovery.review")).toBe(false);
  });
  it("registers same-actor separation and audited single-assignment scope without new navigation",()=>{
@@ -29,7 +29,7 @@ describe("one-job recovery capability boundary",()=>{
   expect(state.authorize).toHaveBeenCalledWith("rides.settlement.recovery.request",{mutation:true});
   expect(state.rpc).toHaveBeenCalledWith("propose_held_ride_recovery",{p_reason:"Technical cap blocker independently verified",p_authorization_reference:"AUTH-ONE-JOB"});
  });
- it.each(["finance_operator","operations_manager","admin"])("allows %s to review using the narrow capability",async role=>{
+ it.each(["finance_operator","operations_manager"])("allows %s to review using the narrow capability",async role=>{
   state.role=role;expect(await approveHeldRideRecovery(id,"INDEPENDENT-REVIEW")).toMatchObject({success:true});
   expect(state.authorize).toHaveBeenCalledWith("rides.settlement.recovery.review",{mutation:true});
   expect(state.rpc).toHaveBeenCalledWith("approve_held_ride_recovery",{p_approval:id,p_review_reference:"INDEPENDENT-REVIEW"});

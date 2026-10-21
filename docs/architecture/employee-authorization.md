@@ -4,8 +4,8 @@
 |--|--|
 | **Purpose** | Boundaries, responsibilities, control flow, and invariants for capability-first Admin AuthZ |
 | **Audience** | Engineering, Architecture, Security, Technical leadership |
-| **Status** | Shipped |
-| **Last updated** | 2026-07-30 |
+| **Status** | Canonical source verified; migration 070 production approval pending |
+| **Last updated** | 2026-10-21 |
 | **Owner** | Admin Engineering |
 | **Slug** | `employee-authorization` |
 
@@ -90,7 +90,7 @@ Audit (exports, initiator records, existing admin_audit_log)
 | Component | Responsibility |
 |-----------|----------------|
 | `CapabilityCatalog` | Canonical capability strings (product + employee) |
-| `employeeRoleTemplates` | Role → bundle; legacy aliases; read-only flags |
+| `employeeRoleTemplates` | Canonical employee role → bundle; read-only flags |
 | `adminCapabilityMapper` | Admin principal → capabilities for Platform AuthZ |
 | `dashboardRegistry` | Capability → nav/pages/search/commands/exports/SoD/data scope |
 | `navigation` | Generate + filter sidebar from registry |
@@ -108,7 +108,7 @@ Audit (exports, initiator records, existing admin_audit_log)
 ### Identity → authorization
 
 1. Cookie session validated (`getAuthenticatedUser` / `proxy`).
-2. `admin_users.role` normalized; must be an employee role (including legacy aliases).
+2. `admin_users.role` must exactly match a canonical employee role. NULL means no employee grant. Account classification and organisation membership remain independent.
 3. Bundle resolved via `capabilitiesForEmployeeRole`.
 4. Optional temporary capabilities merged.
 5. Assertion: capability present ⇒ allow; else deny.

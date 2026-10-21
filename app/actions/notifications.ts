@@ -7,6 +7,7 @@ import { z } from "zod";
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { logger } from "@/lib/logger";
+import { isEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
 import {
   AdminNotification,
   CreateNotificationInput,
@@ -108,8 +109,11 @@ export async function getNotificationHistory(
         .in("id", userIds);
 
       if (!recipientsError && recipients) {
+        const employees=await supabaseAdmin.from("admin_users").select("user_id,role").in("user_id",userIds);
+        if(employees.error) throw new Error("Employee recipient identities unavailable");
+        const roles=new Map((employees.data??[]).map(row=>[row.user_id,row.role]));
         recipientsById = new Map(
-          recipients.map((recipient) => [recipient.id, recipient]),
+          recipients.map((recipient) => [recipient.id, {...recipient,role:isEmployeeRole(roles.get(recipient.id))?roles.get(recipient.id):["rider","advertiser"].includes(recipient.role)?recipient.role:"unassigned"}]),
         );
       }
     }

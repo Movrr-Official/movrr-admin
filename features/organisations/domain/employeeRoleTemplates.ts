@@ -9,70 +9,16 @@
 import type { KnownCapability } from "@/features/organisations/domain/CapabilityCatalog";
 import { CAPABILITIES } from "@/features/organisations/domain/CapabilityCatalog";
 
-/**
- * Canonical employee operating roles.
- * Legacy roles (admin, moderator, support, compliance_officer, government)
- * remain valid DB values and map through LEGACY_EMPLOYEE_ROLE_ALIASES.
- */
-export const EMPLOYEE_ROLES = [
-  "super_admin",
-  "security_admin",
-  "operations_manager",
-  "platform_operator",
-  "campaign_manager",
-  "partner_operations_manager",
-  "fraud_analyst",
-  "trust_safety_analyst",
-  "support_agent",
-  "support_lead",
-  "finance_operator",
-  "compliance_analyst",
-  "programme_operations_manager",
-  "executive_viewer",
-  "product_operations",
-  "engineering_operations",
-  // Legacy aliases retained for DB / migration compatibility
-  "admin",
-  "moderator",
-  "support",
-  "compliance_officer",
-  "government",
-] as const;
-
-export type EmployeeRole = (typeof EMPLOYEE_ROLES)[number];
-
-/** Roles that grant dashboard login (admin_users). */
-export const DASHBOARD_EMPLOYEE_ROLES = EMPLOYEE_ROLES;
-
-/** Canonical (non-legacy) role ids used in role management UI. */
+/** Employee grants have exactly one role domain: admin_users.role. */
 export const CANONICAL_EMPLOYEE_ROLES = [
-  "super_admin",
-  "security_admin",
-  "operations_manager",
-  "platform_operator",
-  "campaign_manager",
-  "partner_operations_manager",
-  "fraud_analyst",
-  "trust_safety_analyst",
-  "support_agent",
-  "support_lead",
-  "finance_operator",
-  "compliance_analyst",
-  "programme_operations_manager",
-  "executive_viewer",
-  "product_operations",
-  "engineering_operations",
-] as const satisfies readonly EmployeeRole[];
-
+  "super_admin", "security_admin", "operations_manager", "platform_operator",
+  "campaign_manager", "partner_operations_manager", "fraud_analyst",
+  "trust_safety_analyst", "support_agent", "support_lead", "finance_operator",
+  "compliance_analyst", "programme_operations_manager", "executive_viewer",
+  "product_operations", "engineering_operations",
+] as const;
 export type CanonicalEmployeeRole = (typeof CANONICAL_EMPLOYEE_ROLES)[number];
-
-export const LEGACY_EMPLOYEE_ROLE_ALIASES: Record<string, CanonicalEmployeeRole> = {
-  admin: "operations_manager",
-  moderator: "product_operations",
-  support: "support_agent",
-  compliance_officer: "compliance_analyst",
-  government: "programme_operations_manager",
-};
+export type EmployeeRole = CanonicalEmployeeRole;
 
 export type DataScopePreset =
   | "global"
@@ -564,37 +510,11 @@ export const EMPLOYEE_ROLE_TEMPLATES: Record<
 };
 
 export function isEmployeeRole(value: string | null | undefined): value is EmployeeRole {
-  if (!value) return false;
-  return (EMPLOYEE_ROLES as readonly string[]).includes(value);
+  return (CANONICAL_EMPLOYEE_ROLES as readonly unknown[]).includes(value);
 }
 
-export function normalizeEmployeeRole(
-  role: string | null | undefined,
-): EmployeeRole | undefined {
-  if (!role) return undefined;
-  const normalized = role.trim().toLowerCase().replace(/-/g, "_");
-  if (!isEmployeeRole(normalized)) return undefined;
-  return normalized;
-}
-
-/** Resolve legacy aliases to canonical template ids. */
-export function resolveCanonicalEmployeeRole(
-  role: string | null | undefined,
-): CanonicalEmployeeRole | undefined {
-  const normalized = normalizeEmployeeRole(role);
-  if (!normalized) return undefined;
-  if (normalized in EMPLOYEE_ROLE_TEMPLATES) {
-    return normalized as CanonicalEmployeeRole;
-  }
-  return LEGACY_EMPLOYEE_ROLE_ALIASES[normalized];
-}
-
-export function getEmployeeRoleTemplate(
-  role: string | null | undefined,
-): EmployeeRoleTemplate | undefined {
-  const canonical = resolveCanonicalEmployeeRole(role);
-  if (!canonical) return undefined;
-  return EMPLOYEE_ROLE_TEMPLATES[canonical];
+export function getEmployeeRoleTemplate(role: string | null | undefined): EmployeeRoleTemplate | undefined {
+  return isEmployeeRole(role) ? EMPLOYEE_ROLE_TEMPLATES[role] : undefined;
 }
 
 export function capabilitiesForEmployeeRole(

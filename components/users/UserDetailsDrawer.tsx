@@ -62,7 +62,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   User,
-  userRoleSchema,
+  employeeRoleSchema,
   userStatusSchema,
   RewardTransaction,
 } from "@/schemas";
@@ -78,6 +78,7 @@ import {
   getUserRewardTransactions,
   getUserPointsBalance,
 } from "@/app/actions/users";
+import { EMPLOYEE_ROLE_OPTIONS } from "@/features/authorization/roleOptions";
 import { exportToJSON } from "@/lib/export";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -85,7 +86,7 @@ const editUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
-  role: userRoleSchema,
+  employeeRole: employeeRoleSchema.nullable(),
   status: userStatusSchema,
   organization: z.string().optional(),
   languagePreference: z.string().default("en"),
@@ -130,7 +131,7 @@ export function UserDetailsDrawer({
       name: "",
       email: "",
       phone: "",
-      role: "rider",
+      employeeRole: null,
       status: "active",
       organization: "",
       languagePreference: "en",
@@ -146,7 +147,7 @@ export function UserDetailsDrawer({
         name: user.name,
         email: user.email,
         phone: user.phone || "",
-        role: user.role,
+        employeeRole: user.employeeRole ?? null,
         status: user.status,
         organization: user.organization || "",
         languagePreference: user.languagePreference || "en",
@@ -239,9 +240,11 @@ export function UserDetailsDrawer({
 
     setIsLoading(true);
     try {
+      const { employeeRole, ...profile } = data;
       const result = await updateUser({
         id: user.id,
-        ...data,
+        ...profile,
+        ...(employeeRole !== (user.employeeRole ?? null) ? { employeeRole } : {}),
       });
 
       if (!result.success) {
@@ -344,12 +347,11 @@ export function UserDetailsDrawer({
 
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case "admin":
       case "super_admin":
         return (
           <Badge variant="warning">
             <Shield className="h-3 w-3 mr-1" />
-            {role === "super_admin" ? "Super Admin" : "Admin"}
+            Super Admin
           </Badge>
         );
       case "advertiser":
@@ -520,15 +522,16 @@ export function UserDetailsDrawer({
                         />
                         <FormField
                           control={form.control}
-                          name="role"
+                          name="employeeRole"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-sm font-semibold">
-                                Role *
+                                Employee role
                               </FormLabel>
+                              <p className="text-sm text-muted-foreground">Account type: {user.accountType ?? "employee"}. Employee access does not change this identity.</p>
                               <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
+                                onValueChange={(value) => field.onChange(value === "none" ? null : value)}
+                                value={field.value ?? "none"}
                               >
                                 <FormControl>
                                   <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
@@ -536,67 +539,8 @@ export function UserDetailsDrawer({
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="rider">Rider</SelectItem>
-                                  <SelectItem value="advertiser">
-                                    Advertiser
-                                  </SelectItem>
-                                  <SelectItem value="operations_manager">
-                                    Operations Manager
-                                  </SelectItem>
-                                  <SelectItem value="admin">
-                                    Admin (legacy)
-                                  </SelectItem>
-                                  <SelectItem value="super_admin">
-                                    Super Administrator
-                                  </SelectItem>
-                                  <SelectItem value="security_admin">
-                                    Security Administrator
-                                  </SelectItem>
-                                  <SelectItem value="campaign_manager">
-                                    Campaign Manager
-                                  </SelectItem>
-                                  <SelectItem value="partner_operations_manager">
-                                    Partner Operations Manager
-                                  </SelectItem>
-                                  <SelectItem value="fraud_analyst">
-                                    Fraud Analyst
-                                  </SelectItem>
-                                  <SelectItem value="trust_safety_analyst">
-                                    Trust &amp; Safety Analyst
-                                  </SelectItem>
-                                  <SelectItem value="support_agent">
-                                    Support Agent
-                                  </SelectItem>
-                                  <SelectItem value="support_lead">
-                                    Support Lead
-                                  </SelectItem>
-                                  <SelectItem value="finance_operator">
-                                    Finance Operator
-                                  </SelectItem>
-                                  <SelectItem value="compliance_analyst">
-                                    Compliance Analyst
-                                  </SelectItem>
-                                  <SelectItem value="programme_operations_manager">
-                                    Programme Operations Manager
-                                  </SelectItem>
-                                  <SelectItem value="executive_viewer">
-                                    Executive Viewer
-                                  </SelectItem>
-                                  <SelectItem value="product_operations">
-                                    Product Operations
-                                  </SelectItem>
-                                  <SelectItem value="engineering_operations">
-                                    Engineering Operations
-                                  </SelectItem>
-                                  <SelectItem value="platform_operator">
-                                    Platform Operator
-                                  </SelectItem>
-                                  <SelectItem value="moderator">
-                                    Moderator (legacy)
-                                  </SelectItem>
-                                  <SelectItem value="support">
-                                    Support (legacy)
-                                  </SelectItem>
+                                  <SelectItem value="none">No employee access</SelectItem>
+                                  {EMPLOYEE_ROLE_OPTIONS.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                               <FormMessage />

@@ -21,7 +21,7 @@ const adminRow: AdminUserRecord = {
   id: "admin-row-1",
   userId: USER_ID,
   email: "admin@movrr.io",
-  role: "admin",
+  role: "operations_manager",
 };
 
 const riderRow: RiderProfileRecord = {
@@ -109,7 +109,7 @@ describe("authenticateRequest", () => {
       userId: USER_ID,
       email: EMAIL,
       adminUserId: "admin-row-1",
-      role: "admin",
+      role: "operations_manager",
     });
     expect(result.value.correlationId).toBe("c-admin");
     expect(result.value.permissions).toEqual([]);
@@ -233,5 +233,23 @@ describe("authenticateRequest", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.principal.type).toBe("organisation");
+  });
+  it("resolves an owned Rider operation without replacing employee or organisation identity", async () => {
+    const deps=createDeps({findAdminUser:vi.fn().mockResolvedValue({...adminRow,role:"partner_operations_manager"}),findOrganisationMembership:vi.fn().mockResolvedValue(membershipRow),findRiderProfile:vi.fn().mockResolvedValue(riderRow)});
+    const owned=await authenticateRequest({accessToken:"valid-jwt",preferRider:true},deps);
+    expect(owned.ok && owned.value.principal).toMatchObject({type:"rider",riderId:riderRow.id});
+    const operations=await authenticateRequest({accessToken:"valid-jwt"},deps);
+    expect(operations.ok && operations.value.principal).toMatchObject({type:"admin",role:"partner_operations_manager"});
+  });
+  it.each([null,"admin","moderator","support","unknown"])("does not derive employee authority from a retained or obsolete staff record: %s",async role=>{
+    const result=await authenticateRequest({accessToken:"valid-jwt"},createDeps({findAdminUser:vi.fn().mockResolvedValue({...adminRow,role}),findRiderProfile:vi.fn().mockResolvedValue(riderRow)}));
+    expect(result.ok && result.value.principal.type).toBe("rider");
+  });
+  it("does not let employee scope suppress self-service fulfilment or merge Rider privileges into staff commands",async()=>{
+    const deps=createDeps({findAdminUser:vi.fn().mockResolvedValue({...adminRow,role:"campaign_manager"}),findRiderProfile:vi.fn().mockResolvedValue(riderRow)});
+    const own=await authenticateRequest({accessToken:"valid-jwt",requiredCapability:"fulfilment.read"},deps);
+    expect(own.ok && own.value.principal.type).toBe("rider");
+    const staff=await authenticateRequest({accessToken:"valid-jwt",requiredCapability:"fulfilment.refund"},deps);
+    expect(staff.ok && staff.value.principal.type).toBe("admin");
   });
 });

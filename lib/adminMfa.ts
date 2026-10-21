@@ -130,7 +130,7 @@ const getAdminUserByUserId = async (userId: string) => {
   const supabaseAdmin = createSupabaseAdminClient();
   const { data, error } = await supabaseAdmin
     .from("admin_users")
-    .select("id, user_id, email, role")
+    .select("id, user_id, email, role").not("role", "is", null)
     .eq("user_id", userId)
     .maybeSingle<AdminMfaAdminUser>();
 
@@ -250,7 +250,7 @@ export async function getAdminMfaRecoveryCandidates(
   const supabaseAdmin = createSupabaseAdminClient();
   const query = supabaseAdmin
     .from("admin_users")
-    .select("user_id, email, role")
+    .select("user_id, email, role").not("role", "is", null)
     .order("role", { ascending: true })
     .order("email", { ascending: true });
 

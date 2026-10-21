@@ -1,7 +1,7 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { employeeHasCapability } from "@/features/organisations/domain/employeeRoleTemplates";
 vi.mock("server-only", () => ({}));
-const state = vi.hoisted(() => ({ role: "support", requireCapability: vi.fn(), client: vi.fn(), from: vi.fn(), revalidate: vi.fn() }));
+const state = vi.hoisted(() => ({ role: "support_agent", requireCapability: vi.fn(), client: vi.fn(), from: vi.fn(), revalidate: vi.fn() }));
 vi.mock("@/lib/admin", () => ({ requireCapability: (...args: unknown[]) => state.requireCapability(...args) }));
 vi.mock("@/lib/supabase-admin", () => ({ createSupabaseAdminClient: () => state.client() }));
 vi.mock("next/cache", () => ({ revalidatePath: (...args: unknown[]) => state.revalidate(...args) }));
@@ -14,7 +14,7 @@ vi.mock("@/emails/password-reset", () => ({ default: () => null, passwordResetTe
 import { getUsers, createUser, updateUser, toggleUserStatus, bulkUpdateUserStatus, deleteUser, sendPasswordResetEmail, updateUserRole, exportUserData } from "@/app/actions/users";
 import { getRiders, updateRiderProfile, bulkUpdateRiderStatus, setCommunityRideCreatorAccess } from "@/app/actions/riders";
 beforeEach(() => {
-  vi.clearAllMocks(); state.role = "support";
+  vi.clearAllMocks(); state.role = "support_agent";
   state.requireCapability.mockImplementation(async (capability: string) => {
     if (!employeeHasCapability(state.role, capability)) throw new Error("Missing capability: " + capability);
     return { authUser: { id: "operator", email: "operator@example.test" }, adminUser: { role: state.role } };
@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 describe("Users/Riders direct server-action authorization", () => {
-  it.each(["support", "support_agent"])("%s may read Users/Riders without mutation", async (role) => {
+  it.each(["support_agent"])("%s may read Users/Riders without mutation", async (role) => {
     state.role = role;
     expect((await getUsers()).success).toBe(true);
     expect((await getRiders()).success).toBe(true);

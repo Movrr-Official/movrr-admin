@@ -179,7 +179,7 @@ export async function assertEligibleWorkboardInvitee(
   if (!data?.user_id || !data.email) {
     return fail(
       "not_provisioned",
-      "Workboard invites require an existing MOVRR admin account (admin, super admin, or moderator). Create the user in Admin → Users first.",
+      "Workboard invites require an existing active employee with workboard.access. Assign an employee membership in Admin → Users first.",
     );
   }
 
@@ -192,7 +192,7 @@ export async function assertEligibleWorkboardInvitee(
     return fail("email_mismatch", "Invitee email does not match platform identity");
   }
 
-  const role = String(data.role || "").toLowerCase();
+  const role = String(data.role || "");
   if (!isWorkboardInviteEligibleRole(role)) {
     return fail(
       "ineligible_role",

@@ -11,6 +11,7 @@ export async function discoveryRoute(request: Request) {
         request,
         authDeps: productionAuthDeps,
         capability: "rewards.catalog.read",
+        preferRider: true,
         handle: async (ctx) => {
             try {
                 return await service.discover(ctx, Object.fromEntries(new URL(request.url).searchParams));

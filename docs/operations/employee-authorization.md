@@ -4,8 +4,8 @@
 |--|--|
 | **Purpose** | Operate, monitor, troubleshoot, and recover Admin employee authorization in production |
 | **Audience** | Operations, Support, Security, SRE, on-call engineers |
-| **Status** | Active |
-| **Last updated** | 2026-07-30 |
+| **Status** | Canonical source verified; migration 070 production approval pending |
+| **Last updated** | 2026-10-21 |
 | **Owner** | Platform Operations / Admin Engineering |
 | **Slug** | `employee-authorization` |
 
@@ -68,7 +68,7 @@ Authorization is **application-layer** on service-role Supabase for Admin. Do no
 | Privileged security | `security_admin` (rare) |
 | Break-glass | `super_admin` (rarest) |
 
-Avoid assigning legacy `admin` for new hires; keep it only for unmigrated accounts.
+Assign canonical employee roles only. Migration 070 converts historical values once; no runtime alias remains.
 
 ### Privileged promotion
 
@@ -79,7 +79,7 @@ Avoid assigning legacy `admin` for new hires; keep it only for unmigrated accoun
 
 ### Revoking access
 
-1. Set `public.user` inactive **or** change role to non-employee / delete `admin_users` row via existing Users flows.
+1. Select No employee access in User Details, which calls `assign_employee_role(..., NULL)`. Preserve the staff row ID, Rider classification/history and organisation memberships. Suspend the account separately when all account access must stop.
 2. Confirm user cannot open Admin (expect `/unauthorized` or sign-in redirect).
 3. Invalidate sessions if security incident (sign-out / revoke refresh as per MFA/session runbooks).
 
@@ -134,7 +134,7 @@ Until dedicated dashboards ship:
 | Cannot assign Super Admin | Missing `users.role.approve` | Security Admin performs assignment |
 | Export button missing / fails | Missing `exports.execute` or rate limit | Confirm role; wait / retry; check audit errors |
 | Fraud Verify buttons missing | Missing `fraud.resolve` | Assign Fraud Analyst / Operations Manager |
-| Legacy `admin` behaves like Operations Manager | Expected alias | Educate; migrate label when convenient |
+| Historical employee role rejected | Required canonical contract | Verify approved migration 070 was released with matching source; do not restore aliases |
 | Partner activation blocked | Needs `partners.approve` + SoD | Partner Ops Manager / Operations Manager who is not creator |
 
 ---
@@ -161,7 +161,7 @@ Until dedicated dashboards ship:
 | Next.js `proxy.ts` | Login gate (Next 16 network boundary) |
 | Platform API AuthZ | Separate principal path; shared capability strings |
 
-**No SQL migration required** for AuthZ day-1.
+Migration 070 requires approval and coordinated release with matching Admin source. Follow the [release acceptance package](../verification/employee-rbac-authority/README.md).
 
 ---
 

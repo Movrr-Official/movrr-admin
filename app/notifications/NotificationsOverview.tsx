@@ -1,4 +1,5 @@
 "use client";
+import { EMPLOYEE_ROLE_OPTIONS, PRODUCT_ROLE_OPTIONS } from "@/features/authorization/roleOptions";
 
 import { useMemo, useState, useTransition } from "react";
 import { Bell, BellRing, CheckCircle, Megaphone } from "lucide-react";
@@ -38,7 +39,7 @@ import {
   NotificationStatusFilter,
   NotificationTarget,
   NotificationType,
-  UserRole,
+  CreateNotificationInput,
 } from "@/schemas";
 
 const notificationTypeLabels: Record<NotificationType, string> = {
@@ -65,15 +66,7 @@ const targetOptions: Array<{ value: NotificationTarget; label: string }> = [
   { value: "userIds", label: "Specific Users" },
 ];
 
-const roleOptions = [
-  { value: "rider", label: "Rider" },
-  { value: "advertiser", label: "Advertiser" },
-  { value: "government", label: "Government" },
-  { value: "admin", label: "Admin" },
-  { value: "super_admin", label: "Super Admin" },
-  { value: "moderator", label: "Moderator" },
-  { value: "support", label: "Support" },
-];
+const roleOptions = [...PRODUCT_ROLE_OPTIONS, ...EMPLOYEE_ROLE_OPTIONS];
 
 const statusOptions: Array<{ value: NotificationStatusFilter; label: string }> =
   [
@@ -94,7 +87,7 @@ export default function NotificationsOverview() {
   const [message, setMessage] = useState("");
   const [type, setType] = useState<NotificationType>("system");
   const [target, setTarget] = useState<NotificationTarget>("all");
-  const [role, setRole] = useState<UserRole>("rider");
+  const [role, setRole] = useState<NonNullable<CreateNotificationInput["role"]>>("rider");
   const [userIdsInput, setUserIdsInput] = useState("");
   const [metadataInput, setMetadataInput] = useState("{}");
   const [respectPreferences, setRespectPreferences] = useState(true);
@@ -295,7 +288,7 @@ export default function NotificationsOverview() {
                   <Label htmlFor="notification-role">Role</Label>
                   <Select
                     value={role}
-                    onValueChange={(value) => setRole(value as UserRole)}
+                    onValueChange={(value) => setRole(value as NonNullable<CreateNotificationInput["role"]>)}
                   >
                     <SelectTrigger id="notification-role" className="w-full">
                       <SelectValue placeholder="Select role" />

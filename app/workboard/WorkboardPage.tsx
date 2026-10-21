@@ -1161,8 +1161,8 @@ export default function WorkboardPage() {
             <div className="space-y-5">
               <div className="rounded-xl border bg-muted/30 p-4">
                 <p className="mb-3 text-xs text-muted-foreground">
-                  Invite existing MOVRR admin users only (admin, super admin, or
-                  moderator). Create the account under Users before inviting.
+                  Invite an existing active employee with workboard.access.
+                  Assign employee access under Users before inviting.
                 </p>
                 <div className="flex flex-col gap-3 md:flex-row md:items-end">
                   <div className="flex-1 space-y-1">

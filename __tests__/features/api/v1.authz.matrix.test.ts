@@ -49,7 +49,7 @@ function principalFor(
         role: "owner",
       };
     case "support":
-      return { type: "admin", userId: "user-support", email: "support@test", adminUserId: "support-1", role: "support" };
+      return { type: "admin", userId: "user-support", email: "support@test", adminUserId: "support-1", role: "support_agent" };
     case "admin":
       return {
         type: "admin",
@@ -122,6 +122,20 @@ async function apiFor(
 }
 
 describe("Platform API /api/v1 authz matrix", () => {
+  it("keeps owned Wallet reads isolated when the same Rider is also an employee",async()=>{
+    const deps=authDepsFor({...principalFor("support"),role:"partner_operations_manager"} as AuthenticatedPrincipal);
+    deps.findRiderProfile=async()=>({id:"rider-own",userId:"user-support"});
+    const seen:string[]=[];
+    const api=await createPlatformApiForTests({authDeps:deps,ledger:{getBalance:async riderId=>{seen.push(riderId);return {riderId,pointsBalance:9,lifetimePointsEarned:9,transactionCount:0,asOf:new Date().toISOString()}},listEntries:async(_id,input)=>({entries:[],nextCursor:null,asOf:input?.asOf??new Date().toISOString()})}});
+    const owned=await api.wallet.balance(request("GET","http://x/api/v1/wallet/balance"));
+    expect(owned.status).toBe(200);expect((await owned.json()).data.riderId).toBe("rider-own");expect(seen).toEqual(["rider-own"]);
+    expect((await api.organisations.list(request("GET","http://x/api/v1/organisations"))).status).toBe(200);
+    // A role without staff Wallet authority can still read its own Rider Wallet,
+    // and cannot turn the same handler into another account's investigation view.
+    deps.findAdminUser=async()=>({id:"employee",userId:"user-support",email:null,role:"campaign_manager"});
+    expect((await api.wallet.balance(request("GET","http://x/api/v1/wallet/balance"))).status).toBe(200);
+    expect((await api.wallet.balance(request("GET","http://x/api/v1/wallet/balance?riderId=11111111-1111-4111-8111-111111111111"))).status).toBe(403);
+  });
   it("statement authenticates, enforces rider ownership and denies organisation access", async () => {
     const rider = await apiFor("rider");
     expect((await rider.wallet.statement(new Request("http://x/api/v1/wallet/statement"))).status).toBe(401);

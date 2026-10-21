@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-20",
+  "updatedAt": "2026-10-21",
   "scope": "MOVRR integrated production acceptance across Mobile, Admin, web and Supabase; owner device and external-provider acceptance remain open",
   "evidence": "../verification/final-dashboard-performance/production.json",
   "milestones": [
@@ -90,7 +90,10 @@
       "status": "deployed; fresh production journal and live function-body comparison passed",
       "commit": "7d5d53753a1c68b10c49ec614e4360c580e8f9ce",
       "deploymentId": "dpl_2Hvf87yio6ZWFxzzRprx4S6EA4xn",
-      "migrations": ["20261020195301", "20261020195302"],
+      "migrations": [
+        "20261020195301",
+        "20261020195302"
+      ],
       "validation": "068/069 journal source checks and 13 provisioning function bodies match. Default Admin suite: 692 passing; opt-in provisioning: 33 real PostgreSQL plus 7 real local GoTrue tests passed. Atomic creation: 79 PostgreSQL/PostGIS assertions. No production identity, membership or email mutation.",
       "acceptanceLimit": "Live invitation provider acceptance, inbox receipt and real invitation acceptance remain unverified; no explicitly authorized controlled recipient established. Database idempotency does not establish exactly-once email delivery."
     },
@@ -108,6 +111,13 @@
       "android": "Latest Preview 4c74603e-7ba8-4b6d-b478-fe3bec24b2bc, 1.0.0 (4), source 702ea8c6c243a71da345272f8493700f6349264d; existing preview OTA at 282aed4 also predates native/config/PiP changes. New compatible native build needs approval. First-entry blank PiP remains undiagnosed and uncertified.",
       "checklist": "../../../movrr-mobile/docs/operations/physical-device-launch-acceptance.md",
       "access": "No connected Android device, Chrome DevTools session or CUA browser/app surface. No credential/session/MFA extraction or authentication bypass."
+    },
+    {
+      "name": "Canonical employee identity and RBAC retirement",
+      "status": "source and isolated contracts verified; coordinated production approval pending",
+      "work": "Retire runtime employee aliases, legacy account-role assignment and duplicate employee grant writes. Preserve Rider/employee coexistence and staff references; canonical NULL revocation, atomic profile/role command, invitation and RLS enforcement.",
+      "evidence": "../verification/employee-rbac-authority/README.md",
+      "release": "Migration 070 and matching Admin source require approval together; no deployment or production mutation executed."
     }
   ],
   "operatingStates": {

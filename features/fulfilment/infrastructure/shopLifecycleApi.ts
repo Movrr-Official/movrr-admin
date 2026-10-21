@@ -29,7 +29,8 @@ export async function shopRpc(name: string, args: Record<string, unknown>) {
 /** Boundary adapter only: all durable lifecycle effects execute in PostgreSQL. */
 export function attachShopLifecycle(api: PlatformApiHandlers, authDeps: AuthenticateRequestDeps): PlatformApiHandlers {
   const route = (request: Request, capability: string, handle: Parameters<typeof platformRoute>[0]["handle"]) =>
-    platformRoute({ request, capability, authDeps, handle });
+    platformRoute({ request, capability, authDeps, handle,
+      preferRider: /^\/api\/v1\/rewards(?:\/|$)/.test(new URL(request.url).pathname) });
   const mutate = (request: Request, id: string | null, command: "cancel" | "refund" | "collect" | "consume" | "retry") =>
     route(request, `fulfilment.${command === "collect" ? "confirm" : command === "consume" ? "validate" : command === "retry" ? "cancel" : command}`, async (ctx, req) => {
       const key = operation.safeParse(req.headers.get("Idempotency-Key"));

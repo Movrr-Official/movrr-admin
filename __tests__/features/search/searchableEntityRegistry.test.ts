@@ -58,10 +58,10 @@ describe("Searchable Entity Registry navigation contracts", () => {
   it("gates Users by users.read, including the approved legacy Support role", () => {
     const userEntity = SEARCHABLE_ENTITY_REGISTRY.user;
 
-    expect(canAccessSearchableEntity(userEntity, "admin")).toBe(true);
+    expect(canAccessSearchableEntity(userEntity, "operations_manager")).toBe(true);
     expect(canAccessSearchableEntity(userEntity, "super_admin")).toBe(true);
     expect(canAccessSearchableEntity(userEntity, "moderator")).toBe(false);
-    expect(canAccessSearchableEntity(userEntity, "support")).toBe(true);
+    expect(canAccessSearchableEntity(userEntity, "support")).toBe(false);
     expect(canAccessSearchableEntity(userEntity, "support_agent")).toBe(true);
     expect(canAccessSearchableEntity(userEntity, "support_lead")).toBe(true);
     expect(canAccessSearchableEntity(userEntity, "executive_viewer")).toBe(false);
@@ -72,7 +72,7 @@ describe("Searchable Entity Registry navigation contracts", () => {
 
   it("allows moderators to access routes when searchable is enabled later", () => {
     const routeEntity = SEARCHABLE_ENTITY_REGISTRY.route;
-    expect(canAccessSearchableEntity(routeEntity, "moderator")).toBe(true);
+    expect(canAccessSearchableEntity(routeEntity, "product_operations")).toBe(true);
     expect(canAccessSearchableEntity(routeEntity, "support")).toBe(false);
   });
 

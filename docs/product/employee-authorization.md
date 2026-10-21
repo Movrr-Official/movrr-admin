@@ -4,8 +4,8 @@
 |--|--|
 | **Purpose** | Why MOVRR Admin uses capability-first employee authorization and how operators experience it |
 | **Audience** | Product, Ops leadership, Support, Security, Engineering, QA |
-| **Status** | Shipped |
-| **Last updated** | 2026-07-30 |
+| **Status** | Canonical source verified; migration 070 production approval pending |
+| **Last updated** | 2026-10-21 |
 | **Owner** | Platform Operations + Admin Engineering |
 | **Slug** | `employee-authorization` |
 
@@ -70,7 +70,7 @@ Operators should never need to understand Postgres enums or scattered allow-list
 - An operator never discovers an action they cannot perform.
 - An authorized capability is never hidden from a role that holds it.
 - Adding a role does not require rewriting authorization logic — only a capability bundle.
-- Legacy roles (`admin`, `moderator`, `support`, …) keep working via aliases during transition.
+- Only canonical employee roles are accepted. Historical values are converted once by approved migration 070; runtime aliases are retired.
 
 ---
 
@@ -96,7 +96,7 @@ Operators should never need to understand Postgres enums or scattered allow-list
 ### Assigning access
 
 1. Create or edit the user in **Users**.
-2. Choose a **canonical employee role** (prefer these over legacy aliases).
+2. Choose a **canonical employee role**. Rider account type and history are preserved when adding employee access.
 3. Non-privileged roles: assignable by operators with `users.role.assign`.
 4. Privileged roles (`super_admin`, `security_admin`): require `users.role.approve` (Security Administrator / Super Administrator).
 
@@ -123,7 +123,7 @@ Operators should never need to understand Postgres enums or scattered allow-list
 | Product Operations | Product Operations | Routes, workboard, community |
 | Engineering Operations | Engineering Operations | Platform reliability + feature flags |
 
-**Legacy aliases (still valid):** `admin` → Operations Manager · `moderator` → Product Operations · `support` → Support Agent · `compliance_officer` → Compliance Analyst · `government` → Programme Operations Manager.
+**Retired inputs:** `admin`, `moderator`, `support`, `compliance_officer`, `government`. These are rejected as employee assignments after migration 070.
 
 ---
 
@@ -210,7 +210,7 @@ Employee Authorization does **not**:
 ## FAQ
 
 **Q: Should we still assign `admin`?**  
-Prefer `operations_manager`. `admin` remains as a legacy alias.
+Assign `operations_manager` where authorized. `admin` is not an employee-role input.
 
 **Q: Why can’t I approve a campaign I created?**  
 Separation of Duties. Ask a colleague with `campaigns.approve` who did not create it.
@@ -219,7 +219,7 @@ Separation of Duties. Ask a colleague with `campaigns.approve` who did not creat
 Your role lacks `fraud.review`. Request Fraud Analyst or Operations Manager via your lead / Security.
 
 **Q: Do we need a database migration?**  
-Not for day-1 auth. `admin_users.role` is text; legacy aliases work. No enum expansion required to operate.
+Migration 070 and matching Admin source must be released together after approval. No `user_role` enum expansion is required. See the [release acceptance package](../verification/employee-rbac-authority/README.md).
 
 **Q: Where do product riders/advertisers fit?**  
 They are not Admin employee roles. They use Platform API principals in movrr-app / mobile.

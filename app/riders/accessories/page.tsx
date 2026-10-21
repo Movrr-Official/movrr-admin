@@ -18,7 +18,7 @@ export default async function AccessoriesPage({
   const inventory = await getAvailableEquipment(params.inventoryCursor);
   const canManage =
     actor.adminUser &&
-    (await import("@/lib/authPermissions")).hasAdminPermission(
+    (await import("@/lib/authPermissions")).hasCapability(
       actor.adminUser.role,
       "riders.manage",
     );

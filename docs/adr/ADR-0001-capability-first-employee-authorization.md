@@ -14,7 +14,7 @@ MOVRR Admin outgrew coarse role allow-lists (`admin` / `moderator` / `support`).
 ## Decision
 
 1. **Capabilities are the platform contract.** No Admin feature authorizes on employee role names for feature access.
-2. **Roles are curated capability bundles** (`employeeRoleTemplates`), including legacy aliases for migration.
+2. **Roles are curated capability bundles** (`employeeRoleTemplates`). The migration-only alias transition is retired by migration 070; runtime accepts canonical roles exclusively.
 3. **Extend** `CapabilityCatalog` + `authorisationService` — do not replace them.
 4. **Dashboard Capability Registry** is the single source for navigation, pages, search, commands, exports, and SoD metadata.
 5. **`admin_users.role`** remains the employee role source of truth (text). Do **not** expand `public.user.role` enum with every job title at this stage.

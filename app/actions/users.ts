@@ -3,14 +3,13 @@
 import { provisionProduct, advertiserProvisioningSchema } from "@/features/identity/application/productProvisioning";
 import { notifyAccountSetup } from "@/lib/services/accountSetupNotification";
 import { provisionEmployee } from "@/features/identity/application/employeeProvisioning";
-import { EMPLOYEE_ROLES, resolveCanonicalEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
+import { isEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
 import {
   capabilityRequiredToAssignRole,
-  roleAssignmentRequiresSecurityApproval,
 } from "@/features/authorization/sod";
 
 import { revalidatePath } from "next/cache";
-import { requireCapability } from "@/lib/admin";
+import { requireCapability, requireAnyCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   User,
@@ -18,6 +17,7 @@ import {
   updateUserRoleSchema,
   toggleUserStatusSchema,
   userRoleSchema,
+  employeeRoleSchema,
   accountCreationRoleSchema,
   userStatusSchema,
   RewardTransaction,
@@ -108,13 +108,13 @@ const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   email: z.string().email().optional(),
   phone: z.string().optional(),
-  role: userRoleSchema.optional(),
+  employeeRole: employeeRoleSchema.nullable().optional(),
   status: z.enum(["active", "inactive", "pending"]).optional(),
   organization: z.string().optional(),
   languagePreference: z.string().optional(),
   isVerified: z.boolean().optional(),
   accountNotes: z.string().optional(),
-});
+}).strict();
 
 const deleteUserSchema = z.object({
   userId: z.string(),
@@ -143,8 +143,6 @@ const buildConfirmUrl = (hashedToken: string, type: string): string => {
   url.searchParams.set("type", type);
   return url.toString();
 };
-
-const ADMIN_ACCESS_ROLES = new Set<string>(EMPLOYEE_ROLES);
 
 type UserActivityEntry = {
   id: string;
@@ -304,7 +302,7 @@ export async function getUsers(
 
     let query = supabaseAdmin.from("user").select("*");
 
-    if (filters?.role && !ADMIN_ACCESS_ROLES.has(filters.role)) {
+    if (filters?.role && ["rider", "advertiser"].includes(filters.role)) {
       query = query.eq("role", filters.role);
     }
 
@@ -351,7 +349,9 @@ export async function getUsers(
       email: row.email,
       name: row.name,
       phone: row.phone ?? undefined,
-      role: employeeRoles.get(row.id) ?? row.role,
+      role: isEmployeeRole(employeeRoles.get(row.id)) ? employeeRoles.get(row.id) : ["rider","advertiser"].includes(row.role) ? row.role : "unassigned",
+      employeeRole: isEmployeeRole(employeeRoles.get(row.id)) ? employeeRoles.get(row.id) : null,
+      accountType: row.role === "rider" || row.role === "advertiser" ? row.role : "employee",
       status: mapDbStatusToUi(row.status),
       createdAt: row.created_at ?? new Date().toISOString(),
       updatedAt: row.updated_at ?? new Date().toISOString(),
@@ -369,8 +369,7 @@ export async function getUsers(
     })) as User[];
 
     if (filters?.role) {
-      const role = resolveCanonicalEmployeeRole(filters.role);
-      users = users.filter((user) => role ? resolveCanonicalEmployeeRole(user.role) === role : user.role === filters.role);
+      users = users.filter((user) => user.role === filters.role || user.accountType === filters.role);
     }
 
     if (selectedAdvertiserIds.length > 0) {
@@ -415,7 +414,7 @@ export async function createUser(
       };
     }
 
-    const canonicalRole = resolveCanonicalEmployeeRole(validatedData.role);
+    const canonicalRole = isEmployeeRole(validatedData.role) ? validatedData.role : undefined;
     let account;
     if (canonicalRole) {
       await requireCapability(capabilityRequiredToAssignRole(canonicalRole), { mutation: true });
@@ -484,13 +483,12 @@ export async function updateUser(
     if (validatedData.accountNotes !== undefined)
       updateData.account_notes = validatedData.accountNotes;
 
-    if (validatedData.role) {
-      const role = resolveCanonicalEmployeeRole(validatedData.role) ?? validatedData.role;
-      await requireCapability(capabilityRequiredToAssignRole(role), { mutation: true });
+    if (validatedData.employeeRole !== undefined) {
+      await requireCapability(validatedData.employeeRole ? capabilityRequiredToAssignRole(validatedData.employeeRole) : "users.role.assign", { mutation: true });
+      updateData.employee_role = validatedData.employeeRole;
     }
     const { error } = await supabaseAdmin.rpc("update_admin_user_profile", {
       p_actor: auth.authUser.id, p_user: validatedData.id,
-      p_role: validatedData.role ? (resolveCanonicalEmployeeRole(validatedData.role) ?? validatedData.role) : null,
       p_patch: updateData,
     });
 
@@ -541,15 +539,10 @@ export async function updateUserRole(
   try {
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = updateUserRoleSchema.parse(data);
-    const canonicalRole =
-      resolveCanonicalEmployeeRole(validatedData.role) ?? validatedData.role;
-    // Privileged roles (super_admin / security_admin) require users.role.approve
-    const requiredCapability = roleAssignmentRequiresSecurityApproval(
-      canonicalRole,
-    )
-      ? "users.role.approve"
-      : capabilityRequiredToAssignRole(canonicalRole);
-    const auth = await requireCapability(requiredCapability, { mutation: true });
+    const canonicalRole = validatedData.role;
+    // PostgreSQL checks both the previous and requested role under the shared
+    // lock, including privileged demotion and revocation by security approvers.
+    const auth = await requireAnyCapability(["users.role.assign", "users.role.approve"], { mutation: true });
 
     const { error } = await supabaseAdmin.rpc("assign_employee_role", {
       p_actor: auth.authUser.id, p_user: validatedData.userId, p_role: canonicalRole,

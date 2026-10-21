@@ -56,7 +56,7 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     if (!healthy) throw new Error("Local GoTrue failed to start: " + execFileSync("docker", ["logs", "--tail", "12", container], { windowsHide: true }).toString());
-    await db.unsafe(`CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$ SELECT current_setting('request.jwt.claim.role',true) $$;
+    await db.unsafe(`CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$; CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$ SELECT current_setting('request.jwt.claim.role',true) $$;
       CREATE TYPE public.user_role AS ENUM('super_admin','admin','moderator','support','advertiser','rider','gov');
       CREATE TYPE public.user_status AS ENUM('active','suspended','pending','deleted');CREATE TYPE public.rider_status AS ENUM('active','inactive','suspended');
       CREATE TABLE public."user"(id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,email text UNIQUE,name text,phone text,organization text,avatar_url text,role public.user_role DEFAULT 'rider',status public.user_status DEFAULT 'active',created_at timestamptz,updated_at timestamptz,language_preference text,is_verified boolean,email_verified boolean,verification_level text,account_notes text);
@@ -75,6 +75,11 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
     await db`insert into admin_users(user_id,email,role) values(${actor},'operator@example.test','super_admin')`;
     const migration = await db.reserve();
     try { await migration.unsafe(readFileSync("scripts/068_employee_provisioning.sql", "utf8")); } finally { await migration.release(); }
+    const invitationSchema = readFileSync("scripts/050_platform_invitations.sql", "utf8");
+    await db.unsafe(invitationSchema.slice(0, invitationSchema.indexOf("CREATE INDEX")));
+    const notificationSchema=readFileSync("scripts/057_alignment_operations.sql","utf8");
+    await db.unsafe(notificationSchema.slice(notificationSchema.indexOf("CREATE TABLE public.ops_notification_send"),notificationSchema.indexOf("CREATE FUNCTION public.ops_notification_status")));
+    await db.begin(tx => tx.unsafe(readFileSync("scripts/070_employee_rbac_authority.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
     await db.unsafe(`CREATE FUNCTION fail_employee_grant() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF current_setting('test.fail_member',true)='on' THEN RAISE EXCEPTION 'Injected real Auth grant failure'; END IF; RETURN NEW; END $$;
       CREATE TRIGGER fail_employee_grant BEFORE INSERT ON admin_users FOR EACH ROW EXECUTE FUNCTION fail_employee_grant();`);
   }, 45000);

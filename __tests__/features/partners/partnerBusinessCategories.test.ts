@@ -89,7 +89,7 @@ describe("category HTTP update contract", () => {
     const { createPlatformApiForTests } = await import("@/features/platform/infrastructure/composePlatformApi");
     const api = await createPlatformApiForTests({ organisationStore: store, authDeps: {
       verifyAccessToken: async () => ({ userId: id, email: null }),
-      findAdminUser: async () => ["admin", "support"].includes(actor) ? { id, userId: id, email: null, role: actor } : null,
+      findAdminUser: async () => ["admin", "support"].includes(actor) ? { id, userId: id, email: null, role: actor === "admin" ? "operations_manager" : "support_agent" } : null,
       findOrganisationMembership: async () => actor === "owner" ? { id, organisationId: org.id, userId: id, role: "owner", organisationType: "reward_partner" } : null,
       findRiderProfile: async () => actor === "rider" ? { id, userId: id } : null,
     } });
