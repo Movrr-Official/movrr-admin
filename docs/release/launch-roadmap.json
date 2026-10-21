@@ -114,17 +114,18 @@
     },
     {
       "name": "Canonical employee identity and RBAC retirement",
-      "status": "source and isolated contracts verified; coordinated production approval pending",
+      "status": "deployed and production verified",
       "work": "Retire runtime employee aliases, legacy account-role assignment and duplicate employee grant writes. Preserve Rider/employee coexistence and staff references; canonical NULL revocation, atomic profile/role command, invitation and RLS enforcement.",
-      "evidence": "../verification/employee-rbac-authority/README.md",
-      "release": "Migration 070 and matching Admin source require approval together; no deployment or production mutation executed."
+      "evidence": "../verification/employee-rbac-authority/production.json",
+      "release": "Migration 20261021071500 / 070_employee_rbac_authority; Admin 89c3a0b7f874af7e3a68a343a22bed8bc244f142 / dpl_83NGcnrxQAu6CSShrAS4sAoCBcey at admin.movrr.nl. Scoped cutover hold removed; legacy operational authorities retired.",
+      "remaining": "Authenticated browser journeys, physical-device and controlled external-provider acceptance remain outstanding; no test identities or grants created."
     }
   ],
   "operatingStates": {
     "publicShopRedemption": "Disabled; production confirmed",
     "selfServiceDeletionIntake": "Enabled/version 1; production contract and actual MFA command/audit confirmed at 2026-10-20T17:39:58.979Z",
     "financialTestTransactions": "none executed",
-    "databaseSchemaAndPrivileges": "Community migration 065 applied as 20261020151107; only approved Community function bodies/ACL and trigger changed. All unrelated RLS and financial permissions verified unchanged. Approved deletion migrations 066/067 applied as 20261020171801/20261020171802; protected data and critical execution/receipt contracts preserved.",
+    "databaseSchemaAndPrivileges": "Community migration 065 applied as 20261020151107; only approved Community function bodies/ACL and trigger changed. All unrelated RLS and financial permissions verified unchanged. Approved deletion migrations 066/067 applied as 20261020171801/20261020171802; protected data and critical execution/receipt contracts preserved. Approved canonical employee RBAC migration 070 applied as 20261021071500 with protected identity/financial rows and 1091 unrelated functions preserved.",
     "mobileRuntimeAndReleases": "unchanged; existing EAS build/channel records inspected read-only; no build, OTA or submission initiated"
   },
   "mobileFirstEvidence": "../verification/mobile-first-alignment/production.json",

@@ -4,7 +4,7 @@
 |--|--|
 | **Purpose** | How capability-first employee AuthZ is realised in movrr-admin |
 | **Audience** | Engineers |
-| **Status** | Canonical source verified; migration 070 production approval pending |
+| **Status** | Canonical source and migration 070 deployed; production verified 2026-10-21 |
 | **Last updated** | 2026-10-21 |
 | **Owner** | Admin Engineering |
 | **Slug** | `employee-authorization` |
@@ -94,7 +94,7 @@ Admin authorization is **capability-first**. Employee roles in `admin_users.role
 | Existing historical employee values | Migration 070 converts once with an authorized actor and audit evidence |
 | `admin_users.role` | Canonical text or NULL for revoked access; staff row IDs retained |
 | `public.user.role` | Account classification only; employee assignment never changes existing account type |
-| SQL migration | 070 and matching Admin source require coordinated approval and release |
+| SQL migration | Approved 070 applied as `20261021071500` with matching Admin `89c3a0b` |
 | Deprecated helpers | Removed; callers use canonical capability assertions |
 | Enum expansion | **Not recommended now** — see product FAQ / ADR |
 
@@ -131,7 +131,7 @@ npx vitest run __tests__/features/authorization __tests__/ui/sidebarNavigation.t
 | Diagnostics UI | Done |
 | ABAC enforcement | Deferred (foundation only) |
 | Persisted break-glass / delegation | Deferred (runtime merge ready) |
-| DB migration | 070 locally verified; production approval pending |
+| DB migration | 070 deployed and production verified; see release acceptance evidence |
 
 Verification artefacts: Implementation Verification Report + Post-Implementation Re-Audit under `docs/security/`.
 

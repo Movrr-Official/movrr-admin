@@ -1,6 +1,8 @@
 # Canonical employee authority — release acceptance
 
-2026-10-21. Source and candidate migration verified locally; production migration/deployment require authorization. No production identity, membership, financial record or email was changed by this remediation.
+2026-10-21. The approved production rollout is complete: migration `20261021071500` (`070_employee_rbac_authority`) and Admin `89c3a0b7f874af7e3a68a343a22bed8bc244f142`, deployment `dpl_83NGcnrxQAu6CSShrAS4sAoCBcey`, at `admin.movrr.nl`. See [production evidence](production.json) and [preflight schema evidence](preflight-contracts.json).
+
+The migration converted three historical employee role labels to `operations_manager`, with audit records. Protected identities, account types, Rider history, organisation memberships, financial rows and staff IDs were unchanged within the migration. After traffic resumed, separate operational activity granted `partner_operations_manager` to an existing Rider while preserving Rider classification/profile; acceptance did not initiate that grant. No synthetic production identity, financial mutation or email was created by this acceptance run.
 
 ## Authoritative contracts
 
@@ -29,7 +31,8 @@ Removed runtime aliases, deprecated role/permission helpers, role-array shims, a
 
 | Environment | Result |
 |---|---|
-| Production, read-only metadata | Three historical `admin` employee rows and one `super_admin`; restrictive historical staff references; 13 simple membership-existence policies inspected. No production remediation applied |
+| Pre-release production, read-only metadata | Three historical `admin` employee rows and one `super_admin`; restrictive historical staff references; 13 simple membership-existence policies inspected |
+| Released production | All ten installed function bodies match approved source; old RPC signatures absent, aliases denied, 13 existence policies retired and four restrictive Workboard policies installed. Five current employee memberships pass read-only effective-access checks; five active Rider own-identity checks pass; no duplicate/orphan employee grants |
 | Admin automated suite | 709 passed; 46 opt-in tests skipped by default and executed separately below |
 | Isolated PostgreSQL + actual provisioning handlers | 39 passed; assignment, revocation, canonicalization preservation, retries, concurrency, lost responses, status restrictions, privileged demotion, last-super-admin protection and atomic rollback |
 | Isolated actual GoTrue HTTP | 7 passed; exact identity provisioning, failed persistence/resume, concurrent creation, ordinary password login and invalid metadata denial |
@@ -54,4 +57,4 @@ Candidate: `scripts/070_employee_rbac_authority.sql`, SHA-256 `185617e57be2f3f33
 
 Do not roll back only the source or reinstall legacy granting functions. If cutover fails, keep employee mutation operations paused and use an approved coherent recovery/forward-fix plan preserving audit and identity data.
 
-Decision: GO for review/approval of this coordinated release; NO-GO for declaring the incident fixed in production before cutover, or full launch acceptance before required device and external-provider evidence.
+Decision: GO for the completed canonical RBAC production release. The temporary cutover hold is removed, retired RPC signatures return PostgREST `PGRST202`, aliases grant no employee capabilities, and canonical function bodies/ACLs match the approved source. Full launch acceptance still requires device and external-provider evidence. Authenticated browser journeys were unavailable in this environment; read-only existing-identity database checks are recorded separately.

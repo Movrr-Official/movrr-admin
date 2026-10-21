@@ -1,0 +1,571 @@
+{
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "verifiedAt": "2026-10-21T07:22:27.734Z",
+  "approval": "Explicit user approval for migration 070 and Admin revision 89c3a0b as one coordinated production release",
+  "migration": {
+    "version": "20261021071500",
+    "name": "070_employee_rbac_authority",
+    "checksum": "185617e57be2f3f33f926dc0c19380b793f3bd7aff4f079b406021d85d0f2728",
+    "appliedAt": "2026-10-21T07:18:26.676Z",
+    "baseline": [
+      {
+        "version": "20261020195302",
+        "name": "069_admin_creation_transactions",
+        "checksum": "f54359db7ebb47ab6068fc078136bf3ee8223ff67ba1c28a3de787eea543d4dc"
+      },
+      {
+        "version": "20261020195301",
+        "name": "068_employee_provisioning",
+        "checksum": "ef473752c15d0406961d96375642378f96cd442744f45980e32216dbcce6528c"
+      }
+    ],
+    "journalCreatedBy": "codex-authorized:89c3a0b7f874af7e3a68a343a22bed8bc244f142"
+  },
+  "deployment": {
+    "id": "dpl_83NGcnrxQAu6CSShrAS4sAoCBcey",
+    "sha": "89c3a0b7f874af7e3a68a343a22bed8bc244f142",
+    "url": "https://movrr-admin-a0we2oepr-movrrops-projects.vercel.app",
+    "domain": "https://admin.movrr.nl",
+    "state": "READY",
+    "gitSource": {
+      "type": "github",
+      "repoId": 1084919487,
+      "ref": "89c3a0b7f874af7e3a68a343a22bed8bc244f142",
+      "sha": "89c3a0b7f874af7e3a68a343a22bed8bc244f142"
+    },
+    "customDomainAliasDeployment": "dpl_83NGcnrxQAu6CSShrAS4sAoCBcey",
+    "previousId": "dpl_2Hvf87yio6ZWFxzzRprx4S6EA4xn"
+  },
+  "cutover": {
+    "candidateBuiltBeforeMigration": true,
+    "candidateAutoAssignCustomDomains": false,
+    "scopedHoldPath": "^/(users|advertisers|workboard|notifications|settings)(/.*)?$",
+    "holdRemoved": true,
+    "firewallEnabled": true,
+    "finalCustomRules": 0
+  },
+  "preservation": {
+    "migrationAtomicBefore": {
+      "data": {
+        "user": {
+          "count": "17",
+          "digest": "0cbcef55ed42f399af04adf0342ccaf2"
+        },
+        "rider": {
+          "count": "15",
+          "digest": "4657fa8145f35ae5847f06027194c0d0"
+        },
+        "organisation": {
+          "count": "10",
+          "digest": "84068da26d602f112f3d78c3cf8e4d69"
+        },
+        "organisation_membership": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "reward_transactions": {
+          "count": "34",
+          "digest": "4303fe12af68b78ab612156d51fa69b3"
+        },
+        "rider_reward_balance": {
+          "count": "15",
+          "digest": "b118929bc51294f835fe41ba84f2988c"
+        },
+        "reward_redemptions": {
+          "count": "2",
+          "digest": "ffedf21e34e8a641fc5c14ae1127a52f"
+        },
+        "fulfilment": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "ride_session": {
+          "count": "66",
+          "digest": "0c9d53123188fd76b995ac20ebe00c02"
+        },
+        "employee_provisioning": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "product_provisioning": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "admin_creation_operation": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "platform_invitations": {
+          "count": "7",
+          "digest": "cd741a2ffed81b56f8879e3d0bbf924c"
+        },
+        "workboard_team_members": {
+          "count": "1",
+          "digest": "cfc50cf7e03beedd1bbcfc4764d16987"
+        },
+        "account_deletion_jobs": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "account_deletion_review": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "account_deletion_audit": {
+          "count": "23",
+          "digest": "1032dcc1b177a14321a66448e578d740"
+        },
+        "account_deletion_receipt_access": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "auth": {
+          "count": "17",
+          "digest": "3e7abae427a3f8212faca534166fa4f1"
+        },
+        "staffIdentity": {
+          "count": "4",
+          "digest": "1b52415973821736f10ce5db491cb946"
+        }
+      },
+      "gates": {
+        "deletion": {
+          "requests_enabled": true,
+          "managed_resources_execution_enabled": false,
+          "operating_state": "enabled",
+          "active_policy_version": 2
+        },
+        "shop": {
+          "state": "disabled",
+          "redemption_enabled": false
+        }
+      }
+    },
+    "migrationAtomicAfter": {
+      "data": {
+        "user": {
+          "count": "17",
+          "digest": "0cbcef55ed42f399af04adf0342ccaf2"
+        },
+        "rider": {
+          "count": "15",
+          "digest": "4657fa8145f35ae5847f06027194c0d0"
+        },
+        "organisation": {
+          "count": "10",
+          "digest": "84068da26d602f112f3d78c3cf8e4d69"
+        },
+        "organisation_membership": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "reward_transactions": {
+          "count": "34",
+          "digest": "4303fe12af68b78ab612156d51fa69b3"
+        },
+        "rider_reward_balance": {
+          "count": "15",
+          "digest": "b118929bc51294f835fe41ba84f2988c"
+        },
+        "reward_redemptions": {
+          "count": "2",
+          "digest": "ffedf21e34e8a641fc5c14ae1127a52f"
+        },
+        "fulfilment": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "ride_session": {
+          "count": "66",
+          "digest": "0c9d53123188fd76b995ac20ebe00c02"
+        },
+        "employee_provisioning": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "product_provisioning": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "admin_creation_operation": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "platform_invitations": {
+          "count": "7",
+          "digest": "cd741a2ffed81b56f8879e3d0bbf924c"
+        },
+        "workboard_team_members": {
+          "count": "1",
+          "digest": "cfc50cf7e03beedd1bbcfc4764d16987"
+        },
+        "account_deletion_jobs": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "account_deletion_review": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "account_deletion_audit": {
+          "count": "23",
+          "digest": "1032dcc1b177a14321a66448e578d740"
+        },
+        "account_deletion_receipt_access": {
+          "count": "0",
+          "digest": "d41d8cd98f00b204e9800998ecf8427e"
+        },
+        "auth": {
+          "count": "17",
+          "digest": "3e7abae427a3f8212faca534166fa4f1"
+        },
+        "staffIdentity": {
+          "count": "4",
+          "digest": "1b52415973821736f10ce5db491cb946"
+        }
+      },
+      "gates": {
+        "deletion": {
+          "requests_enabled": true,
+          "managed_resources_execution_enabled": false,
+          "operating_state": "enabled",
+          "active_policy_version": 2
+        },
+        "shop": {
+          "state": "disabled",
+          "redemption_enabled": false
+        }
+      }
+    },
+    "allProtectedRowsUnchangedDuringMigration": true,
+    "staffIdsAndOtherFieldsUnchanged": true,
+    "onlyAuthorizedRoleNormalization": "3 admin to operations_manager, with 3 migration audit records from one authorized active super administrator",
+    "unrelatedFunctionDefinitionsUnchanged": 1091,
+    "userRoleEnumUnchanged": true,
+    "afterTrafficResumed": {
+      "user": false,
+      "rider": true,
+      "organisation": true,
+      "organisation_membership": true,
+      "reward_transactions": true,
+      "rider_reward_balance": true,
+      "reward_redemptions": true,
+      "fulfilment": true,
+      "ride_session": true,
+      "employee_provisioning": true,
+      "product_provisioning": true,
+      "admin_creation_operation": true,
+      "platform_invitations": true,
+      "workboard_team_members": true,
+      "account_deletion_jobs": true,
+      "account_deletion_review": true,
+      "account_deletion_audit": false,
+      "account_deletion_receipt_access": true,
+      "auth": false,
+      "staffIdentity": false
+    }
+  },
+  "rbac": {
+    "installed": {
+      "functions": [
+        {
+          "name": "ops_employee_capabilities",
+          "sourceSha256": "9e3faa30bb508e4895ad83ec6c8507f06e54c3c2de26fbf7cc72d985e7179795",
+          "anon": false,
+          "authenticated": false,
+          "service": false
+        },
+        {
+          "name": "is_dashboard_admin",
+          "sourceSha256": "0c63a9ad5aa0a3f62b7d40ca7b09dbf54f60c78dbff68f9054e33513098d5cc2",
+          "anon": true,
+          "authenticated": true,
+          "service": true
+        },
+        {
+          "name": "assign_employee_role",
+          "sourceSha256": "43b9fe1522441307efbb4fb1cc6a8344cafde81430fc97006cff178e8ffc1fe5",
+          "anon": false,
+          "authenticated": false,
+          "service": true
+        },
+        {
+          "name": "update_admin_user_profile",
+          "sourceSha256": "9e2f9855e1dd942c4a2b98c2e2cf5e20ad0b8602f21862053a96b3ac3fb66a6e",
+          "anon": false,
+          "authenticated": false,
+          "service": true
+        },
+        {
+          "name": "guard_employee_auth_insert",
+          "sourceSha256": "a7f957ff80a2c517bddda4e4f558a5308d1901cd1618fb6b6b5094a16a8e24f5",
+          "anon": true,
+          "authenticated": true,
+          "service": true
+        },
+        {
+          "name": "handle_new_user",
+          "sourceSha256": "51cc1b4a93801a7ec9b90969bf9de43eec237b51c43fd8c83e09cc4a3d9b2558",
+          "anon": true,
+          "authenticated": true,
+          "service": true
+        },
+        {
+          "name": "provision_employee",
+          "sourceSha256": "6948685c7a8d9e333c65f3c46ce04a10a233338be03cf2dede9bf09ca030acea",
+          "anon": false,
+          "authenticated": false,
+          "service": true
+        },
+        {
+          "name": "accept_workboard_platform_invitation",
+          "sourceSha256": "3926b911b6b509f7ff25bfa352b8bab967149ee1a3fcc14bc9de8b3b61ce120d",
+          "anon": true,
+          "authenticated": true,
+          "service": true
+        },
+        {
+          "name": "join_community_ride",
+          "sourceSha256": "f1a05e5401e58defdd350c94d54411c0f7ba0a577136c565125104fa23a8ab50",
+          "anon": true,
+          "authenticated": true,
+          "service": true
+        },
+        {
+          "name": "ops_queue_notifications",
+          "sourceSha256": "06bfda51dddfef3e3eecc0679ec5e387349e720f0bd2b7492bcdad6daf45975a",
+          "anon": false,
+          "authenticated": true,
+          "service": false
+        }
+      ],
+      "legacyContractsRetired": true,
+      "duplicateGrants": 0,
+      "partnerOperationsCapabilities": [
+        "dashboard.read",
+        "notifications.read",
+        "analytics.read",
+        "analytics.view",
+        "rewards.catalog.read",
+        "rewards.manage",
+        "fulfilment.read",
+        "fulfilment.validate",
+        "fulfilment.confirm",
+        "fulfilment.cancel",
+        "fulfilment.refund",
+        "resources.manage",
+        "wallet.read",
+        "partners.approve",
+        "rewards.approve",
+        "exports.execute",
+        "workboard.access",
+        "reports.read"
+      ]
+    },
+    "legacyEmployeeRowsRemaining": 0,
+    "roleCountsAtMigration": [
+      {
+        "role": "operations_manager",
+        "count": 3
+      },
+      {
+        "role": "super_admin",
+        "count": 1
+      }
+    ],
+    "roleCountsAtReadback": [
+      {
+        "role": "operations_manager",
+        "count": 3
+      },
+      {
+        "role": "partner_operations_manager",
+        "count": 1
+      },
+      {
+        "role": "super_admin",
+        "count": 1
+      }
+    ],
+    "effectiveAccess": {
+      "employeeMembershipsChecked": 5,
+      "allowed": 5,
+      "denied": 0,
+      "activeRiderOwnIdentityChecks": 5,
+      "orphanEmployeeGrants": 0,
+      "canonicalizationAudit": {
+        "count": 3,
+        "actors": 1,
+        "adminToOperations": 3
+      },
+      "method": "transaction-local existing identity contexts in read-only PostgreSQL; not authenticated browser/device sign-in"
+    },
+    "readOnlyDenials": [
+      {
+        "label": "Untrusted employee grant",
+        "denied": true
+      },
+      {
+        "label": "Retired alias",
+        "denied": true
+      },
+      {
+        "label": "Organisation role rejected as employee",
+        "denied": true
+      },
+      {
+        "label": "Unauthorised employee creation",
+        "denied": true
+      },
+      {
+        "label": "Organisation payload cannot enter employee provisioning",
+        "denied": true
+      }
+    ],
+    "directMembershipExistencePoliciesRemaining": 0,
+    "restrictiveWorkboardPolicies": 4
+  },
+  "postReleaseOperationalActivity": {
+    "initiatedByThisAcceptanceRun": false,
+    "staffCohorts": [
+      {
+        "role": "operations_manager",
+        "account_type": "admin",
+        "rider_profile": false,
+        "count": 2
+      },
+      {
+        "role": "operations_manager",
+        "account_type": "admin",
+        "rider_profile": true,
+        "count": 1
+      },
+      {
+        "role": "partner_operations_manager",
+        "account_type": "rider",
+        "rider_profile": true,
+        "count": 1
+      },
+      {
+        "role": "super_admin",
+        "account_type": "super_admin",
+        "rider_profile": false,
+        "count": 1
+      }
+    ],
+    "canonicalAssignmentAudit": [
+      {
+        "capability": "users.role.assign",
+        "reason": "employee_membership.change",
+        "prior_role": null,
+        "requested_role": "partner_operations_manager",
+        "count": 1
+      }
+    ],
+    "managedWriteAudit": [
+      {
+        "event_code": "managed_write_acknowledged",
+        "count": 1
+      },
+      {
+        "event_code": "managed_write_dispatched",
+        "count": 1
+      },
+      {
+        "event_code": "managed_write_permit_acquired",
+        "count": 1
+      }
+    ],
+    "explanation": "After the hold was lifted, independently initiated operational activity added one canonical partner_operations_manager grant to an existing Rider. Rider account classification/profile and financial/history fingerprints remained intact. Auth/user/staff digests and managed-write audit count changed after traffic resumed; these are not represented as unchanged snapshots."
+  },
+  "http": {
+    "recordedAt": "2026-10-21T07:21:29.032Z",
+    "mutations": false,
+    "rows": [
+      {
+        "path": "/auth/signin",
+        "status": 200,
+        "location": null,
+        "server": "Vercel",
+        "vercelId": "fra1::fra1::qmzf5-1792567287939-9a2a79947d3c",
+        "buildAssetPaths": [
+          "/_next/static/chunks/0kr_pztjrvat_.css",
+          "/_next/static/chunks/14l0nsu6osw2q.css",
+          "/_next/static/chunks/0-hrh_uw98wb_.js",
+          "/_next/static/chunks/0~k6u5_j-9bf2.js",
+          "/_next/static/chunks/0o2vrd9qzqk-p.js"
+        ]
+      },
+      {
+        "path": "/users",
+        "status": 307,
+        "location": "/auth/signin?redirectTo=%2Fusers",
+        "server": "Vercel",
+        "vercelId": "fra1::lhhsf-1792567288384-70bf032cd2b8",
+        "buildAssetPaths": []
+      },
+      {
+        "path": "/api/v1/wallet/balance",
+        "status": 401,
+        "location": null,
+        "server": "Vercel",
+        "vercelId": "fra1::fra1::9lfxp-1792567288460-328f03c40a4b",
+        "buildAssetPaths": []
+      },
+      {
+        "path": "/api/v1/organisations",
+        "status": 307,
+        "location": "/auth/signin?redirectTo=%2Fapi%2Fv1%2Forganisations",
+        "server": "Vercel",
+        "vercelId": "fra1::f6dmx-1792567288602-e55ea22055e6",
+        "buildAssetPaths": []
+      },
+      {
+        "contract": "get_user_role",
+        "status": 404,
+        "code": "PGRST202"
+      },
+      {
+        "contract": "update_admin_user_profile",
+        "status": 404,
+        "code": "PGRST202"
+      },
+      {
+        "contract": "assign_employee_role",
+        "status": 401,
+        "code": "42501"
+      }
+    ]
+  },
+  "operatingStates": {
+    "deletion": {
+      "requests_enabled": true,
+      "managed_resources_execution_enabled": false,
+      "operating_state": "enabled",
+      "active_policy_version": 2
+    },
+    "shop": {
+      "state": "disabled",
+      "redemption_enabled": false
+    }
+  },
+  "priorIsolatedVerification": {
+    "adminTests": 709,
+    "postgresAndGoTrueTests": 46,
+    "postgresAssertions": 125,
+    "postgrestAssertions": 31,
+    "creationAssertions": 82,
+    "typecheck": "passed",
+    "lint": "passed (TypeScript alias)",
+    "build": "passed"
+  },
+  "limits": [
+    "No synthetic production identity, ride, grant or financial transaction was created by acceptance testing.",
+    "Positive production assignment was independently observed through existing canonical audit/cohort records; this run did not initiate it.",
+    "Concurrent retries, failed provisioning recovery, revocation and cross-organisation mutation scenarios are covered by isolated actual handlers/PostgreSQL/GoTrue, with exact installed function and ACL checks in production.",
+    "Organisation membership count is zero in production, so no live positive organisation membership mutation is claimed.",
+    "Chrome DevTools could not connect; authenticated browser login/MFA/invitation journeys were not exercised. Transaction-local read-only identity contexts are not end-to-end sign-in.",
+    "Physical devices and controlled external email/inbox acceptance remain pending; no live email was sent."
+  ],
+  "decision": "GO: approved canonical RBAC production release completed. Full launch readiness remains pending device and external-provider acceptance."
+}

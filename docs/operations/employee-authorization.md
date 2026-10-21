@@ -4,7 +4,7 @@
 |--|--|
 | **Purpose** | Operate, monitor, troubleshoot, and recover Admin employee authorization in production |
 | **Audience** | Operations, Support, Security, SRE, on-call engineers |
-| **Status** | Canonical source verified; migration 070 production approval pending |
+| **Status** | Canonical source and migration 070 deployed; production verified 2026-10-21 |
 | **Last updated** | 2026-10-21 |
 | **Owner** | Platform Operations / Admin Engineering |
 | **Slug** | `employee-authorization` |

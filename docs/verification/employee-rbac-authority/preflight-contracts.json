@@ -1,0 +1,785 @@
+{
+  "recordedAt": "2026-10-21T07:16:29.435Z",
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "sourceRevision": "89c3a0b7f874af7e3a68a343a22bed8bc244f142",
+  "functions": [
+    {
+      "signature": "accept_workboard_platform_invitation(text,uuid,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.accept_workboard_platform_invitation(p_token_hash text, p_user_id uuid, p_email text)\n RETURNS TABLE(success boolean, error_code text, error_message text, invitation_id uuid, team_id uuid, membership_id uuid, membership_role text, result_status text)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  invite_row public.platform_invitations%ROWTYPE;\n  member_id uuid;\n  member_role text;\n  normalized_email text := lower(trim(COALESCE(p_email, '')));\nBEGIN\n  IF p_token_hash IS NULL OR length(trim(p_token_hash)) = 0 THEN\n    RETURN QUERY SELECT false, 'invalid_token', 'Invitation token is required',\n      NULL::uuid, NULL::uuid, NULL::uuid, NULL::text, NULL::text;\n    RETURN;\n  END IF;\n\n  IF p_user_id IS NULL THEN\n    RETURN QUERY SELECT false, 'unauthenticated', 'Authenticated user is required',\n      NULL::uuid, NULL::uuid, NULL::uuid, NULL::text, NULL::text;\n    RETURN;\n  END IF;\n\n  IF normalized_email = '' THEN\n    RETURN QUERY SELECT false, 'email_missing', 'User email not found',\n      NULL::uuid, NULL::uuid, NULL::uuid, NULL::text, NULL::text;\n    RETURN;\n  END IF;\n\n  IF NOT EXISTS (\n    SELECT 1 FROM public.admin_users a JOIN public.\"user\" u ON u.id=a.user_id\n      JOIN auth.users au ON au.id=a.user_id\n    WHERE a.user_id=p_user_id AND u.status='active' AND lower(au.email)=normalized_email\n      AND public.ops_employee_capabilities(a.role) ? 'workboard.access'\n  ) THEN\n    RETURN QUERY SELECT false, 'ineligible_role', 'An active eligible employee account is required',\n      NULL::uuid, NULL::uuid, NULL::uuid, NULL::text, NULL::text;\n    RETURN;\n  END IF;\n\n  PERFORM public.expire_platform_invitations();\n\n  SELECT *\n  INTO invite_row\n  FROM public.platform_invitations\n  WHERE token_hash = p_token_hash\n  FOR UPDATE;\n\n  IF invite_row.id IS NULL THEN\n    RETURN QUERY SELECT false, 'not_found', 'Invite not found',\n      NULL::uuid, NULL::uuid, NULL::uuid, NULL::text, NULL::text;\n    RETURN;\n  END IF;\n\n  IF invite_row.scope <> 'workboard_team' THEN\n    RETURN QUERY SELECT false, 'wrong_scope', 'Invitation is not a Workboard invite',\n      invite_row.id, invite_row.target_entity_id, NULL::uuid, NULL::text, invite_row.status::text;\n    RETURN;\n  END IF;\n\n  IF invite_row.status = 'revoked' THEN\n    RETURN QUERY SELECT false, 'revoked', 'This invitation has been revoked',\n      invite_row.id, invite_row.target_entity_id, NULL::uuid, NULL::text, 'revoked';\n    RETURN;\n  END IF;\n\n  IF invite_row.status = 'rejected' THEN\n    RETURN QUERY SELECT false, 'rejected', 'This invitation was rejected',\n      invite_row.id, invite_row.target_entity_id, NULL::uuid, NULL::text, 'rejected';\n    RETURN;\n  END IF;\n\n  IF invite_row.status = 'expired'\n     OR (invite_row.expires_at IS NOT NULL AND invite_row.expires_at < now()) THEN\n    IF invite_row.status = 'pending' THEN\n      UPDATE public.platform_invitations\n      SET status = 'expired', updated_at = now()\n      WHERE id = invite_row.id;\n    END IF;\n    RETURN QUERY SELECT false, 'expired', 'Invite expired',\n      invite_row.id, invite_row.target_entity_id, NULL::uuid, NULL::text, 'expired';\n    RETURN;\n  END IF;\n\n  IF invite_row.email <> normalized_email THEN\n    RETURN QUERY SELECT false, 'email_mismatch', 'Invite email does not match current user',\n      invite_row.id, invite_row.target_entity_id, NULL::uuid, NULL::text, invite_row.status::text;\n    RETURN;\n  END IF;\n\n  IF NOT EXISTS (\n    SELECT 1 FROM public.workboard_teams t WHERE t.id = invite_row.target_entity_id\n  ) THEN\n    RETURN QUERY SELECT false, 'board_deleted', 'This workboard no longer exists',\n      invite_row.id, invite_row.target_entity_id, NULL::uuid, NULL::text, invite_row.status::text;\n    RETURN;\n  END IF;\n\n  IF invite_row.status = 'accepted' THEN\n    SELECT m.id, m.role::text\n    INTO member_id, member_role\n    FROM public.workboard_team_members m\n    WHERE m.team_id = invite_row.target_entity_id\n      AND m.user_id = p_user_id\n      AND m.status = 'active'\n    LIMIT 1;\n\n    IF member_id IS NULL THEN\n      RETURN QUERY SELECT false, 'accepted_without_membership',\n        'Invitation was already used but you are not an active member',\n        invite_row.id, invite_row.target_entity_id, NULL::uuid, NULL::text, 'accepted';\n      RETURN;\n    END IF;\n\n    RETURN QUERY SELECT true, NULL::text, NULL::text,\n      invite_row.id, invite_row.target_entity_id, member_id, member_role, 'already_accepted';\n    RETURN;\n  END IF;\n\n  IF invite_row.status <> 'pending' THEN\n    RETURN QUERY SELECT false, 'invalid_status', 'Invitation cannot be accepted in its current state',\n      invite_row.id, invite_row.target_entity_id, NULL::uuid, NULL::text, invite_row.status::text;\n    RETURN;\n  END IF;\n\n  INSERT INTO public.workboard_team_members (\n    team_id,\n    user_id,\n    role,\n    status,\n    created_at,\n    updated_at\n  ) VALUES (\n    invite_row.target_entity_id,\n    p_user_id,\n    invite_row.role::public.workboard_member_role,\n    'active',\n    now(),\n    now()\n  )\n  ON CONFLICT ON CONSTRAINT workboard_team_members_team_id_user_id_key DO UPDATE\n  SET\n    role = EXCLUDED.role,\n    status = 'active',\n    updated_at = now()\n  RETURNING id, role::text INTO member_id, member_role;\n\n  IF member_id IS NULL THEN\n    RETURN QUERY SELECT false, 'membership_failed', 'Failed to create or activate membership',\n      invite_row.id, invite_row.target_entity_id, NULL::uuid, NULL::text, 'pending';\n    RETURN;\n  END IF;\n\n  IF NOT EXISTS (\n    SELECT 1\n    FROM public.workboard_team_members m\n    WHERE m.id = member_id\n      AND m.status = 'active'\n      AND m.user_id = p_user_id\n      AND m.team_id = invite_row.target_entity_id\n  ) THEN\n    RAISE EXCEPTION 'membership verification failed';\n  END IF;\n\n  UPDATE public.platform_invitations\n  SET\n    status = 'accepted',\n    accepted_at = now(),\n    accepted_by = p_user_id,\n    updated_at = now()\n  WHERE id = invite_row.id;\n\n  RETURN QUERY SELECT true, NULL::text, NULL::text,\n    invite_row.id, invite_row.target_entity_id, member_id, member_role, 'accepted';\n\nEXCEPTION\n  WHEN others THEN\n    -- Never leak sqlerrm to clients\n    RETURN QUERY SELECT false, 'transaction_failed', 'Invitation acceptance failed',\n      NULL::uuid, NULL::uuid, NULL::uuid, NULL::text, NULL::text;\nEND;\n$function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "anon": true,
+      "authenticated": true,
+      "service": true
+    },
+    {
+      "signature": "account_deletion_queue_barrier()",
+      "definition": "CREATE OR REPLACE FUNCTION public.account_deletion_queue_barrier()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nBEGIN\n INSERT INTO public.account_deletion_write_guard(user_id,restricted,job_id) VALUES(NEW.user_id,true,NEW.id)\n ON CONFLICT(user_id) DO UPDATE SET restricted=true,job_id=excluded.job_id,changed_at=now();\n INSERT INTO public.account_deletion_alias SELECT NEW.id,NEW.user_id,'user',NEW.user_id::text ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_alias SELECT NEW.id,NEW.user_id,'rider',id::text FROM public.rider WHERE user_id=NEW.user_id ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_alias SELECT NEW.id,NEW.user_id,'admin',id::text FROM public.admin_users WHERE user_id=NEW.user_id ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_alias SELECT NEW.id,NEW.user_id,'email',lower(trim(email)) FROM auth.users WHERE id=NEW.user_id AND nullif(trim(email),'') IS NOT NULL ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_alias SELECT NEW.id,NEW.user_id,'email',lower(trim(identity_data->>'email')) FROM auth.identities WHERE user_id=NEW.user_id AND nullif(trim(identity_data->>'email'),'') IS NOT NULL ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_alias SELECT NEW.id,NEW.user_id,'email',lower(trim(email)) FROM public.\"user\" WHERE id=NEW.user_id AND nullif(trim(email),'') IS NOT NULL ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_alias SELECT NEW.id,NEW.user_id,'email',lower(trim(email)) FROM public.admin_users WHERE user_id=NEW.user_id AND nullif(trim(email),'') IS NOT NULL ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_alias SELECT NEW.id,NEW.user_id,'phone',regexp_replace(phone,'[^0-9]','','g') FROM (\n  SELECT phone FROM auth.users WHERE id=NEW.user_id UNION SELECT phone FROM public.\"user\" WHERE id=NEW.user_id UNION SELECT phone FROM public.rider WHERE user_id=NEW.user_id\n ) phones WHERE length(regexp_replace(phone,'[^0-9]','','g'))>=7 ON CONFLICT DO NOTHING;\n RETURN NEW;\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": false
+    },
+    {
+      "signature": "acquire_account_managed_write(uuid,uuid,uuid[],jsonb,text,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.acquire_account_managed_write(p_id uuid, p_actor uuid, p_subjects uuid[], p_identity jsonb, p_resource text, p_method text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE subjects uuid[]; subject uuid; permit public.account_deletion_managed_write;\nBEGIN\n IF p_id IS NULL OR p_actor IS NULL OR NOT EXISTS(SELECT 1 FROM auth.users WHERE id=p_actor)\n OR p_method NOT IN ('POST','PUT','PATCH','DELETE') OR length(p_resource) NOT BETWEEN 1 AND 2048\n OR NOT (p_resource LIKE '/auth/v1/admin/%' OR p_resource LIKE '/storage/v1/object/%')\n OR jsonb_typeof(p_identity) IS DISTINCT FROM 'object' OR cardinality(p_subjects)>100 THEN\n RAISE EXCEPTION USING ERRCODE='42501',MESSAGE='managed_write_scope_required'; END IF;\n -- Canonicalization is authoritative in the database, including rolling clients.\n -- A changed email payload cannot escape a hold on an existing Auth resource.\n IF p_identity ? 'email' THEN p_identity:=jsonb_set(p_identity,'{email}',to_jsonb(lower(trim(p_identity->>'email'))));END IF;\n IF p_resource LIKE '/auth/v1/admin/%' THEN\n  p_resource:=lower(split_part(p_resource,'?',1));\n  IF p_resource !~ '/users/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)' THEN\n   IF nullif(p_identity->>'email','') IS NULL THEN RAISE EXCEPTION 'managed_write_scope_required';END IF;\n   p_resource:=p_resource||'?email='||(p_identity->>'email');\n  END IF;\n END IF;\n -- Recovery links cannot silently create an unbound principal.\n IF split_part(p_resource,'?',1)='/auth/v1/admin/generate_link' AND NOT EXISTS(\n  SELECT 1 FROM auth.users WHERE lower(email)=p_identity->>'email') THEN\n  RAISE EXCEPTION 'managed_write_existing_identity_required';END IF;\n IF split_part(p_resource,'?',1)='/auth/v1/admin/users' AND p_method='POST'\n AND (nullif(p_identity->>'id','') IS NULL OR NOT((p_identity->>'id')::uuid=ANY(p_subjects))) THEN\n  RAISE EXCEPTION 'managed_write_creation_identity_required';END IF;\n PERFORM pg_advisory_xact_lock(hashtextextended(p_resource,0));\n subjects:=public.account_deletion_managed_subjects(p_actor,p_subjects,p_identity);\n FOREACH subject IN ARRAY subjects LOOP PERFORM public.account_deletion_assert_writable(subject);END LOOP;\n -- Suppressed aliases cannot be recreated through a new Auth UUID.\n IF to_regprocedure('public.assert_account_deletion_restore_allowed(jsonb)') IS NOT NULL THEN\n  EXECUTE 'SELECT public.assert_account_deletion_restore_allowed($1)' USING p_identity;\n END IF;\n IF EXISTS(SELECT 1 FROM public.account_deletion_managed_write WHERE id=p_id) THEN\n RAISE EXCEPTION USING ERRCODE='42501',MESSAGE='managed_write_replay_rejected';END IF;\n -- A lost acknowledgement must not be retried using a fresh permit ID.\n IF EXISTS(SELECT 1 FROM public.account_deletion_managed_write w WHERE w.state IN ('prepared','in_flight','uncertain')\n AND w.resource_digest=sha256(convert_to(p_resource,'UTF8')) AND w.method=p_method) THEN\n RAISE EXCEPTION USING ERRCODE='42501',MESSAGE='managed_write_outcome_unresolved';END IF;\n INSERT INTO public.account_deletion_managed_write(id,actor_id,subject_ids,identity,resource_digest,method)\n VALUES(p_id,p_actor,subjects,jsonb_build_object('email_digest',encode(sha256(convert_to(lower(p_identity->>'email'),'UTF8')),'hex'),'phone_digest',encode(sha256(convert_to(p_identity->>'phone','UTF8')),'hex')),sha256(convert_to(p_resource,'UTF8')),p_method) RETURNING * INTO permit;\n INSERT INTO public.account_deletion_audit(actor_user_id,event_code) VALUES(p_actor,'managed_write_permit_acquired');\n RETURN jsonb_build_object('id',permit.id,'token',permit.token);\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "signature": "admin_create(uuid,uuid,text,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_create(p_actor uuid, p_operation uuid, p_kind text, p_input jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE caps jsonb; required text; saved public.admin_creation_operation; result jsonb; child_id uuid; children jsonb; hot_children jsonb; child_result jsonb;\n  record jsonb:=p_input->'record'; child jsonb; entity_table text; team uuid; member_role text; actor_role text;\n  route_ids uuid[]; assigned integer; partner uuid; organisation_result jsonb;\nBEGIN\n  IF coalesce(auth.role(),'')<>'service_role' THEN RAISE EXCEPTION 'Service role required' USING ERRCODE='42501'; END IF;\n  required:=CASE p_kind WHEN 'route' THEN 'routes.write' WHEN 'route_stops' THEN 'routes.write' WHEN 'suggested_route' THEN 'routes.write' WHEN 'campaign_geography' THEN 'campaigns.write' WHEN 'campaign' THEN 'campaigns.write'\n    WHEN 'workboard_bootstrap' THEN 'workboard.access' WHEN 'workboard_board' THEN 'workboard.access' WHEN 'workboard_card' THEN 'workboard.access'\n    WHEN 'organisation' THEN 'rewards.manage' WHEN 'catalog' THEN 'rewards.manage' WHEN 'partner_location' THEN 'rewards.manage'\n    WHEN 'community_ride' THEN 'community.manage' WHEN 'pro_tip' THEN 'protips.manage' END;\n  IF required IS NULL OR p_operation IS NULL THEN RAISE EXCEPTION 'Invalid creation command'; END IF;\n  SELECT a.role,public.ops_employee_capabilities(a.role) INTO actor_role,caps FROM public.admin_users a\n    JOIN public.\"user\" u ON u.id=a.user_id WHERE a.user_id=p_actor AND u.status='active';\n  -- The advertiser Platform API owns its campaign boundary. No client-selected\n  -- advertiser ID can cross an organisation membership boundary.\n  IF p_kind='campaign' AND actor_role IS NULL THEN\n    IF NOT EXISTS(SELECT 1 FROM public.organisation_membership m JOIN public.organisation o ON o.id=m.organisation_id\n      JOIN public.advertiser a ON a.organisation_id=o.id JOIN public.\"user\" u ON u.id=m.user_id\n      WHERE m.user_id=p_actor AND m.status='active' AND o.type='advertiser' AND o.status='active' AND u.status='active'\n      AND a.id=(record->>'advertiser_id')::uuid) THEN\n      RAISE EXCEPTION 'Advertiser ownership required' USING ERRCODE='42501';\n    END IF;\n  ELSIF NOT coalesce(caps ? required,false) THEN RAISE EXCEPTION 'Unauthorized creation command' USING ERRCODE='42501'; END IF;\n  -- Generated timestamps are not part of a retried command's intent.\n  IF record IS NOT NULL THEN\n    record:=record-'created_at'-'updated_at';\n    p_input:=jsonb_set(p_input,'{record}',record);\n  END IF;\n  IF p_kind IN ('workboard_board','workboard_card') AND NOT EXISTS(\n    SELECT 1 FROM public.workboard_team_members WHERE team_id=(record->>'team_id')::uuid\n      AND user_id=p_actor AND status='active' AND role IN ('owner','admin','editor')) THEN\n    RAISE EXCEPTION 'Workboard write membership required' USING ERRCODE='42501';\n  END IF;\n  PERFORM pg_advisory_xact_lock(hashtextextended(p_operation::text,69));\n  SELECT * INTO saved FROM public.admin_creation_operation WHERE id=p_operation;\n  IF saved.id IS NOT NULL THEN\n    IF saved.actor_id<>p_actor OR saved.kind<>p_kind OR saved.input<>p_input THEN RAISE EXCEPTION 'Conflicting creation retry'; END IF;\n    IF p_kind='workboard_bootstrap' THEN\n      SELECT jsonb_build_object('teamId',t.id,'teamName',t.name,'role',m.role::text) INTO result\n        FROM public.workboard_team_members m JOIN public.workboard_teams t ON t.id=m.team_id\n        WHERE m.user_id=p_actor AND m.status='active' AND t.id=(saved.result->>'teamId')::uuid;\n      IF result IS NULL THEN RAISE EXCEPTION 'Workboard membership is no longer active' USING ERRCODE='42501'; END IF;\n      RETURN result;\n    END IF;\n    RETURN saved.result;\n  END IF;\n  IF p_kind='route_stops' THEN\n    children:='[]';\n    PERFORM 1 FROM public.route WHERE id=(p_input->>'routeId')::uuid FOR UPDATE;\n    IF NOT FOUND THEN RAISE EXCEPTION 'Route not found'; END IF;\n    FOR child IN SELECT value FROM jsonb_array_elements(p_input->'stops') LOOP\n      child_id:=(child->>'id')::uuid; child:=child-'id';\n      IF child_id IS NULL THEN child_result:=public.admin_insert_creation_record('route_stop',child || jsonb_build_object('route_id',p_input->>'routeId'));\n      ELSE child_result:=public.admin_update_creation_record('route_stop',child_id,(p_input->>'routeId')::uuid,child); END IF;\n      children:=children || jsonb_build_array(child_result->>'id');\n    END LOOP;\n    result:=jsonb_build_object('ids',children);\n  ELSIF p_kind='campaign_geography' THEN\n    children:='[]';hot_children:='[]';\n    PERFORM 1 FROM public.campaign WHERE id=(p_input->>'campaignId')::uuid FOR UPDATE;\n    IF NOT FOUND THEN RAISE EXCEPTION 'Campaign not found'; END IF;\n    FOR child IN SELECT value FROM jsonb_array_elements(p_input->'zones') LOOP\n      child_id:=(child->>'id')::uuid; child:=child-'id';\n      IF child_id IS NULL THEN child_result:=public.admin_insert_creation_record('campaign_zone',child || jsonb_build_object('campaign_id',p_input->>'campaignId'));\n      ELSE child_result:=public.admin_update_creation_record('campaign_zone',child_id,(p_input->>'campaignId')::uuid,child); END IF;\n      children:=children || jsonb_build_array(child_result->>'id');\n    END LOOP;\n    FOR child IN SELECT value FROM jsonb_array_elements(p_input->'hotZones') LOOP\n      child_id:=(child->>'id')::uuid; child:=child-'id';\n      IF child_id IS NULL THEN child_result:=public.admin_insert_creation_record('campaign_hot_zone',child || jsonb_build_object('campaign_id',p_input->>'campaignId'));\n      ELSE child_result:=public.admin_update_creation_record('campaign_hot_zone',child_id,(p_input->>'campaignId')::uuid,child); END IF;\n      hot_children:=hot_children || jsonb_build_array(child_result->>'id');\n    END LOOP;\n    result:=jsonb_build_object('zoneIds',children,'hotZoneIds',hot_children);\n  ELSIF p_kind LIKE 'workboard_%' THEN\n    IF p_kind='workboard_bootstrap' THEN\n      PERFORM pg_advisory_xact_lock(69001);\n      SELECT m.team_id,m.role INTO team,member_role FROM public.workboard_team_members m WHERE m.user_id=p_actor AND m.status='active' LIMIT 1;\n      IF team IS NULL THEN\n        IF EXISTS(SELECT 1 FROM public.workboard_teams) OR actor_role NOT IN ('super_admin','admin') THEN\n          RAISE EXCEPTION 'Not authorized to bootstrap a workboard team' USING ERRCODE='42501';\n        END IF;\n        INSERT INTO public.workboard_teams(name,created_by) VALUES('MOVRR HQ',p_actor) RETURNING id INTO team;\n        INSERT INTO public.workboard_team_members(team_id,user_id,role,status) VALUES(team,p_actor,'owner','active');\n        member_role:='owner';\n      END IF;\n      SELECT jsonb_build_object('teamId',id,'teamName',name,'role',member_role) INTO result FROM public.workboard_teams WHERE id=team;\n    ELSE\n      team:=(record->>'team_id')::uuid;\n      IF NOT EXISTS(SELECT 1 FROM public.workboard_team_members WHERE team_id=team AND user_id=p_actor AND status='active' AND role IN ('owner','admin','editor')) THEN\n        RAISE EXCEPTION 'Workboard write membership required' USING ERRCODE='42501';\n      END IF;\n      IF p_kind='workboard_card' AND NOT EXISTS(SELECT 1 FROM public.workboard_boards WHERE id=(record->>'board_id')::uuid AND team_id=team) THEN\n        RAISE EXCEPTION 'Board does not belong to requested team';\n      END IF;\n      record:=record || jsonb_build_object('id',p_operation,'created_by',p_actor,'updated_by',p_actor);\n      result:=public.admin_insert_creation_record(CASE WHEN p_kind='workboard_card' THEN 'workboard_cards' ELSE 'workboard_boards' END,record);\n    END IF;\n  ELSIF p_kind='organisation' THEN\n    IF p_input->>'type'='reward_partner' THEN\n      PERFORM pg_advisory_xact_lock(hashtextextended(lower(p_input->>'name'),69002));\n      IF EXISTS(SELECT 1 FROM public.reward_partner WHERE lower(name)=lower(p_input->>'name') AND organisation_id IS NOT NULL) THEN\n        RAISE EXCEPTION 'Partner already belongs to an organisation; use the existing organisation';\n      END IF;\n    END IF;\n    result:=public.save_organisation_with_partner(NULL,p_input);\n  ELSIF p_kind='partner_location' THEN\n    result:=public.save_partner_location((p_input->>'organisationId')::uuid,p_input->'location',p_actor,p_operation::text);\n  ELSIF p_kind='catalog' THEN\n    IF record->>'status'='active' THEN RAISE EXCEPTION 'Create a draft before approval'; END IF;\n    record:=record || jsonb_build_object('partner_id',public.admin_catalog_partner(p_input->>'partnerName',p_input->>'partnerWebsite'));\n    result:=public.shop_save_catalog(p_actor,NULL,record,NULL);\n    INSERT INTO public.platform_audit_record(actor_user_id,principal_type,capability,target_entity_type,target_entity_id,resulting_state,correlation_id,reason)\n      VALUES(p_actor,'admin','rewards.manage','reward_catalog',result->>'id','{\"action\":\"reward_catalog.create\"}',p_operation::text,'entity_initiator');\n  ELSE\n    entity_table:=CASE p_kind WHEN 'route' THEN 'route' WHEN 'campaign' THEN 'campaign' WHEN 'community_ride' THEN 'community_ride' WHEN 'suggested_route' THEN 'suggested_routes' ELSE 'pro_tips' END;\n    record:=record || jsonb_build_object('id',p_operation);\n    IF p_kind='campaign' THEN record:=record || '{\"lifecycle_status\":\"draft\"}'; END IF;\n    IF p_kind='community_ride' THEN record:=record || jsonb_build_object('created_by_user_id',p_actor); END IF;\n    IF p_kind='suggested_route' THEN record:=record || jsonb_build_object('created_by',p_actor); END IF;\n    result:=public.admin_insert_creation_record(entity_table,record);\n    IF p_kind='campaign' THEN\n      SELECT coalesce(array_agg(value::uuid),'{}') INTO route_ids FROM jsonb_array_elements_text(coalesce(p_input->'routeIds','[]'));\n      IF cardinality(route_ids)>0 THEN\n        PERFORM 1 FROM public.route WHERE id=ANY(route_ids) FOR UPDATE;\n        IF (SELECT count(*) FROM public.route WHERE id=ANY(route_ids) AND campaign_id IS NULL)<>cardinality(route_ids) THEN\n          RAISE EXCEPTION 'Every route must exist and be unassigned';\n        END IF;\n        IF actor_role IS NULL THEN RAISE EXCEPTION 'Route assignment requires Admin authorization' USING ERRCODE='42501'; END IF;\n        UPDATE public.route SET campaign_id=p_operation WHERE id=ANY(route_ids);\n      END IF;\n      IF actor_role IS NOT NULL THEN\n        INSERT INTO public.platform_audit_record(actor_user_id,principal_type,capability,target_entity_type,target_entity_id,resulting_state,correlation_id,reason) VALUES(p_actor,'admin','campaigns.write','campaign',p_operation::text,'{\"action\":\"campaign.create\"}',p_operation::text,'entity_initiator');\n      END IF;\n    ELSIF p_kind='route' THEN\n      FOR child IN SELECT value FROM jsonb_array_elements(coalesce(p_input->'stops','[]')) LOOP\n        PERFORM public.admin_insert_creation_record('route_stop',child || jsonb_build_object('route_id',p_operation));\n      END LOOP;\n      IF jsonb_array_length(coalesce(p_input->'zones','[]'))+jsonb_array_length(coalesce(p_input->'hotZones','[]'))>0 THEN\n        IF NOT coalesce(caps ? 'campaigns.write',false) OR record->>'campaign_id' IS NULL THEN\n          RAISE EXCEPTION 'Campaign authorization and identity required for zones' USING ERRCODE='42501';\n        END IF;\n        FOR child IN SELECT value FROM jsonb_array_elements(coalesce(p_input->'zones','[]')) LOOP\n          PERFORM public.admin_insert_creation_record('campaign_zone',child || jsonb_build_object('campaign_id',record->>'campaign_id'));\n        END LOOP;\n        FOR child IN SELECT value FROM jsonb_array_elements(coalesce(p_input->'hotZones','[]')) LOOP\n          PERFORM public.admin_insert_creation_record('campaign_hot_zone',child || jsonb_build_object('campaign_id',record->>'campaign_id'));\n        END LOOP;\n      END IF;\n      INSERT INTO public.platform_audit_record(actor_user_id,principal_type,capability,target_entity_type,target_entity_id,resulting_state,correlation_id,reason) VALUES(p_actor,'admin','routes.write','route',p_operation::text,'{\"action\":\"route.create\"}',p_operation::text,'entity_initiator');\n    END IF;\n  END IF;\n  INSERT INTO public.admin_creation_operation(id,actor_id,kind,input,result) VALUES(p_operation,p_actor,p_kind,p_input,result);\n  RETURN result;\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "signature": "admin_save_catalog(uuid,uuid,jsonb,text,text,timestamp with time zone)",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_save_catalog(p_actor uuid, p_id uuid, p_payload jsonb, p_partner_name text, p_partner_website text, p_expected timestamp with time zone)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE caps jsonb;\nBEGIN\n  IF coalesce(auth.role(),'')<>'service_role' THEN RAISE EXCEPTION 'Service role required' USING ERRCODE='42501'; END IF;\n  SELECT public.ops_employee_capabilities(a.role) INTO caps FROM public.admin_users a JOIN public.\"user\" u ON u.id=a.user_id WHERE a.user_id=p_actor AND u.status='active';\n  IF NOT coalesce(caps ? 'rewards.manage',false) THEN RAISE EXCEPTION 'Unauthorized catalog write' USING ERRCODE='42501'; END IF;\n  p_payload:=p_payload || jsonb_build_object('partner_id',public.admin_catalog_partner(p_partner_name,p_partner_website));\n  RETURN public.shop_save_catalog(p_actor,p_id,p_payload,p_expected);\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "signature": "apply_account_deletion_privacy_manifest(uuid,uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.apply_account_deletion_privacy_manifest(p_job uuid, p_token uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE j public.account_deletion_jobs;actions jsonb;a jsonb;t text;c text;target text;field text;op text;values_to_match uuid[];tables text[];aliases jsonb;changed integer;total integer:=0;blocked integer:=0;allowed text[];\nBEGIN\n j:=public.account_deletion_assert_claim(p_job,p_token);\n IF NOT public.account_deletion_rule_allowed(j.policy_version,'personal.erase') THEN RETURN jsonb_build_object('state','review');END IF;\n SELECT parameters->'privacyManifest' INTO actions FROM public.account_deletion_action_rule WHERE policy_version=j.policy_version AND scope='personal.erase';\n IF actions IS NULL OR jsonb_typeof(actions)<>'array' THEN RETURN jsonb_build_object('state','review','reasonCode','privacy_manifest_required');END IF;\n SELECT coalesce(jsonb_agg(jsonb_build_object('kind',kind,'token',token)),'[]') INTO aliases FROM public.account_deletion_alias WHERE job_id=j.id;\n SELECT coalesce(array_agg(DISTINCT 'public.'||(value->>'table')),'{}') INTO tables FROM jsonb_array_elements(actions);\n PERFORM public.account_deletion_authorize_write(j.id,p_token,'personal.erase',tables,ARRAY['UPDATE']);\n FOR a IN SELECT value FROM jsonb_array_elements(actions) LOOP\n  t:=a->>'table';c:=a->>'column';target:=a->>'target';field:=a->>'field';op:=a->>'action';\n  IF t LIKE 'account_deletion_%' OR t IN ('reward_transactions','reward_redemptions','fulfilment','ride_session','route_tracking','ride_reward_configuration_snapshot','ride_reward_settlement') OR (t IN ('fulfilment_event','partner_validation','platform_audit_record') AND NOT public.account_deletion_rule_allowed(j.policy_version,'appendonly.privacy')) THEN blocked:=blocked+1;CONTINUE;END IF;\n  IF field NOT IN ('metadata','before_values','after_values','payload','body','message','content','text','comment','notes','description','contact_email','contact_phone','email','phone','avatar_url','device_context','device_id','push_token','account_notes','request_payload','response_payload','route_payload','export_options','schedule','trace_id','error','filename','error_message','name','reason','emergency_contact','emergency_phone','actor_email','previous_state','resulting_state','reason','note') THEN RAISE EXCEPTION 'unclassified personal field';END IF;\n  IF NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name=t AND column_name=field AND udt_name IN ('text','jsonb','varchar')) THEN RAISE EXCEPTION 'privacy field schema drift';END IF;\n  IF NOT EXISTS(SELECT 1 FROM public.account_deletion_barrier_binding WHERE schema_name='public' AND table_name=t AND column_name=c AND identity_kind=CASE target WHEN 'user' THEN 'user' WHEN 'rider' THEN 'rider' ELSE NULL END)\n   AND NOT(t='user' AND c='id' AND target='user') AND NOT(target='admin_users' AND EXISTS(SELECT 1 FROM pg_catalog.pg_constraint fk JOIN pg_catalog.pg_attribute att ON att.attrelid=fk.conrelid AND att.attnum=fk.conkey[1] WHERE fk.contype='f' AND cardinality(fk.conkey)=1 AND cardinality(fk.confkey)=1 AND fk.conrelid=to_regclass(format('public.%I',t)) AND fk.confrelid='public.admin_users'::regclass AND att.attname=c)) THEN RAISE EXCEPTION 'privacy principal binding required';END IF;\n  values_to_match:=CASE target WHEN 'user' THEN ARRAY[j.user_id] WHEN 'rider' THEN ARRAY(SELECT id FROM public.rider WHERE user_id=j.user_id) WHEN 'admin_users' THEN ARRAY(SELECT id FROM public.admin_users WHERE user_id=j.user_id) ELSE NULL END;\n  IF values_to_match IS NULL THEN RAISE EXCEPTION 'unsupported privacy ownership adapter';END IF;\n  BEGIN\n   IF op='redact_alias_mentions' THEN\n    IF EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name=t AND column_name=field AND udt_name='jsonb') THEN\n     EXECUTE format('UPDATE public.%I SET %I=public.account_deletion_redact_projection(%I,$2) WHERE %I=ANY($1) AND %I IS DISTINCT FROM public.account_deletion_redact_projection(%I,$2)',t,field,field,c,field,field) USING values_to_match,aliases;\n    ELSE\n     EXECUTE format('UPDATE public.%I SET %I=public.account_deletion_redact_projection(to_jsonb(%I),$2)#>>''{}'' WHERE %I=ANY($1) AND to_jsonb(%I) IS DISTINCT FROM public.account_deletion_redact_projection(to_jsonb(%I),$2)',t,field,field,c,field,field) USING values_to_match,aliases;\n    END IF;\n   ELSIF op='json_keep_fields' THEN\n    SELECT coalesce(array_agg(value),'{}') INTO allowed FROM jsonb_array_elements_text(a->'fields');\n    EXECUTE format('UPDATE public.%I r SET %I=(SELECT coalesce(jsonb_object_agg(key,value),''{}''::jsonb) FROM jsonb_each(r.%I) WHERE key=ANY($2)) WHERE %I=ANY($1)',t,field,field,c) USING values_to_match,allowed;\n   ELSIF op='redacted' THEN\n    IF NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name=t AND column_name=field AND udt_name IN ('text','varchar')) THEN RAISE EXCEPTION 'redacted text field required';END IF;\n    EXECUTE format('UPDATE public.%I SET %I=$2 WHERE %I=ANY($1)',t,field,c) USING values_to_match,'Deleted account';\n   ELSIF op='null' THEN\n    IF EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name=t AND column_name=field AND is_nullable='NO') THEN blocked:=blocked+1;CONTINUE;END IF;\n    EXECUTE format('UPDATE public.%I SET %I=NULL WHERE %I=ANY($1) AND %I IS NOT NULL',t,field,c,field) USING values_to_match;\n   ELSE RAISE EXCEPTION 'unsupported privacy projection';END IF;\n   GET DIAGNOSTICS changed=ROW_COUNT;total:=total+changed;\n  EXCEPTION WHEN raise_exception OR check_violation OR not_null_violation THEN blocked:=blocked+1;END;\n END LOOP;\n IF blocked>0 THEN INSERT INTO public.account_deletion_review(job_id,category,reason_code,owner_capability,due_at) VALUES(j.id,'residual_erasure','privacy_field_disposition_requires_adapter','privacy.deletion.compliance.review',clock_timestamp()+interval '1 day') ON CONFLICT DO NOTHING;END IF;\n INSERT INTO public.account_deletion_audit(job_id,event_code) VALUES(j.id,'approved_privacy_field_projection_executed');\n RETURN jsonb_build_object('state',CASE WHEN blocked>0 THEN 'review' ELSE 'confirmed' END,'changedRows',total,'blockedActions',blocked);\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "signature": "assign_admin_route(uuid,uuid,uuid[])",
+      "definition": "CREATE OR REPLACE FUNCTION public.assign_admin_route(p_actor uuid, p_route uuid, p_riders uuid[])\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE caps jsonb; template public.route; v_rider_id uuid; assignment_id uuid; inserted_riders uuid[]:='{}'; requested integer;\nBEGIN\n  IF coalesce(auth.role(),'')<>'service_role' THEN RAISE EXCEPTION 'Service role required' USING ERRCODE='42501'; END IF;\n  SELECT public.ops_employee_capabilities(a.role) INTO caps FROM public.admin_users a JOIN public.\"user\" u ON u.id=a.user_id WHERE a.user_id=p_actor AND u.status='active';\n  IF NOT coalesce(caps ? 'routes.write',false) THEN RAISE EXCEPTION 'Unauthorized route assignment' USING ERRCODE='42501'; END IF;\n  SELECT * INTO template FROM public.route WHERE id=p_route FOR UPDATE;\n  IF template.id IS NULL THEN RAISE EXCEPTION 'Route not found'; END IF;\n  SELECT count(DISTINCT x) INTO requested FROM unnest(p_riders) x;\n  IF requested=0 THEN RAISE EXCEPTION 'Riders required'; END IF;\n  FOR v_rider_id IN SELECT DISTINCT x FROM unnest(p_riders) x ORDER BY x LOOP\n    IF NOT EXISTS(SELECT 1 FROM public.rider WHERE id=v_rider_id) THEN RAISE EXCEPTION 'Rider not found'; END IF;\n    IF NOT EXISTS(SELECT 1 FROM public.rider_route rr WHERE rr.route_id=p_route AND rr.rider_id=v_rider_id) THEN\n      INSERT INTO public.rider_route(rider_id,route_id,campaign_id,status,assigned_at,updated_at)\n        VALUES(v_rider_id,p_route,template.campaign_id,'assigned',now(),now()) RETURNING id INTO assignment_id;\n      INSERT INTO public.platform_audit_record(actor_user_id,principal_type,capability,target_entity_type,target_entity_id,resulting_state,correlation_id,reason)\n        VALUES(p_actor,'admin','routes.write','rider_route',assignment_id::text,'{\"action\":\"rider_route.create\"}',assignment_id::text,'entity_initiator');\n      inserted_riders:=array_append(inserted_riders,v_rider_id);\n    END IF;\n  END LOOP;\n  RETURN jsonb_build_object('assignedCount',cardinality(inserted_riders),'skippedCount',requested-cardinality(inserted_riders),'riderIds',to_jsonb(inserted_riders));\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "signature": "assign_employee_role(uuid,uuid,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.assign_employee_role(p_actor uuid, p_user uuid, p_role text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE caps jsonb; v_public_role text; prior_role text;\nBEGIN\n  IF coalesce(auth.role(),'')<>'service_role' THEN RAISE EXCEPTION 'Service role required' USING ERRCODE='42501'; END IF;\n  SELECT public.ops_employee_capabilities(a.role) INTO caps FROM public.admin_users a\n    JOIN public.\"user\" u ON u.id=a.user_id WHERE a.user_id=p_actor AND u.status='active';\n  IF NOT coalesce(caps ? CASE WHEN p_role IN ('super_admin','security_admin') THEN 'users.role.approve' ELSE 'users.role.assign' END,false) THEN\n    RAISE EXCEPTION 'Unauthorized role assignment' USING ERRCODE='42501';\n  END IF;\n  SELECT role::text INTO v_public_role FROM public.\"user\" WHERE id=p_user FOR UPDATE;\n  SELECT role INTO prior_role FROM public.admin_users WHERE user_id=p_user;\n  IF v_public_role IS NULL THEN RAISE EXCEPTION 'User not found'; END IF;\n  IF p_role IN ('rider','advertiser') AND v_public_role=p_role THEN RETURN; END IF;\n  IF p_actor=p_user AND NOT(public.ops_employee_capabilities(prior_role) @> public.ops_employee_capabilities(p_role)) THEN\n    RAISE EXCEPTION 'Self-escalation is not permitted' USING ERRCODE='42501';\n  END IF;\n  IF p_role IS NULL OR p_role IN ('admin','moderator','support','compliance_officer','government')\n      OR jsonb_array_length(public.ops_employee_capabilities(p_role))=0 THEN\n    RAISE EXCEPTION 'Invalid employee role; product conversion requires its own workflow';\n  END IF;\n  IF v_public_role NOT IN ('admin','super_admin','moderator','support','gov')\n     OR EXISTS(SELECT 1 FROM public.rider WHERE user_id=p_user)\n     OR EXISTS(SELECT 1 FROM public.advertiser WHERE user_id=p_user) THEN\n    RAISE EXCEPTION 'Product identities cannot be reclassified through employee assignment';\n  END IF;\n  -- Do not revive an incomplete provisioning reservation through a role edit.\n  IF EXISTS(SELECT 1 FROM public.employee_provisioning WHERE user_id=p_user AND state<>'complete') THEN\n    RAISE EXCEPTION 'Finish employee provisioning before changing its role';\n  END IF;\n  UPDATE public.\"user\" SET role='admin',updated_at=now() WHERE id=p_user;\n  INSERT INTO public.admin_users(user_id,email,role,created_by)\n    SELECT id,email,p_role,p_actor FROM public.\"user\" WHERE id=p_user\n    ON CONFLICT(user_id) DO UPDATE SET role=excluded.role,updated_at=now();\n  IF prior_role IS DISTINCT FROM p_role THEN\n    INSERT INTO public.platform_audit_record(actor_user_id,principal_type,capability,target_entity_type,target_entity_id,previous_state,resulting_state,correlation_id,reason)\n      VALUES(p_actor,'admin',CASE WHEN p_role IN ('super_admin','security_admin') THEN 'users.role.approve' ELSE 'users.role.assign' END,\n        'user',p_user::text,jsonb_build_object('role',prior_role),jsonb_build_object('role',p_role),gen_random_uuid()::text,'admin_employee_role_assignment_v1');\n  END IF;\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "signature": "authorize_account_deletion_managed_dispatch(uuid,uuid,text,text,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.authorize_account_deletion_managed_dispatch(p_job uuid, p_token uuid, p_method text, p_path text, p_body jsonb)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE j public.account_deletion_jobs;prefix text;object_name text;bucket text;\nBEGIN\n j:=public.account_deletion_assert_claim(p_job,p_token);\n IF NOT public.account_deletion_activation_authorized(p_job,p_token) OR p_method<>'DELETE' THEN RETURN false;END IF;\n IF p_path='/auth/v1/admin/users/'||j.user_id::text THEN\n  RETURN EXISTS(SELECT 1 FROM public.account_deletion_operation o WHERE o.job_id=j.id AND o.lease_token=p_token\n   AND o.kind='auth_delete' AND o.state='prepared' AND o.dispatched_at IS NOT NULL AND o.resource=jsonb_build_object('userId',j.user_id));\n END IF;\n IF p_path NOT LIKE '/storage/v1/object/%' OR jsonb_typeof(p_body->'prefixes') IS DISTINCT FROM 'array'\n OR jsonb_array_length(p_body->'prefixes')<>1 THEN RETURN false;END IF;\n bucket:=substring(p_path from length('/storage/v1/object/')+1);\n object_name:=p_body->'prefixes'->>0;\n RETURN EXISTS(SELECT 1 FROM public.account_deletion_external_resource r JOIN public.account_deletion_operation o\n ON o.job_id=r.job_id AND o.operation_key='external:'||r.id::text WHERE r.job_id=j.id AND r.kind='storage_remove'\n AND r.locator->>'bucketId'=bucket AND r.locator->>'name'=object_name AND o.lease_token=p_token\n AND o.state='prepared' AND o.dispatched_at IS NOT NULL AND o.resource->>'classificationId'=r.id::text\n AND o.resource->>'objectId'=r.source_id);\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "signature": "claim_my_held_ride_recovery(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.claim_my_held_ride_recovery(p_approval uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE s public.ride_session;st public.ride_reward_settlement;g public.held_ride_recovery_approval;owner uuid;e jsonb;n integer;\nBEGIN\n -- Same lock order as the existing executor: session, rider, settlement.\n SELECT * INTO s FROM public.ride_session WHERE id='fb5df08c-06ad-4b25-ac0d-81419226e3a4' FOR UPDATE;\n SELECT user_id INTO owner FROM public.rider WHERE id=s.rider_id FOR UPDATE;\n IF owner IS NULL OR owner IS DISTINCT FROM auth.uid() THEN RAISE EXCEPTION USING ERRCODE='42501',MESSAGE='ride not owned';END IF;\n SELECT * INTO st FROM public.ride_reward_settlement WHERE ride_session_id=s.id FOR UPDATE;\n SELECT * INTO g FROM public.held_ride_recovery_approval WHERE approval_id=p_approval FOR UPDATE;\n IF g.approval_id IS NULL OR g.state<>'approved' OR g.expires_at<=clock_timestamp() OR g.approved_by=g.proposed_by\n  OR owner IN (g.proposed_by,g.approved_by) THEN RAISE EXCEPTION 'valid unconsumed independent approval required';END IF;\n PERFORM 1 FROM public.admin_users WHERE user_id IN (g.proposed_by,g.approved_by) ORDER BY user_id FOR SHARE;\n GET DIAGNOSTICS n=ROW_COUNT;IF n<>2 THEN RAISE EXCEPTION 'operator authority revoked';END IF;\n IF NOT public.held_ride_recovery_has_capability(g.proposed_by,'rides.settlement.recovery.request')\n  OR NOT public.held_ride_recovery_has_capability(g.approved_by,'rides.settlement.recovery.review') THEN RAISE EXCEPTION 'operator authority revoked';END IF;\n e:=public.held_ride_recovery_evidence();\n IF e->>'eligible' IS DISTINCT FROM 'true' OR e->>'evidenceDigest' IS DISTINCT FROM g.evidence_digest THEN RAISE EXCEPTION 'recovery evidence changed';END IF;\n PERFORM public.account_deletion_assert_writable(owner);\n UPDATE public.held_ride_recovery_approval SET state='consumed',claimed_at=clock_timestamp() WHERE approval_id=p_approval;\n UPDATE public.ride_reward_settlement SET status='calculating',attempts=attempts+1,lease_token=gen_random_uuid(),lease_until=clock_timestamp()+interval '5 minutes',\n  award_status=NULL,last_error=NULL,updated_at=clock_timestamp() WHERE ride_session_id=s.id RETURNING * INTO st;\n UPDATE public.held_ride_recovery_approval SET claim_audit_id=public.audit_held_ride_recovery(owner,p_approval,'claimed',g.reason,jsonb_build_object('historicalAttempts',23,'attempts',st.attempts,'leaseUntil',st.lease_until)) WHERE approval_id=p_approval;\n RETURN to_jsonb(st);\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "signature": "execute_account_deletion_database_core(uuid,uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.execute_account_deletion_database_core(p_job uuid, p_token uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE j public.account_deletion_jobs;manifest jsonb;a jsonb;values_to_match uuid[];tables text[];t text;c text;target text;op text;r record;ids uuid[];n integer;total integer:=0;blocked integer:=0;policy_fields text[];proof jsonb;\nBEGIN\n j:=public.account_deletion_assert_claim(p_job,p_token);\n IF EXISTS(SELECT 1 FROM public.account_deletion_operation WHERE job_id=j.id AND operation_key='database.erase:v1' AND state='confirmed') THEN RETURN jsonb_build_object('state','confirmed');END IF;\n IF NOT public.account_deletion_rule_allowed(j.policy_version,'personal.erase') THEN RETURN jsonb_build_object('state','review','reasonCode','database_erasure_approval_required');END IF;\n SELECT parameters->'executionManifest' INTO manifest FROM public.account_deletion_action_rule WHERE policy_version=j.policy_version AND scope='personal.erase';\n IF manifest IS NULL OR jsonb_typeof(manifest)<>'array' THEN RETURN jsonb_build_object('state','review','reasonCode','database_erasure_manifest_required');END IF;\n -- This is an ownership inventory, not an alias search. It survives erasure for\n -- checkpoint recovery. All derived IDs require an actual principal binding.\n INSERT INTO public.account_deletion_subject_inventory VALUES(j.id,'user',j.user_id) ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_subject_inventory SELECT j.id,'rider',id FROM public.rider WHERE user_id=j.user_id ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_subject_inventory SELECT j.id,'admin_users',id FROM public.admin_users WHERE user_id=j.user_id ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_subject_inventory SELECT j.id,'ride_session',s.id FROM public.ride_session s JOIN public.rider ri ON ri.id=s.rider_id WHERE ri.user_id=j.user_id ON CONFLICT DO NOTHING;\n INSERT INTO public.account_deletion_subject_inventory SELECT j.id,'route_tracking',s.id FROM public.route_tracking s JOIN public.rider ri ON ri.id=s.rider_id WHERE ri.user_id=j.user_id ON CONFLICT DO NOTHING;\n IF EXISTS(SELECT 1 FROM public.ride_session s JOIN public.rider ri ON ri.id=s.rider_id LEFT JOIN public.ride_reward_settlement st ON st.ride_session_id=s.id WHERE ri.user_id=j.user_id AND st.status IS DISTINCT FROM 'settled') THEN RETURN jsonb_build_object('state','review','reasonCode','pending_settlement_preserved');END IF;\n IF EXISTS(SELECT 1 FROM public.rider_reward_balance b JOIN public.rider ri ON ri.id=b.rider_id WHERE ri.user_id=j.user_id AND b.points_balance<>0) THEN RETURN jsonb_build_object('state','review','reasonCode','wallet_disposition_required');END IF;\n IF EXISTS(SELECT 1 FROM public.reward_redemptions d JOIN public.rider ri ON ri.id=d.rider_id WHERE ri.user_id=j.user_id AND d.status IN ('requested','approved')) THEN RETURN jsonb_build_object('state','review','reasonCode','valid_redemption_continuation_required');END IF;\n IF EXISTS(SELECT 1 FROM public.fulfilment f JOIN public.rider ri ON ri.id=f.rider_id WHERE ri.user_id=j.user_id AND f.state NOT IN ('completed','refunded','reversed','cancelled','failed','expired')) THEN RETURN jsonb_build_object('state','review','reasonCode','valid_fulfilment_continuation_required');END IF;\n IF EXISTS(SELECT 1 FROM public.reward_transactions rt JOIN public.rider ri ON ri.id=rt.rider_id WHERE ri.user_id=j.user_id AND rt.campaign_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.account_deletion_campaign_checkpoint c WHERE c.job_id=j.id AND c.campaign_id=rt.campaign_id AND c.state='confirmed')) THEN RETURN jsonb_build_object('state','review','reasonCode','campaign_reporting_disposition_required');END IF;\n SELECT coalesce(array_agg(DISTINCT 'public.'||(value->>'table')),'{}') INTO tables FROM jsonb_array_elements(manifest);\n PERFORM public.account_deletion_authorize_write(j.id,p_token,'personal.erase',tables,ARRAY['DELETE','UPDATE']);\n -- Every action is explicit and catalog-bound. Shared entity deletion is forbidden.\n -- Archive actions retain only approved scalar fields under independently approved\n -- purpose/period controls. They do not insert reporting facts or replacement riders.\n FOR a IN SELECT value FROM jsonb_array_elements(manifest) LOOP\n  t:=a->>'table';c:=a->>'column';target:=a->>'target';op:=a->>'action';\n  IF t LIKE 'account_deletion_%' OR t IN ('campaign','organisation','community_ride','campaign_accessory_inventory_item','partner','suggested_routes','hot_zones') AND op<>'detach_reference' THEN RAISE EXCEPTION 'shared entity erasure forbidden';END IF;\n  IF NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name=t AND column_name=c AND udt_name='uuid') THEN RAISE EXCEPTION 'manifest schema drift';END IF;\n  IF NOT (c='id' AND t=target AND target IN ('user','rider','admin_users')) AND NOT EXISTS(\n   SELECT 1 FROM pg_catalog.pg_constraint k JOIN pg_catalog.pg_class child ON child.oid=k.conrelid JOIN pg_catalog.pg_namespace ns ON ns.oid=child.relnamespace JOIN pg_catalog.pg_attribute att ON att.attrelid=k.conrelid AND att.attnum=k.conkey[1] JOIN pg_catalog.pg_class parent ON parent.oid=k.confrelid\n   WHERE ns.nspname='public' AND child.relname=t AND att.attname=c AND k.contype='f' AND cardinality(k.conkey)=1 AND parent.relname=target\n  ) AND NOT EXISTS(SELECT 1 FROM public.account_deletion_barrier_binding WHERE schema_name='public' AND table_name=t AND column_name=c AND identity_kind=CASE target WHEN 'user' THEN 'user' WHEN 'rider' THEN 'rider' ELSE NULL END) THEN RAISE EXCEPTION 'manifest ownership binding required';END IF;\n  SELECT coalesce(array_agg(row_id),'{}') INTO values_to_match FROM public.account_deletion_subject_inventory WHERE job_id=j.id AND table_name=target;\n  IF op IN ('delete_owned','archive_owned') THEN\n   IF t='organisation_membership' AND EXISTS(SELECT 1 FROM public.organisation_membership m WHERE m.user_id=j.user_id) THEN\n    -- Membership removal belongs to the continuity/capability/consent adapter.\n    -- A privacy manifest is not permission to remove the last organisation owner.\n    blocked:=blocked+1;CONTINUE;\n   END IF;\n   IF c NOT IN ('id','user_id','rider_id','admin_user_id','employee_user_id','session_id','ride_session_id','route_tracking_id','assignment_id','fulfilment_id','redemption_id','ticket_id','ticketid','support_ticket_id') OR (c='id' AND t<>target) THEN RAISE EXCEPTION 'authorship is not destructive ownership';END IF;\n   IF EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name=t AND column_name='id' AND udt_name='uuid') THEN\n    EXECUTE format('SELECT coalesce(array_agg(id),''{}'') FROM public.%I WHERE %I=ANY($1)',t,c) INTO ids USING values_to_match;\n   ELSIF op='delete_owned' THEN ids:='{}';\n   ELSE RAISE EXCEPTION 'explicit composite ownership adapter required';END IF;\n   -- Add exclusively owned child keys for ordered leaf dispositions. Manifest\n   -- may include capture_owned actions before child deletion when order requires it.\n   INSERT INTO public.account_deletion_subject_inventory SELECT j.id,t,x FROM unnest(ids) x ON CONFLICT DO NOTHING;\n   IF public.account_deletion_has_children(t,c,values_to_match) THEN blocked:=blocked+1;CONTINUE;END IF;\n   IF t IN ('reward_transactions','reward_redemptions','fulfilment','fulfilment_event','partner_validation','campaign_assignment_events','community_ride_change_log','platform_audit_record') AND op<>'archive_owned' THEN RAISE EXCEPTION 'business evidence disposition required';END IF;\n   IF op='archive_owned' THEN\n    IF EXISTS(SELECT 1 FROM public.account_deletion_hold WHERE job_id=j.id AND category IN (a->>'category','all') AND released_at IS NULL) THEN blocked:=blocked+1;CONTINUE;END IF;\n    IF NOT public.account_deletion_rule_allowed(j.policy_version,'evidence.restrict') THEN RAISE EXCEPTION 'business evidence approval required';END IF;\n    FOR r IN EXECUTE format('SELECT id,to_jsonb(r) data FROM public.%I r WHERE %I=ANY($1) FOR UPDATE',t,c) USING values_to_match LOOP\n     PERFORM public.capture_account_deletion_case(j.id,p_token,a->>'category',t,r.id,r.data);\n    END LOOP;\n   END IF;\n   EXECUTE format('DELETE FROM public.%I WHERE %I=ANY($1)',t,c) USING values_to_match;\n  ELSIF op='capture_owned' THEN\n   IF c NOT IN ('user_id','rider_id','admin_user_id','employee_user_id','session_id','ride_session_id','route_tracking_id','assignment_id','fulfilment_id','redemption_id','ticket_id','ticketid','support_ticket_id') THEN RAISE EXCEPTION 'destructive ownership binding required';END IF;\n   EXECUTE format('SELECT coalesce(array_agg(id),''{}'') FROM public.%I WHERE %I=ANY($1)',t,c) INTO ids USING values_to_match;\n   INSERT INTO public.account_deletion_subject_inventory SELECT j.id,t,x FROM unnest(ids) x ON CONFLICT DO NOTHING;CONTINUE;\n  ELSIF op='detach_reference' THEN\n   IF c NOT IN ('created_by','updated_by','auth_user_id','admin_user_id','changed_by_user_id','changed_by','actor_user_id','created_by_user_id','assigned_by','invited_by','accepted_by','revoked_by','resolved_by','verified_by','granted_by_user_id') THEN RAISE EXCEPTION 'ownership detachment requires independent continuity adapter';END IF;\n   IF EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name=t AND column_name=c AND is_nullable='NO') THEN blocked:=blocked+1;CONTINUE;END IF;\n   EXECUTE format('UPDATE public.%I SET %I=NULL WHERE %I=ANY($1)',t,c,c) USING values_to_match;\n  ELSE RAISE EXCEPTION 'unsupported erasure disposition';END IF;\n  GET DIAGNOSTICS n=ROW_COUNT;total:=total+n;\n END LOOP;\n -- Root removal is a consequence of explicit dispositions, never an implicit\n -- cascade. No checkpoint is issued while operational principals remain.\n IF blocked>0 OR EXISTS(SELECT 1 FROM public.rider WHERE user_id=j.user_id) OR EXISTS(SELECT 1 FROM public.admin_users WHERE user_id=j.user_id) OR EXISTS(SELECT 1 FROM public.\"user\" WHERE id=j.user_id) THEN\n  INSERT INTO public.account_deletion_review(job_id,category,reason_code,owner_capability,due_at) VALUES(j.id,'residual_erasure','restricted_dependency_disposition_required','privacy.deletion.compliance.review',clock_timestamp()+interval '1 day') ON CONFLICT DO NOTHING;\n  RETURN jsonb_build_object('state','review','changedRows',total,'blockedActions',blocked);\n END IF;\n proof:=public.verify_account_deletion_residual(j.id,p_token);\n IF EXISTS(SELECT 1 FROM jsonb_array_elements(proof->'residuals') x WHERE x->>'schema'<>'auth') THEN RETURN jsonb_build_object('state','review','reasonCode','database_residuals_remain');END IF;\n INSERT INTO public.account_deletion_operation(job_id,operation_key,lease_token,state,confirmed_at,result_code) VALUES(j.id,'database.erase:v1',p_token,'confirmed',clock_timestamp(),'application_catalog_absence_verified');\n INSERT INTO public.account_deletion_audit(job_id,event_code) VALUES(j.id,'database_erasure_independently_verified');\n RETURN jsonb_build_object('state','confirmed','changedRows',total);\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": false
+    },
+    {
+      "signature": "get_user_role()",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_user_role()\n RETURNS text\n LANGUAGE sql\n STABLE SECURITY DEFINER\nAS $function$\r\n  SELECT role::text\r\n  FROM public.user\r\n  WHERE id = auth.uid()\r\n  LIMIT 1;\r\n$function$\n",
+      "prosecdef": true,
+      "proconfig": null,
+      "anon": true,
+      "authenticated": true,
+      "service": true
+    },
+    {
+      "signature": "guard_employee_auth_insert()",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_employee_auth_insert()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE r public.employee_provisioning; product public.product_provisioning;\nBEGIN\n  -- GoTrue can apply custom app_metadata AFTER inserting auth.users. Resolve the\n  -- already-committed intent by UUID, not by insertion-time metadata timing.\n  SELECT * INTO r FROM public.employee_provisioning WHERE user_id=NEW.id;\n  IF r.user_id IS NOT NULL THEN\n    IF r.state<>'reserved' OR r.email<>lower(NEW.email) THEN\n      RAISE EXCEPTION 'Invalid employee provisioning reservation';\n    END IF;\n    NEW.banned_until := now()+interval '100 years';\n    NEW.raw_app_meta_data:=coalesce(NEW.raw_app_meta_data,'{}') || jsonb_build_object('employee_provisioning_id',NEW.id::text);\n    NEW.raw_user_meta_data := coalesce(NEW.raw_user_meta_data,'{}') || jsonb_strip_nulls(jsonb_build_object(\n      'server_assigned_role','admin','full_name',r.input->>'name','phone',r.input->>'phone'));\n  ELSE\n    SELECT * INTO product FROM public.product_provisioning WHERE user_id=NEW.id;\n    IF product.user_id IS NOT NULL THEN\n      IF product.input->>'role' NOT IN ('rider','advertiser') OR product.state<>'reserved' OR product.email<>lower(NEW.email) THEN\n        RAISE EXCEPTION 'Invalid product provisioning reservation';\n      END IF;\n      NEW.banned_until:=now()+interval '100 years';\n      NEW.raw_app_meta_data:=coalesce(NEW.raw_app_meta_data,'{}') || jsonb_build_object('admin_product_provisioning',\n        jsonb_build_object('actor',product.actor_id::text,'fingerprint',product.fingerprint));\n      NEW.raw_user_meta_data:=coalesce(NEW.raw_user_meta_data,'{}') || jsonb_strip_nulls(jsonb_build_object(\n        'server_assigned_role',product.input->>'role','full_name',product.input->>'name',\n        'phone',product.input->>'phone','city',product.input->>'city','country',product.input->>'country',\n        'companyName',product.input->'advertiserProfile'->>'companyName','language',product.input->>'languagePreference',\n        'timezone',product.input->'advertiserProfile'->>'timezone'));\n    ELSIF NEW.raw_app_meta_data ?| ARRAY['employee_provisioning_id','admin_product_provisioning'] THEN\n      RAISE EXCEPTION 'Provisioning marker without a reservation';\n    ELSIF coalesce(NEW.raw_user_meta_data,'{}') ? 'server_assigned_role' AND\n       coalesce(NEW.raw_user_meta_data->>'server_assigned_role','') NOT IN ('rider','advertiser') THEN\n      -- Explicit invalid/operational metadata must never reach the legacy\n      -- handler's catch-all Rider fallback. Employee grants require a reservation.\n      RAISE EXCEPTION 'Operational account roles require authorized employee provisioning';\n    END IF;\n  END IF;\n  RETURN NEW;\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": true,
+      "authenticated": true,
+      "service": true
+    },
+    {
+      "signature": "handle_new_user()",
+      "definition": "CREATE OR REPLACE FUNCTION public.handle_new_user()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\ndeclare\r\n  _role public.user_role := 'rider';\r\n  _user_id uuid := new.id;\r\n  _lang text := 'en';\r\n  _tz text := 'UTC';\r\n  _meta jsonb := coalesce(new.raw_user_meta_data::jsonb, '{}'::jsonb);\r\n  _name text;\r\n  _avatar text;\r\n  _company_name text;\r\nbegin\r\n  -- Only trust server-assigned role.\r\n  if (_meta ? 'server_assigned_role') then\r\n    begin\r\n      _role := (_meta->>'server_assigned_role')::public.user_role;\r\n    exception\r\n      when others then\r\n        _role := 'rider';\r\n    end;\r\n  end if;\r\n\r\n  _name := coalesce(nullif(_meta->>'full_name', ''), new.email, '');\r\n  _avatar := coalesce(\r\n    nullif(_meta->>'avatar_url', ''),\r\n    nullif(_meta->>'avatarUrl', ''),\r\n    nullif(_meta->>'avatarurl', '')\r\n  );\r\n\r\n  insert into public.\"user\" (\r\n    id,\r\n    email,\r\n    name,\r\n    phone,\r\n    organization,\r\n    avatar_url,\r\n    role,\r\n    created_at,\r\n    updated_at\r\n  )\r\n  values (\r\n    new.id,\r\n    new.email,\r\n    _name,\r\n    nullif(_meta->>'phone', ''),\r\n    null,\r\n    _avatar,\r\n    _role,\r\n    now(),\r\n    now()\r\n  )\r\n  on conflict (id) do update\r\n  set email = excluded.email,\r\n      name = case\r\n        when coalesce(public.\"user\".name, '') = '' then excluded.name\r\n        else public.\"user\".name\r\n      end,\r\n      phone = coalesce(public.\"user\".phone, excluded.phone),\r\n      avatar_url = coalesce(public.\"user\".avatar_url, excluded.avatar_url),\r\n      role = public.\"user\".role,\r\n      updated_at = now();\r\n\r\n  if _role = 'rider' then\r\n    insert into public.rider (\r\n      user_id,\r\n      created_at,\r\n      phone,\r\n      city,\r\n      country\r\n    )\r\n    values (\r\n      _user_id,\r\n      now(),\r\n      nullif(_meta->>'phone', ''),\r\n      nullif(_meta->>'city', ''),\r\n      nullif(_meta->>'country', '')\r\n    )\r\n    on conflict (user_id) do update\r\n    set phone = coalesce(public.rider.phone, excluded.phone),\r\n        city = coalesce(public.rider.city, excluded.city),\r\n        country = coalesce(public.rider.country, excluded.country);\r\n  end if;\r\n\r\n  if _role = 'advertiser' then\r\n    _lang := coalesce(nullif(_meta->>'language', ''), 'en');\r\n    _tz := coalesce(nullif(_meta->>'timezone', ''), 'UTC');\r\n    _company_name := nullif(_meta->>'companyName', '');\r\n\r\n    insert into public.advertiser (\r\n      user_id,\r\n      company_name,\r\n      language,\r\n      timezone,\r\n      created_at\r\n    )\r\n    values (\r\n      _user_id,\r\n      _company_name,\r\n      _lang,\r\n      _tz,\r\n      now()\r\n    )\r\n    on conflict (user_id) do update\r\n    set company_name = coalesce(public.advertiser.company_name, excluded.company_name),\r\n        language = coalesce(public.advertiser.language, excluded.language),\r\n        timezone = coalesce(public.advertiser.timezone, excluded.timezone);\r\n  end if;\r\n\r\n  return null;\r\nexception\r\n  when others then\r\n    raise log 'handle_new_user failed for auth.users.id=% email=% error=%',\r\n      new.id, new.email, sqlerrm;\r\n    raise;\r\nend;\r\n$function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "anon": true,
+      "authenticated": true,
+      "service": true
+    },
+    {
+      "signature": "held_ride_recovery_has_capability(uuid,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.held_ride_recovery_has_capability(p_actor uuid, p_capability text)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n SELECT EXISTS(SELECT 1 FROM public.admin_users a JOIN (VALUES\n  ('super_admin','rides.settlement.recovery.request'),\n  ('super_admin','rides.settlement.recovery.review'),\n  ('operations_manager','rides.settlement.recovery.review'),\n  ('finance_operator','rides.settlement.recovery.review'),\n  ('engineering_operations','rides.settlement.recovery.request'),\n  ('admin','rides.settlement.recovery.review')\n ) grants(role,capability) ON lower(btrim(a.role))=grants.role\n WHERE a.user_id=p_actor AND grants.capability=p_capability);\n$function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": false
+    },
+    {
+      "signature": "held_ride_recovery_operator(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.held_ride_recovery_operator(p_capability text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE actor uuid:=auth.uid();\nBEGIN\n IF actor IS NULL OR coalesce(nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'aal','')<>'aal2' THEN\n  RAISE EXCEPTION USING ERRCODE='42501',MESSAGE='authenticated MFA operator required';END IF;\n -- Reuse Admin's trusted dashboard session, 12-hour maximum and one-second\n -- sign-in binding; require MFA even if the general policy permits AAL1.\n PERFORM 1 FROM public.admin_users a\n JOIN public.admin_dashboard_sessions ds ON ds.admin_user_id=a.id AND ds.auth_user_id=a.user_id\n JOIN auth.users au ON au.id=a.user_id\n WHERE a.user_id=actor AND public.held_ride_recovery_has_capability(actor,p_capability)\n  AND ds.session_expires_at>clock_timestamp() AND ds.session_started_at>clock_timestamp()-interval '12 hours'\n  AND abs(extract(epoch FROM ds.auth_last_sign_in_at-au.last_sign_in_at))<=1\n  AND NOT EXISTS(SELECT 1 FROM public.account_deletion_write_guard g WHERE g.user_id=actor AND g.restricted)\n  AND NOT EXISTS(SELECT 1 FROM public.account_deletion_jobs j WHERE j.user_id=actor)\n FOR SHARE OF a,ds;\n IF NOT FOUND THEN RAISE EXCEPTION USING ERRCODE='42501',MESSAGE='current authorized recovery operator session required';END IF;\n IF EXISTS(SELECT 1 FROM public.ride_session s JOIN public.rider r ON r.id=s.rider_id WHERE s.id='fb5df08c-06ad-4b25-ac0d-81419226e3a4' AND r.user_id=actor) THEN\n  RAISE EXCEPTION 'operator must be independent of rider';END IF;\n RETURN actor;\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": false
+    },
+    {
+      "signature": "is_dashboard_admin()",
+      "definition": "CREATE OR REPLACE FUNCTION public.is_dashboard_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\n  SELECT EXISTS (\r\n    SELECT 1\r\n    FROM public.admin_users au\r\n    WHERE au.user_id = auth.uid()\r\n  );\r\n$function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "anon": true,
+      "authenticated": true,
+      "service": true
+    },
+    {
+      "signature": "is_super_admin(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.is_super_admin(check_user_id uuid)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\nDECLARE\r\n  user_role text;\r\nBEGIN\r\n  -- Get the user's role from admin_users without triggering RLS recursion\r\n  SELECT role INTO user_role \r\n  FROM admin_users \r\n  WHERE user_id = check_user_id;\r\n  \r\n  RETURN user_role = 'super_admin';\r\nEND;\r\n$function$\n",
+      "prosecdef": true,
+      "proconfig": null,
+      "anon": true,
+      "authenticated": true,
+      "service": true
+    },
+    {
+      "signature": "join_community_ride(uuid,uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.join_community_ride(p_community_ride_id uuid, p_rider_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nDECLARE\r\n  v_ride        RECORD;\r\n  v_active_cnt  INTEGER;\r\nBEGIN\n PERFORM public.assert_active_account();\r\n  IF auth.uid() IS NULL THEN\r\n    RETURN jsonb_build_object('success', false, 'error', 'auth_required');\r\n  END IF;\r\n\r\n  IF NOT EXISTS (\r\n    SELECT 1 FROM public.rider r\r\n    WHERE r.id = p_rider_id\r\n      AND r.user_id = auth.uid()\r\n  ) AND NOT EXISTS (\r\n    SELECT 1 FROM public.admin_users au\r\n    WHERE au.user_id = auth.uid()\r\n  ) THEN\r\n    RETURN jsonb_build_object('success', false, 'error', 'not_authorized');\r\n  END IF;\r\n\r\n  SELECT id, status, max_participants, is_public\r\n    INTO v_ride\r\n    FROM public.community_ride\r\n   WHERE id = p_community_ride_id\r\n     FOR UPDATE;\r\n\r\n  IF NOT FOUND THEN\r\n    RETURN jsonb_build_object('success', false, 'error', 'ride_not_found');\r\n  END IF;\r\n\r\n  IF NOT v_ride.is_public THEN\r\n    RETURN jsonb_build_object('success', false, 'error', 'ride_not_public');\r\n  END IF;\r\n\r\n  IF v_ride.status NOT IN ('upcoming', 'active') THEN\r\n    RETURN jsonb_build_object('success', false, 'error', 'ride_not_joinable');\r\n  END IF;\r\n\r\n  SELECT COUNT(*)\r\n    INTO v_active_cnt\r\n    FROM public.community_ride_participant\r\n   WHERE community_ride_id = p_community_ride_id\r\n     AND status = 'joined';\r\n\r\n  IF v_active_cnt >= v_ride.max_participants THEN\r\n    RETURN jsonb_build_object('success', false, 'error', 'ride_full');\r\n  END IF;\r\n\r\n  INSERT INTO public.community_ride_participant\r\n    (community_ride_id, rider_id, status, joined_at)\r\n  VALUES\r\n    (p_community_ride_id, p_rider_id, 'joined', NOW())\r\n  ON CONFLICT (community_ride_id, rider_id)\r\n    DO UPDATE SET status = 'joined', joined_at = NOW();\r\n\r\n  RETURN jsonb_build_object('success', true);\r\nEND;\r\n$function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "anon": true,
+      "authenticated": true,
+      "service": true
+    },
+    {
+      "signature": "mark_employee_profile_pending()",
+      "definition": "CREATE OR REPLACE FUNCTION public.mark_employee_profile_pending()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nBEGIN\n  IF NEW.raw_app_meta_data ? 'employee_provisioning_id' THEN\n    IF EXISTS(SELECT 1 FROM public.rider WHERE user_id=NEW.id) THEN\n      RAISE EXCEPTION 'Employee bootstrap must not create Rider';\n    END IF;\n    UPDATE public.\"user\" SET status='pending' WHERE id=NEW.id AND role='admin';\n    IF NOT FOUND THEN RAISE EXCEPTION 'Invalid employee public profile bootstrap'; END IF;\n  ELSIF NEW.raw_app_meta_data ? 'admin_product_provisioning' THEN\n    UPDATE public.\"user\" SET status='pending' WHERE id=NEW.id AND role::text=(SELECT input->>'role' FROM public.product_provisioning WHERE user_id=NEW.id);\n    IF NOT FOUND THEN RAISE EXCEPTION 'Invalid product public profile bootstrap'; END IF;\n    UPDATE public.rider SET status='inactive' WHERE user_id=NEW.id;\n  END IF;\n  RETURN NEW;\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": true,
+      "authenticated": true,
+      "service": true
+    },
+    {
+      "signature": "ops_assert_capability(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.ops_assert_capability(p_capability text)\n RETURNS uuid\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\n#variable_conflict use_variable\nDECLARE actor uuid:=auth.uid(); role_name text;\nBEGIN\n PERFORM public.assert_active_account();\n IF coalesce((SELECT (value->>'enforceAdminMfa')::boolean FROM public.platform_settings WHERE key='security'),true) AND coalesce(current_setting('request.jwt.claims',true),'{}')::jsonb->>'aal' IS DISTINCT FROM 'aal2' THEN\n  RAISE EXCEPTION 'MFA required' USING ERRCODE='42501'; END IF;\n SELECT role::text INTO role_name FROM public.admin_users WHERE user_id=actor;\n IF role_name IS NULL OR NOT (public.ops_employee_capabilities(role_name) ? p_capability) THEN\n  RAISE EXCEPTION 'Capability required' USING ERRCODE='42501'; END IF;\n RETURN actor;\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "signature": "ops_employee_capabilities(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.ops_employee_capabilities(p_role text)\n RETURNS jsonb\n LANGUAGE sql\n IMMUTABLE\n SET search_path TO ''\nAS $function$ SELECT coalesce('{\"super_admin\":[\"rewards.redeem\",\"rewards.catalog.read\",\"rewards.manage\",\"fulfilment.read\",\"fulfilment.cancel\",\"fulfilment.refund\",\"fulfilment.override\",\"fulfilment.validate\",\"fulfilment.confirm\",\"resources.manage\",\"wallet.read\",\"staff.manage\",\"analytics.view\",\"campaigns.read\",\"campaigns.write\",\"campaigns.launch\",\"campaigns.pause\",\"billing.read\",\"programmes.read\",\"compliance.read\",\"impact.read\",\"org.settings\",\"dashboard.read\",\"users.read\",\"users.manage\",\"users.role.assign\",\"users.role.approve\",\"waitlist.manage\",\"riders.read\",\"riders.manage\",\"rides.read\",\"rides.verify\",\"rides.settlement.recovery.request\",\"rides.settlement.recovery.review\",\"routes.read\",\"routes.write\",\"routes.approve\",\"campaigns.approve\",\"campaigns.publish\",\"campaigns.archive\",\"rewards.approve\",\"partners.approve\",\"fraud.review\",\"fraud.resolve\",\"incidents.read\",\"incidents.create\",\"incidents.manage\",\"notifications.read\",\"notifications.send\",\"settings.manage\",\"settings.security\",\"exports.execute\",\"privacy.erase\",\"privacy.deletion.monitor\",\"privacy.deletion.escalate\",\"privacy.deletion.operations.review\",\"privacy.deletion.finance.review\",\"privacy.deletion.compliance.review\",\"privacy.deletion.recovery\",\"platform.health.read\",\"platform.jobs.manage\",\"featureflags.manage\",\"billing.manage\",\"workboard.access\",\"analytics.read\",\"reports.read\",\"protips.manage\",\"community.manage\",\"advertisers.manage\",\"authz.inspect\",\"authz.manage\",\"break_glass.use\",\"delegation.manage\"],\"security_admin\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"privacy.deletion.monitor\",\"privacy.deletion.escalate\",\"privacy.deletion.recovery\",\"users.read\",\"users.role.approve\",\"settings.manage\",\"settings.security\",\"authz.inspect\",\"authz.manage\",\"break_glass.use\",\"delegation.manage\",\"exports.execute\",\"privacy.erase\",\"incidents.read\",\"incidents.manage\",\"fraud.review\",\"reports.read\"],\"operations_manager\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"campaigns.read\",\"campaigns.write\",\"campaigns.launch\",\"campaigns.pause\",\"campaigns.publish\",\"campaigns.archive\",\"advertisers.manage\",\"community.manage\",\"campaigns.approve\",\"rewards.catalog.read\",\"rewards.manage\",\"fulfilment.read\",\"fulfilment.validate\",\"fulfilment.confirm\",\"fulfilment.cancel\",\"fulfilment.refund\",\"resources.manage\",\"wallet.read\",\"partners.approve\",\"rewards.approve\",\"privacy.deletion.monitor\",\"privacy.deletion.escalate\",\"privacy.deletion.operations.review\",\"rides.settlement.recovery.review\",\"users.read\",\"users.manage\",\"users.role.assign\",\"waitlist.manage\",\"riders.read\",\"riders.manage\",\"rides.read\",\"rides.verify\",\"routes.read\",\"routes.write\",\"routes.approve\",\"fraud.review\",\"fraud.resolve\",\"incidents.read\",\"incidents.create\",\"incidents.manage\",\"notifications.send\",\"settings.manage\",\"exports.execute\",\"platform.health.read\",\"platform.jobs.manage\",\"billing.read\",\"billing.manage\",\"workboard.access\",\"programmes.read\",\"compliance.read\",\"impact.read\",\"protips.manage\",\"reports.read\",\"authz.inspect\",\"fulfilment.override\",\"staff.manage\"],\"platform_operator\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"privacy.deletion.monitor\",\"privacy.deletion.escalate\",\"privacy.deletion.operations.review\",\"platform.health.read\",\"platform.jobs.manage\",\"featureflags.manage\",\"incidents.read\",\"incidents.manage\",\"workboard.access\",\"authz.inspect\"],\"campaign_manager\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"campaigns.read\",\"campaigns.write\",\"campaigns.launch\",\"campaigns.pause\",\"campaigns.publish\",\"campaigns.archive\",\"advertisers.manage\",\"community.manage\",\"routes.read\",\"riders.read\",\"rides.read\",\"exports.execute\",\"workboard.access\",\"reports.read\"],\"partner_operations_manager\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"rewards.catalog.read\",\"rewards.manage\",\"fulfilment.read\",\"fulfilment.validate\",\"fulfilment.confirm\",\"fulfilment.cancel\",\"fulfilment.refund\",\"resources.manage\",\"wallet.read\",\"partners.approve\",\"rewards.approve\",\"exports.execute\",\"workboard.access\",\"reports.read\"],\"fraud_analyst\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"fraud.review\",\"fraud.resolve\",\"rides.read\",\"rides.verify\",\"riders.read\",\"incidents.read\",\"incidents.create\",\"users.read\",\"exports.execute\",\"workboard.access\"],\"trust_safety_analyst\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"users.read\",\"riders.read\",\"rides.read\",\"fraud.review\",\"incidents.read\",\"incidents.create\",\"incidents.manage\",\"notifications.send\",\"workboard.access\"],\"support_agent\":[\"privacy.deletion.monitor\",\"privacy.deletion.escalate\",\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"users.read\",\"riders.read\",\"rides.read\",\"incidents.create\",\"incidents.read\",\"notifications.send\",\"rewards.catalog.read\",\"fulfilment.read\",\"wallet.read\"],\"support_lead\":[\"privacy.deletion.monitor\",\"privacy.deletion.escalate\",\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"users.read\",\"riders.read\",\"rides.read\",\"incidents.create\",\"incidents.read\",\"notifications.send\",\"waitlist.manage\",\"incidents.manage\",\"riders.manage\",\"rewards.catalog.read\",\"fulfilment.read\",\"wallet.read\",\"exports.execute\",\"workboard.access\"],\"finance_operator\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"rides.settlement.recovery.review\",\"privacy.deletion.monitor\",\"privacy.deletion.finance.review\",\"billing.read\",\"billing.manage\",\"exports.execute\",\"campaigns.read\",\"reports.read\",\"authz.inspect\"],\"compliance_analyst\":[\"privacy.deletion.monitor\",\"privacy.deletion.compliance.review\",\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"programmes.read\",\"compliance.read\",\"impact.read\",\"campaigns.read\",\"rewards.catalog.read\",\"fulfilment.read\",\"users.read\",\"riders.read\",\"rides.read\",\"billing.read\",\"reports.read\",\"authz.inspect\",\"exports.execute\"],\"programme_operations_manager\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"programmes.read\",\"compliance.read\",\"impact.read\",\"campaigns.read\",\"riders.read\",\"rides.read\",\"reports.read\"],\"executive_viewer\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"reports.read\",\"programmes.read\",\"impact.read\",\"campaigns.read\",\"billing.read\",\"compliance.read\"],\"product_operations\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"routes.read\",\"routes.write\",\"routes.approve\",\"campaigns.read\",\"workboard.access\",\"community.manage\",\"protips.manage\",\"riders.read\",\"rides.read\"],\"engineering_operations\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"privacy.deletion.monitor\",\"privacy.deletion.escalate\",\"privacy.deletion.operations.review\",\"platform.health.read\",\"platform.jobs.manage\",\"featureflags.manage\",\"incidents.read\",\"incidents.manage\",\"workboard.access\",\"settings.manage\",\"authz.inspect\",\"rides.settlement.recovery.request\"],\"admin\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"campaigns.read\",\"campaigns.write\",\"campaigns.launch\",\"campaigns.pause\",\"campaigns.publish\",\"campaigns.archive\",\"advertisers.manage\",\"community.manage\",\"campaigns.approve\",\"rewards.catalog.read\",\"rewards.manage\",\"fulfilment.read\",\"fulfilment.validate\",\"fulfilment.confirm\",\"fulfilment.cancel\",\"fulfilment.refund\",\"resources.manage\",\"wallet.read\",\"partners.approve\",\"rewards.approve\",\"privacy.deletion.monitor\",\"privacy.deletion.escalate\",\"privacy.deletion.operations.review\",\"rides.settlement.recovery.review\",\"users.read\",\"users.manage\",\"users.role.assign\",\"waitlist.manage\",\"riders.read\",\"riders.manage\",\"rides.read\",\"rides.verify\",\"routes.read\",\"routes.write\",\"routes.approve\",\"fraud.review\",\"fraud.resolve\",\"incidents.read\",\"incidents.create\",\"incidents.manage\",\"notifications.send\",\"settings.manage\",\"exports.execute\",\"platform.health.read\",\"platform.jobs.manage\",\"billing.read\",\"billing.manage\",\"workboard.access\",\"programmes.read\",\"compliance.read\",\"impact.read\",\"protips.manage\",\"reports.read\",\"authz.inspect\",\"fulfilment.override\",\"staff.manage\"],\"moderator\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"routes.read\",\"routes.write\",\"routes.approve\",\"campaigns.read\",\"workboard.access\",\"community.manage\",\"protips.manage\",\"riders.read\",\"rides.read\"],\"support\":[\"privacy.deletion.monitor\",\"privacy.deletion.escalate\",\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"users.read\",\"riders.read\",\"rides.read\",\"incidents.create\",\"incidents.read\",\"notifications.send\",\"rewards.catalog.read\",\"fulfilment.read\",\"wallet.read\"],\"compliance_officer\":[\"privacy.deletion.monitor\",\"privacy.deletion.compliance.review\",\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"programmes.read\",\"compliance.read\",\"impact.read\",\"campaigns.read\",\"rewards.catalog.read\",\"fulfilment.read\",\"users.read\",\"riders.read\",\"rides.read\",\"billing.read\",\"reports.read\",\"authz.inspect\",\"exports.execute\"],\"government\":[\"dashboard.read\",\"notifications.read\",\"analytics.read\",\"analytics.view\",\"programmes.read\",\"compliance.read\",\"impact.read\",\"campaigns.read\",\"riders.read\",\"rides.read\",\"reports.read\"]}'::jsonb->p_role,'[]'::jsonb) $function$\n",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": false
+    },
+    {
+      "signature": "ops_queue_notifications(uuid,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.ops_queue_notifications(p_operation uuid, p_payload jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\n#variable_conflict use_variable\nDECLARE actor uuid; job public.ops_notification_send;\nBEGIN\n actor:=public.ops_assert_capability('notifications.send');\n IF p_operation IS NULL OR length(trim(coalesce(p_payload->>'title',''))) NOT BETWEEN 1 AND 200 OR length(trim(coalesce(p_payload->>'message',''))) NOT BETWEEN 1 AND 10000 OR p_payload->>'type' NOT IN ('campaign_assigned','campaign_completed','route_assigned','route_completed','system','reward','status') OR p_payload->>'target' NOT IN ('all','role','userIds') OR jsonb_typeof(p_payload->'respectPreferences') IS DISTINCT FROM 'boolean' THEN RAISE EXCEPTION 'Invalid notification request' USING ERRCODE='22023'; END IF;\n PERFORM pg_advisory_xact_lock(hashtextextended(p_operation::text,8));\n SELECT * INTO job FROM public.ops_notification_send WHERE id=p_operation FOR UPDATE;\n IF FOUND THEN\n  IF job.actor_user_id<>actor OR job.payload<>p_payload THEN RAISE EXCEPTION 'Operation conflict' USING ERRCODE='40001'; END IF;\n  RETURN public.ops_notification_status(p_operation);\n END IF;\n IF p_payload->>'target'='role' AND nullif(p_payload->>'role','') IS NULL OR p_payload->>'target'='userIds' AND (jsonb_typeof(p_payload->'userIds') IS DISTINCT FROM 'array' OR jsonb_array_length(p_payload->'userIds')=0) THEN RAISE EXCEPTION 'Audience required' USING ERRCODE='22023'; END IF;\n INSERT INTO public.ops_notification_send(id,actor_user_id,payload) VALUES(p_operation,actor,p_payload);\n -- No PostgREST row cap. Preference-query failure rolls back the entire operation.\n INSERT INTO public.ops_notification_recipient(operation,user_id)\n SELECT p_operation,u.id FROM public.\"user\" u LEFT JOIN public.user_preferences pref ON pref.user_id=u.id\n WHERE u.status::text='active' AND (p_payload->>'target'='all' OR p_payload->>'target'='role' AND u.role::text=p_payload->>'role' OR p_payload->>'target'='userIds' AND (p_payload->'userIds') ? u.id::text)\n AND (NOT (p_payload->>'respectPreferences')::boolean OR coalesce(pref.notifications,true));\n PERFORM public.ops_audit('notifications.send','notification_send',p_operation::text,NULL,jsonb_build_object('audience',p_payload->>'target','counts',public.ops_notification_status(p_operation)),'Notification send queued',p_operation);\n RETURN public.ops_notification_status(p_operation);\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "signature": "provision_employee(uuid,jsonb,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.provision_employee(p_actor uuid, p_input jsonb, p_phase text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE r public.employee_provisioning; actor_role text; caps jsonb; requested text:=p_input->>'role';\nBEGIN\n  IF coalesce(auth.role(),'')<>'service_role' THEN RAISE EXCEPTION 'Service role required' USING ERRCODE='42501'; END IF;\n  SELECT a.role INTO actor_role FROM public.admin_users a JOIN public.\"user\" u ON u.id=a.user_id\n    WHERE a.user_id=p_actor AND u.status='active';\n  caps:=public.ops_employee_capabilities(actor_role);\n  IF NOT coalesce(caps ? 'users.manage',false) OR NOT coalesce(caps ?\n      CASE WHEN requested IN ('super_admin','security_admin') THEN 'users.role.approve' ELSE 'users.role.assign' END,false) THEN\n    RAISE EXCEPTION 'Unauthorized employee role assignment' USING ERRCODE='42501';\n  END IF;\n  -- Canonical roles are the generated template contract; do not accept aliases\n  -- for new employees, or put owner/manager/staff/viewer in this role domain.\n  IF requested IS NULL OR requested IN ('admin','moderator','support','compliance_officer','government')\n     OR jsonb_array_length(public.ops_employee_capabilities(requested))=0\n     OR p_input->>'status' IS NULL OR p_input->>'status' NOT IN ('active','inactive','pending')\n     OR coalesce(btrim(p_input->>'name'),'')='' OR coalesce(p_input->>'email','') !~ '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$'\n     OR p_input->>'email'<>lower(btrim(p_input->>'email'))\n     OR p_input ?| ARRAY['organisationId','organisation_id','membershipRole','bundleKey'] THEN\n    RAISE EXCEPTION 'Invalid employee provisioning contract';\n  END IF;\n  IF p_phase NOT IN ('reserve','persist','complete') THEN RAISE EXCEPTION 'Invalid provisioning phase'; END IF;\n  -- All operations for an email, including concurrent first submissions, serialize.\n  PERFORM pg_advisory_xact_lock(hashtextextended(p_input->>'email',68));\n  SELECT * INTO r FROM public.employee_provisioning WHERE email=p_input->>'email' FOR UPDATE;\n  IF r.user_id IS NULL THEN\n    IF p_phase<>'reserve' THEN RAISE EXCEPTION 'Provisioning reservation missing'; END IF;\n    IF EXISTS(SELECT 1 FROM auth.users WHERE lower(email)=p_input->>'email') THEN\n      RAISE EXCEPTION 'Existing account: use its authorized invitation workflow; creation cannot reclassify it';\n    END IF;\n    INSERT INTO public.employee_provisioning(email,actor_id,input) VALUES(p_input->>'email',p_actor,p_input) RETURNING * INTO r;\n  END IF;\n  IF r.actor_id<>p_actor OR r.input<>p_input THEN RAISE EXCEPTION 'Conflicting provisioning request; original reservation preserved'; END IF;\n  IF r.state IN ('ready','complete') AND (NOT EXISTS(SELECT 1 FROM public.admin_users WHERE user_id=r.user_id AND role=requested)\n    OR NOT EXISTS(SELECT 1 FROM public.\"user\" WHERE id=r.user_id AND email=r.email AND role='admin' AND status::text=\n      CASE WHEN p_input->>'status'='inactive' THEN 'suspended' ELSE p_input->>'status' END)) THEN\n    RAISE EXCEPTION 'Provisioned account changed; do not reactivate automatically';\n  END IF;\n  IF p_phase='persist' AND r.state='reserved' THEN\n    IF NOT EXISTS(SELECT 1 FROM auth.users WHERE id=r.user_id AND lower(email)=r.email\n       AND raw_app_meta_data->>'employee_provisioning_id'=r.user_id::text AND banned_until>now()) THEN\n      RAISE EXCEPTION 'Owned, banned Auth identity required';\n    END IF;\n    IF EXISTS(SELECT 1 FROM public.rider WHERE user_id=r.user_id)\n       OR EXISTS(SELECT 1 FROM public.organisation_membership WHERE user_id=r.user_id)\n       OR EXISTS(SELECT 1 FROM public.admin_users WHERE user_id=r.user_id) THEN\n      RAISE EXCEPTION 'Unexpected existing identity grants; investigation required';\n    END IF;\n    UPDATE public.\"user\" SET name=p_input->>'name',phone=p_input->>'phone',\n      status=(CASE WHEN p_input->>'status'='inactive' THEN 'suspended' ELSE p_input->>'status' END)::public.user_status,\n      organization=p_input->>'organization',language_preference=p_input->>'languagePreference',\n      is_verified=(p_input->>'isVerified')::boolean,email_verified=(p_input->>'isVerified')::boolean,verification_level='basic',\n      account_notes=p_input->>'accountNotes',updated_at=now()\n      WHERE id=r.user_id AND role='admin' AND status='pending';\n    IF NOT FOUND THEN RAISE EXCEPTION 'Pending employee profile required'; END IF;\n    INSERT INTO public.admin_users(user_id,email,role,created_by) VALUES(r.user_id,r.email,requested,p_actor);\n    INSERT INTO public.platform_audit_record(actor_user_id,principal_type,capability,target_entity_type,target_entity_id,resulting_state,correlation_id,reason)\n      VALUES(p_actor,'admin','users.manage','user',r.user_id::text,jsonb_build_object('role',requested,'status',p_input->>'status'),r.user_id::text,'admin_account_creation_v1');\n    UPDATE public.employee_provisioning SET state='ready',updated_at=now() WHERE user_id=r.user_id RETURNING * INTO r;\n  ELSIF p_phase='complete' AND r.state='ready' THEN\n    IF p_input->>'status'='active' AND EXISTS(SELECT 1 FROM auth.users WHERE id=r.user_id AND banned_until>now()) THEN\n      RAISE EXCEPTION 'Auth activation pending';\n    END IF;\n    UPDATE public.employee_provisioning SET state='complete',updated_at=now() WHERE user_id=r.user_id RETURNING * INTO r;\n  END IF;\n  RETURN jsonb_build_object('user_id',r.user_id,'state',r.state);\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "signature": "provision_product(uuid,uuid,jsonb,text,text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.provision_product(p_actor uuid, p_id uuid, p_input jsonb, p_fingerprint text, p_phase text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE caps jsonb; identity auth.users; journal jsonb; requested text:=p_input->>'role'; required text; reservation public.product_provisioning;\nBEGIN\n  IF coalesce(auth.role(),'')<>'service_role' THEN RAISE EXCEPTION 'Service role required' USING ERRCODE='42501'; END IF;\n  required:=CASE WHEN p_input ? 'waitlistId' THEN 'waitlist.manage' WHEN requested='advertiser' THEN 'advertisers.manage' ELSE 'users.manage' END;\n  SELECT public.ops_employee_capabilities(a.role) INTO caps FROM public.admin_users a JOIN public.\"user\" u ON u.id=a.user_id\n    WHERE a.user_id=p_actor AND u.status='active';\n  IF NOT coalesce(caps ? required,false) THEN RAISE EXCEPTION 'Unauthorized product provisioning' USING ERRCODE='42501'; END IF;\n  IF requested IS NULL OR requested NOT IN ('rider','advertiser') OR p_input->>'status' IS NULL\n    OR p_input->>'status' NOT IN ('active','inactive','pending') OR coalesce(btrim(p_input->>'name'),'')=''\n    OR coalesce(p_input->>'email','') !~ '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$'\n    OR p_input->>'email'<>lower(btrim(p_input->>'email')) OR length(p_fingerprint)<>64\n    OR (requested='advertiser' AND (p_input->'advertiserProfile'->>'companyName' IS NULL OR p_input ? 'waitlistId'))\n    OR (requested='rider' AND p_input ? 'advertiserProfile') OR p_input ?| ARRAY['organisationId','bundleKey','membershipRole'] THEN\n    RAISE EXCEPTION 'Invalid product provisioning contract';\n  END IF;\n  IF p_phase IS NULL OR p_phase NOT IN ('validate','persist','complete') THEN RAISE EXCEPTION 'Invalid provisioning phase'; END IF;\n  PERFORM pg_advisory_xact_lock(hashtextextended(p_input->>'email',68));\n  IF EXISTS(SELECT 1 FROM auth.users WHERE lower(email)=p_input->>'email' AND id<>p_id) THEN\n    RAISE EXCEPTION 'Email belongs to an existing account; use its authorized update workflow';\n  END IF;\n  IF p_input ? 'waitlistId' THEN\n    PERFORM 1 FROM public.waitlist WHERE id=(p_input->>'waitlistId')::uuid AND lower(email)=p_input->>'email' FOR UPDATE;\n    IF NOT FOUND THEN RAISE EXCEPTION 'Waitlist identity mismatch'; END IF;\n  END IF;\n  SELECT * INTO reservation FROM public.product_provisioning WHERE user_id=p_id FOR UPDATE;\n  IF reservation.user_id IS NULL THEN\n    IF p_phase<>'validate' OR EXISTS(SELECT 1 FROM auth.users WHERE id=p_id) THEN RAISE EXCEPTION 'Product reservation required'; END IF;\n    INSERT INTO public.product_provisioning(user_id,email,actor_id,input,fingerprint)\n      VALUES(p_id,p_input->>'email',p_actor,p_input,p_fingerprint) RETURNING * INTO reservation;\n  END IF;\n  IF reservation.actor_id<>p_actor OR reservation.input<>p_input OR reservation.fingerprint<>p_fingerprint THEN\n    RAISE EXCEPTION 'Conflicting product provisioning request';\n  END IF;\n  SELECT * INTO identity FROM auth.users WHERE id=p_id FOR UPDATE;\n  journal:=identity.raw_app_meta_data->'admin_product_provisioning';\n  IF identity.id IS NOT NULL AND (journal IS NULL OR journal->>'fingerprint' IS DISTINCT FROM p_fingerprint\n      OR journal->>'actor' IS DISTINCT FROM p_actor::text) THEN\n    RAISE EXCEPTION 'Conflicting product provisioning request';\n  END IF;\n  IF reservation.state IN ('ready','complete') THEN\n    IF NOT EXISTS(SELECT 1 FROM public.\"user\" WHERE id=p_id AND email=p_input->>'email' AND role::text=requested AND status::text=\n      CASE WHEN p_input->>'status'='inactive' THEN 'suspended' ELSE p_input->>'status' END) THEN\n      RAISE EXCEPTION 'Provisioned product account changed; do not reactivate automatically';\n    END IF;\n  END IF;\n  IF p_phase='validate' THEN RETURN jsonb_build_object('id',p_id,'state',reservation.state); END IF;\n  IF identity.id IS NULL THEN RAISE EXCEPTION 'Owned product Auth identity required'; END IF;\n  IF reservation.state IN ('ready','complete') THEN\n    IF p_phase='complete' AND reservation.state='ready' THEN\n      IF p_input->>'status'='active' AND identity.banned_until>now() THEN RAISE EXCEPTION 'Auth activation pending'; END IF;\n      UPDATE public.product_provisioning SET state='complete',updated_at=now() WHERE user_id=p_id;\n    END IF;\n    RETURN jsonb_build_object('id',p_id);\n  END IF;\n  IF p_phase<>'persist' OR reservation.state<>'reserved' OR identity.banned_until IS NULL OR identity.banned_until<=now()\n    OR EXISTS(SELECT 1 FROM public.admin_users WHERE user_id=p_id)\n    OR EXISTS(SELECT 1 FROM public.organisation_membership WHERE user_id=p_id)\n    OR (requested='advertiser' AND EXISTS(SELECT 1 FROM public.rider WHERE user_id=p_id)) THEN\n    RAISE EXCEPTION 'Invalid pending product identity';\n  END IF;\n  UPDATE public.\"user\" SET name=p_input->>'name',phone=p_input->>'phone',organization=p_input->>'organization',\n    status=(CASE WHEN p_input->>'status'='inactive' THEN 'suspended' ELSE p_input->>'status' END)::public.user_status,\n    language_preference=p_input->>'languagePreference',is_verified=(p_input->>'isVerified')::boolean,\n    email_verified=coalesce((p_input->>'emailVerified')::boolean,(p_input->>'isVerified')::boolean),verification_level='basic',account_notes=p_input->>'accountNotes',updated_at=now()\n    WHERE id=p_id AND role::text=requested AND status='pending';\n  IF NOT FOUND THEN RAISE EXCEPTION 'Pending product profile required'; END IF;\n  IF requested='rider' THEN\n    UPDATE public.rider SET city=coalesce(p_input->>'city',city),country=coalesce(p_input->>'country',country),\n      status=CASE WHEN p_input->>'status'='active' THEN 'active'::public.rider_status ELSE 'inactive'::public.rider_status END\n      WHERE user_id=p_id;\n    IF NOT FOUND THEN RAISE EXCEPTION 'Rider profile missing'; END IF;\n  ELSE\n    UPDATE public.advertiser SET company_name=p_input->'advertiserProfile'->>'companyName',company_email=p_input->>'email',\n      website=p_input->'advertiserProfile'->>'website',logo_url=p_input->'advertiserProfile'->>'logoUrl',\n      industry=p_input->'advertiserProfile'->>'industry',language=p_input->'advertiserProfile'->>'language',\n      timezone=p_input->'advertiserProfile'->>'timezone',budget=(p_input->'advertiserProfile'->>'budget')::numeric,\n      email_notifications=(p_input->'advertiserProfile'->>'emailNotifications')::boolean,\n      campaign_updates=(p_input->'advertiserProfile'->>'campaignUpdates')::boolean WHERE user_id=p_id;\n    IF NOT FOUND THEN RAISE EXCEPTION 'Advertiser profile missing'; END IF;\n  END IF;\n  IF p_input ? 'waitlistId' THEN\n    UPDATE public.waitlist SET converted_to_user=true,status='approved',status_reason=p_input->>'waitlistReason',\n      provisioning_user_id=p_id,updated_at=now() WHERE id=(p_input->>'waitlistId')::uuid;\n  END IF;\n  UPDATE public.product_provisioning SET state='ready',updated_at=now() WHERE user_id=p_id;\n  INSERT INTO public.platform_audit_record(actor_user_id,principal_type,capability,target_entity_type,target_entity_id,resulting_state,correlation_id,reason)\n    VALUES(p_actor,'admin',required,'user',p_id::text,jsonb_build_object('role',requested,'status',p_input->>'status'),p_id::text,'admin_account_creation_v1');\n  RETURN jsonb_build_object('id',p_id);\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "signature": "set_account_deletion_intake(text,bigint,text,uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.set_account_deletion_intake(p_state text, p_expected bigint, p_reason text, p_operation uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\n#variable_conflict use_variable\nDECLARE actor uuid; gate public.account_deletion_contract_gate; prior public.ops_command_receipt;\n payload jsonb; result jsonb; old_state jsonb;\nBEGIN\n actor:=public.ops_assert_capability('settings.security');\n IF NOT EXISTS(SELECT 1 FROM public.admin_users WHERE user_id=actor AND role::text IN ('super_admin','security_admin')) THEN\n  RAISE EXCEPTION 'Security administrator required' USING ERRCODE='42501'; END IF;\n IF p_state IS NULL OR p_state NOT IN ('enabled','disabled','hold') OR p_expected IS NULL OR p_expected<0 OR p_operation IS NULL\n OR length(trim(coalesce(p_reason,''))) NOT BETWEEN 10 AND 1000 THEN\n  RAISE EXCEPTION 'State, version, operation and reason required' USING ERRCODE='22023'; END IF;\n payload:=jsonb_build_object('state',p_state,'expected',p_expected,'reason',trim(p_reason));\n SELECT * INTO gate FROM public.account_deletion_contract_gate WHERE singleton FOR UPDATE;\n IF NOT FOUND THEN RAISE EXCEPTION 'Intake control unavailable' USING ERRCODE='55000'; END IF;\n SELECT * INTO prior FROM public.ops_command_receipt WHERE actor_user_id=actor AND operation=p_operation;\n IF FOUND THEN\n  IF prior.kind<>'deletion.intake' OR prior.payload<>payload THEN RAISE EXCEPTION 'Operation reused' USING ERRCODE='22023'; END IF;\n  RETURN prior.result;\n END IF;\n IF gate.operating_version<>p_expected THEN RAISE EXCEPTION 'Operating state changed' USING ERRCODE='40001'; END IF;\n IF p_state='enabled' AND NOT public.account_deletion_intake_ready(gate.active_policy_version) THEN\n  RAISE EXCEPTION 'Intake contract and approved receipt access required' USING ERRCODE='55000'; END IF;\n old_state:=jsonb_build_object('state',gate.operating_state,'version',gate.operating_version);\n UPDATE public.account_deletion_contract_gate SET operating_state=p_state,operating_version=operating_version+1,\n  operating_changed_at=clock_timestamp(),operating_changed_by=actor,operating_reason=trim(p_reason) WHERE singleton;\n result:=public.account_deletion_intake_status();\n PERFORM public.ops_audit('settings.security','account_deletion_intake','global',old_state,result,trim(p_reason),p_operation);\n INSERT INTO public.ops_command_receipt(actor_user_id,operation,kind,payload,result) VALUES(actor,p_operation,'deletion.intake',payload,result);\n RETURN result;\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "anon": false,
+      "authenticated": true,
+      "service": false
+    },
+    {
+      "signature": "shop_authorize(uuid,text,uuid,uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.shop_authorize(p_actor uuid, p_action text, p_org uuid DEFAULT NULL::uuid, p_rider uuid DEFAULT NULL::uuid)\n RETURNS text\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nDECLARE v_role text; BEGIN\r\n IF p_actor IS NULL THEN RAISE EXCEPTION 'Actor required' USING ERRCODE='42501'; END IF;\r\n IF p_action='redeem' AND EXISTS(SELECT 1 FROM rider WHERE id=p_rider AND user_id=p_actor) THEN RETURN 'rider'; END IF;\r\n SELECT role INTO v_role FROM admin_users WHERE user_id=p_actor;\r\n IF v_role IS NOT NULL AND (\r\n  (p_action='read' AND v_role IN ('super_admin','admin','operations_manager','partner_operations_manager','support_agent','support_lead','security_admin')) OR\r\n  (p_action IN ('cancel','refund','consume','collect','adjust','retry') AND v_role IN ('super_admin','admin','operations_manager','partner_operations_manager'))\r\n ) THEN RETURN 'admin'; END IF;\r\n IF p_action='read' AND EXISTS(SELECT 1 FROM rider WHERE id=p_rider AND user_id=p_actor) THEN RETURN 'rider'; END IF;\r\n IF p_org IS NOT NULL AND EXISTS(SELECT 1 FROM organisation_membership WHERE user_id=p_actor AND organisation_id=p_org AND status='active'\r\n  AND ((p_action='read') OR (p_action IN ('consume','collect') AND role IN ('owner','manager','staff')) OR\r\n  (p_action IN ('cancel','refund','retry') AND role IN ('owner','manager')))) THEN RETURN 'organisation'; END IF;\r\n RAISE EXCEPTION 'Target not authorized' USING ERRCODE='42501';\r\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public"
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": false
+    },
+    {
+      "signature": "shop_operating_status(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.shop_operating_status(p_actor uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$ BEGIN\n PERFORM shop_authorize(p_actor,'read');\n RETURN (SELECT to_jsonb(s)||jsonb_build_object('canManage',EXISTS(SELECT 1 FROM admin_users WHERE user_id=p_actor AND role IN ('super_admin','security_admin')),\n 'evidence',coalesce((SELECT jsonb_agg(to_jsonb(e) ORDER BY criterion) FROM shop_readiness_evidence e),'[]'::jsonb)) FROM shop_release_control s WHERE singleton);\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "signature": "shop_require_controller(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.shop_require_controller(p_actor uuid)\n RETURNS void\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$ BEGIN\n IF NOT EXISTS(SELECT 1 FROM admin_users WHERE user_id=p_actor AND role IN ('super_admin','security_admin')) THEN\n  RAISE EXCEPTION 'Security administrator required' USING ERRCODE='42501';\n END IF;\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=public, pg_temp"
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": false
+    },
+    {
+      "signature": "update_admin_user_profile(uuid,uuid,text,jsonb)",
+      "definition": "CREATE OR REPLACE FUNCTION public.update_admin_user_profile(p_actor uuid, p_user uuid, p_role text, p_patch jsonb)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE caps jsonb;\nBEGIN\n  IF coalesce(auth.role(),'')<>'service_role' THEN RAISE EXCEPTION 'Service role required' USING ERRCODE='42501'; END IF;\n  SELECT public.ops_employee_capabilities(a.role) INTO caps FROM public.admin_users a JOIN public.\"user\" u ON u.id=a.user_id WHERE a.user_id=p_actor AND u.status='active';\n  IF NOT coalesce(caps ? 'users.manage',false) THEN RAISE EXCEPTION 'Unauthorized profile update' USING ERRCODE='42501'; END IF;\n  PERFORM 1 FROM public.\"user\" WHERE id=p_user FOR UPDATE;\n  IF NOT FOUND THEN RAISE EXCEPTION 'User not found'; END IF;\n  IF p_role IS NOT NULL THEN PERFORM public.assign_employee_role(p_actor,p_user,p_role); END IF;\n  UPDATE public.\"user\" SET\n    name=CASE WHEN p_patch ? 'name' THEN p_patch->>'name' ELSE name END,\n    email=CASE WHEN p_patch ? 'email' THEN p_patch->>'email' ELSE email END,\n    phone=CASE WHEN p_patch ? 'phone' THEN p_patch->>'phone' ELSE phone END,\n    status=CASE WHEN p_patch ? 'status' THEN (p_patch->>'status')::public.user_status ELSE status END,\n    organization=CASE WHEN p_patch ? 'organization' THEN p_patch->>'organization' ELSE organization END,\n    language_preference=CASE WHEN p_patch ? 'language_preference' THEN p_patch->>'language_preference' ELSE language_preference END,\n    is_verified=CASE WHEN p_patch ? 'is_verified' THEN (p_patch->>'is_verified')::boolean ELSE is_verified END,\n    account_notes=CASE WHEN p_patch ? 'account_notes' THEN p_patch->>'account_notes' ELSE account_notes END,\n    updated_at=now() WHERE id=p_user;\n  -- Employee email is presentation data; preserve its exact role template.\n  IF p_patch ? 'email' THEN UPDATE public.admin_users SET email=p_patch->>'email',updated_at=now() WHERE user_id=p_user; END IF;\nEND $function$\n",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    }
+  ],
+  "policies": [
+    {
+      "schemaname": "public",
+      "tablename": "audit_log",
+      "policyname": "Dashboard admins can read audit logs",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "is_dashboard_admin()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "bundle_capability",
+      "policyname": "Dashboard admins manage bundle capabilities",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "Admins can read all community rides",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride_participant",
+      "policyname": "Admins can read all participants",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fulfilment",
+      "policyname": "Dashboard admins manage fulfilment",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fulfilment_event",
+      "policyname": "Dashboard admins manage fulfilment events",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fulfilment_resource",
+      "policyname": "Dashboard admins manage fulfilment resources",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fulfilment_resource_allocation",
+      "policyname": "Dashboard admins manage fulfilment allocations",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fulfilment_resource_item",
+      "policyname": "Dashboard admins manage fulfilment resource items",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "fulfilment_token",
+      "policyname": "Dashboard admins manage fulfilment tokens",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "notifications",
+      "policyname": "admin_manage_notifications",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM admin_users\n  WHERE (admin_users.user_id = auth.uid())))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM admin_users\n  WHERE (admin_users.user_id = auth.uid())))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "organisation",
+      "policyname": "Dashboard admins manage organisations",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "organisation_membership",
+      "policyname": "Dashboard admins manage memberships",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "partner_validation",
+      "policyname": "Dashboard admins manage partner validation",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "permission_bundle",
+      "policyname": "Dashboard admins manage permission bundles",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_audit_record",
+      "policyname": "Dashboard admins read audit",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "is_dashboard_admin()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_consumed_jti",
+      "policyname": "Dashboard admins manage consumed jti",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_idempotency_key",
+      "policyname": "Dashboard admins manage idempotency",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "platform_rate_limit_counter",
+      "policyname": "Dashboard admins manage rate limits",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "is_dashboard_admin()",
+      "with_check": "is_dashboard_admin()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "ride_session",
+      "policyname": "Admins can read all ride sessions",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "is_dashboard_admin()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "route_intelligence_logs",
+      "policyname": "Admins can read route intelligence logs",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "route_optimizer_decisions",
+      "policyname": "Admins can insert optimizer decisions",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "route_optimizer_decisions",
+      "policyname": "Admins can read optimizer decisions",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "route_optimizer_runs",
+      "policyname": "Admins can insert optimizer runs",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "route_optimizer_runs",
+      "policyname": "Admins can read optimizer runs",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "scheduled_exports",
+      "policyname": "Admin users can create scheduled exports",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "scheduled_exports",
+      "policyname": "Admin users can delete their scheduled exports",
+      "roles": [
+        "public"
+      ],
+      "cmd": "DELETE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "scheduled_exports",
+      "policyname": "Admin users can update their scheduled exports",
+      "roles": [
+        "public"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "scheduled_exports",
+      "policyname": "Admin users can view all scheduled exports",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "user_activity",
+      "policyname": "Admins can read all user activity",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "is_dashboard_admin()",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "workboard_teams",
+      "policyname": "workboard_teams_insert",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM admin_users au\n  WHERE (au.user_id = auth.uid())))"
+    }
+  ],
+  "triggers": [
+    {
+      "relation": "admin_users",
+      "tgname": "account_deletion_truncate_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.admin_users FOR EACH STATEMENT EXECUTE FUNCTION account_deletion_truncate_barrier()"
+    },
+    {
+      "relation": "admin_users",
+      "tgname": "zzzz_account_deletion_write_barrier",
+      "tgenabled": "A",
+      "definition": "CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR DELETE OR UPDATE ON public.admin_users FOR EACH ROW EXECUTE FUNCTION account_deletion_write_barrier()"
+    },
+    {
+      "relation": "auth.users",
+      "tgname": "account_deletion_restore_barrier",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER account_deletion_restore_barrier BEFORE INSERT OR UPDATE ON auth.users FOR EACH ROW EXECUTE FUNCTION account_deletion_restore_barrier()"
+    },
+    {
+      "relation": "auth.users",
+      "tgname": "guard_employee_auth_insert",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER guard_employee_auth_insert BEFORE INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION guard_employee_auth_insert()"
+    },
+    {
+      "relation": "auth.users",
+      "tgname": "on_auth_user_created",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user()"
+    },
+    {
+      "relation": "auth.users",
+      "tgname": "zz_mark_employee_profile_pending",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER zz_mark_employee_profile_pending AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION mark_employee_profile_pending()"
+    }
+  ],
+  "constraints": [
+    {
+      "relation": "admin_dashboard_sessions",
+      "conname": "admin_dashboard_sessions_admin_user_id_fkey",
+      "definition": "FOREIGN KEY (admin_user_id) REFERENCES admin_users(id)"
+    },
+    {
+      "relation": "admin_users",
+      "conname": "admin_users_created_by_fkey",
+      "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id)"
+    },
+    {
+      "relation": "admin_users",
+      "conname": "admin_users_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "admin_users",
+      "conname": "admin_users_user_id_fkey",
+      "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+    },
+    {
+      "relation": "admin_users",
+      "conname": "admin_users_user_id_key",
+      "definition": "UNIQUE (user_id)"
+    },
+    {
+      "relation": "route_optimizer_decisions",
+      "conname": "route_optimizer_decisions_admin_user_id_fkey",
+      "definition": "FOREIGN KEY (admin_user_id) REFERENCES admin_users(id) ON DELETE SET NULL"
+    },
+    {
+      "relation": "route_optimizer_runs",
+      "conname": "route_optimizer_runs_admin_user_id_fkey",
+      "definition": "FOREIGN KEY (admin_user_id) REFERENCES admin_users(id) ON DELETE SET NULL"
+    }
+  ],
+  "roleCounts": [
+    {
+      "role": "admin",
+      "count": 3
+    },
+    {
+      "role": "super_admin",
+      "count": 1
+    }
+  ],
+  "enums": [
+    {
+      "enumlabel": "super_admin"
+    },
+    {
+      "enumlabel": "admin"
+    },
+    {
+      "enumlabel": "moderator"
+    },
+    {
+      "enumlabel": "support"
+    },
+    {
+      "enumlabel": "advertiser"
+    },
+    {
+      "enumlabel": "rider"
+    },
+    {
+      "enumlabel": "gov"
+    }
+  ],
+  "note": "Read-only preflight schema evidence, not executable rollback. Reinstalling retired grant authorities is prohibited. Use an approved coordinated forward-recovery plan."
+}

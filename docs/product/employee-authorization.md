@@ -4,7 +4,7 @@
 |--|--|
 | **Purpose** | Why MOVRR Admin uses capability-first employee authorization and how operators experience it |
 | **Audience** | Product, Ops leadership, Support, Security, Engineering, QA |
-| **Status** | Canonical source verified; migration 070 production approval pending |
+| **Status** | Canonical source and migration 070 deployed; production verified 2026-10-21 |
 | **Last updated** | 2026-10-21 |
 | **Owner** | Platform Operations + Admin Engineering |
 | **Slug** | `employee-authorization` |

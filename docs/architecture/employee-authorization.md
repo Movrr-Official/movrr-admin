@@ -4,7 +4,7 @@
 |--|--|
 | **Purpose** | Boundaries, responsibilities, control flow, and invariants for capability-first Admin AuthZ |
 | **Audience** | Engineering, Architecture, Security, Technical leadership |
-| **Status** | Canonical source verified; migration 070 production approval pending |
+| **Status** | Canonical source and migration 070 deployed; production verified 2026-10-21 |
 | **Last updated** | 2026-10-21 |
 | **Owner** | Admin Engineering |
 | **Slug** | `employee-authorization` |
