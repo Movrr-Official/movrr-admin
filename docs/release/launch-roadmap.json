@@ -12,7 +12,8 @@
       "release": "enterprise-identity-release.md",
       "acceptanceLimit": "Migrations 071-077 and both deployments require explicit approval; actual authenticated Partner Operations Manager browser lifecycle and controlled provider acceptance remain open. Production untouched.",
       "validation": "Admin 792 tests including 73 real SQL/GoTrue integration cases; 82 PostGIS creation assertions; web 78; Mobile 2802. TypeScript/lint and Admin/web production builds passed. Existing lint warnings only. No production mutations.",
-      "webCommit": "5e44a6fdc8a03ab2241b43faef5dd7e1a27cc5b0"
+      "webCommit": "5e44a6fdc8a03ab2241b43faef5dd7e1a27cc5b0",
+      "adminCommit": "8d7320ea96325bbc9adbc67f7e4b820baba9c5e1"
     },
     {
       "name": "Account-deletion request intake activation",

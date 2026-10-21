@@ -1,8 +1,8 @@
 {
-  "recordedAt": "2026-10-21T09:30:40.151Z",
+  "recordedAt": "2026-10-21T09:33:09.176Z",
   "status": "source and isolated acceptance passed; production release and authenticated acceptance pending",
   "sourceCommits": {
-    "admin": "pending source commit receipt",
+    "admin": "8d7320ea96325bbc9adbc67f7e4b820baba9c5e1",
     "web": "5e44a6fdc8a03ab2241b43faef5dd7e1a27cc5b0"
   },
   "production": {
@@ -119,7 +119,7 @@
     "goTrueImage": "public.ecr.aws/supabase/gotrue:v2.197.0",
     "localDatabasePassword": "isolated-local-test-only",
     "commands": [
-      "MOVRR_EMPLOYEE_POSTGRES=1 MOVRR_EMPLOYEE_AUTH_HTTP=1 npm test -- --reporter=dot",
+      "$env:MOVRR_EMPLOYEE_POSTGRES='1'; $env:MOVRR_EMPLOYEE_AUTH_HTTP='1'; npm.cmd test -- --reporter=dot",
       "npm run lint",
       "node scripts/generate-account-domain-catalog.cjs --check",
       "node scripts/test-creation-workflows.cjs",
