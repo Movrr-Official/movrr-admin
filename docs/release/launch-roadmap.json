@@ -4,6 +4,16 @@
   "evidence": "../verification/final-dashboard-performance/production.json",
   "milestones": [
     {
+      "name": "P1 User Details read-only presentation and canonical membership editing",
+      "status": "Source corrected and isolated acceptance verified; exact Admin deployment approval and authenticated production acceptance pending",
+      "work": "Keep View read-only with actual relationships inside Basic Information; use the existing Edit User form for explicit assignment, role Save and revocation. Serialize expected denials and disable sole-Owner removal without weakening canonical SQL safeguards.",
+      "evidence": "../verification/user-details-p1/verification.json",
+      "release": "user-details-membership-p1.md",
+      "validation": "966 tests across 82 files, including local PostgreSQL, GoTrue and actual membership Server Actions over PostgREST. TypeScript, configured lint, production build and local rendered design checks are recorded in the receipt.",
+      "acceptanceLimit": "No production deployment or membership mutation in this task. Complete the already grouped authenticated Users table and User Details acceptance after an approved Admin-only release. The reported Partner membership is the only active Owner and must remain protected until another authorized active Owner exists.",
+      "preservedStates": "No new migration or permission change. Mobile/web, financial records, cleanup/account-activity work and operating gates unchanged. Deletion intake Enabled; irreversible execution Disabled; public Shop redemption Disabled."
+    },
+    {
       "name": "P1 Users dashboard production regression",
       "status": "Closed: deployed and backend-verified; authenticated UI acceptance tracked with existing User Details remediation",
       "work": "Replace revoked direct account_auth_sync read with one service-only pending-ID projection; remove Campaigns coupling and historical role enrichment; paginate projections; display loading/error/partial data states; report orphan Rider links without mutating records.",

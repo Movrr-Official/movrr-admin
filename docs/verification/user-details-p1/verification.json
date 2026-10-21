@@ -1,0 +1,172 @@
+{
+  "at": "2026-10-21T15:50:10.769Z",
+  "sourceCommit": "fec76ef8afce1bdb8bc2197cc54561f8840662aa",
+  "testedBase": "c82a74b",
+  "sourceAcceptance": "Passed; staged source compared with isolated worktree before commit",
+  "productionDeployment": "Not executed; explicit approval required",
+  "migrationRequired": false,
+  "permissionsChanged": false,
+  "scope": "Admin only; excludes parallel account activity 080, Rider correction and cleanup work",
+  "tests": {
+    "files": 82,
+    "passed": 966,
+    "skipped": 0,
+    "realInfrastructure": [
+      "PostgreSQL 17 isolated local container",
+      "GoTrue local Auth HTTP",
+      "PostgREST local service RPC HTTP"
+    ],
+    "membershipContractSuite": {
+      "total": 27,
+      "realServerActionHttpCases": 8
+    },
+    "commands": [
+      {
+        "name": "full",
+        "exitCode": 0,
+        "log": ".tmp/user-details-p1-20261021/full-isolated.log",
+        "sha256": "becf64ecfe0770fb3c901af130868a9ddbd0bf700254c7342549d3e1351e3222"
+      },
+      {
+        "name": "typecheck",
+        "exitCode": 0,
+        "log": ".tmp/user-details-p1-20261021/typecheck-isolated.log",
+        "sha256": "519cd7d4763f96e95a4945a803cc8fd693cd81c01748cae0a4e995b79c24a302"
+      },
+      {
+        "name": "lint",
+        "exitCode": 0,
+        "log": ".tmp/user-details-p1-20261021/lint-isolated.log",
+        "sha256": "b9eeb5557544b60cbbfb68a5e512c0e9ad35fdcd7210c78f43978a7ab52956fa"
+      },
+      {
+        "name": "build",
+        "exitCode": 0,
+        "log": ".tmp/user-details-p1-20261021/build-isolated.log",
+        "sha256": "9361c0ac6adc84eee4c4a32c3a622b1ca11aa2a37a4b6edada352c7693738fec"
+      },
+      {
+        "name": "visual",
+        "exitCode": 0,
+        "log": ".tmp/user-details-p1-20261021/visual-isolated.log",
+        "sha256": "1b27b76cec766dcea96fc7378f5222966c19aeeb3766ef1850c75ddbd66fce90"
+      }
+    ]
+  },
+  "runtimeCause": {
+    "deploymentId": "dpl_8LSDe7hSSjpb2NgZjGC2sqjNFrrR",
+    "sourceCommit": "083fe8ce749e012dea6812cafea10289bdd8a2eb",
+    "events": [
+      {
+        "at": "2026-10-21T14:55:19.784Z",
+        "request": "nmdd7-1792594519088-dea7a89dcc59"
+      },
+      {
+        "at": "2026-10-21T14:57:12.794Z",
+        "request": "zkpgs-1792594632164-64b223e261d8"
+      }
+    ],
+    "path": "/users",
+    "method": "POST",
+    "message": "Cannot remove last active organisation owner",
+    "digest": "3448287092"
+  },
+  "readOnlyProductionEvidence": {
+    "at": "2026-10-21T15:04:10.952Z",
+    "memberships": [
+      {
+        "type": "advertiser",
+        "role": "owner",
+        "status": "active",
+        "rider": false,
+        "internal_staff": false,
+        "effective_active_owners": 1
+      },
+      {
+        "type": "reward_partner",
+        "role": "owner",
+        "status": "active",
+        "rider": true,
+        "internal_staff": true,
+        "effective_active_owners": 1
+      }
+    ],
+    "journal": [
+      {
+        "version": "20261021144000",
+        "name": "079_users_dashboard_sync_read"
+      },
+      {
+        "version": "20261021131000",
+        "name": "078_independent_user_accounts"
+      },
+      {
+        "version": "20261021110700",
+        "name": "077_invitation_authority_boundaries"
+      },
+      {
+        "version": "20261021110600",
+        "name": "076_identity_notification_audiences"
+      },
+      {
+        "version": "20261021110500",
+        "name": "075_identity_rls_capability_boundaries"
+      },
+      {
+        "version": "20261021110400",
+        "name": "074_identity_consumer_authorization"
+      },
+      {
+        "version": "20261021110300",
+        "name": "073_account_status_and_staff_commands"
+      },
+      {
+        "version": "20261021110200",
+        "name": "072_organisation_invitations"
+      },
+      {
+        "version": "20261021110100",
+        "name": "071_external_account_domains"
+      }
+    ],
+    "gates": {
+      "deletion": [
+        {
+          "requests_enabled": true,
+          "managed_resources_execution_enabled": false
+        }
+      ],
+      "shop": [
+        {
+          "redemption_enabled": false
+        }
+      ]
+    }
+  },
+  "productionMutations": 0,
+  "productionFinancialTransactions": 0,
+  "productionEmailsSent": 0,
+  "visualAcceptance": {
+    "method": "Actual React component test DOM rendered with isolated production-build CSS and fonts in headless Chrome",
+    "productionAuthenticatedBrowserExecuted": false,
+    "measurements": "measurements.json",
+    "reviewed": [
+      "rider-view.png",
+      "multi-view.png",
+      "multi-owner-edit.png"
+    ],
+    "readOnlyControlsAbsent": true,
+    "cardHierarchyAndGeometryPreserved": true
+  },
+  "remainingAcceptance": [
+    "Explicit approval and exact-source Admin deployment",
+    "Deployed SHA, deployment ID and domain aliases",
+    "Grouped authenticated Users counts/loading/filtering and User Details acceptance",
+    "Live authorized membership mutations not performed solely for testing; Owner safeguard must remain"
+  ],
+  "operatingStates": {
+    "accountDeletionIntake": "Enabled",
+    "irreversibleDeletion": "Disabled",
+    "publicShopRedemption": "Disabled"
+  }
+}

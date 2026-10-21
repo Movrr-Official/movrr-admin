@@ -1,0 +1,150 @@
+{
+  "at": "2026-10-21T15:49:25.744Z",
+  "method": "actual React-test DOM and built production CSS rendered by isolated headless Chrome; local fixtures, not production browser acceptance",
+  "viewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "measurements": {
+    "rider-view": {
+      "drawer": {
+        "x": 544,
+        "y": 0,
+        "width": 880,
+        "height": 1005
+      },
+      "font": "Manrope, \"Manrope Fallback\", \"Manrope Fallback\", system-ui, sans-serif",
+      "cards": [
+        {
+          "title": "Basic Information",
+          "rect": {
+            "x": 569,
+            "y": 232,
+            "width": 831,
+            "height": 244.25
+          },
+          "radius": "16px"
+        },
+        {
+          "title": "Account Activity",
+          "rect": {
+            "x": 569,
+            "y": 500.25,
+            "width": 831,
+            "height": 239
+          },
+          "radius": "16px"
+        },
+        {
+          "title": "Additional Information",
+          "rect": {
+            "x": 569,
+            "y": 763.25,
+            "width": 831,
+            "height": 310.75
+          },
+          "radius": "16px"
+        }
+      ],
+      "viewMutationControls": []
+    },
+    "multi-view": {
+      "drawer": {
+        "x": 544,
+        "y": 0,
+        "width": 880,
+        "height": 1005
+      },
+      "font": "Manrope, \"Manrope Fallback\", \"Manrope Fallback\", system-ui, sans-serif",
+      "cards": [
+        {
+          "title": "Basic Information",
+          "rect": {
+            "x": 569,
+            "y": 232,
+            "width": 831,
+            "height": 307
+          },
+          "radius": "16px"
+        },
+        {
+          "title": "Account Activity",
+          "rect": {
+            "x": 569,
+            "y": 563,
+            "width": 831,
+            "height": 239
+          },
+          "radius": "16px"
+        },
+        {
+          "title": "Additional Information",
+          "rect": {
+            "x": 569,
+            "y": 826,
+            "width": 831,
+            "height": 310.75
+          },
+          "radius": "16px"
+        }
+      ],
+      "viewMutationControls": []
+    },
+    "multi-edit": {
+      "drawer": {
+        "x": 544,
+        "y": 0,
+        "width": 880,
+        "height": 1005
+      },
+      "font": "Manrope, \"Manrope Fallback\", \"Manrope Fallback\", system-ui, sans-serif",
+      "cards": [
+        {
+          "title": "Account Activity",
+          "rect": {
+            "x": 569,
+            "y": 880.25,
+            "width": 831,
+            "height": 239
+          },
+          "radius": "16px"
+        }
+      ],
+      "viewMutationControls": [
+        "Assign to Organisation",
+        "Save Assignment",
+        "Revoke membership",
+        "Save",
+        "Reset Password"
+      ]
+    },
+    "multi-owner-edit": {
+      "drawer": {
+        "x": 544,
+        "y": 0,
+        "width": 880,
+        "height": 1005
+      },
+      "font": "Manrope, \"Manrope Fallback\", \"Manrope Fallback\", system-ui, sans-serif",
+      "cards": [
+        {
+          "title": "Account Activity",
+          "rect": {
+            "x": 569,
+            "y": 911.75,
+            "width": 831,
+            "height": 239
+          },
+          "radius": "16px"
+        }
+      ],
+      "viewMutationControls": [
+        "Assign to Organisation",
+        "Save Assignment",
+        "Revoke membership",
+        "Save",
+        "Reset Password"
+      ]
+    }
+  }
+}
