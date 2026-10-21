@@ -1,5 +1,6 @@
 "use client";
-import { EMPLOYEE_ROLE_OPTIONS, PRODUCT_ROLE_OPTIONS } from "@/features/authorization/roleOptions";
+import { EMPLOYEE_ROLE_OPTIONS } from "@/features/authorization/roleOptions";
+import { ACCOUNT_DOMAINS, accountRoleLabel } from "@/features/identity/domain/accountDomains";
 
 import { useMemo, useState, useTransition } from "react";
 import { Bell, BellRing, CheckCircle, Megaphone } from "lucide-react";
@@ -66,7 +67,7 @@ const targetOptions: Array<{ value: NotificationTarget; label: string }> = [
   { value: "userIds", label: "Specific Users" },
 ];
 
-const roleOptions = [...PRODUCT_ROLE_OPTIONS, ...EMPLOYEE_ROLE_OPTIONS];
+const roleOptions = [...ACCOUNT_DOMAINS.map(domain => ({ value: domain, label: domain === "staff" ? "MOVRR Staff (all)" : accountRoleLabel(domain, domain) })), ...EMPLOYEE_ROLE_OPTIONS];
 
 const statusOptions: Array<{ value: NotificationStatusFilter; label: string }> =
   [

@@ -498,8 +498,8 @@ export const getAuthenticatedUser = cache(async (): Promise<AuthenticatedUser | 
 
     const supabaseAdmin = createSupabaseAdminClient();
     const { data: account, error: accountError } = await supabaseAdmin
-      .from("user").select("status").eq("id", authUser.id).maybeSingle();
-    if (accountError || account?.status !== "active") {
+      .rpc("account_identity_active", { p_user: authUser.id });
+    if (accountError || account !== true) {
       throw new AdminAuthError("NOT_ADMIN", "Account is not active", accountError);
     }
     const { data: adminRow, error: adminError } = await supabaseAdmin

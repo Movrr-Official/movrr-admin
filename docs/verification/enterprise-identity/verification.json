@@ -1,0 +1,131 @@
+{
+  "recordedAt": "2026-10-21T09:30:40.151Z",
+  "status": "source and isolated acceptance passed; production release and authenticated acceptance pending",
+  "sourceCommits": {
+    "admin": "pending source commit receipt",
+    "web": "5e44a6fdc8a03ab2241b43faef5dd7e1a27cc5b0"
+  },
+  "production": {
+    "mutations": false,
+    "inspection": "production-before.json",
+    "latestMigration": "20261021071500 / 070_employee_rbac_authority",
+    "functionInventory": 380,
+    "policies": 236,
+    "syntheticAccounts": 0,
+    "emailsSent": 0,
+    "financialTestTransactions": 0,
+    "gates": {
+      "accountDeletionIntake": true,
+      "irreversibleDeletion": false,
+      "publicShopRedemption": false
+    }
+  },
+  "validation": {
+    "admin": {
+      "testFilesPassed": 71,
+      "testsPassed": 792,
+      "skipped": 0,
+      "realPostgresEmployeeTests": 39,
+      "realPostgresExternalAndRlsTests": 18,
+      "realGoTrueTests": 16,
+      "actualActionJourneys": [
+        "rider",
+        "partner:partner_operations_manager",
+        "advertiser",
+        "government",
+        "staff:partner_operations_manager"
+      ],
+      "unitMailRoutingTests": 8,
+      "typecheck": "passed",
+      "lint": "passed (repository lint script runs TypeScript)",
+      "productionBuild": "passed",
+      "catalogDriftCheck": "passed",
+      "postgisCreationAssertions": 82
+    },
+    "web": {
+      "testFilesPassed": 12,
+      "testsPassed": 78,
+      "typecheck": "passed",
+      "lint": {
+        "errors": 0,
+        "warnings": 1,
+        "existingWarning": "lib/notifications.ts unused _role"
+      },
+      "productionBuild": "passed; PLATFORM_API_URL set to existing HTTPS production API origin for build validation"
+    },
+    "mobile": {
+      "sourceChanged": false,
+      "testSuitesPassed": 325,
+      "testSuitesSkipped": 1,
+      "testsPassed": 2802,
+      "testsSkipped": 1,
+      "typecheck": "passed",
+      "lint": {
+        "errors": 0,
+        "warnings": 4
+      },
+      "nativeBuildOrRelease": false
+    },
+    "website": {
+      "sourceChanged": false
+    }
+  },
+  "limits": [
+    "No authenticated visual browser acceptance: no connected authenticated browser was available.",
+    "No production application, database permission or migration acceptance claimed; changes are not deployed.",
+    "GoTrue HTTP and real PostgreSQL RPC transactions are used; action actor/MFA and notification-provider boundaries are injected in isolated tests. No live MFA/provider/inbox acceptance.",
+    "Captured identity and tenant policies execute under actual PostgreSQL roles; this is not a full production-schema installation rehearsal of every unrelated RLS module.",
+    "Financial fixtures and creation/Shop SQL regressions pass; external financial-provider behavior and physical devices remain unverified."
+  ],
+  "migrations": [
+    {
+      "path": "scripts/071_external_account_domains.sql",
+      "sha256Utf8Lf": "4a87f45b3da19282042942232583ffd35cf229ee31d30d48ca1f8f2f26c485a8"
+    },
+    {
+      "path": "scripts/072_organisation_invitations.sql",
+      "sha256Utf8Lf": "b44aea79133868b94092791f8489cf15f56c31b6af275a2987199e6ca1b77ac0"
+    },
+    {
+      "path": "scripts/073_account_status_and_staff_commands.sql",
+      "sha256Utf8Lf": "9d77f314eaed0e5ed4bfc59f49dcdf0c4c06684d15400ef552c5c2ae3f480d33"
+    },
+    {
+      "path": "scripts/074_identity_consumer_authorization.sql",
+      "sha256Utf8Lf": "59c8d8402513b3ad0630154a593d7209a5e09f7b151a4fe43e18017edc460869"
+    },
+    {
+      "path": "scripts/075_identity_rls_capability_boundaries.sql",
+      "sha256Utf8Lf": "a53a315b69e88b690769ca2e3eaca25314be1c53b02b52791812e1f175d39082"
+    },
+    {
+      "path": "scripts/076_identity_notification_audiences.sql",
+      "sha256Utf8Lf": "4e55c0a5b543f97d02eecfc27b3eaae651a3ff20208151749b40930d00f89d69"
+    },
+    {
+      "path": "scripts/077_invitation_authority_boundaries.sql",
+      "sha256Utf8Lf": "e0958f74b88c9aeec0f1dd93752a235833667c33b39e80e74b99c1ff1107be68"
+    }
+  ],
+  "reproduction": {
+    "localOnly": true,
+    "loadProductionEnv": false,
+    "sqlPorts": [
+      55442,
+      55443
+    ],
+    "goTruePort": 55444,
+    "postgresImage": "public.ecr.aws/supabase/postgres:17.11.0.004 (GoTrue/PostGIS fixtures); PostgreSQL 17 for core SQL fixtures",
+    "goTrueImage": "public.ecr.aws/supabase/gotrue:v2.197.0",
+    "localDatabasePassword": "isolated-local-test-only",
+    "commands": [
+      "MOVRR_EMPLOYEE_POSTGRES=1 MOVRR_EMPLOYEE_AUTH_HTTP=1 npm test -- --reporter=dot",
+      "npm run lint",
+      "node scripts/generate-account-domain-catalog.cjs --check",
+      "node scripts/test-creation-workflows.cjs",
+      "npm run build",
+      "web: npm run typecheck; npm test; npm run lint; npm run build (existing HTTPS PLATFORM_API_URL)",
+      "mobile: npm run type-check; npm run lint; npm test -- --runInBand"
+    ]
+  }
+}

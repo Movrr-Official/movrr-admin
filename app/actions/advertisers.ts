@@ -612,9 +612,9 @@ export async function createAdvertiserProfile(
     // before activation. Existing records are edited via their own update flow.
     const created = await createUser({
       email: normalizedEmail, name: normalizedContactName, phone: normalizedPhone,
-      role: "advertiser", status: validatedData.status, organization: normalizedCompanyName,
+      domain: "advertiser", role: "owner", status: validatedData.status, membershipStatus: "active", organization: normalizedCompanyName,
       languagePreference: normalizedLanguage, isVerified: false,
-      sendWelcomeEmail: validatedData.sendWelcomeEmail, allowAdvertiserBootstrap: true,
+      sendWelcomeEmail: validatedData.sendWelcomeEmail,
       advertiserProfile: {
         companyName: normalizedCompanyName, website: normalizedWebsite,
         logoUrl: normalizedLogoUrl, industry: normalizedIndustry,

@@ -6,7 +6,6 @@ import {
 } from "@/features/organisations/domain/CapabilityCatalog";
 import type {
   AddMemberInput,
-  AssignBundleInput,
   CreateOrganisationInput,
   OrganisationRepository,
 } from "@/features/organisations/application/contracts/OrganisationRepository";
@@ -70,20 +69,5 @@ export function createInMemoryOrganisationRepository(): OrganisationRepository {
       return null;
     },
 
-    async assignBundle(
-      input: AssignBundleInput,
-    ): Promise<OrganisationMembership> {
-      const existing = memberships.get(input.membershipId);
-      if (!existing) {
-        throw new Error(`Membership not found: ${input.membershipId}`);
-      }
-      const updated: OrganisationMembership = {
-        ...existing,
-        bundleKey: input.bundleKey,
-        updatedAt: new Date().toISOString(),
-      };
-      memberships.set(updated.id, updated);
-      return updated;
-    },
   };
 }

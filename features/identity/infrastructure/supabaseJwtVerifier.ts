@@ -33,15 +33,10 @@ export const verifySupabaseAccessToken: VerifyAccessToken = async (
   }
 
   // Re-read on every request: an existing JWT must not outlive suspension.
-  const account = await createSupabaseAdminClient()
-    .from("user")
-    .select("status")
-    .eq("id", user.id)
-    .maybeSingle();
+  const account = await createSupabaseAdminClient().rpc("account_identity_active", { p_user: user.id });
   if (
     account.error ||
-    !account.data ||
-    !["active", "pending"].includes(String(account.data.status).toLowerCase())
+    account.data !== true
   )
     return null;
 

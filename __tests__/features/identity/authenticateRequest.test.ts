@@ -198,7 +198,7 @@ describe("authenticateRequest", () => {
     if (!result.ok) return;
     expect(result.value.principal.type).toBe("rider");
     expect(deps.findAdminUser).toHaveBeenCalledWith(USER_ID);
-    expect(deps.findOrganisationMembership).toHaveBeenCalledWith(USER_ID);
+    expect(deps.findOrganisationMembership).toHaveBeenCalledWith(USER_ID, undefined);
     expect(deps.findRiderProfile).toHaveBeenCalledWith(USER_ID);
   });
 

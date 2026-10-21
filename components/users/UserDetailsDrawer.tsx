@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { AccountMemberships } from "@/components/users/AccountMemberships";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -243,8 +244,9 @@ export function UserDetailsDrawer({
       const { employeeRole, ...profile } = data;
       const result = await updateUser({
         id: user.id,
+        expectedUpdatedAt: user.updatedAt,
         ...profile,
-        ...(employeeRole !== (user.employeeRole ?? null) ? { employeeRole } : {}),
+        ...(employeeRole !== (user.employeeRole ?? null) ? { employeeRole, expectedEmployeeRole: user.employeeRole ?? null } : {}),
       });
 
       if (!result.success) {
@@ -472,6 +474,7 @@ export function UserDetailsDrawer({
                               <FormControl>
                                 <Input
                                   type="email"
+                                  readOnly
                                   placeholder="user@example.com"
                                   className="rounded-xl border-border/50 bg-background/60"
                                   {...field}
@@ -528,7 +531,7 @@ export function UserDetailsDrawer({
                               <FormLabel className="text-sm font-semibold">
                                 Employee role
                               </FormLabel>
-                              <p className="text-sm text-muted-foreground">Account type: {user.accountType ?? "employee"}. Employee access does not change this identity.</p>
+                              <p className="text-sm text-muted-foreground">Internal MOVRR staff access is an independent grant. Organisation memberships appear separately below.</p>
                               <Select
                                 onValueChange={(value) => field.onChange(value === "none" ? null : value)}
                                 value={field.value ?? "none"}
@@ -662,9 +665,12 @@ export function UserDetailsDrawer({
                       )}
                     </div>
                     <div className="flex items-center gap-2 mb-3">
-                      {getRoleBadge(user.role)}
+                      {user.role !== "unassigned" && getRoleBadge(user.role)}
+                      {user.domains?.includes("rider") && user.employeeRole && getRoleBadge("rider")}
+                      {user.riderStatus && <span className="text-sm text-muted-foreground">Rider membership: {user.riderStatus}</span>}
                       {getStatusBadge(user.status)}
                     </div>
+                    <AccountMemberships userId={user.id} onChange={onUserUpdate} />
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Mail className="h-4 w-4" />

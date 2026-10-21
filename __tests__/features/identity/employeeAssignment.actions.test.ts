@@ -7,7 +7,7 @@ vi.mock("next/cache",()=>({revalidatePath:vi.fn()}));
 vi.mock("@/lib/userActivity",()=>({writeUserActivity:vi.fn(async()=>{}),fetchUserActivityFeed:vi.fn()}));
 vi.mock("@/lib/platformSettings",()=>({}));
 vi.mock("@/lib/env",()=>({APP_URL:"https://example.test",FROM_EMAIL:"test@example.test",RESEND_API_KEY:""}));
-import {updateUser,updateUserRole} from "@/app/actions/users";
+import {updateUser} from "@/app/actions/users";
 beforeEach(()=>{vi.clearAllMocks();state.capability.mockResolvedValue({authUser:{id:"operator"}});state.anyCapability.mockResolvedValue({authUser:{id:"operator"}});state.rpc.mockResolvedValue({error:null});});
 describe("canonical User Details employee commands",()=>{
  it("passes employee membership and profile through one atomic PostgreSQL contract",async()=>{
@@ -19,10 +19,9 @@ describe("canonical User Details employee commands",()=>{
    expect((await updateUser({id:"rider",name:"No conversion",role} as never)).success).toBe(false);
    expect(state.rpc).not.toHaveBeenCalled();expect(state.from).not.toHaveBeenCalled();
  });
- it("revokes only the employee grant using the same assignment command",async()=>{
-   expect((await updateUserRole({userId:"rider",role:null})).success).toBe(true);
-   expect(state.anyCapability).toHaveBeenCalledWith(["users.role.assign","users.role.approve"],{mutation:true});
-   expect(state.rpc).toHaveBeenCalledExactlyOnceWith("assign_employee_role",{p_actor:"operator",p_user:"rider",p_role:null});
+ it("revokes only the employee grant through the profile membership command",async()=>{
+   expect((await updateUser({id:"rider",employeeRole:null,expectedEmployeeRole:"partner_operations_manager",expectedUpdatedAt:"2026-10-21T00:00:00Z"})).success).toBe(true);
+   expect(state.rpc).toHaveBeenCalledWith("update_admin_user_profile",expect.objectContaining({p_patch:expect.objectContaining({employee_role:null,expected_employee_role:"partner_operations_manager"})}));
  });
  it("reports an atomic profile/assignment failure truthfully",async()=>{
    state.rpc.mockResolvedValue({error:{message:"Unauthorized employee role assignment"}});

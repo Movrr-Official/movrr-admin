@@ -4,6 +4,17 @@
   "evidence": "../verification/final-dashboard-performance/production.json",
   "milestones": [
     {
+      "name": "Enterprise identity domains, scoped memberships and Partner Operations Manager",
+      "status": "source implemented and isolated acceptance passed; production approval and authenticated acceptance pending",
+      "work": "Canonical five-domain creation; distinct external Partner Operations Manager with operational staff ceiling; one audited membership writer, recoverable Auth provisioning/status, exact invitation lifecycle, active tenant/capability/MFA RLS and migrated Admin/web readers. No legacy role dropdown or role-assignment endpoint remains in source.",
+      "evidence": "../verification/enterprise-identity/verification.json",
+      "findings": "../architecture/enterprise-identity-findings.md",
+      "release": "enterprise-identity-release.md",
+      "acceptanceLimit": "Migrations 071-077 and both deployments require explicit approval; actual authenticated Partner Operations Manager browser lifecycle and controlled provider acceptance remain open. Production untouched.",
+      "validation": "Admin 792 tests including 73 real SQL/GoTrue integration cases; 82 PostGIS creation assertions; web 78; Mobile 2802. TypeScript/lint and Admin/web production builds passed. Existing lint warnings only. No production mutations.",
+      "webCommit": "5e44a6fdc8a03ab2241b43faef5dd7e1a27cc5b0"
+    },
+    {
       "name": "Account-deletion request intake activation",
       "status": "production Enabled/version 1; MFA activation and audit verified",
       "work": "Approved migrations 066/067 installed and journal/checksum verified. Genuine super_admin MFA command enabled intake at 2026-10-20T17:39:48.695Z, version 0 to 1; receipt policy v2 gives 30 days from original submission without retry extension. Production contract reports requestsEnabled=true; no intake blockers. Eligibility, ownership, duplicate handling and manual-review routing remain enforced. Irreversible execution remains Disabled with pending retention/accounting/backup and case approvals. No synthetic production request or financial mutation.",
@@ -70,8 +81,7 @@
         "Verify the new companion routes and retired not-found behavior in an authenticated production browser session.",
         "Exercise additional authorized rider, employee-role and organisation identities for live isolation acceptance; focused regression tests already pass.",
         "Exercise live account switching and logout using authorized test accounts; private cache cancellation and clearing tests already pass.",
-        "Collect repeated cold and warm production observations across representative sessions before claiming p75 below 800ms or primary navigation below one second.",
-        "Resolve existing untouched rider advertiser lint errors through a separately scoped correction."
+        "Collect repeated cold and warm production observations across representative sessions before claiming p75 below 800ms or primary navigation below one second."
       ]
     },
     {
@@ -118,7 +128,7 @@
       "work": "Retire runtime employee aliases, legacy account-role assignment and duplicate employee grant writes. Preserve Rider/employee coexistence and staff references; canonical NULL revocation, atomic profile/role command, invitation and RLS enforcement.",
       "evidence": "../verification/employee-rbac-authority/production.json",
       "release": "Migration 20261021071500 / 070_employee_rbac_authority; Admin 89c3a0b7f874af7e3a68a343a22bed8bc244f142 / dpl_83NGcnrxQAu6CSShrAS4sAoCBcey at admin.movrr.nl. Scoped cutover hold removed; legacy operational authorities retired.",
-      "remaining": "Authenticated browser journeys, physical-device and controlled external-provider acceptance remain outstanding; no test identities or grants created."
+      "remaining": "Employee-only production correction preserved. Broader external-domain/RLS source remediation now has its own milestone; do not treat the 070 employee rollout as five-domain production acceptance."
     }
   ],
   "operatingStates": {
@@ -126,7 +136,8 @@
     "selfServiceDeletionIntake": "Enabled/version 1; production contract and actual MFA command/audit confirmed at 2026-10-20T17:39:58.979Z",
     "financialTestTransactions": "none executed",
     "databaseSchemaAndPrivileges": "Community migration 065 applied as 20261020151107; only approved Community function bodies/ACL and trigger changed. All unrelated RLS and financial permissions verified unchanged. Approved deletion migrations 066/067 applied as 20261020171801/20261020171802; protected data and critical execution/receipt contracts preserved. Approved canonical employee RBAC migration 070 applied as 20261021071500 with protected identity/financial rows and 1091 unrelated functions preserved.",
-    "mobileRuntimeAndReleases": "unchanged; existing EAS build/channel records inspected read-only; no build, OTA or submission initiated"
+    "mobileRuntimeAndReleases": "unchanged; existing EAS build/channel records inspected read-only; no build, OTA or submission initiated",
+    "enterpriseIdentityRelease": "071-077 and changed Admin/web authorization not applied or deployed; production remains at approved 070 pending explicit approval."
   },
   "mobileFirstEvidence": "../verification/mobile-first-alignment/production.json",
   "mobileFirstProductDecision": "../product/mobile-first-companion.md",

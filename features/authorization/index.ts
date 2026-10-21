@@ -26,12 +26,6 @@ export {
 } from "@/features/authorization/sod";
 
 export {
-  resolveDataScope,
-  canAccessRecord,
-  describeDataScope,
-} from "@/features/authorization/dataScope";
-
-export {
   simulateEmployeeRole,
   simulateAllEmployeeRoles,
   inspectCapabilitiesForRole,

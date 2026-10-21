@@ -190,7 +190,7 @@ const mapRiderRow = ({
     phone: user?.phone ?? rider.phone ?? undefined,
     avatarUrl: user?.avatar_url ?? undefined,
     role: "rider",
-    status: mapDbStatusToUi(user?.status ?? rider.status),
+    status: mapDbStatusToUi(user?.status && user.status !== "active" ? user.status : rider.status),
     isVerified: Boolean(user?.is_verified ?? false),
     city: rider.city ?? undefined,
     country: rider.country ?? undefined,
@@ -494,29 +494,9 @@ export async function bulkUpdateRiderStatus(
       };
 
     const rows = riderRows ?? [];
-    const userIds = rows.map((r) => r.user_id).filter(Boolean) as string[];
-
-    const [{ error: riderError }, { error: userError }] = await Promise.all([
-      supabaseAdmin
-        .from("rider")
-        .update({ status: dbStatus, updated_at: new Date().toISOString() })
-        .in("id", riderIds),
-      userIds.length
-        ? supabaseAdmin
-            .from("user")
-            .update({ status: dbStatus, updated_at: new Date().toISOString() })
-            .in("id", userIds)
-        : Promise.resolve({ error: null }),
-    ]);
-
-    if (riderError || userError) {
-      return {
-        success: false,
-        updated: 0,
-        failed: riderIds.length,
-        error: riderError?.message ?? userError?.message,
-      };
-    }
+    const { error: riderError } = await supabaseAdmin.from("rider")
+      .update({ status: dbStatus, updated_at: new Date().toISOString() }).in("id", riderIds);
+    if (riderError) return { success: false, updated: 0, failed: riderIds.length, error: riderError.message };
 
     // Audit trail for each rider
     const action =
@@ -705,7 +685,6 @@ export async function updateRiderProfile(
       riderUpdate.phone = validatedData.phone;
     }
     if (validatedData.status !== undefined) {
-      userUpdate.status = mapUiStatusToDb(validatedData.status);
       riderUpdate.status = mapUiStatusToDb(validatedData.status);
     }
     if (validatedData.languagePreference !== undefined) {

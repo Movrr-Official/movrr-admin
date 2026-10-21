@@ -68,8 +68,8 @@ export type DashboardCapabilitySurface = {
  * Adding a module: register surfaces here; nav/pages/search derive automatically.
  */
 export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[] = [
-  { capability: "rides.settlement.recovery.request", description: "Request one bounded recovery for the specifically approved held ride", category: "rewards", actions: ["rides.settlement.recovery.request"], auditRequired: true, approval: { initiateCapability: "rides.settlement.recovery.request", approveCapability: "rides.settlement.recovery.review", sodStrict: true }, dataScope: "assignment" },
-  { capability: "rides.settlement.recovery.review", description: "Independently review the specifically approved held ride recovery; cannot issue points", category: "rewards", actions: ["rides.settlement.recovery.review"], auditRequired: true, dataScope: "assignment" },
+  { capability: "rides.settlement.recovery.request", description: "Request one bounded recovery for the specifically approved held ride", category: "rewards", actions: ["rides.settlement.recovery.request"], auditRequired: true, approval: { initiateCapability: "rides.settlement.recovery.request", approveCapability: "rides.settlement.recovery.review", sodStrict: true }, dataScope: "global" },
+  { capability: "rides.settlement.recovery.review", description: "Independently review the specifically approved held ride recovery; cannot issue points", category: "rewards", actions: ["rides.settlement.recovery.review"], auditRequired: true, dataScope: "global" },
   {
     capability: "privacy.deletion.monitor",
     description: "Read minimal deletion lifecycle metadata",
@@ -81,9 +81,9 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     dataScope: "global",
   },
   { capability: "privacy.deletion.escalate", description: "Escalate deletion review without replaying destructive work", category: "security", actions: ["privacy.deletion.escalate"], auditRequired: true, dataScope: "global" },
-  { capability: "privacy.deletion.operations.review", description: "Review shared resources and equipment; dispositions remain gated", category: "security", auditRequired: true, dataScope: "department" },
-  { capability: "privacy.deletion.finance.review", description: "Review reward obligations; financial decisions remain gated", category: "security", auditRequired: true, dataScope: "department" },
-  { capability: "privacy.deletion.compliance.review", description: "Review legal and retention exceptions; approvals remain gated", category: "security", auditRequired: true, dataScope: "department" },
+  { capability: "privacy.deletion.operations.review", description: "Review shared resources and equipment; dispositions remain gated", category: "security", auditRequired: true, dataScope: "global" },
+  { capability: "privacy.deletion.finance.review", description: "Review reward obligations; financial decisions remain gated", category: "security", auditRequired: true, dataScope: "global" },
+  { capability: "privacy.deletion.compliance.review", description: "Review legal and retention exceptions; approvals remain gated", category: "security", auditRequired: true, dataScope: "global" },
   { capability: "privacy.deletion.recovery", description: "Reserved for fenced recovery after verified invocation termination", category: "security", auditRequired: true, dataScope: "global" },
   {
     capability: "dashboard.read",
@@ -103,7 +103,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     pages: ["/workboard", "/workboard/invite"],
     commands: ["quick.workboard"],
     auditRequired: false,
-    dataScope: "department",
+    dataScope: "global",
   },
   {
     capability: "fraud.review",
@@ -113,7 +113,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     pages: ["/fraud"],
     commands: ["quick.fraud"],
     auditRequired: true,
-    dataScope: "assignment",
+    dataScope: "global",
   },
   {
     capability: "fraud.resolve",
@@ -122,7 +122,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     pages: ["/fraud", "/ride-sessions"],
     actions: ["rideSessions.verify", "rideSessions.reject"],
     auditRequired: true,
-    dataScope: "assignment",
+    dataScope: "global",
   },
   {
     capability: "incidents.read",
@@ -131,7 +131,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     navigation: { kind: "ops", order: 20, label: "Incidents", href: "/incidents", icon: "AlertTriangle" },
     pages: ["/incidents"],
     auditRequired: true,
-    dataScope: "assignment",
+    dataScope: "global",
   },
   {
     capability: "incidents.manage",
@@ -140,7 +140,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     pages: ["/incidents"],
     actions: ["incidents.create", "incidents.update"],
     auditRequired: true,
-    dataScope: "assignment",
+    dataScope: "global",
   },
   {
     capability: "incidents.create",
@@ -148,7 +148,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     category: "incidents",
     actions: ["incidents.create"],
     auditRequired: true,
-    dataScope: "assignment",
+    dataScope: "global",
   },
   {
     capability: "programmes.read",
@@ -157,7 +157,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     navigation: { kind: "ops", order: 30, label: "Programmes", href: "/programmes", icon: "Landmark" },
     pages: ["/programmes"],
     auditRequired: false,
-    dataScope: "programme",
+    dataScope: "global",
   },
   {
     capability: "platform.jobs.manage",
@@ -285,7 +285,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     category: "fraud",
     actions: ["rideSessions.verify", "rideSessions.reject"],
     auditRequired: true,
-    dataScope: "assignment",
+    dataScope: "global",
   },
   {
     capability: "routes.read",
@@ -342,7 +342,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
       approveCapability: "rewards.approve",
       sodStrict: true,
     },
-    dataScope: "organisation",
+    dataScope: "global",
   },
   {
     capability: "rewards.approve",
@@ -350,7 +350,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     category: "rewards",
     actions: ["rewards.approve"],
     auditRequired: true,
-    dataScope: "organisation",
+    dataScope: "global",
   },
   {
     capability: "fulfilment.read",
@@ -360,7 +360,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     pages: ["/fulfilment"],
     searchEntities: ["fulfilment_item", "partner", "organisation"],
     auditRequired: false,
-    dataScope: "organisation",
+    dataScope: "global",
   },
   {
     capability: "fulfilment.cancel",
@@ -368,7 +368,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     category: "fulfilment",
     actions: ["fulfilment.cancel"],
     auditRequired: true,
-    dataScope: "organisation",
+    dataScope: "global",
   },
   {
     capability: "advertisers.manage",
@@ -379,7 +379,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
     searchEntities: ["advertiser"],
     actions: ["advertisers.create", "advertisers.update"],
     auditRequired: true,
-    dataScope: "organisation",
+    dataScope: "global",
   },
   {
     capability: "campaigns.read",
@@ -458,7 +458,7 @@ export const DASHBOARD_CAPABILITY_SURFACES: readonly DashboardCapabilitySurface[
       approveCapability: "partners.approve",
       sodStrict: true,
     },
-    dataScope: "organisation",
+    dataScope: "global",
   },
   {
     capability: "community.manage",

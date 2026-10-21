@@ -40,6 +40,16 @@ export async function authenticateRequest(
   const { userId, email } = verified;
   const correlationId = getOrCreateCorrelationId(input.correlationIdHeader);
 
+  if (input.organisationId && !input.preferRider) {
+    const membership = await deps.findOrganisationMembership(userId, input.organisationId);
+    if (!membership || membership.organisationId !== input.organisationId) {
+      return fail("permission_denied", "Active membership in the selected organisation is required");
+    }
+    return ok(buildContext({ type: "organisation", userId, email,
+      organisationId: membership.organisationId, membershipId: membership.id,
+      role: membership.role, organisationType: membership.organisationType }, correlationId));
+  }
+
   // A legitimate employee membership does not replace the same identity's Rider
   // profile. Owned-resource handlers use that profile and only Rider grants.
   if (input.preferRider) {
@@ -70,7 +80,7 @@ export async function authenticateRequest(
     );
   }
 
-  const membership = await deps.findOrganisationMembership(userId);
+  const membership = await deps.findOrganisationMembership(userId, input.organisationId);
   if (membership) {
     return ok(
       buildContext(

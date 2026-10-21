@@ -63,6 +63,8 @@ export type OrganisationOpsCommands = {
     input: {
       organisationId: string;
       membershipId: string;
+      expectedUpdatedAt?: string;
+      status?: OrganisationMembership["status"];
       role: MembershipRole;
     },
   ) => Promise<ApplicationResult<OrganisationMembership>>;
@@ -76,6 +78,9 @@ export type OrganisationListPort = OrganisationRepository & {
     organisationId: string,
   ) => Promise<OrganisationMembership[]>;
   updateMemberRole: (input: {
+    actorId?: string;
+    expectedUpdatedAt?: string;
+    status?: OrganisationMembership["status"];
     membershipId: string;
     organisationId: string;
     role: MembershipRole;
@@ -148,19 +153,6 @@ export function createOrganisationOpsStore(): OrganisationListPort {
       }
       return null;
     },
-    async assignBundle(input) {
-      const existing = memberships.get(input.membershipId);
-      if (!existing) {
-        throw new Error(`Membership not found: ${input.membershipId}`);
-      }
-      const updated: OrganisationMembership = {
-        ...existing,
-        bundleKey: input.bundleKey,
-        updatedAt: new Date().toISOString(),
-      };
-      memberships.set(updated.id, updated);
-      return updated;
-    },
     async listOrganisations(filter) {
       return [...organisations.values()]
         .filter((org) => (filter?.type ? org.type === filter.type : true))
@@ -189,6 +181,8 @@ export function createOrganisationOpsStore(): OrganisationListPort {
       const updated: OrganisationMembership = {
         ...existing,
         role: input.role,
+        bundleKey: ORG_ROLE_BUNDLE_KEYS[input.role],
+        status: input.status ?? existing.status,
         updatedAt: new Date().toISOString(),
       };
       memberships.set(updated.id, updated);
@@ -329,10 +323,11 @@ export function createOrganisationOpsCommands(deps: {
       if (ctx.principal.type !== "admin" && input.role === "owner") {
         return fail("permission_denied", "Ownership assignment requires Admin authorization");
       }
+      if (ctx.principal.type === "organisation" && ctx.principal.role === "partner_operations_manager" && !["staff", "viewer"].includes(input.role)) return fail("permission_denied", "Partner Operations Managers may administer only operational staff and viewers");
       if (!isMembershipRole(input.role)) {
         return fail("validation_failed", "Invalid membership role");
       }
-      return addMember(input, { organisations: deps.store });
+      return addMember({ ...input, actorId: ctx.principal.userId }, { organisations: deps.store });
     },
     async updateStaffRole(ctx, input) {
       const authz = deps.authorisation.assertCapability(ctx, "staff.manage");
@@ -349,8 +344,10 @@ export function createOrganisationOpsCommands(deps: {
         if (!existing || existing.organisationId !== input.organisationId || existing.role === "owner") {
           return fail("permission_denied", "Ownership changes require Admin authorization");
         }
+        if (ctx.principal.type === "organisation" && ctx.principal.role === "partner_operations_manager" &&
+            (!["staff", "viewer"].includes(input.role) || !["staff", "viewer"].includes(existing.role))) return fail("permission_denied", "Partner Operations Managers may administer only operational staff and viewers");
       }
-      const updated = await deps.store.updateMemberRole(input);
+      const updated = await deps.store.updateMemberRole({ ...input, actorId: ctx.principal.userId });
       if (!updated) return fail("not_found", "Membership not found");
       return ok(updated);
     },

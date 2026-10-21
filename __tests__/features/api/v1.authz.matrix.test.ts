@@ -29,6 +29,7 @@ function principalFor(
         organisationId: "org-1",
         membershipId: "mem-staff",
         role: "staff",
+        organisationType: "reward_partner",
       };
     case "manager":
       return {
@@ -38,6 +39,7 @@ function principalFor(
         organisationId: "org-1",
         membershipId: "mem-manager",
         role: "manager",
+        organisationType: "reward_partner",
       };
     case "owner":
       return {
@@ -47,6 +49,7 @@ function principalFor(
         organisationId: "org-1",
         membershipId: "mem-owner",
         role: "owner",
+        organisationType: "reward_partner",
       };
     case "support":
       return { type: "admin", userId: "user-support", email: "support@test", adminUserId: "support-1", role: "support_agent" };
@@ -79,6 +82,7 @@ function authDepsFor(principal: AuthenticatedPrincipal): AuthenticateRequestDeps
     findOrganisationMembership: async () =>
       principal.type === "organisation"
         ? {
+            organisationType: principal.organisationType,
             id: principal.membershipId,
             organisationId: principal.organisationId,
             userId: principal.userId,

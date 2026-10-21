@@ -420,6 +420,7 @@ export async function createPlatformApiForTests(
           const body = await readJsonBody(req);
           const membershipId =
             typeof body.membershipId === "string" ? body.membershipId : "";
+          if (body.status !== undefined && body.status !== "active" && body.status !== "invited" && body.status !== "revoked") return fail("validation", "Invalid membership status");
           const role = typeof body.role === "string" ? body.role : "";
           if (!isMembershipRole(role)) {
             return fail("validation", "Valid membership role is required");
@@ -427,6 +428,8 @@ export async function createPlatformApiForTests(
           const result = await organisationCommands.updateStaffRole(ctx, {
             organisationId: params.id,
             membershipId,
+            expectedUpdatedAt: typeof body.expectedUpdatedAt === "string" ? body.expectedUpdatedAt : undefined,
+            status: body.status === "active" || body.status === "invited" || body.status === "revoked" ? body.status : undefined,
             role,
           });
           if (result.ok && options.hooks?.onStaffAccessChanged) {

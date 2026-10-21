@@ -92,7 +92,9 @@ export async function platformRoute<T>(
   const correlationIdHeader = config.request.headers.get("x-correlation-id");
 
   const auth = await authenticate(
-    { accessToken, correlationIdHeader, requiredCapability: config.capability, ...(config.preferRider ? { preferRider: true } : {}) },
+    { accessToken, correlationIdHeader, requiredCapability: config.capability,
+      organisationId: config.request.headers.get("x-organisation-id") || undefined,
+      ...(config.preferRider ? { preferRider: true } : {}) },
     config.authDeps,
   );
   if (!auth.ok) {

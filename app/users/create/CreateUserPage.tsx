@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,6 +58,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DASHBOARD_COUNTS_QUERY_KEY } from "@/providers/CountProvider";
 
+import { getAccountOrganisations } from "@/app/actions/accountMemberships";
+import { ACCOUNT_DOMAINS, accountDomainSchema, rolesForDomain, accountRoleLabel, ORGANISATION_TYPES, type AccountDomain } from "@/features/identity/domain/accountDomains";
 import { accountCreationRoleSchema } from "@/schemas/user";
 import { CANONICAL_EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
 
@@ -69,6 +71,9 @@ const createUserFormSchema = z.object({
     .max(100, "Name must be less than 100 characters"),
   phone: z.string().optional(),
   role: accountCreationRoleSchema,
+  domain: accountDomainSchema,
+  organisationId: z.string().uuid().optional(),
+  membershipStatus: z.enum(["active", "invited"]).default("active"),
   status: z.enum(["active", "inactive", "pending"]),
   organization: z.string().optional(),
   languagePreference: z.string().default("en"),
@@ -78,6 +83,8 @@ const createUserFormSchema = z.object({
   city: z.string().optional(),
   country: z.string().optional(),
 }).superRefine((value, ctx) => {
+  if (!rolesForDomain(value.domain).includes(value.role)) ctx.addIssue({ code: "custom", message: "Select a valid scoped role", path: ["role"] });
+  if (["partner", "advertiser", "government"].includes(value.domain) && !value.organisationId) ctx.addIssue({ code: "custom", message: "Organisation is required", path: ["organisationId"] });
   if (value.role === "rider") {
     if (!value.city?.trim()) {
       ctx.addIssue({
@@ -162,6 +169,8 @@ export default function CreateUserPage() {
       name: "",
       phone: "",
       role: initialRole,
+      domain: CANONICAL_EMPLOYEE_ROLES.some(role => role === initialRole) ? "staff" : "rider",
+      membershipStatus: "active",
       status: "active",
       organization: "",
       languagePreference: "en",
@@ -175,6 +184,9 @@ export default function CreateUserPage() {
   });
 
   const watchedValues = form.watch();
+  const [organisations, setOrganisations] = useState<Awaited<ReturnType<typeof getAccountOrganisations>>>([]);
+  const [organisationError, setOrganisationError] = useState("");
+  useEffect(() => { getAccountOrganisations().then(setOrganisations).catch(error => setOrganisationError(error.message)); }, []);
 
   const onSubmit = async (data: CreateUserFormData) => {
     setIsLoading(true);
@@ -287,6 +299,27 @@ export default function CreateUserPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  <FormField control={form.control} name="domain" render={({ field }) => (
+                    <FormItem><FormLabel>Account domain</FormLabel>
+                      <Select value={field.value} onValueChange={value => {
+                        field.onChange(value); form.setValue("organisationId", undefined);
+                        form.setValue("role", value === "rider" ? "rider" : value === "staff" ? "support_agent" : "viewer");
+                      }}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>{ACCOUNT_DOMAINS.map(domain => <SelectItem key={domain} value={domain}>{domain === "staff" ? "Internal MOVRR Staff" : roleLabel(domain)}</SelectItem>)}</SelectContent>
+                      </Select><FormMessage />
+                    </FormItem>)} />
+                  {["partner", "advertiser", "government"].includes(watchedValues.domain) && <FormField control={form.control} name="organisationId" render={({ field }) => (
+                    <FormItem><FormLabel>Organisation</FormLabel>
+                      <Select value={field.value ?? ""} onValueChange={field.onChange}><FormControl><SelectTrigger><SelectValue placeholder="Select organisation" /></SelectTrigger></FormControl>
+                        <SelectContent>{organisations.filter(org => org.type === ORGANISATION_TYPES[watchedValues.domain as keyof typeof ORGANISATION_TYPES]).map(org => <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>)}</SelectContent>
+                      </Select><FormMessage />{organisationError && <p role="alert" className="text-destructive text-sm">{organisationError}</p>}
+                    </FormItem>)} />}
+                  {["partner", "advertiser", "government"].includes(watchedValues.domain) && <FormField control={form.control} name="membershipStatus" render={({ field }) => (
+                    <FormItem><FormLabel>Membership status</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent><SelectItem value="active">Active membership</SelectItem><SelectItem value="invited">Awaiting invitation acceptance</SelectItem></SelectContent>
+                      </Select><FormDescription>Account status and organisation access are independent. Create an invitation link from User Details for a membership awaiting acceptance.</FormDescription><FormMessage />
+                    </FormItem>)} />}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -463,42 +496,11 @@ export default function CreateUserPage() {
                           >
                             <FormControl>
                               <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
-                                <SelectValue placeholder="Select role">{roleLabel(field.value)}</SelectValue>
+                                <SelectValue placeholder="Select role">{accountRoleLabel(watchedValues.domain, field.value)}</SelectValue>
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="rider">
-                                <div className="flex flex-col">
-                                  <span className="font-medium self-start">
-                                    Rider
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {roleDescriptions.rider}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="advertiser">
-                                <div className="flex flex-col">
-                                  <span className="font-medium self-start">
-                                    Advertiser
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {roleDescriptions.advertiser}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                              {EMPLOYEE_CREATE_ROLE_VALUES.map((roleValue) => (
-                                <SelectItem key={roleValue} value={roleValue}>
-                                  <div className="flex flex-col">
-                                    <span className="font-medium self-start">
-                                      {roleLabel(roleValue)}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {roleDescriptions[roleValue]}
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
+                              {rolesForDomain(watchedValues.domain).map(role => <SelectItem key={role} value={role}>{accountRoleLabel(watchedValues.domain, role)}</SelectItem>)}
                             </SelectContent>
                           </Select>
                           {selectedRoleDescription && (
@@ -656,9 +658,7 @@ export default function CreateUserPage() {
                   <Alert>
                     <Info className="h-4 w-4" />
                     <AlertDescription>
-                      Advertiser accounts are created from the Advertisers
-                      module so the linked advertiser business profile is created
-                      at the same time.
+                      External accounts require an existing organisation. Create a new advertiser business from the Advertisers module.
                     </AlertDescription>
                   </Alert>
                 </CardContent>
@@ -755,7 +755,7 @@ export default function CreateUserPage() {
                         Organization
                       </p>
                       <p className="text-base font-medium">
-                        {watchedValues.organization || "—"}
+                        {organisations.find(organisation => organisation.id === watchedValues.organisationId)?.name || watchedValues.organization || "—"}
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -763,7 +763,7 @@ export default function CreateUserPage() {
                         Role
                       </p>
                       <Badge variant="outline" className="capitalize">
-                        {watchedValues.role?.replace("-", " ") || "—"}
+                        {roleLabel(watchedValues.domain)} · {accountRoleLabel(watchedValues.domain, watchedValues.role)}
                       </Badge>
                     </div>
                     <div className="space-y-2">
@@ -836,7 +836,7 @@ export default function CreateUserPage() {
                 {formStep !== "review" && (
                   <Button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (formStep === "basic") {
                         const fields: (keyof CreateUserFormData)[] = [
                           "name",
@@ -845,22 +845,9 @@ export default function CreateUserPage() {
                         if (isRiderRole) {
                           fields.push("city", "country");
                         }
-                        form.trigger(fields);
-                        const basicErrors = form.formState.errors;
-                        if (
-                          !basicErrors.name &&
-                          !basicErrors.email &&
-                          !basicErrors.city &&
-                          !basicErrors.country
-                        ) {
-                          setFormStep("details");
-                        }
+                        if (await form.trigger([...fields, "domain", "organisationId"])) setFormStep("details");
                       } else if (formStep === "details") {
-                        form.trigger(["role", "status"]);
-                        const detailsErrors = form.formState.errors;
-                        if (!detailsErrors.role && !detailsErrors.status) {
-                          setFormStep("review");
-                        }
+                        if (await form.trigger()) setFormStep("review");
                       }
                     }}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground"

@@ -3,7 +3,7 @@ const deps = vi.hoisted(() => ({ policy: vi.fn(), assurance: vi.fn(), trusted: v
 vi.mock("server-only", () => ({}));
 vi.mock("next/headers", () => ({headers: async () => new Headers({'x-pathname':'/'})}));
 vi.mock("@/lib/supabase-server", () => ({createSupabaseServerClient: async () => ({auth:{getUser:deps.user}})}));
-vi.mock("@/lib/supabase-admin", () => ({createSupabaseAdminClient: () => ({from:(table:string) => {
+vi.mock("@/lib/supabase-admin", () => ({createSupabaseAdminClient: () => ({rpc: async () => { const result = await deps.account(); return { ...result, data: result.data?.status === 'active' }; }, from:(table:string) => {
   const query = {select:()=>query,eq:()=>query, single:async()=>({data:{id:'employee',user_id:'a',role:'super_admin',email:'employee@isolated.test'},error:null}),maybeSingle:table==='user'?deps.account:deps.trusted,upsert:deps.upsert};
   if (!['user','admin_users','admin_dashboard_sessions'].includes(table)) throw new Error('Unexpected data access');
   return query;

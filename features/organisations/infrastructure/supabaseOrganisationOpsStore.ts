@@ -161,33 +161,12 @@ export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
     },
 
     async addMember(input) {
-      const supabase = createSupabaseAdminClient();
-      const { data, error } = await supabase
-        .from("organisation_membership")
-        .upsert({
-          organisation_id: input.organisationId,
-          user_id: input.userId,
-          role: input.role,
-          bundle_key: input.bundleKey ?? ORG_ROLE_BUNDLE_KEYS[input.role],
-          status: "active",
-        }, { onConflict: "organisation_id,user_id", ignoreDuplicates: true })
-        .select(
-          "id, organisation_id, user_id, role, bundle_key, status, created_at, updated_at",
-        )
-        .maybeSingle();
-
+      if (!input.actorId) throw new Error("Authenticated membership actor required");
+      const { data, error } = await createSupabaseAdminClient().rpc("change_organisation_membership", {
+        p_actor: input.actorId, p_user: input.userId, p_organisation: input.organisationId,
+        p_role: input.role, p_status: "active", p_expected: null,
+      });
       throwOnError(error, "addMember");
-      if (!data) {
-        const existing = await supabase.from("organisation_membership")
-          .select("id, organisation_id, user_id, role, bundle_key, status, created_at, updated_at")
-          .eq("organisation_id", input.organisationId).eq("user_id", input.userId).single();
-        throwOnError(existing.error, "addMember.retry");
-        if (!existing.data || existing.data.role !== input.role ||
-            existing.data.bundle_key !== (input.bundleKey ?? ORG_ROLE_BUNDLE_KEYS[input.role]) || existing.data.status !== "active") {
-          throw new Error("Membership already exists with different access; use the authorized role update workflow");
-        }
-        return mapMembership(existing.data as MembershipRow);
-      }
       return mapMembership(data as MembershipRow);
     },
 
@@ -226,26 +205,6 @@ export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
       return data ? mapMembership(data as MembershipRow) : null;
     },
 
-    async assignBundle(input) {
-      const supabase = createSupabaseAdminClient();
-      const { data, error } = await supabase
-        .from("organisation_membership")
-        .update({
-          bundle_key: input.bundleKey,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", input.membershipId)
-        .select(
-          "id, organisation_id, user_id, role, bundle_key, status, created_at, updated_at",
-        )
-        .maybeSingle();
-
-      throwOnError(error, "assignBundle");
-      if (!data) {
-        throw new Error(`Membership not found: ${input.membershipId}`);
-      }
-      return mapMembership(data as MembershipRow);
-    },
 
     async listOrganisations(filter) {
       const supabase = createSupabaseAdminClient();
@@ -332,25 +291,15 @@ export function createSupabaseOrganisationOpsStore(): OrganisationListPort {
     },
 
     async updateMemberRole(input) {
-      const supabase = createSupabaseAdminClient();
-      const { data, error } = await supabase
-        .from("organisation_membership")
-        .update({
-          role: input.role,
-          bundle_key: ORG_ROLE_BUNDLE_KEYS[input.role],
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", input.membershipId)
-        .eq("organisation_id", input.organisationId)
-        .select(
-          "id, organisation_id, user_id, role, bundle_key, status, created_at, updated_at",
-        )
-        .maybeSingle();
-
-      if (error) {
-        throwOnError(error, "updateMemberRole");
-      }
-      return data ? mapMembership(data as MembershipRow) : null;
+      if (!input.actorId || !input.expectedUpdatedAt) throw new Error("Actor and expected membership version required; reload before saving");
+      const existing = await store.findMembershipById(input.membershipId);
+      if (!existing || existing.organisationId !== input.organisationId) return null;
+      const { data, error } = await createSupabaseAdminClient().rpc("change_organisation_membership", {
+        p_actor: input.actorId, p_user: existing.userId, p_organisation: input.organisationId,
+        p_role: input.role, p_status: input.status ?? existing.status, p_expected: input.expectedUpdatedAt,
+      });
+      throwOnError(error, "updateMemberRole");
+      return mapMembership(data as MembershipRow);
     },
 
     async updateOrganisation(input) {

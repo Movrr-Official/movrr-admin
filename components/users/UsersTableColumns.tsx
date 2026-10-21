@@ -101,7 +101,6 @@ interface UsersTableColumnsProps {
   onRoleChange?: (user: User) => void;
   onResetPassword?: (user: User) => void;
   onExportData?: (user: User) => void;
-  onDelete?: (user: User) => void;
 }
 
 export const getUsersTableColumns = ({
@@ -110,7 +109,6 @@ export const getUsersTableColumns = ({
   onRoleChange,
   onResetPassword,
   onExportData,
-  onDelete,
 }: UsersTableColumnsProps = {}): ColumnDef<User>[] => [
   {
     id: "select",
@@ -188,8 +186,16 @@ export const getUsersTableColumns = ({
   },
   {
     accessorKey: "role",
-    header: "Role",
-    cell: ({ row }) => getRoleBadge(row.getValue("role")),
+    header: "Domains and roles",
+    cell: ({ row }) => <div className="space-y-1">
+      {row.original.role !== "unassigned" && getRoleBadge(row.original.role)}
+      {row.original.domains?.includes("rider") && row.original.employeeRole && getRoleBadge("rider")}
+      {row.original.riderStatus && <span className="text-xs text-muted-foreground">Rider: {row.original.riderStatus}</span>}
+      {row.original.memberships?.map(membership => <div key={membership.id} className="text-xs">
+        {membership.organisationName} · {membership.domain} · {membership.role} · {membership.status}
+      </div>)}
+      {row.original.role === "unassigned" && !row.original.memberships?.length && "No active membership"}
+    </div>,
   },
   {
     accessorKey: "status",
@@ -283,13 +289,7 @@ export const getUsersTableColumns = ({
               Export Data
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => onDelete?.(user)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete User
-            </DropdownMenuItem>
+
           </DropdownMenuContent>
         </DropdownMenu>
       );

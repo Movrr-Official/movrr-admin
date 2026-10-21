@@ -2,6 +2,7 @@ import type { OrganisationMembership } from "@/features/organisations/domain/Mem
 import {
   ORG_ROLE_BUNDLE_KEYS,
   isMembershipRole,
+  capabilitiesForMembership,
 } from "@/features/organisations/domain/CapabilityCatalog";
 import type {
   AddMemberInput,
@@ -33,8 +34,10 @@ export async function addMember(
   if (!organisation) {
     return fail("not_found", "Organisation not found");
   }
+  if (!capabilitiesForMembership(organisation.type, input.role).length) return fail("validation_failed", "Role is invalid for the organisation domain");
 
   const membership = await deps.organisations.addMember({
+    actorId: input.actorId,
     organisationId: input.organisationId,
     userId: input.userId,
     role: input.role,

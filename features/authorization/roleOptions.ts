@@ -27,16 +27,6 @@ export const EMPLOYEE_ROLE_OPTIONS: EmployeeRoleOption[] =
     };
   });
 
-/** Product roles assignable alongside employee roles in user management. */
-export const PRODUCT_ROLE_OPTIONS = [
-  { value: "rider" as const, label: "Rider", description: "End-user rider account" },
-  {
-    value: "advertiser" as const,
-    label: "Advertiser",
-    description: "Advertiser product account",
-  },
-];
-
 export function getEmployeeRoleLabel(role: string | null | undefined): string {
   if (!role) return "Unknown";
   const template =

@@ -460,6 +460,17 @@ export async function resendWorkboardInvitation(input: {
     return eligible;
   }
 
+  // A previous response may have been lost before email/commit. Recover that
+  // exact durable preparation before issuing a new token; do not clear a newer
+  // concurrent preparation. SQL revalidates the current team administrator.
+  if (typeof existing.metadata.next_token_hash === "string") {
+    const recovered = await supabase.rpc("abort_resend_platform_invitation", {
+      p_invitation_id: input.invitationId, p_actor: input.invitedByUserId,
+      p_expected_hash: existing.metadata.next_token_hash,
+    });
+    if (recovered.error) return fail("resend_recovery_failed", "Previous invitation resend needs recovery; reload before retrying");
+  }
+
   const expiresAt = new Date(Date.now() + INVITE_TTL_MS).toISOString();
   const plaintextToken = generateInvitationPlaintext();
   const nextHash = hashInvitationToken(plaintextToken);
@@ -503,7 +514,7 @@ export async function resendWorkboardInvitation(input: {
 
   if (!emailResult.ok) {
     await supabase.rpc("abort_resend_platform_invitation", {
-      p_invitation_id: input.invitationId,
+      p_invitation_id: input.invitationId, p_actor: input.invitedByUserId, p_expected_hash: nextHash,
     });
     await auditInviteEvent({
       actorUserId: input.invitedByUserId,
@@ -522,12 +533,12 @@ export async function resendWorkboardInvitation(input: {
 
   const { data: commitData, error: commitError } = await supabase.rpc(
     "commit_resend_platform_invitation",
-    { p_invitation_id: input.invitationId },
+    { p_invitation_id: input.invitationId, p_actor: input.invitedByUserId, p_expected_hash: nextHash },
   );
 
   if (commitError) {
     await supabase.rpc("abort_resend_platform_invitation", {
-      p_invitation_id: input.invitationId,
+      p_invitation_id: input.invitationId, p_actor: input.invitedByUserId, p_expected_hash: nextHash,
     });
     return fail(
       "rpc_failed",
@@ -543,7 +554,7 @@ export async function resendWorkboardInvitation(input: {
 
   if (!commitRow?.success) {
     await supabase.rpc("abort_resend_platform_invitation", {
-      p_invitation_id: input.invitationId,
+      p_invitation_id: input.invitationId, p_actor: input.invitedByUserId, p_expected_hash: nextHash,
     });
     return fail(
       commitRow?.error_code || "commit_failed",

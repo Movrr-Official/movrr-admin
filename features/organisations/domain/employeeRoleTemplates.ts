@@ -20,13 +20,8 @@ export const CANONICAL_EMPLOYEE_ROLES = [
 export type CanonicalEmployeeRole = (typeof CANONICAL_EMPLOYEE_ROLES)[number];
 export type EmployeeRole = CanonicalEmployeeRole;
 
-export type DataScopePreset =
-  | "global"
-  | "department"
-  | "programme"
-  | "assignment"
-  | "region"
-  | "organisation";
+/** Staff capabilities authorize platform operations; external roles are tenant scoped separately. */
+export type DataScopePreset = "global";
 
 export type EmployeeRoleTemplate = {
   id: CanonicalEmployeeRole | "super_admin";
@@ -411,7 +406,7 @@ export const EMPLOYEE_ROLE_TEMPLATES: Record<
     description: "Fulfilment queues, rewards catalog and partner approvals.",
     department: "Partner Operations",
     bundleKey: EMPLOYEE_BUNDLE_KEYS.partner_operations_manager,
-    dataScope: "organisation",
+    dataScope: "global",
     responsibilities: ["Fulfilment", "Partner onboarding", "Reward catalog"],
   },
   fraud_analyst: {
@@ -420,7 +415,7 @@ export const EMPLOYEE_ROLE_TEMPLATES: Record<
     description: "Fraud review and ride verification disposition.",
     department: "Fraud",
     bundleKey: EMPLOYEE_BUNDLE_KEYS.fraud_analyst,
-    dataScope: "assignment",
+    dataScope: "global",
     responsibilities: ["Fraud queue", "Ride verification", "Risk disposition"],
   },
   trust_safety_analyst: {
@@ -429,7 +424,7 @@ export const EMPLOYEE_ROLE_TEMPLATES: Record<
     description: "Incident handling and safety investigations.",
     department: "Trust & Safety",
     bundleKey: EMPLOYEE_BUNDLE_KEYS.trust_safety_analyst,
-    dataScope: "assignment",
+    dataScope: "global",
     responsibilities: ["Incidents", "Safety review"],
   },
   support_agent: {
@@ -438,7 +433,7 @@ export const EMPLOYEE_ROLE_TEMPLATES: Record<
     description: "Customer support read access and incident creation.",
     department: "Support",
     bundleKey: EMPLOYEE_BUNDLE_KEYS.support_agent,
-    dataScope: "assignment",
+    dataScope: "global",
     responsibilities: ["User lookup", "Notifications", "Incident intake"],
   },
   support_lead: {
@@ -447,7 +442,7 @@ export const EMPLOYEE_ROLE_TEMPLATES: Record<
     description: "Support leadership including waitlist and escalations.",
     department: "Support",
     bundleKey: EMPLOYEE_BUNDLE_KEYS.support_lead,
-    dataScope: "department",
+    dataScope: "global",
     responsibilities: ["Waitlist", "Escalations", "Agent oversight"],
   },
   finance_operator: {
@@ -465,7 +460,7 @@ export const EMPLOYEE_ROLE_TEMPLATES: Record<
     description: "Read-heavy compliance and programme oversight with audited export.",
     department: "Compliance",
     bundleKey: EMPLOYEE_BUNDLE_KEYS.compliance_analyst,
-    dataScope: "programme",
+    dataScope: "global",
     responsibilities: ["Compliance review", "Programme audit", "Exports"],
     readOnly: true,
   },
@@ -475,7 +470,7 @@ export const EMPLOYEE_ROLE_TEMPLATES: Record<
     description: "Government programme visibility and impact reporting.",
     department: "Government Programmes",
     bundleKey: EMPLOYEE_BUNDLE_KEYS.programme_operations_manager,
-    dataScope: "programme",
+    dataScope: "global",
     responsibilities: ["Programme oversight", "Impact reporting"],
     readOnly: true,
   },

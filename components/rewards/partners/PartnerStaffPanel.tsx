@@ -35,20 +35,22 @@ import {
 } from "@/features/organisations/presentation";
 import { Badge } from "@/components/ui/badge";
 import { trackOpsEvent } from "@/lib/opsTelemetry";
-
-const ROLES: MembershipRole[] = ["owner", "manager", "staff", "viewer"];
+import { rolesForDomain } from "@/features/identity/domain/accountDomains";
 
 type PartnerStaffPanelProps = {
+  organisationType: string;
   organisationId: string;
   staff: OrganisationMembership[];
   isLoading: boolean;
 };
 
 export function PartnerStaffPanel({
+  organisationType,
   organisationId,
   staff,
   isLoading,
 }: PartnerStaffPanelProps) {
+  const ROLES = rolesForDomain(organisationType === "government" ? "government" : organisationType === "advertiser" ? "advertiser" : "partner") as MembershipRole[];
   const { toast } = useToast();
   const addStaff = useAddOrganisationStaff();
   const updateRole = useUpdateOrganisationStaffRole();
@@ -99,6 +101,7 @@ export function PartnerStaffPanel({
       await updateRole.mutateAsync({
         organisationId,
         membershipId,
+        expectedUpdatedAt: staff.find(member => member.id === membershipId)?.updatedAt,
         role: nextRole,
       });
       trackOpsEvent("membership_action", {

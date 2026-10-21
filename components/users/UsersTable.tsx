@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { EMPLOYEE_ROLE_OPTIONS, PRODUCT_ROLE_OPTIONS } from "@/features/authorization/roleOptions";
+import { ACCOUNT_DOMAINS, rolesForDomain, accountRoleLabel } from "@/features/identity/domain/accountDomains";
 
 import { FilterConfig } from "@/lib/applyFilters";
 import { DataTableContainer } from "@/context/DataTableContext";
@@ -27,14 +27,20 @@ export function UsersTable({
   refetchData,
   isRefetching = false,
 }: UsersTableProps) {
+  const tableUsers = React.useMemo(() => users.map(user => ({ ...user,
+    scopedRoles: [...(user.domains?.includes("rider") ? ["rider:rider"] : []), ...(user.employeeRole ? [`staff:${user.employeeRole}`] : []), ...(user.memberships ?? []).map(member => `${member.domain}:${member.role}`)],
+    membershipSearch: (user.memberships ?? []).map(member => `${member.domain} ${member.organisationName} ${member.role} ${member.status}`).join(" "),
+  })), [users]);
   const filterConfig: FilterConfig[] = [
+    { id: "domains", label: "Account domain", type: "multi-select", key: "domains", primary: true,
+      options: ACCOUNT_DOMAINS.map(domain => ({ value: domain, label: domain === "staff" ? "MOVRR Staff" : accountRoleLabel(domain, domain) })) },
     {
-      id: "role",
-      label: "Role",
+      id: "scopedRoles",
+      label: "Scoped role",
       type: "multi-select",
-      key: "role",
+      key: "scopedRoles",
       primary: true,
-      options: [...PRODUCT_ROLE_OPTIONS, ...EMPLOYEE_ROLE_OPTIONS, { value: "unassigned", label: "No employee access" }],
+      options: ACCOUNT_DOMAINS.flatMap(domain => rolesForDomain(domain).map(role => ({ value: `${domain}:${role}`, label: `${domain === "staff" ? "MOVRR Staff" : accountRoleLabel(domain, domain)}: ${accountRoleLabel(domain, role)}` }))),
     },
     {
       id: "status",
@@ -52,7 +58,7 @@ export function UsersTable({
 
   return (
     <DataTableContainer
-      data={users}
+      data={tableUsers}
       filterConfig={filterConfig}
       persistToUrl={true}
       debounceMs={500}

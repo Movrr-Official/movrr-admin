@@ -712,6 +712,7 @@ export function OrganisationDetailsDrawer({
                   </CardHeader>
                   <CardContent>
                     <PartnerStaffPanel
+                      organisationType={org.type}
                       organisationId={org.id}
                       staff={staff.data ?? []}
                       isLoading={staff.isLoading}

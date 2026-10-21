@@ -221,6 +221,7 @@ export function useFilters({
         }
 
         if (Array.isArray(filterValue)) {
+          if (Array.isArray(itemValue)) return filterValue.some(value => itemValue.includes(value));
           const normalized = String(itemValue);
           return filterValue.some((value) => String(value) === normalized);
         }

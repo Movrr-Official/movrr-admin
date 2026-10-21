@@ -102,12 +102,13 @@ export type KnownCapability = (typeof CAPABILITIES)[number];
 export type ProductCapability = (typeof PRODUCT_CAPABILITIES)[number];
 export type EmployeeCapability = (typeof EMPLOYEE_CAPABILITIES)[number];
 
-export type MembershipRole = "owner" | "manager" | "staff" | "viewer";
+export type MembershipRole = "owner" | "manager" | "partner_operations_manager" | "staff" | "viewer";
 
 /** Role → permission bundle key (permissions live on bundles, not the role enum). */
 export const ORG_ROLE_BUNDLE_KEYS = {
   owner: "org.owner",
   manager: "org.manager",
+  partner_operations_manager: "org.partner_operations_manager",
   staff: "org.staff",
   viewer: "org.viewer",
 } as const satisfies Record<MembershipRole, string>;
@@ -175,10 +176,15 @@ export const BUNDLE_CAPABILITIES: Record<string, readonly KnownCapability[]> = {
   ],
 };
 
+BUNDLE_CAPABILITIES[ORG_ROLE_BUNDLE_KEYS.partner_operations_manager] = [
+  ...BUNDLE_CAPABILITIES[ORG_ROLE_BUNDLE_KEYS.manager], "staff.manage",
+];
+
 export function isMembershipRole(value: string | undefined): value is MembershipRole {
   return (
     value === "owner" ||
     value === "manager" ||
+    value === "partner_operations_manager" ||
     value === "staff" ||
     value === "viewer"
   );
@@ -187,6 +193,25 @@ export function isMembershipRole(value: string | undefined): value is Membership
 export function capabilitiesForOrgRole(role: MembershipRole): KnownCapability[] {
   const key = ORG_ROLE_BUNDLE_KEYS[role];
   return [...BUNDLE_CAPABILITIES[key]];
+}
+
+/** Role and tenant domain both constrain authority. Unknown domains deny. */
+export function capabilitiesForMembership(domain: string | undefined, role: string | undefined): KnownCapability[] {
+  if (!isMembershipRole(role)) return [];
+  if (domain === "reward_partner") return capabilitiesForOrgRole(role);
+  if (role === "partner_operations_manager") return [];
+  if (domain === "advertiser") {
+    const capabilities = capabilitiesForAdvertiser();
+    if (role === "owner") return [...capabilities, "staff.manage", "org.settings"];
+    if (role === "manager") return capabilities.filter(capability => capability !== "billing.read");
+    return capabilities.filter(capability => (role === "staff" ? ["campaigns.read", "campaigns.write", "analytics.view"] : ["campaigns.read", "analytics.view"]).includes(capability));
+  }
+  if (domain === "government") {
+    if (role === "manager" || role === "staff") return [];
+    if (role === "owner") return [...capabilitiesForGovernment(), "staff.manage"];
+    return capabilitiesForGovernment().filter(capability => capability !== "org.settings");
+  }
+  return [];
 }
 
 export function capabilitiesForRider(): KnownCapability[] {

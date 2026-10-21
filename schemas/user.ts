@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CANONICAL_EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
+import { MEMBERSHIP_ROLES } from "@/features/identity/domain/accountDomains";
 
 import {
   performanceDataSchema,
@@ -7,10 +8,10 @@ import {
   statCardSchema,
 } from "./dashboard";
 
-export const accountCreationRoleSchema = z.enum(["rider", "advertiser", ...CANONICAL_EMPLOYEE_ROLES]);
+export const accountCreationRoleSchema = z.enum(["rider", ...MEMBERSHIP_ROLES, ...CANONICAL_EMPLOYEE_ROLES]);
 
 export const employeeRoleSchema = z.enum(CANONICAL_EMPLOYEE_ROLES);
-export const userRoleSchema = z.enum(["rider", "advertiser", "unassigned", ...CANONICAL_EMPLOYEE_ROLES]);
+export const userRoleSchema = z.enum(["rider", "partner", "advertiser", "government", "unassigned", ...CANONICAL_EMPLOYEE_ROLES]);
 
 export const userStatusSchema = z.enum(["active", "inactive", "pending"]);
 
@@ -21,12 +22,16 @@ export const userSchema = z.object({
   phone: z.string().optional(),
   role: userRoleSchema,
   employeeRole: employeeRoleSchema.nullable().optional(),
-  accountType: z.enum(["rider", "advertiser", "employee"]).optional(),
+  domains: z.array(z.enum(["rider", "partner", "advertiser", "government", "staff"])).optional(),
+  riderStatus: z.string().optional(),
+  memberships: z.array(z.object({ id: z.string(), organisationId: z.string(), organisationName: z.string(),
+    domain: z.enum(["partner", "advertiser", "government"]), role: z.enum(MEMBERSHIP_ROLES),
+    status: z.enum(["active", "invited", "revoked"]), updatedAt: z.string() })).optional(),
   status: userStatusSchema,
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  lastActive: z.string().datetime().optional(),
-  lastLogin: z.string().datetime().optional(),
+  createdAt: z.string().datetime({ offset: true }),
+  updatedAt: z.string().datetime({ offset: true }),
+  lastActive: z.string().datetime({ offset: true }).optional(),
+  lastLogin: z.string().datetime({ offset: true }).optional(),
   avatarUrl: z.string().url().optional(),
   organization: z.string().optional(),
   isVerified: z.boolean().default(false),
@@ -52,12 +57,8 @@ export const profileSchema = userSchema
     languagePreference: z.string(),
   });
 
-export const updateUserRoleSchema = z.object({
-  userId: z.string(),
-  role: employeeRoleSchema.nullable(),
-}).strict();
-
 export const toggleUserStatusSchema = z.object({
+  expectedUpdatedAt: z.string().datetime({ offset: true }),
   userId: z.string(),
   status: userStatusSchema,
 });

@@ -35,7 +35,6 @@ import {
 } from "lucide-react";
 
 import {
-  deleteUser,
   exportUserData,
   getUserActivityLogs,
   getUserCampaigns,
@@ -133,7 +132,6 @@ export function RiderDetailsDrawer({
   const [isLoading, setIsLoading] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const [showRevokeDialog, setShowRevokeDialog] = useState<string | null>(null);
   const [selectedBadgeCode, setSelectedBadgeCode] = useState<string>("");
@@ -218,7 +216,6 @@ export function RiderDetailsDrawer({
   useEffect(() => {
     if (!open) {
       setIsEditMode(false);
-      setShowDeleteDialog(false);
       setShowResetConfirmation(false);
       setActivityLogs([]);
       setRoutes([]);
@@ -362,35 +359,6 @@ export function RiderDetailsDrawer({
       });
     } finally {
       setIsExporting(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!rider) return;
-    setIsLoading(true);
-    try {
-      const result = await deleteUser({ userId: rider.userId });
-      if (!result.success)
-        throw new Error(result.error || "Failed to delete rider");
-      await queryClient.invalidateQueries({
-        queryKey: DASHBOARD_COUNTS_QUERY_KEY,
-      });
-      toast({
-        title: "Rider deleted",
-        description: `${rider.name} and related rider records were deleted.`,
-      });
-      setShowDeleteDialog(false);
-      onOpenChange(false);
-      onRiderUpdate?.();
-    } catch (error) {
-      toast({
-        title: "Delete failed",
-        description:
-          error instanceof Error ? error.message : "Failed to delete rider.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -1646,15 +1614,7 @@ export function RiderDetailsDrawer({
                         </>
                       )}
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowDeleteDialog(true)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </Button>
+
                   </>
                 )}
               </div>
@@ -1717,39 +1677,7 @@ export function RiderDetailsDrawer({
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <div className="mb-2 flex items-center gap-3">
-              <div className="rounded-xl bg-destructive/10 p-2 dark:bg-destructive/20">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-              </div>
-              <AlertDialogTitle>Delete rider account</AlertDialogTitle>
-            </div>
-            <AlertDialogDescription>
-              This permanently deletes the linked user, rider profile, reward
-              data, route assignments, and campaign participation records.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isLoading}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete rider"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
     </>
   );
 }

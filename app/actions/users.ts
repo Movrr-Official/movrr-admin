@@ -3,6 +3,9 @@
 import { provisionProduct, advertiserProvisioningSchema } from "@/features/identity/application/productProvisioning";
 import { notifyAccountSetup } from "@/lib/services/accountSetupNotification";
 import { provisionEmployee } from "@/features/identity/application/employeeProvisioning";
+import { provisionExternalAccount } from "@/features/identity/application/externalAccountProvisioning";
+import { synchronizeAccountAuthStatus } from "@/features/identity/application/accountAuthStatus";
+import { accountDomainSchema, rolesForDomain, type AccountDomain } from "@/features/identity/domain/accountDomains";
 import { isEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
 import {
   capabilityRequiredToAssignRole,
@@ -14,7 +17,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   User,
   UserFiltersSchema,
-  updateUserRoleSchema,
   toggleUserStatusSchema,
   userRoleSchema,
   employeeRoleSchema,
@@ -30,7 +32,7 @@ import {
 import { z } from "zod";
 import { Resend } from "resend";
 import PasswordResetEmail, { passwordResetText } from "@/emails/password-reset";
-import { APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
+import { APP_URL, CUSTOMER_APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
 import {
   getPlatformOperationalPolicies,
   getPlatformPrivacyPolicy,
@@ -64,6 +66,10 @@ const createUserSchema = z
     name: z.string().min(1, "Full name is required").max(100),
     phone: z.string().optional(),
     role: accountCreationRoleSchema,
+    domain: accountDomainSchema,
+    organisationId: z.string().uuid().optional(),
+    membershipStatus: z.enum(["active", "invited"]).default("active"),
+    advertiserProfile: advertiserProvisioningSchema.optional(),
     status: userStatusSchema.default("active"),
     organization: z.string().optional(),
     languagePreference: z.string().default("en"),
@@ -72,18 +78,23 @@ const createUserSchema = z
     sendWelcomeEmail: z.boolean().default(true),
     city: z.string().optional(),
     country: z.string().optional(),
-    allowAdvertiserBootstrap: z.boolean().optional(),
-    advertiserProfile: advertiserProvisioningSchema.optional(),
   })
   .strict()
   .superRefine((value, ctx) => {
-    if (value.role === "advertiser" && !value.allowAdvertiserBootstrap) {
+    if (!rolesForDomain(value.domain).includes(value.role)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message:
-          "Advertiser accounts must be created from the Advertisers module.",
+          "Role does not belong to the selected account domain.",
         path: ["role"],
       });
+    }
+    if (["partner", "advertiser", "government"].includes(value.domain) && !value.organisationId &&
+        !(value.domain === "advertiser" && value.role === "owner" && value.advertiserProfile)) {
+      ctx.addIssue({ code: "custom", message: "Organisation is required", path: ["organisationId"] });
+    }
+    if (["rider", "staff"].includes(value.domain) && value.organisationId) {
+      ctx.addIssue({ code: "custom", message: "This domain does not use an organisation membership", path: ["organisationId"] });
     }
     if (value.role === "rider") {
       if (!value.city?.trim()) {
@@ -109,16 +120,14 @@ const updateUserSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   employeeRole: employeeRoleSchema.nullable().optional(),
+  expectedEmployeeRole: employeeRoleSchema.nullable().optional(),
+  expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
   status: z.enum(["active", "inactive", "pending"]).optional(),
   organization: z.string().optional(),
   languagePreference: z.string().optional(),
   isVerified: z.boolean().optional(),
   accountNotes: z.string().optional(),
 }).strict();
-
-const deleteUserSchema = z.object({
-  userId: z.string(),
-});
 
 const getResendClient = () => {
   const apiKey = RESEND_API_KEY;
@@ -129,16 +138,16 @@ const getResendClient = () => {
 const getSenderEmail = () =>
   FROM_EMAIL ? `MOVRR <${FROM_EMAIL}>` : "MOVRR <no-reply@movrr.nl>";
 
-const getRecoveryRedirectUrl = () =>
-  new URL("/auth/callback?next=/auth/reset-password", APP_URL).toString();
+const getRecoveryRedirectUrl = (origin: string) =>
+  new URL("/auth/callback?next=/auth/reset-password", origin).toString();
 
 /**
  * Build the scanner-safe confirm URL for outbound emails.
  * Uses token_hash (from generateLink) instead of action_link so the token
  * is only consumed after the user explicitly clicks "Continue" on /auth/confirm.
  */
-const buildConfirmUrl = (hashedToken: string, type: string): string => {
-  const url = new URL("/auth/confirm", APP_URL);
+const buildConfirmUrl = (hashedToken: string, type: string, origin: string): string => {
+  const url = new URL("/auth/confirm", origin);
   url.searchParams.set("token_hash", hashedToken);
   url.searchParams.set("type", type);
   return url.toString();
@@ -302,9 +311,6 @@ export async function getUsers(
 
     let query = supabaseAdmin.from("user").select("*");
 
-    if (filters?.role && ["rider", "advertiser"].includes(filters.role)) {
-      query = query.eq("role", filters.role);
-    }
 
     if (filters?.status) {
       query = query.eq("status", mapUiStatusToDb(filters.status));
@@ -337,6 +343,22 @@ export async function getUsers(
       .from("admin_users").select("user_id, role");
     if (employeeError) return { success: false, error: employeeError.message };
     const employeeRoles = new Map((employeeRows ?? []).map((row) => [row.user_id, row.role]));
+    const { data: riderRows, error: riderError } = await supabaseAdmin.from("rider").select("user_id,status");
+    if (riderError) return { success: false, error: riderError.message };
+    const riderStatuses = new Map((riderRows ?? []).map(row => [row.user_id, row.status]));
+    const { data: memberships, error: membershipError } = await supabaseAdmin.from("organisation_membership")
+      .select("id,user_id,organisation_id,role,status,updated_at,organisation:organisation_id(name,type)");
+    if (membershipError) return { success: false, error: membershipError.message };
+    const membershipsByUser = new Map<string, NonNullable<User["memberships"]>>();
+    for (const membership of memberships ?? []) {
+      const organisation = (Array.isArray(membership.organisation) ? membership.organisation[0] : membership.organisation) as { name: string; type: string };
+      if (!organisation || !["reward_partner", "advertiser", "government"].includes(organisation.type)) continue;
+      const current = membershipsByUser.get(membership.user_id) ?? [];
+      current.push({ id: membership.id, organisationId: membership.organisation_id, organisationName: organisation.name,
+        domain: (organisation.type === "reward_partner" ? "partner" : organisation.type) as "partner" | "advertiser" | "government",
+        role: membership.role, status: membership.status, updatedAt: membership.updated_at });
+      membershipsByUser.set(membership.user_id, current);
+    }
 
     const userIds = (data ?? []).map((row) => row.id);
     const lastActivitySignalMap = await fetchLatestUserActivitySignalMap(
@@ -349,9 +371,11 @@ export async function getUsers(
       email: row.email,
       name: row.name,
       phone: row.phone ?? undefined,
-      role: isEmployeeRole(employeeRoles.get(row.id)) ? employeeRoles.get(row.id) : ["rider","advertiser"].includes(row.role) ? row.role : "unassigned",
+      role: isEmployeeRole(employeeRoles.get(row.id)) ? employeeRoles.get(row.id) : riderStatuses.has(row.id) ? "rider" : membershipsByUser.get(row.id)?.some(member => member.domain === "advertiser" && member.status !== "revoked") ? "advertiser" : "unassigned",
       employeeRole: isEmployeeRole(employeeRoles.get(row.id)) ? employeeRoles.get(row.id) : null,
-      accountType: row.role === "rider" || row.role === "advertiser" ? row.role : "employee",
+      domains: [...new Set([...(riderStatuses.has(row.id) ? ["rider"] : []), ...(isEmployeeRole(employeeRoles.get(row.id)) ? ["staff"] : []), ...(membershipsByUser.get(row.id) ?? []).map(member => member.domain)])],
+      riderStatus: riderStatuses.get(row.id),
+      memberships: membershipsByUser.get(row.id) ?? [],
       status: mapDbStatusToUi(row.status),
       createdAt: row.created_at ?? new Date().toISOString(),
       updatedAt: row.updated_at ?? new Date().toISOString(),
@@ -369,7 +393,7 @@ export async function getUsers(
     })) as User[];
 
     if (filters?.role) {
-      users = users.filter((user) => user.role === filters.role || user.accountType === filters.role);
+      users = users.filter((user) => user.role === filters.role || user.domains?.some(domain => domain === filters.role) || user.memberships?.some(membership => membership.role === filters.role && membership.status !== "revoked"));
     }
 
     if (selectedAdvertiserIds.length > 0) {
@@ -394,7 +418,7 @@ export async function getUsers(
  */
 export async function createUser(
   data: z.infer<typeof createUserSchema>,
-): Promise<{ success: boolean; error?: string; warning?: string; data?: User }> {
+): Promise<{ success: boolean; error?: string; warning?: string; data?: { id: string; domain: AccountDomain; role: string; organisationId?: string; status: string } }> {
   try {
     const auth = await requireCapability("users.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
@@ -414,7 +438,7 @@ export async function createUser(
       };
     }
 
-    const canonicalRole = isEmployeeRole(validatedData.role) ? validatedData.role : undefined;
+    const canonicalRole = validatedData.domain === "staff" && isEmployeeRole(validatedData.role) ? validatedData.role : undefined;
     let account;
     if (canonicalRole) {
       await requireCapability(capabilityRequiredToAssignRole(canonicalRole), { mutation: true });
@@ -424,16 +448,32 @@ export async function createUser(
         languagePreference: validatedData.languagePreference, isVerified: validatedData.isVerified,
         accountNotes: validatedData.accountNotes, sendWelcomeEmail: validatedData.sendWelcomeEmail,
       });
-    } else {
-      if (validatedData.role === "advertiser") await requireCapability("advertisers.manage", { mutation: true });
+    } else if (validatedData.domain === "advertiser" && validatedData.advertiserProfile && !validatedData.organisationId) {
+      await requireCapability("advertisers.manage", { mutation: true });
       account = await provisionProduct(supabaseAdmin, auth.authUser.id, {
-        email: validatedData.email, name: validatedData.name, role: validatedData.role as "rider" | "advertiser",
+        email: validatedData.email, name: validatedData.name, role: "advertiser", status: validatedData.status,
+        phone: validatedData.phone, organization: validatedData.organization,
+        languagePreference: validatedData.languagePreference, isVerified: validatedData.isVerified,
+        accountNotes: validatedData.accountNotes, advertiserProfile: validatedData.advertiserProfile,
+      });
+    } else if (validatedData.domain !== "rider" && validatedData.domain !== "staff") {
+      account = await provisionExternalAccount(supabaseAdmin, auth.authUser.id, {
+        domain: validatedData.domain, organisationId: validatedData.organisationId!,
+        membershipStatus: validatedData.membershipStatus,
+        role: validatedData.role as "owner" | "manager" | "partner_operations_manager" | "staff" | "viewer",
+        email: validatedData.email, name: validatedData.name, status: validatedData.status,
+        phone: validatedData.phone, languagePreference: validatedData.languagePreference,
+        isVerified: validatedData.isVerified, accountNotes: validatedData.accountNotes,
+      });
+    } else if (validatedData.domain === "rider") {
+      account = await provisionProduct(supabaseAdmin, auth.authUser.id, {
+        email: validatedData.email, name: validatedData.name, role: "rider",
         status: validatedData.status, phone: validatedData.phone, organization: validatedData.organization,
         languagePreference: validatedData.languagePreference, isVerified: validatedData.isVerified,
         accountNotes: validatedData.accountNotes, city: validatedData.city, country: validatedData.country,
-        advertiserProfile: validatedData.advertiserProfile,
       });
     }
+    else throw new Error("Unsupported account domain or scoped role");
     const warning = validatedData.sendWelcomeEmail ? await notifyAccountSetup(supabaseAdmin, account) : undefined;
     await writeUserActivity(supabaseAdmin, {
       user_id: account.id, actor_user_id: auth.authUser.id, source: "account", action: "Account created",
@@ -441,7 +481,8 @@ export async function createUser(
       metadata: { role: account.role, status: account.status },
     }).catch(() => undefined);
     revalidatePath("/users");
-    return { success: true, warning, data: account as unknown as User };
+    return { success: true, warning, data: { id: account.id, domain: validatedData.domain, role: validatedData.role,
+      organisationId: validatedData.organisationId, status: validatedData.status } };
   } catch (error) {
     console.error("Create user error:", error);
     return {
@@ -486,7 +527,9 @@ export async function updateUser(
     if (validatedData.employeeRole !== undefined) {
       await requireCapability(validatedData.employeeRole ? capabilityRequiredToAssignRole(validatedData.employeeRole) : "users.role.assign", { mutation: true });
       updateData.employee_role = validatedData.employeeRole;
+      updateData.expected_employee_role = validatedData.expectedEmployeeRole;
     }
+    if (validatedData.expectedUpdatedAt) updateData.expected_updated_at = validatedData.expectedUpdatedAt;
     const { error } = await supabaseAdmin.rpc("update_admin_user_profile", {
       p_actor: auth.authUser.id, p_user: validatedData.id,
       p_patch: updateData,
@@ -498,10 +541,7 @@ export async function updateUser(
     }
 
     if (validatedData.status) {
-      const authStatus = await supabaseAdmin.auth.admin.updateUserById(validatedData.id, {
-        ban_duration: validatedData.status === "active" ? "none" : "876000h",
-      });
-      if (authStatus.error) return { success: false, error: `Profile saved; Auth status needs retry: ${authStatus.error.message}` };
+      await synchronizeAccountAuthStatus(supabaseAdmin, auth.authUser.id, validatedData.id);
     }
 
     await writeUserActivity(supabaseAdmin, {
@@ -531,50 +571,6 @@ export async function updateUser(
 }
 
 /**
- * Server action to update user role
- */
-export async function updateUserRole(
-  data: z.infer<typeof updateUserRoleSchema>,
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const supabaseAdmin = createSupabaseAdminClient();
-    const validatedData = updateUserRoleSchema.parse(data);
-    const canonicalRole = validatedData.role;
-    // PostgreSQL checks both the previous and requested role under the shared
-    // lock, including privileged demotion and revocation by security approvers.
-    const auth = await requireAnyCapability(["users.role.assign", "users.role.approve"], { mutation: true });
-
-    const { error } = await supabaseAdmin.rpc("assign_employee_role", {
-      p_actor: auth.authUser.id, p_user: validatedData.userId, p_role: canonicalRole,
-    });
-    if (error) return { success: false, error: error.message };
-
-    await writeUserActivity(supabaseAdmin, {
-      user_id: validatedData.userId,
-      actor_user_id: auth.authUser.id,
-      source: "account",
-      action: "Role updated",
-      description: `User role changed to ${validatedData.role}.`,
-      related_entity_type: "user",
-      related_entity_id: validatedData.userId,
-      metadata: { role: validatedData.role },
-    }).catch((activityError) => {
-      console.warn("Update user role activity write failed:", activityError);
-    });
-
-    revalidatePath("/users");
-    return { success: true };
-  } catch (error) {
-    console.error("Update user role error:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to update user role",
-    };
-  }
-}
-
-/**
  * Server action to toggle user status
  */
 export async function toggleUserStatus(
@@ -585,23 +581,8 @@ export async function toggleUserStatus(
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = toggleUserStatusSchema.parse(data);
 
-    const { error } = await supabaseAdmin
-      .from("user")
-      .update({
-        status: mapUiStatusToDb(validatedData.status),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", validatedData.userId);
-
-    if (error) {
-      console.error("Toggle user status error:", error);
-      return { success: false, error: error.message };
-    }
-
-    const authStatus = await supabaseAdmin.auth.admin.updateUserById(validatedData.userId, {
-      ban_duration: validatedData.status === "active" ? "none" : "876000h",
-    });
-    if (authStatus.error) return { success: false, error: `Account status saved; Auth status needs retry: ${authStatus.error.message}` };
+    const updated = await updateUser({ id: validatedData.userId, status: validatedData.status, expectedUpdatedAt: validatedData.expectedUpdatedAt });
+    if (!updated.success) return updated;
 
     // Suspension preserves the exact employee template. Access readers enforce
     // public account status; rebuilding from coarse user.role would promote a
@@ -653,11 +634,18 @@ export async function sendPasswordResetEmail(
       };
     }
 
+    email = z.string().trim().email().toLowerCase().parse(email);
+    const profile = await supabaseAdmin.from("user").select("id,name").eq("email", email).single();
+    if (profile.error) throw new Error(profile.error.message);
+    const employee = await supabaseAdmin.from("admin_users").select("role").eq("user_id", profile.data.id).maybeSingle();
+    if (employee.error) throw new Error(employee.error.message);
+    const origin = isEmployeeRole(employee.data?.role) ? APP_URL : CUSTOMER_APP_URL;
+    const accountLabel = origin === APP_URL ? "MOVRR Admin" : "MOVRR";
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email,
       options: {
-        redirectTo: getRecoveryRedirectUrl(),
+        redirectTo: getRecoveryRedirectUrl(origin),
       },
     });
 
@@ -670,7 +658,7 @@ export async function sendPasswordResetEmail(
     if (!hashedToken) {
       return { success: false, error: "Password reset link not generated" };
     }
-    const resetLink = buildConfirmUrl(hashedToken, "recovery");
+    const resetLink = buildConfirmUrl(hashedToken, "recovery", origin);
 
     const resend = getResendClient();
     if (!resend) {
@@ -680,25 +668,20 @@ export async function sendPasswordResetEmail(
       };
     }
 
-    const { data: profileRow } = await supabaseAdmin
-      .from("user")
-      .select("name")
-      .eq("email", email)
-      .maybeSingle();
-
-    await resend.emails.send({
+    const delivery = await resend.emails.send({
       from: getSenderEmail(),
       to: email,
-      subject: "Reset your MOVRR Admin password",
+      subject: `Reset your ${accountLabel} password`,
       react: PasswordResetEmail({
-        name: profileRow?.name || "there",
+        name: profile.data.name || "there", accountLabel,
         resetUrl: resetLink,
       }),
       text: passwordResetText({
-        name: profileRow?.name || "there",
+        name: profile.data.name || "there", accountLabel,
         resetUrl: resetLink,
       }),
     });
+    if (delivery.error) throw new Error(delivery.error.message);
 
     const { data: userRow } = await supabaseAdmin
       .from("user")
@@ -858,167 +841,24 @@ export async function exportUserData(
 }
 
 /**
- * Server action to delete a user and related records.
- */
-export async function deleteUser(
-  data: z.infer<typeof deleteUserSchema>,
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const auth = await requireCapability("users.manage", { mutation: true });
-    const supabaseAdmin = createSupabaseAdminClient();
-    const validatedData = deleteUserSchema.parse(data);
-
-    const userId = validatedData.userId;
-    const { data: targetUser } = await supabaseAdmin
-      .from("user")
-      .select("id, name, email")
-      .eq("id", userId)
-      .maybeSingle();
-
-    const { data: rider } = await supabaseAdmin
-      .from("rider")
-      .select("id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (rider?.id) {
-      const riderId = rider.id as string;
-
-      await supabaseAdmin
-        .from("impression_events")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin
-        .from("campaign_assignment_events")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin
-        .from("campaign_assignment")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin
-        .from("campaign_signup")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin
-        .from("performance_stats")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin
-        .from("reward_redemptions")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin
-        .from("reward_transactions")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin
-        .from("rider_reward_balance")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin
-        .from("rider_campaign_streak")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin
-        .from("rider_availability_log")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin.from("rider_bikes").delete().eq("rider_id", riderId);
-      await supabaseAdmin.from("rider_route").delete().eq("rider_id", riderId);
-      await supabaseAdmin
-        .from("route_tracking")
-        .delete()
-        .eq("rider_id", riderId);
-      await supabaseAdmin.from("rider").delete().eq("id", riderId);
-    }
-
-    const { data: advertiser } = await supabaseAdmin
-      .from("advertiser")
-      .select("id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (advertiser?.id) {
-      const { count: campaignCount } = await supabaseAdmin
-        .from("campaign")
-        .select("id", { count: "exact", head: true })
-        .eq("advertiser_id", advertiser.id);
-
-      if ((campaignCount ?? 0) > 0) {
-        return {
-          success: false,
-          error:
-            "Cannot delete advertiser with existing campaigns. Reassign or archive campaigns first.",
-        };
-      }
-
-      await supabaseAdmin.from("advertiser").delete().eq("id", advertiser.id);
-    }
-
-    await supabaseAdmin.from("admin_users").delete().eq("user_id", userId);
-    await writeUserActivity(supabaseAdmin, {
-      user_id: userId,
-      actor_user_id: auth.authUser.id,
-      source: "account",
-      action: "Account deleted",
-      description: `Account ${targetUser?.email ?? userId} was deleted by an administrator.`,
-      related_entity_type: "user",
-      related_entity_id: userId,
-      metadata: {
-        name: targetUser?.name ?? null,
-        email: targetUser?.email ?? null,
-      },
-    }).catch((activityError) => {
-      console.warn("Delete user activity write failed:", activityError);
-    });
-    await supabaseAdmin.from("user").delete().eq("id", userId);
-    await supabaseAdmin.auth.admin.deleteUser(userId);
-
-    revalidatePath("/users");
-    return { success: true };
-  } catch (error) {
-    console.error("Delete user error:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to delete user",
-    };
-  }
-}
-
-/**
  * Server action to bulk update user status
  */
 export async function bulkUpdateUserStatus(
   userIds: string[],
   status: "active" | "inactive" | "pending",
+  expectedVersions?: Record<string, string>,
 ): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
   try {
     await requireCapability("users.manage", { mutation: true });
-    const supabaseAdmin = createSupabaseAdminClient();
-
-    const { data, error } = await supabaseAdmin
-      .from("user")
-      .update({
-        status: mapUiStatusToDb(status),
-        updated_at: new Date().toISOString(),
-      })
-      .in("id", userIds)
-      .select();
-
-    if (error) {
-      console.error("Bulk update user status error:", error);
-      return { success: false, error: error.message };
+    const requested = z.array(z.string().uuid()).min(1).max(100).parse(userIds);
+    userStatusSchema.parse(status);
+    let updatedCount = 0;
+    for (const id of requested) {
+      const result = await updateUser({ id, status, expectedUpdatedAt: expectedVersions?.[id] });
+      if (!result.success) return { success: false, updatedCount, error: result.error };
+      updatedCount++;
     }
-
-    for (const row of data ?? []) {
-      const authStatus = await supabaseAdmin.auth.admin.updateUserById(row.id, {
-        ban_duration: status === "active" ? "none" : "876000h",
-      });
-      if (authStatus.error) return { success: false, error: `Account statuses saved; Auth status needs retry: ${authStatus.error.message}` };
-    }
-
-    return { success: true, updatedCount: data?.length || 0 };
+    return { success: true, updatedCount };
   } catch (error) {
     console.error("Bulk update user status error:", error);
     return {

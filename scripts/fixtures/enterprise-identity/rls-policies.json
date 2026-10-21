@@ -1,0 +1,398 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "advertiser",
+    "policyname": "Authenticated users can read advertiser names",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "advertiser",
+    "policyname": "advertiser_insert_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((user_id = auth.uid()) OR is_admin())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "advertiser",
+    "policyname": "advertiser_select_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "((user_id = auth.uid()) OR is_admin() OR rider_can_access_advertiser(id))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "advertiser",
+    "policyname": "advertiser_update_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "UPDATE",
+    "qual": "((user_id = auth.uid()) OR is_admin())",
+    "with_check": "((user_id = auth.uid()) OR is_admin())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "campaign",
+    "policyname": "Authenticated users can view campaigns",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "campaign",
+    "policyname": "Service role can manage campaigns",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "ALL",
+    "qual": "(auth.role() = 'service_role'::text)",
+    "with_check": "(auth.role() = 'service_role'::text)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "campaign",
+    "policyname": "campaign_insert_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((EXISTS ( SELECT 1\n   FROM advertiser a\n  WHERE ((a.id = campaign.advertiser_id) AND (a.user_id = auth.uid())))) OR is_admin())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "campaign",
+    "policyname": "campaign_select_admin",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "is_admin()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "campaign",
+    "policyname": "campaign_select_authenticated_open",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "((auth.role() = 'authenticated'::text) AND (lifecycle_status = ANY (ARRAY['open_for_signup'::campaign_lifecycle_status, 'selection_in_progress'::campaign_lifecycle_status, 'confirmed'::campaign_lifecycle_status])))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "campaign",
+    "policyname": "campaign_select_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM advertiser a\n  WHERE ((a.id = campaign.advertiser_id) AND (a.user_id = auth.uid()))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "campaign",
+    "policyname": "campaign_select_rider",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM rider r\n  WHERE ((r.user_id = auth.uid()) AND ((EXISTS ( SELECT 1\n           FROM campaign_signup cs\n          WHERE ((cs.campaign_id = campaign.id) AND (cs.rider_id = r.id)))) OR (EXISTS ( SELECT 1\n           FROM campaign_assignment ca\n          WHERE ((ca.campaign_id = campaign.id) AND (ca.rider_id = r.id))))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "campaign",
+    "policyname": "campaign_update_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "UPDATE",
+    "qual": "((EXISTS ( SELECT 1\n   FROM advertiser a\n  WHERE ((a.id = campaign.advertiser_id) AND (a.user_id = auth.uid())))) OR is_admin())",
+    "with_check": "((EXISTS ( SELECT 1\n   FROM advertiser a\n  WHERE ((a.id = campaign.advertiser_id) AND (a.user_id = auth.uid())))) OR is_admin())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organisation",
+    "policyname": "Dashboard admins manage organisations",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "ALL",
+    "qual": "is_dashboard_admin()",
+    "with_check": "is_dashboard_admin()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organisation",
+    "policyname": "Members can read own organisation",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM organisation_membership m\n  WHERE ((m.organisation_id = organisation.id) AND (m.user_id = auth.uid()) AND (m.status = 'active'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organisation_membership",
+    "policyname": "Dashboard admins manage memberships",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "ALL",
+    "qual": "is_dashboard_admin()",
+    "with_check": "is_dashboard_admin()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "organisation_membership",
+    "policyname": "Members can read own memberships",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "(user_id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rider",
+    "policyname": "account_status_required",
+    "permissive": "RESTRICTIVE",
+    "roles": [
+      "authenticated"
+    ],
+    "cmd": "ALL",
+    "qual": "account_is_active()",
+    "with_check": "account_is_active()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rider",
+    "policyname": "rider_insert_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((user_id = auth.uid()) OR is_admin())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rider",
+    "policyname": "rider_select_admin",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "is_admin()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rider",
+    "policyname": "rider_select_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "(user_id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "rider",
+    "policyname": "rider_update_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "UPDATE",
+    "qual": "((user_id = auth.uid()) OR is_admin())",
+    "with_check": "((user_id = auth.uid()) OR is_admin())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "route",
+    "policyname": "Authenticated users can insert routes",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.role() = 'authenticated'::text)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "route",
+    "policyname": "Authenticated users can update routes",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "UPDATE",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "route",
+    "policyname": "Authenticated users can view routes",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "(auth.role() = 'authenticated'::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "route",
+    "policyname": "route_insert_admin",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "is_admin()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "route",
+    "policyname": "route_select_admin",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "is_admin()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "route",
+    "policyname": "route_select_advertiser",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "((campaign_id IS NULL) OR user_owns_campaign(campaign_id))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "route",
+    "policyname": "route_select_rider",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "((campaign_id IS NULL) OR (EXISTS ( SELECT 1\n   FROM rider r\n  WHERE ((r.user_id = auth.uid()) AND ((EXISTS ( SELECT 1\n           FROM rider_route rr\n          WHERE ((rr.route_id = route.id) AND (rr.rider_id = r.id)))) OR (EXISTS ( SELECT 1\n           FROM campaign_signup cs\n          WHERE ((cs.campaign_id = route.campaign_id) AND (cs.rider_id = r.id)))) OR (EXISTS ( SELECT 1\n           FROM campaign_assignment ca\n          WHERE ((ca.campaign_id = route.campaign_id) AND (ca.rider_id = r.id)))))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "route",
+    "policyname": "route_update_admin",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "UPDATE",
+    "qual": "is_admin()",
+    "with_check": "is_admin()"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user",
+    "policyname": "user_insert_system",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user",
+    "policyname": "user_select_admin",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "is_admin()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user",
+    "policyname": "user_select_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "SELECT",
+    "qual": "(id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user",
+    "policyname": "user_update_own",
+    "permissive": "PERMISSIVE",
+    "roles": [
+      "public"
+    ],
+    "cmd": "UPDATE",
+    "qual": "((id = auth.uid()) OR is_admin())",
+    "with_check": "((id = auth.uid()) OR is_admin())"
+  }
+]

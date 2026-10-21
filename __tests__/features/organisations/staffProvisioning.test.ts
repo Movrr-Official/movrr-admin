@@ -30,7 +30,7 @@ describe("organisation staff creation boundaries", () => {
     expect(await store.listMembersByOrganisation(org.id)).toHaveLength(1);
     await expect(commands.addStaff(ctx, { ...input, role: "owner" })).rejects.toThrow("different access");
     expect((await store.listMembersByOrganisation(org.id))[0]).toMatchObject({ role: "staff", bundleKey: "org.staff" });
-    expect((await commands.addStaff(ctx, { ...input, userId: "another-user", role: "partner_operations_manager" as never })).ok).toBe(false);
+    expect((await commands.addStaff(ctx, { ...input, userId: "another-user", role: "security_admin" as never })).ok).toBe(false);
     expect(await store.listMembersByOrganisation(org.id)).toHaveLength(1);
   });
   it("preserves the employee role capability boundary and prevents owner demotion by tenant staff", async () => {

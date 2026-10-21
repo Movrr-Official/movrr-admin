@@ -45,6 +45,7 @@ export type FindRiderProfile = (
  */
 export type FindOrganisationMembership = (
   userId: string,
+  organisationId?: string,
 ) => Promise<OrganisationMembershipRecord | null>;
 
 export type AuthenticateRequestDeps = {
@@ -59,6 +60,8 @@ export type AuthenticateRequestDeps = {
  * never a principal type (resolution is derived from DB records).
  */
 export type AuthenticateRequestInput = {
+  /** A requested tenant is a selector, never a grant; lookup verifies membership. */
+  organisationId?: string;
   accessToken: string | null | undefined;
   correlationIdHeader?: string | null;
   /** Set by an owned-resource handler, never read from client headers or claims. */

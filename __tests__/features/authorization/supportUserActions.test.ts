@@ -11,7 +11,7 @@ vi.mock("@/lib/activitySignals", () => ({ fetchLatestUserActivitySignalMap: vi.f
 vi.mock("@/lib/userActivity", () => ({ fetchUserActivityFeed: vi.fn(), writeUserActivity: vi.fn(), writeUserActivities: vi.fn() }));
 vi.mock("@/emails/account-setup", () => ({ default: () => null, accountSetupText: () => "" }));
 vi.mock("@/emails/password-reset", () => ({ default: () => null, passwordResetText: () => "" }));
-import { getUsers, createUser, updateUser, toggleUserStatus, bulkUpdateUserStatus, deleteUser, sendPasswordResetEmail, updateUserRole, exportUserData } from "@/app/actions/users";
+import { getUsers, createUser, updateUser, toggleUserStatus, bulkUpdateUserStatus, sendPasswordResetEmail, exportUserData } from "@/app/actions/users";
 import { getRiders, updateRiderProfile, bulkUpdateRiderStatus, setCommunityRideCreatorAccess } from "@/app/actions/riders";
 beforeEach(() => {
   vi.clearAllMocks(); state.role = "support_agent";
@@ -44,12 +44,11 @@ describe("Users/Riders direct server-action authorization", () => {
   const attempts = [
     ["create account", () => createUser({} as never)],
     ["update account", () => updateUser({} as never)],
-    ["suspend account", () => toggleUserStatus({ userId: "target", status: "inactive" })],
+    ["suspend account", () => toggleUserStatus({ userId: "target", status: "inactive", expectedUpdatedAt: "2026-10-21T00:00:00Z" })],
     ["bulk suspend accounts", () => bulkUpdateUserStatus(["target"], "inactive")],
-    ["delete account", () => deleteUser({ userId: "target" })],
     ["reset password", () => sendPasswordResetEmail("target")],
-    ["assign employee role", () => updateUserRole({ userId: "target", role: "support_agent" })],
-    ["approve privileged role", () => updateUserRole({ userId: "target", role: "super_admin" })],
+    ["assign employee role", () => updateUser({ id: "target", employeeRole: "support_agent" })],
+    ["approve privileged role", () => updateUser({ id: "target", employeeRole: "super_admin" })],
     ["edit rider", () => updateRiderProfile({} as never)],
     ["suspend riders", () => bulkUpdateRiderStatus(["target"], "inactive")],
     ["grant ride creator", () => setCommunityRideCreatorAccess({} as never)],

@@ -11,17 +11,6 @@ import { User } from "@/schemas";
 import { useDataTable } from "@/context/DataTableContext";
 import { useToast } from "@/hooks/useToast";
 import { useDrawerQueryId } from "@/hooks/useDrawerQueryId";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { deleteUser } from "@/app/actions/users";
 import { UserDetailsDrawer } from "@/components/users/UserDetailsDrawer";
 import { BulkActions, BulkAction } from "@/components/filters/BulkActions";
 import { Users, UserCheck, UserX, Download, Plus } from "lucide-react";
@@ -49,8 +38,6 @@ export default function UsersTableContent({
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedRows, setSelectedRows] = useState<User[]>([]);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     data: users,
@@ -115,6 +102,7 @@ export default function UsersTableContent({
       const { toggleUserStatus } = await import("@/app/actions/users");
       const result = await toggleUserStatus({
         userId: user.id,
+      expectedUpdatedAt: user.updatedAt,
         status: newStatus,
       });
 
@@ -187,34 +175,6 @@ export default function UsersTableContent({
     }
   };
 
-  const handleDelete = (user: User) => {
-    setUserToDelete(user);
-  };
-
-  const confirmDelete = async () => {
-    if (!userToDelete) return;
-    setIsDeleting(true);
-
-    const result = await deleteUser({ userId: userToDelete.id });
-    setIsDeleting(false);
-
-    if (!result.success) {
-      toast({
-        title: "Delete Failed",
-        description: result.error || "Failed to delete user.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "User Deleted",
-      description: `${userToDelete.name} has been deleted successfully.`,
-    });
-    setUserToDelete(null);
-    refetchData?.();
-  };
-
   const columns = React.useMemo(
     () =>
       getUsersTableColumns({
@@ -223,7 +183,6 @@ export default function UsersTableContent({
         onRoleChange: handleRoleChange,
         onResetPassword: handleResetPassword,
         onExportData: handleExportData,
-        onDelete: handleDelete,
       }),
     [],
   );
@@ -237,7 +196,7 @@ export default function UsersTableContent({
         onClick: async (selectedRows: User[]) => {
           const { bulkUpdateUserStatus } = await import("@/app/actions/users");
           const userIds = selectedRows.map((u) => u.id);
-          const result = await bulkUpdateUserStatus(userIds, "active");
+          const result = await bulkUpdateUserStatus(userIds, "active", Object.fromEntries(selectedRows.map(user => [user.id, user.updatedAt])));
           if (!result.success) {
             throw new Error(result.error || "Failed to activate users");
           }
@@ -259,7 +218,7 @@ export default function UsersTableContent({
         onClick: async (selectedRows: User[]) => {
           const { bulkUpdateUserStatus } = await import("@/app/actions/users");
           const userIds = selectedRows.map((u) => u.id);
-          const result = await bulkUpdateUserStatus(userIds, "inactive");
+          const result = await bulkUpdateUserStatus(userIds, "inactive", Object.fromEntries(selectedRows.map(user => [user.id, user.updatedAt])));
           if (!result.success) {
             throw new Error(result.error || "Failed to suspend users");
           }
@@ -396,32 +355,7 @@ export default function UsersTableContent({
         onUserUpdate={refetchData}
       />
 
-      <AlertDialog
-        open={Boolean(userToDelete)}
-        onOpenChange={(open) => {
-          if (!open) setUserToDelete(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete user</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action permanently deletes the user and related rider data.
-              This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={confirmDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete user"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
     </>
   );
 }

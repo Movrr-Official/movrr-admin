@@ -11,15 +11,11 @@ export type CreateOrganisationInput = {
 };
 
 export type AddMemberInput = {
+  actorId?: string;
   organisationId: string;
   userId: string;
   role: MembershipRole;
   bundleKey?: string;
-};
-
-export type AssignBundleInput = {
-  membershipId: string;
-  bundleKey: string;
 };
 
 export type OrganisationRepository = {
@@ -30,5 +26,4 @@ export type OrganisationRepository = {
   findActiveMembershipByUserId(
     userId: string,
   ): Promise<OrganisationMembership | null>;
-  assignBundle(input: AssignBundleInput): Promise<OrganisationMembership>;
 };

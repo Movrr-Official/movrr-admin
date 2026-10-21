@@ -65,15 +65,10 @@ export async function authenticateRiderSessionRequest(
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const account = await adminClient
-    .from("user")
-    .select("status")
-    .eq("id", user.id)
-    .maybeSingle();
+  const account = await adminClient.rpc("account_identity_active", { p_user: user.id });
   if (
     account.error ||
-    !account.data ||
-    !["active", "pending"].includes(String(account.data.status).toLowerCase())
+    account.data !== true
   )
     return { ok: false, status: 403, error: "Account access restricted" };
 
@@ -91,6 +86,7 @@ export async function authenticateRiderSessionRequest(
     .from("rider")
     .select("user_id")
     .eq("id", session.rider_id)
+    .eq("status", "active")
     .maybeSingle();
 
   if (riderError || !rider?.user_id || rider.user_id !== user.id) {

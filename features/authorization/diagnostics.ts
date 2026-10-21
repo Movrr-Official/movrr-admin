@@ -21,7 +21,6 @@ import {
   generateNavigationFromCapabilities,
 } from "@/features/authorization/navigation";
 import { SOD_RULES } from "@/features/authorization/sod";
-import { resolveDataScope } from "@/features/authorization/dataScope";
 
 export type RoleSimulationResult = {
   role: CanonicalEmployeeRole;
@@ -108,7 +107,7 @@ export function simulateEmployeeRole(
     commands,
     exportModules,
     sodApprovals,
-    dataScope: resolveDataScope(role),
+    dataScope: template.dataScope,
     conflicts: detectCapabilityConflicts(capabilities),
   };
 }

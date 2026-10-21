@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { userRoleSchema, accountCreationRoleSchema } from "./user";
+import { userRoleSchema, employeeRoleSchema } from "./user";
+import { ACCOUNT_DOMAINS } from "@/features/identity/domain/accountDomains";
 
 export const notificationTypeSchema = z.enum([
   "campaign_assigned",
@@ -23,7 +24,7 @@ export const createNotificationSchema = z
     type: notificationTypeSchema,
     metadata: z.record(z.any()).optional().default({}),
     target: notificationTargetSchema,
-    role: accountCreationRoleSchema.optional(),
+    role: z.union([z.enum(ACCOUNT_DOMAINS), employeeRoleSchema]).optional(),
     userIds: z.array(z.string()).optional(),
     respectPreferences: z.boolean().default(true),
   })

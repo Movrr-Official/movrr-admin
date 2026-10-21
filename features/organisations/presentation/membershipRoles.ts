@@ -15,6 +15,11 @@ const ROLE_PRESENTATION: Record<MembershipRole, OrganisationPresentation> = {
     description: "Operational management without staff admin.",
     badgeVariant: "info",
   },
+  partner_operations_manager: {
+    label: "Partner Operations Manager",
+    description: "Partner operations and operational staff administration within this organisation.",
+    badgeVariant: "info",
+  },
   staff: {
     label: "Staff",
     description: "Validate and confirm fulfilment operations.",

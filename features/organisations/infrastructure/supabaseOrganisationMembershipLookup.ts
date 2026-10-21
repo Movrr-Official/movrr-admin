@@ -9,17 +9,20 @@ import type { FindOrganisationMembership } from "@/features/identity/application
  */
 export const findOrganisationMembership: FindOrganisationMembership = async (
   userId: string,
+  organisationId?: string,
 ) => {
   const supabase = createSupabaseAdminClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("organisation_membership")
-    .select("id, organisation_id, user_id, role, status, organisation:organisation_id (type)")
+    .select("id, organisation_id, user_id, role, status, organisation:organisation_id!inner (type, status)")
     .eq("user_id", userId)
     .eq("status", "active")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .eq("organisation.status", "active");
+  if (organisationId) query = query.eq("organisation_id", organisationId);
+  // Multiple memberships require explicit tenant selection; never choose by age.
+  const { data: rows, error } = await query.limit(2);
+  const data = rows?.length === 1 ? rows[0] : null;
 
   if (error || !data) {
     return null;

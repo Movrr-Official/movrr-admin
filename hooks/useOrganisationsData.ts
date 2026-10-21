@@ -26,6 +26,7 @@ export type AddStaffInput = {
 export type UpdateStaffRoleInput = {
   organisationId: string;
   membershipId: string;
+  expectedUpdatedAt?: string;
   role: MembershipRole;
 };
 
@@ -164,6 +165,7 @@ export function useUpdateOrganisationStaffRole() {
         {
           body: {
             membershipId: input.membershipId,
+            expectedUpdatedAt: input.expectedUpdatedAt,
             role: input.role,
           },
         },

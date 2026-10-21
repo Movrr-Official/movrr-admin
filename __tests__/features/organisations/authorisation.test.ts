@@ -18,6 +18,7 @@ import {
 function orgPrincipal(role: MembershipRole): OrganisationPrincipal {
   return {
     type: "organisation",
+    organisationType: "reward_partner",
     userId: "user-org-1",
     email: "staff@partner.test",
     organisationId: "org-1",

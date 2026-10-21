@@ -70,6 +70,7 @@ export function createSupabaseInvitationStore(
 ): InvitationStore {
   return {
     async save(invitation) {
+      if (invitation.scope !== "workboard_team") throw new Error("Organisation invitations require their canonical lifecycle commands");
       const { error } = await client
         .from("platform_invitations")
         .upsert(toRow(invitation), { onConflict: "id" });
@@ -122,6 +123,7 @@ export function createSupabaseInvitationStore(
     },
 
     async update(invitation) {
+      if (invitation.scope !== "workboard_team") throw new Error("Organisation invitations require their canonical lifecycle commands");
       const row = toRow(invitation);
       const { error } = await client
         .from("platform_invitations")

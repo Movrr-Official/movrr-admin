@@ -17,6 +17,7 @@ vi.mock("@supabase/supabase-js", () => ({
 }));
 vi.mock("@/lib/supabase-admin", () => ({
   createSupabaseAdminClient: () => ({
+    rpc: async () => ({ data: state.status === "active", error: state.error ? { message: "offline" } : null }),
     from: () => ({
       select() {
         return this;
@@ -35,13 +36,13 @@ import { verifySupabaseAccessToken } from "@/features/identity/infrastructure/su
 import { mapLedgerEntry } from "@/features/wallet/infrastructure/supabaseLedgerRepository";
 beforeEach(() => Object.assign(state, { status: "active", error: false, valid: true }));
 describe("existing-session account enforcement", () => {
-  it.each(["active", "pending"])("allows eligible %s accounts", async (status) => {
+  it.each(["active"])("allows eligible %s accounts", async (status) => {
     state.status = status;
     expect(await verifySupabaseAccessToken("existing-token")).toMatchObject({
       userId: "user",
     });
   });
-  it.each(["suspended", "blocked", "deleted", "inactive", "unknown", ""])(
+  it.each(["pending", "suspended", "blocked", "deleted", "inactive", "unknown", ""])(
     "denies %s even with a valid existing JWT",
     async (status) => {
       state.status = status;

@@ -8,24 +8,26 @@ interface PasswordResetEmailProps {
   name: string;
   resetUrl: string;
   locale?: string;
+  accountLabel?: string;
 }
 
 export default function PasswordResetEmail({
   name = "Ada",
   resetUrl = "https://admin.movrr.nl/reset?token=preview",
   locale = "en-US",
+  accountLabel = "MOVRR Admin",
 }: PasswordResetEmailProps = { name: "Ada", resetUrl: "https://admin.movrr.nl/reset?token=preview" }) {
   return (
     <BaseEmail
       locale={locale}
-      contextLabel="MOVRR Admin"
-      previewText="Use this secure link to reset your MOVRR Admin password."
+      contextLabel={accountLabel}
+      previewText={`Use this secure link to reset your ${accountLabel} password.`}
       title={`Reset your password, ${name}`}
-      intro="We received a request to reset the password for your MOVRR Admin account."
+      intro={`We received a request to reset the password for your ${accountLabel} account.`}
       actionLabel="Reset password"
       actionUrl={resetUrl}
-      actionAriaLabel="Reset your MOVRR Admin password"
-      footerNote="This is a transactional security email from MOVRR Admin."
+      actionAriaLabel={`Reset your ${accountLabel} password`}
+      footerNote={`This is a transactional security email from ${accountLabel}.`}
     >
       <Paragraph>
         This link expires according to the current security policy. After you
@@ -43,11 +45,11 @@ PasswordResetEmail.PreviewProps = {
   resetUrl: "https://admin.movrr.nl/reset?token=preview",
 } satisfies PasswordResetEmailProps;
 
-export function passwordResetText({ name, resetUrl }: PasswordResetEmailProps) {
+export function passwordResetText({ name, resetUrl, accountLabel = "MOVRR Admin" }: PasswordResetEmailProps) {
   return [
-    `Reset your MOVRR Admin password, ${name}`,
+    `Reset your ${accountLabel} password, ${name}`,
     "",
-    "We received a request to reset the password for your MOVRR Admin account.",
+    `We received a request to reset the password for your ${accountLabel} account.`,
     "",
     `Reset password: ${resetUrl}`,
     "",
