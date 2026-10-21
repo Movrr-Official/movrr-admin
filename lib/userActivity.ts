@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { readAllRows } from "@/lib/supabase/readAllRows";
 
 type SupabaseAdminClient = ReturnType<typeof createSupabaseAdminClient>;
 
@@ -76,27 +77,18 @@ export const fetchRecentUserActivityMap = async (
 ) => {
   if (userIds.length === 0) return new Map<string, string>();
 
-  const { data, error } = await supabaseAdmin
-    .from("user_activity")
-    .select("user_id, occurred_at")
-    .in("user_id", userIds)
-    .order("occurred_at", { ascending: false })
-    .limit(Math.max(userIds.length * 4, 100));
-
-  if (error) {
-    if (isMissingRelationError(error.message)) {
-      return new Map<string, string>();
-    }
-    console.warn("Fetch recent user activity map error:", error.message);
-    return new Map<string, string>();
-  }
-
   const latestByUser = new Map<string, string>();
-  for (const row of data ?? []) {
-    if (!row.user_id || !row.occurred_at || latestByUser.has(row.user_id)) {
-      continue;
+  for (let offset = 0; offset < userIds.length; offset += 100) {
+    const data = await readAllRows((from, to) => supabaseAdmin
+      .from("user_activity").select("user_id, occurred_at")
+      .in("user_id", userIds.slice(offset, offset + 100))
+      .order("occurred_at", { ascending: false }).order("id").range(from, to));
+    for (const row of data) {
+      if (!row.user_id || !row.occurred_at || latestByUser.has(row.user_id)) {
+        continue;
+      }
+      latestByUser.set(row.user_id, row.occurred_at);
     }
-    latestByUser.set(row.user_id, row.occurred_at);
   }
 
   return latestByUser;

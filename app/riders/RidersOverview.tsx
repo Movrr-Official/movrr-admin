@@ -5,9 +5,12 @@ import { Bike, CheckCircle2, Coins, Route } from "lucide-react";
 import { RidersTable } from "@/components/riders/RidersTable";
 import { StatsCard } from "@/components/stats/StatsCard";
 import { useRidersData } from "@/hooks/useRidersData";
+import { OpsErrorState } from "@/components/ops/OpsEmptyState";
 
 export default function RidersOverview() {
-  const { data: riders, isLoading, refetch, isRefetching } = useRidersData();
+  const { data: riders, isLoading, refetch, isRefetching, error } = useRidersData();
+  if (error) return <OpsErrorState title="Riders unavailable" message={error.message} onRetry={() => { void refetch(); }} />;
+  if (isLoading || !riders) return <div role="status" className="p-6 text-muted-foreground">Loading riders and statistics…</div>;
 
   const totalRiders = riders?.length ?? 0;
   const activeRiders = riders?.filter((rider) => rider.status === "active").length ?? 0;

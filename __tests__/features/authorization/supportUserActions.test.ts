@@ -20,7 +20,7 @@ beforeEach(() => {
     return { authUser: { id: "operator", email: "operator@example.test" }, adminUser: { role: state.role } };
   });
   const result = { data: [], error: null }; const builder: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "in", "order", "single", "maybeSingle"]) builder[method] = vi.fn(() => builder);
+  for (const method of ["select", "eq", "in", "order", "range", "single", "maybeSingle"]) builder[method] = vi.fn(() => builder);
   builder.then = (resolve: (value: unknown) => unknown) => Promise.resolve(result).then(resolve);
   state.from.mockReturnValue(builder); state.client.mockReturnValue({ from: state.from });
   vi.spyOn(console, "error").mockImplementation(() => {});

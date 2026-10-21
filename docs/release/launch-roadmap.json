@@ -4,6 +4,17 @@
   "evidence": "../verification/final-dashboard-performance/production.json",
   "milestones": [
     {
+      "name": "P1 Users dashboard production regression",
+      "status": "Source and 941-test SQL/HTTP/DOM regression verified; production migration and Admin deployment require explicit approval",
+      "work": "Replace revoked direct account_auth_sync read with one service-only pending-ID projection; remove Campaigns coupling and historical role enrichment; paginate projections; display loading/error/partial data states; report orphan Rider links without mutating records.",
+      "evidence": "../verification/users-dashboard-p1/verification.json",
+      "release": "users-dashboard-p1.md",
+      "productionCounts": "17 users/17 active; 13 distinct Rider users from 15 profiles (2 null-linked); 1 organisation user; 5 Staff; 200% 30-day registration growth.",
+      "validation": "941 tests in 81 files, real PostgreSQL/PostgREST with 37-row cap and real GoTrue HTTP; TypeScript/lint and production build pass. Existing Admin/external tenant RLS contexts checked read-only.",
+      "acceptanceLimit": "P1 remains open until approved 079 reader installation, pinned Admin release and authenticated live Users/search/filter/pagination/Details acceptance. No production migration or deployment performed.",
+      "preservedStates": "Deletion intake Enabled; irreversible deletion Disabled; public Shop redemption Disabled; parallel seven-account cleanup untouched."
+    },
+    {
       "name": "Owner-authorized exact seven synthetic account cleanup",
       "status": "Blocked atomically by canonical protected-redemption cleanup contract; zero production writes",
       "work": "Seven Auth/public User identities, six Riders, three Staff memberships and 173 dependent records across 23 tables are pinned and freshly reverified. Owner confirms all targeted activity is synthetic, including the 520-point redemption. The stricter no-partial-cleanup boundary is enforced; no identity, grant, Wallet, ledger, shared record or unrelated account was modified.",

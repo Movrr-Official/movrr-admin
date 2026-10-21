@@ -58,6 +58,8 @@ import {
 import { CopyButton } from "@/components/CopyButton";
 import { DASHBOARD_COUNTS_QUERY_KEY } from "@/providers/CountProvider";
 import { Rider, RiderPerformanceMetrics, updateRiderSchema } from "@/schemas";
+import { z } from "zod";
+import { OpsErrorState } from "@/components/ops/OpsEmptyState";
 import { useToast } from "@/hooks/useToast";
 import { exportToJSON } from "@/lib/export";
 import { BONUS_TYPE_LABELS, REWARD_SOURCE_LABELS } from "@/lib/rewardConstants";
@@ -230,7 +232,7 @@ export function RiderDetailsDrawer({
   }, [open]);
 
   useEffect(() => {
-    if (!open || !rider || isEditMode) return;
+    if (!open || !rider || !z.string().uuid().safeParse(rider.userId).success || isEditMode) return;
     let mounted = true;
 
     const load = async () => {
@@ -415,6 +417,15 @@ export function RiderDetailsDrawer({
   };
 
   if (!rider) return null;
+  if (!z.string().uuid().safeParse(rider.userId).success) return (
+    <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHeader><DrawerTitle>{rider.name}</DrawerTitle><DrawerDescription>Rider profile details</DrawerDescription></DrawerHeader>
+        <OpsErrorState title="Linked account unavailable" message="This Rider profile has no linked User account. Contact MOVRR support to review the account relationship." />
+        <DrawerClose asChild><Button variant="outline">Close</Button></DrawerClose>
+      </DrawerContent>
+    </Drawer>
+  );
 
   return (
     <>
