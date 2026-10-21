@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-21T11:43:13.711Z",
+  "recordedAt": "2026-10-21T11:44:06.886Z",
   "project": "kzdvunpuxaxlphqvmzxw",
   "status": "Approved SQL and pinned applications deployed; canonical bearer ingress discrepancy blocks complete acceptance",
   "migrationSource": "43b15cd46c8aaf56fcba427bacbf145a75777ba7",
@@ -1954,7 +1954,7 @@
     "impact": "Membership discovery, organisation, campaign, Government programme and several operational APIs encounter the Admin cookie gate before their canonical bearer handler; external workspace flows fail closed.",
     "productionEvidence": "Unauthenticated GET /api/v1/me/memberships and /api/v1/organisations return 307 /auth/signin, whereas their own handlers require bearer authentication and return 401 without it. No token or real identity mutation used.",
     "sourceCorrection": "Rename isRiderApiPath to isPlatformBearerApiPath; route registered canonical endpoints to their existing JWT/scope/capability handlers; retain internal jobs and unrelated Admin gates. No aliases, fallback or permission changes.",
-    "sourceCommit": "pending source receipt",
+    "sourceCommit": "75105bd8c7ab29323803987e334403f12b918b86",
     "approvalRequired": "Deploy the verified ingress correction Admin revision; no further SQL/backfill or web release required."
   }
 }

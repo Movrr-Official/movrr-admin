@@ -11,12 +11,13 @@
       "findings": "../architecture/enterprise-identity-findings.md",
       "release": "enterprise-identity-production.md",
       "acceptanceLimit": "ID-25: canonical external API requests encounter the Admin cookie gate. Verified ingress correction awaits approval for a new Admin deployment. Authenticated browser and external-provider acceptance remain open.",
-      "validation": "Production: seven exact journals, 34 function bodies, 11 domain/role catalogs, 150 protected-table comparisons, one authorized Advertiser organisation/Owner backfill. Source ingress correction: 860 real SQL/GoTrue-enabled tests and TypeScript/lint pass.",
+      "validation": "Production: seven exact journals, 34 function bodies, 11 domain/role catalogs, 150 protected-table comparisons, one authorized Advertiser organisation/Owner backfill. Source ingress correction: 860 real SQL/GoTrue-enabled tests and TypeScript/lint pass. Ingress production build passed.",
       "webCommit": "5e44a6fdc8a03ab2241b43faef5dd7e1a27cc5b0",
       "adminCommit": "8d7320ea96325bbc9adbc67f7e4b820baba9c5e1",
       "correctionCommit": "43b15cd46c8aaf56fcba427bacbf145a75777ba7",
       "adminDeployment": "dpl_Cpxc7H62VD3zLpCdVot4MzGYFe8X",
-      "webDeployment": "dpl_FgZDgMTfSM3Zaaaov2VSc2xdCp35"
+      "webDeployment": "dpl_FgZDgMTfSM3Zaaaov2VSc2xdCp35",
+      "ingressCorrectionCommit": "75105bd8c7ab29323803987e334403f12b918b86"
     },
     {
       "name": "Account-deletion request intake activation",
