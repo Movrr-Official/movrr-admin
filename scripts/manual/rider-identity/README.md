@@ -154,3 +154,12 @@ checks pass again; configured lint/TypeScript pass. Live browser login, logout,
 account switching and visual acceptance were not performed because Chrome
 DevTools was unavailable and the browser inventory was empty. No production
 credentials, sessions, synthetic identities or financial transactions were created.
+
+To repeat the non-destructive handler checks from the repository root, set
+`MOVRR_PRODUCTION_RIDER_ACTIVITY_READONLY=1` and run
+`npm test -- --config scripts/manual/rider-identity/vitest.production.config.ts`.
+The suite blocks all HTTP mutations except the two known read-only RPCs. Repeat
+independent SQL checks with `node scripts/manual/rider-identity/verify-production.cjs corrected`.
+`deploy-production.ps1 -Phase final` can re-read the recorded deployment without
+promoting anything. Sanitized deployment fixtures remain committed so receipt
+assertions do not depend on disposable raw project responses.

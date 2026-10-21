@@ -28,7 +28,12 @@ if($Phase -eq 'candidate'){
  if($d.gitSource.sha -ne $sha -or $d.autoAssignCustomDomains -ne $false){throw 'Candidate source/domain mismatch'}
  Write-Output "candidate $($d.id) $($d.readyState) sha=$($d.gitSource.sha)";exit
 }
-$candidate=Get-Content -Raw (Join-Path $releaseOut 'admin-candidate.json')|ConvertFrom-Json
+if(Test-Path -LiteralPath (Join-Path $releaseOut 'admin-candidate.json')){
+ $candidate=Get-Content -Raw (Join-Path $releaseOut 'admin-candidate.json')|ConvertFrom-Json
+}elseif($Phase -in @('poll','final')){
+ $receipt=Get-Content -Raw (Join-Path $repoRoot 'docs/verification/rider-identity-activity/production.json')|ConvertFrom-Json
+ $candidate=@{id=$receipt.deployment.id}
+}else{throw 'Promotion requires the original reviewed candidate and baseline'}
 $d=Api "/v13/deployments/$($candidate.id)";Save 'admin-runtime.json' $d
 if($d.gitSource.sha -ne $sha -or $d.readyState -in @('ERROR','CANCELED')){throw 'Candidate source/build failure'}
 Write-Output "$($d.id) $($d.readyState) sha=$($d.gitSource.sha)"
@@ -46,7 +51,12 @@ if($Phase -eq 'final'){
  $alias=Api "/v4/aliases/$domain";Save 'admin-alias-final.json' $alias
  if($project.targets.production.id -ne $d.id -or $alias.deployment.id -ne $d.id){throw 'Production target/domain mismatch'}
  $firewall=Api "/v1/security/firewall/config/active?projectId=$projectId";Save 'admin-firewall-final.json' $firewall
- $before=Get-Content -Raw (Join-Path $releaseOut 'admin-firewall-before.json')|ConvertFrom-Json
+ if(Test-Path -LiteralPath (Join-Path $releaseOut 'admin-firewall-before.json')){
+  $before=Get-Content -Raw (Join-Path $releaseOut 'admin-firewall-before.json')|ConvertFrom-Json
+ }else{
+  $fixtures=Get-Content -Raw (Join-Path $repoRoot 'docs/verification/rider-identity-activity/deployment-readback.json')|ConvertFrom-Json
+  $before=$fixtures.'admin-firewall-before.json'
+ }
  if($firewall.firewallEnabled -ne $true -or ($firewall.rules|ConvertTo-Json -Depth 100) -ne ($before.rules|ConvertTo-Json -Depth 100)){throw 'Firewall protection changed'}
  Write-Output "Verified production alias, target and firewall: $($d.id)"
 }
