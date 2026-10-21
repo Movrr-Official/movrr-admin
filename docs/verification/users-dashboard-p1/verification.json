@@ -1,0 +1,343 @@
+{
+  "recordedAt": "2026-10-21T14:26:00.985283+00:00",
+  "status": "Root cause reproduced in production; source and local SQL/HTTP/DOM verified; migration and Admin deployment awaiting explicit approval",
+  "incident": "P1 Users dashboard zero-user regression",
+  "productionDeployment": {
+    "id": "dpl_CmD93XcJu3yxdh9iDYQoAbk2G9Y4",
+    "url": "movrr-admin-jf6p9nw6o-movrrops-projects.vercel.app",
+    "readyState": "READY",
+    "revision": "f3f0dec1bccf515cb53f48356bc1007b56e5eea1",
+    "revisionEvidence": "Vercel runtime log branch and existing release receipt; alias independently inspected"
+  },
+  "rootCause": {
+    "function": "app/actions/users.ts:getUsers",
+    "table": "public.account_auth_sync",
+    "sqlstate": "42501",
+    "reason": "073 revoked all direct table access including service_role; getUsers still selected pending receipt rows directly",
+    "presentation": "UsersOverview ignored query error and used zero/empty defaults",
+    "contributingDefects": [
+      "Unrelated Campaigns fetch could fail the entire Users hook",
+      "User and relationship projections did not paginate API limits",
+      "Activity queries truncated rows and suppressed errors",
+      "Two orphan Rider profiles generated null account UUID requests"
+    ]
+  },
+  "production": {
+    "counts": {
+      "total": 17,
+      "active": 17,
+      "suspended": 0,
+      "pending": 0,
+      "registered7": 2,
+      "registered30": 3,
+      "registeredprevious30": 1,
+      "verified": 5,
+      "recentlyactive30": 6,
+      "riderprofiles": 15,
+      "orphanprofiles": 2,
+      "riderusers": 13,
+      "memberships": 1,
+      "organisationusers": 1,
+      "staff": 5,
+      "authusers": 17
+    },
+    "shapes": {
+      "useronly": 0,
+      "rideronlywithoutorganisation": 11,
+      "staffonly": 3,
+      "multipledomains": 2
+    },
+    "tablePrivileges": [
+      {
+        "sync_select": false,
+        "users_select": true
+      }
+    ],
+    "journal": [
+      {
+        "version": "20261021110100",
+        "name": "071_external_account_domains",
+        "checksum": "b1857e697755ca0d37644659ce45eb73ba7166cf8aa321f01f723e1f5031a088"
+      },
+      {
+        "version": "20261021110200",
+        "name": "072_organisation_invitations",
+        "checksum": "b44aea79133868b94092791f8489cf15f56c31b6af275a2987199e6ca1b77ac0"
+      },
+      {
+        "version": "20261021110300",
+        "name": "073_account_status_and_staff_commands",
+        "checksum": "9d77f314eaed0e5ed4bfc59f49dcdf0c4c06684d15400ef552c5c2ae3f480d33"
+      },
+      {
+        "version": "20261021110400",
+        "name": "074_identity_consumer_authorization",
+        "checksum": "59c8d8402513b3ad0630154a593d7209a5e09f7b151a4fe43e18017edc460869"
+      },
+      {
+        "version": "20261021110500",
+        "name": "075_identity_rls_capability_boundaries",
+        "checksum": "6c1531254028c098700ed6c6f1b90f23dfe9512d171d20b7b33561260a72f7ec"
+      },
+      {
+        "version": "20261021110600",
+        "name": "076_identity_notification_audiences",
+        "checksum": "4e55c0a5b543f97d02eecfc27b3eaae651a3ff20208151749b40930d00f89d69"
+      },
+      {
+        "version": "20261021110700",
+        "name": "077_invitation_authority_boundaries",
+        "checksum": "e0958f74b88c9aeec0f1dd93752a235833667c33b39e80e74b99c1ff1107be68"
+      },
+      {
+        "version": "20261021131000",
+        "name": "078_independent_user_accounts",
+        "checksum": "4508df3709a058777661d3aff6cff1e834e4d855acb42abb7a2cda910514d516"
+      }
+    ],
+    "gates": {
+      "deletion": {
+        "requests_enabled": true,
+        "managed_resources_execution_enabled": false,
+        "operating_state": "enabled"
+      },
+      "shop": {
+        "state": "disabled",
+        "redemption_enabled": false
+      }
+    },
+    "fingerprints": {
+      "auth.users": {
+        "records": 17,
+        "digest": "10c4766fe94104741f22c7afa6b60c1c"
+      },
+      "public.account_auth_sync": {
+        "records": 0,
+        "digest": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      "public.admin_users": {
+        "records": 5,
+        "digest": "7dbb612df89d7d5ebdc0300eb178e9fe"
+      },
+      "public.organisation_membership": {
+        "records": 1,
+        "digest": "b932663084197372920596ac829e6034"
+      },
+      "public.reward_redemptions": {
+        "records": 2,
+        "digest": "ffedf21e34e8a641fc5c14ae1127a52f"
+      },
+      "public.reward_transactions": {
+        "records": 34,
+        "digest": "4303fe12af68b78ab612156d51fa69b3"
+      },
+      "public.rider": {
+        "records": 15,
+        "digest": "4657fa8145f35ae5847f06027194c0d0"
+      },
+      "public.rider_reward_balance": {
+        "records": 15,
+        "digest": "b118929bc51294f835fe41ba84f2988c"
+      },
+      "public.user": {
+        "records": 17,
+        "digest": "53fbaf43e3ddf3227d4f4ee93d08530e"
+      }
+    },
+    "recordedAt": "2026-10-21T14:20:38.780Z",
+    "method": "Read-only production PostgreSQL transactions and Supabase GET requests; SQL contexts are not browser acceptance",
+    "sqlContexts": [
+      {
+        "role": "super_admin",
+        "users_read": true,
+        "visible_users": 17
+      },
+      {
+        "role": "operations_manager",
+        "users_read": true,
+        "visible_users": 17
+      },
+      {
+        "role": "operations_manager",
+        "users_read": true,
+        "visible_users": 17
+      },
+      {
+        "role": "operations_manager",
+        "users_read": true,
+        "visible_users": 17
+      },
+      {
+        "role": "partner_operations_manager",
+        "users_read": false,
+        "visible_users": 1
+      },
+      {
+        "role": "external membership",
+        "users_read": false,
+        "visible_users": 1
+      }
+    ],
+    "reads": {
+      "user": {
+        "count": 17,
+        "error": null
+      },
+      "admin_users": {
+        "count": 5,
+        "error": null
+      },
+      "rider": {
+        "count": 15,
+        "error": null
+      },
+      "organisation_membership": {
+        "count": 1,
+        "error": null
+      },
+      "account_auth_sync": {
+        "error": {
+          "code": "42501",
+          "details": null,
+          "hint": null,
+          "message": "permission denied for table account_auth_sync"
+        }
+      }
+    },
+    "anonymousHttp": [
+      {
+        "url": "https://admin.movrr.nl/users",
+        "status": 307,
+        "location": "/auth/signin?redirectTo=%2Fusers",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://admin.movrr.nl/api/dashboard/reads/users?args=%5B%5D",
+        "status": 307,
+        "location": "/auth/signin?redirectTo=%2Fapi%2Fdashboard%2Freads%2Fusers%3Fargs%3D%255B%255D",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      }
+    ]
+  },
+  "expectedCorrectedDashboard": {
+    "totalUsers": 17,
+    "activeUsers": 17,
+    "riderUsers": 13,
+    "organisationUsers": 1,
+    "internalStaff": 5,
+    "growth30Percent": 200,
+    "registered7": 2,
+    "registered30": 3,
+    "recentlyActive30": 6,
+    "activityRatePercent": 35,
+    "verified": 5,
+    "verificationRatePercent": 29,
+    "pending": 0,
+    "inactive": 0
+  },
+  "countDefinitions": {
+    "total": "Distinct public.user IDs, not Auth/profile/membership rows",
+    "active": "public.user.status=active",
+    "riders": "Distinct users with an explicit Rider profile; null-linked profiles are not accounts",
+    "organisationUsers": "Distinct users with any non-revoked external membership; not membership rows",
+    "staff": "Distinct users with a canonical admin_users role",
+    "growth": "(registrations in last 30 days - previous 30 days) / previous period; current (3-1)/1=200%"
+  },
+  "migration": {
+    "path": "scripts/079_users_dashboard_sync_read.sql",
+    "sha256Utf8Lf": "6d29a01faa98716c0b6d073f8863bdd5154cfe6e89d65a24d47cfe09e9e1ee4b",
+    "appliedToProduction": false,
+    "scope": "One STABLE SECURITY DEFINER service-only JSON pending-ID reader; existing direct table denial and all RLS remain unchanged"
+  },
+  "validation": {
+    "fullSuite": {
+      "files": 81,
+      "passed": 941,
+      "skipped": 0,
+      "flags": [
+        "MOVRR_EMPLOYEE_POSTGRES=1",
+        "MOVRR_USERS_HTTP=1",
+        "MOVRR_EMPLOYEE_AUTH_HTTP=1"
+      ]
+    },
+    "realPostgrest": {
+      "actualGetUsersHandler": true,
+      "totalAccounts": 1213,
+      "additionalAccounts": 1207,
+      "apiRowCap": 37,
+      "riderUsers": 1001,
+      "organisationUsers": 1001,
+      "pendingSyncFlags": 201,
+      "literalSearchAndCombinedFilters": true
+    },
+    "realGoTrueHttpTests": 21,
+    "typecheck": true,
+    "lint": true,
+    "lintDefinition": "Repository lint command runs TypeScript; no separate ESLint configuration",
+    "productionBuild": true,
+    "accountSwitchCacheIsolation": true,
+    "actualDomStatesAndUserDetails": true
+  },
+  "runtimeLogs": {
+    "retainedRecords": 4,
+    "entries": [
+      {
+        "timestamp": "2026-10-21T13:51:20.603Z",
+        "branch": "f3f0dec1bccf515cb53f48356bc1007b56e5eea1",
+        "deploymentId": "dpl_CmD93XcJu3yxdh9iDYQoAbk2G9Y4",
+        "requestPath": "/riders",
+        "level": "error",
+        "message": "Get user activity logs error: Error: invalid input syntax for type uuid: \"null\"\n    at k (.next/server/chunks/ssr/[root-of-the-server]__0rm5tkk._.js:2:9400)\n    at async N (.next/server/chunks/ssr/_0lsucii._.js:8:3049)"
+      },
+      {
+        "timestamp": "2026-10-21T13:50:39.589Z",
+        "branch": "f3f0dec1bccf515cb53f48356bc1007b56e5eea1",
+        "deploymentId": "dpl_CmD93XcJu3yxdh9iDYQoAbk2G9Y4",
+        "requestPath": "/riders",
+        "level": "error",
+        "message": "Get user activity logs error: Error: invalid input syntax for type uuid: \"null\"\n    at k (.next/server/chunks/ssr/[root-of-the-server]__0rm5tkk._.js:2:9400)\n    at async N (.next/server/chunks/ssr/_0lsucii._.js:8:3049)"
+      },
+      {
+        "timestamp": "2026-10-21T13:50:17.494Z",
+        "branch": "f3f0dec1bccf515cb53f48356bc1007b56e5eea1",
+        "deploymentId": "dpl_CmD93XcJu3yxdh9iDYQoAbk2G9Y4",
+        "requestPath": "/riders",
+        "level": "error",
+        "message": "Get user activity logs error: Error: invalid input syntax for type uuid: \"null\"\n    at k (.next/server/chunks/ssr/[root-of-the-server]__0rm5tkk._.js:2:9400)\n    at async N (.next/server/chunks/ssr/_0lsucii._.js:8:3049)"
+      },
+      {
+        "timestamp": "2026-10-21T13:50:10.813Z",
+        "branch": "f3f0dec1bccf515cb53f48356bc1007b56e5eea1",
+        "deploymentId": "dpl_CmD93XcJu3yxdh9iDYQoAbk2G9Y4",
+        "requestPath": "/riders",
+        "level": "error",
+        "message": "Get user activity logs error: Error: invalid input syntax for type uuid: \"null\"\n    at k (.next/server/chunks/ssr/[root-of-the-server]__0rm5tkk._.js:2:9400)\n    at async N (.next/server/chunks/ssr/_0lsucii._.js:8:3049)"
+      }
+    ],
+    "usersErrorNotLoggedByOldEarlyReturn": true
+  },
+  "relatedAudit": {
+    "overview": "Uses same corrected Users hook; already renders N/A on query failure",
+    "riders": "Added loading/error handling and guard for null-linked Rider details; no profiles modified",
+    "organisationsAndStaff": "Canonical independent membership/admin_users contracts remain unchanged; SQL/HTTP/DOM regressions pass",
+    "searchDetailsExports": "Canonical relationships preserved; literal search and combined filters verified; shared query no longer enriches from obsolete user.role",
+    "analytics": "Cumulative series already uses domains; corrected shared query restores its input"
+  },
+  "boundaries": {
+    "productionIdentityWrites": 0,
+    "productionFinancialWrites": 0,
+    "productionMigrations": 0,
+    "productionDeployments": 0,
+    "mobileRuntimeChanges": 0,
+    "cleanupInterference": false,
+    "legacyFallbacksAdded": 0,
+    "mainAutomaticDeploymentsEnabled": false
+  },
+  "acceptanceLimitations": [
+    "Expected dashboard values are reconciled production read-only counts, not observations of a corrected live dashboard.",
+    "New reader is not installed in production and corrected Admin is not deployed.",
+    "Chrome DevTools could not connect; no authenticated production browser acceptance was performed.",
+    "User-only, Partner-only and Government-only fixtures were verified locally; no such production identities were fabricated.",
+    "Orphan Rider records are preserved and explicitly reported; no account-link repair or deletion is authorized by this correction."
+  ]
+}

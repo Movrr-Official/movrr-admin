@@ -15,6 +15,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { requireCapability, requireAnyCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { readAllRows } from "@/lib/supabase/readAllRows";
 import {
   User,
   UserFiltersSchema,
@@ -250,9 +251,9 @@ const toAdminAccessTimelineEntries = (
 export async function getUsers(
   filters?: UserFiltersSchema,
   selectedAdvertiserIds: string[] = [],
-): Promise<{ success: boolean; data?: User[]; error?: string }> {
+): Promise<{ success: boolean; data?: User[]; error?: string; warnings?: string[] }> {
   try {
-    await requireCapability("users.read");
+    const actor = await requireCapability("users.read");
     const supabaseAdmin = createSupabaseAdminClient();
     if (filters?.role && !userRoleSchema.safeParse(filters.role).success) return { success: false, error: "Invalid user role filter" };
 
@@ -266,7 +267,10 @@ export async function getUsers(
     if (filters?.searchQuery) {
       const q = filters.searchQuery.trim();
       if (q) {
-        query = query.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
+        // Quote PostgREST values and escape LIKE metacharacters. Search is literal.
+        const pattern = q.replace(/[\\%_]/g, "\\$&");
+        const literal = pattern.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+        query = query.or(`name.ilike."%${literal}%",email.ilike."%${literal}%"`);
       }
     }
 
@@ -278,24 +282,15 @@ export async function getUsers(
       query = query.lte("created_at", filters.dateRange.to.toISOString());
     }
 
-    const { data, error } = await query.order("created_at", {
-      ascending: false,
-    });
+    const data = await readAllRows((from, to) => query.order("created_at", { ascending: false }).order("id").range(from, to));
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    const { data: employeeRows, error: employeeError } = await supabaseAdmin
-      .from("admin_users").select("user_id, role");
-    if (employeeError) return { success: false, error: employeeError.message };
+    const employeeRows = await readAllRows((from, to) => supabaseAdmin
+      .from("admin_users").select("user_id, role").order("user_id").range(from, to));
     const employeeRoles = new Map((employeeRows ?? []).map((row) => [row.user_id, row.role]));
-    const { data: riderRows, error: riderError } = await supabaseAdmin.from("rider").select("user_id,status");
-    if (riderError) return { success: false, error: riderError.message };
+    const riderRows = await readAllRows((from, to) => supabaseAdmin.from("rider").select("user_id,status").order("id").range(from, to));
     const riderStatuses = new Map((riderRows ?? []).map(row => [row.user_id, row.status]));
-    const { data: memberships, error: membershipError } = await supabaseAdmin.from("organisation_membership")
-      .select("id,user_id,organisation_id,role,status,updated_at,organisation:organisation_id(name,type)");
-    if (membershipError) return { success: false, error: membershipError.message };
+    const memberships = await readAllRows((from, to) => supabaseAdmin.from("organisation_membership")
+      .select("id,user_id,organisation_id,role,status,updated_at,organisation:organisation_id(name,type)").order("id").range(from, to));
     const membershipsByUser = new Map<string, NonNullable<User["memberships"]>>();
     for (const membership of memberships ?? []) {
       const organisation = (Array.isArray(membership.organisation) ? membership.organisation[0] : membership.organisation) as { name: string; type: string };
@@ -307,14 +302,23 @@ export async function getUsers(
       membershipsByUser.set(membership.user_id, current);
     }
 
-    const { data: authSyncRows, error: authSyncError } = await supabaseAdmin.from("account_auth_sync").select("user_id").eq("state", "pending");
-    if (authSyncError) return { success: false, error: authSyncError.message };
-    const pendingAuthSync = new Set((authSyncRows ?? []).map(row => row.user_id));
     const userIds = (data ?? []).map((row) => row.id);
-    const lastActivitySignalMap = await fetchLatestUserActivitySignalMap(
-      supabaseAdmin,
-      userIds,
-    );
+    const pendingAuthSync = new Set<string>();
+    for (let offset = 0; offset < userIds.length; offset += 500) {
+      const result = await supabaseAdmin.rpc("read_user_auth_sync_pending", {
+        p_actor: actor.authUser.id, p_users: userIds.slice(offset, offset + 500),
+      });
+      if (result.error) throw new Error(result.error.message);
+      if (!Array.isArray(result.data)) throw new Error("Auth synchronization status unavailable");
+      for (const row of result.data) pendingAuthSync.add(row.user_id);
+    }
+    const warnings: string[] = [];
+    const lastActivitySignalMap = await fetchLatestUserActivitySignalMap(supabaseAdmin, userIds)
+      .catch(error => {
+        console.error("Users activity projection unavailable:", error);
+        warnings.push("Recent activity is unavailable. Retry to refresh activity statistics.");
+        return new Map<string, string>();
+      });
 
     let users = (data ?? []).map((row) => ({
       id: row.id,
@@ -355,7 +359,7 @@ export async function getUsers(
       );
     }
 
-    return { success: true, data: users };
+    return { success: true, data: users, warnings };
   } catch (error) {
     console.error("Get users error:", error);
     return {

@@ -36,8 +36,7 @@ export const fetchAuthLastSignInMap = async (
     });
 
     if (error) {
-      console.warn("Fetch auth last sign-in map error:", error.message);
-      break;
+      throw new Error(`Auth activity unavailable: ${error.message}`);
     }
 
     for (const user of data.users) {

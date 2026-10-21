@@ -27,11 +27,15 @@ import { StatsCard } from "@/components/stats/StatsCard";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { OpsErrorState } from "@/components/ops/OpsEmptyState";
 
 export default function UsersOverview() {
   const router = useRouter();
-  const { data: users, isLoading, isFetching, error, refetch } = useUsersData();
+  const { data: users, isLoading, isFetching, error, refetch, warnings } = useUsersData();
   const { data: stats } = useUserStats();
+
+  if (error) return <OpsErrorState title="Users unavailable" message={error.message} onRetry={() => { void refetch(); }} />;
+  if (isLoading || !users || !stats) return <div role="status" className="p-6 text-muted-foreground">Loading users and statistics…</div>;
 
   // Calculate comprehensive stats for user management
   const totalUsers = users?.length ?? 0;
@@ -137,7 +141,7 @@ export default function UsersOverview() {
               title="Active Users"
               value={activeUsers}
               icon={UserCheck}
-              trend={{
+              trend={warnings?.length ? undefined : {
                 value: activityRate,
                 type: "increase",
               }}
@@ -191,7 +195,7 @@ export default function UsersOverview() {
               animationDelay="0.2s"
             />
 
-            <StatsCard
+            {warnings?.length ? <OpsErrorState title="Activity data unavailable" message={warnings.join(" ")} onRetry={() => { void refetch(); }} /> : <StatsCard
               title="User Health"
               value={`${activityRate}%`}
               icon={Activity}
@@ -207,7 +211,7 @@ export default function UsersOverview() {
                 },
               ]}
               animationDelay="0.3s"
-            />
+            />}
           </div>
 
           {/* Right Side - User Growth & Verification Card */}

@@ -41,7 +41,10 @@ export async function dashboardRead<K extends keyof Readers>(
   const response = await fetch(`/api/dashboard/reads/${resource}?${query}`, {
     cache: "no-store",
     credentials: "same-origin",
+    signal: AbortSignal.timeout(30_000),
   });
+  if (response.redirected || response.status === 401) throw new Error("Your session has expired. Sign in again to load dashboard data.");
+  if (response.status === 403) throw new Error("Permission denied. This account cannot read the requested dashboard data.");
   if (!response.ok) throw new Error("Dashboard data unavailable. Refresh and retry.");
   return response.json();
 }
