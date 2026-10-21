@@ -5,22 +5,25 @@
   "milestones": [
     {
       "name": "P1 unintended Partner Rider identity and Last Active",
-      "status": "Source implemented and locally verified; exact activity migration and single-account correction await explicit production approval",
-      "work": "Remove redundant managed Product role metadata; read Last Active from authenticated actors and existing Auth/Admin sessions, preserve recorded session activity on logout, and distinguish unavailable from no recorded activity. Prepare guarded removal of the historical unintended Rider and zero balance for powerdonnl@gmail.com, preserving Partner Owner authority.",
-      "evidence": "../verification/rider-identity-activity/verification.json",
+      "status": "Approved production correction and activity migration deployed; backend, real handler, authorization and integrity verified; live authenticated browser acceptance unavailable",
+      "work": "Removed only Powerdon's unintended Rider and zero balance; cleared its obsolete User role and Auth role metadata while preserving Auth identity, active status and Partner Owner membership. Deployed authenticated-actor activity projection and logout retention with explicit null/unavailable states; retired the redundant managed Product role metadata writer.",
+      "evidence": "../verification/rider-identity-activity/production.json",
       "release": "../../scripts/manual/rider-identity/README.md",
-      "validation": "979 tests pass with actual PostgreSQL and GoTrue enabled; 15 final focused SQL/Auth/PostgREST checks pass, including 1,213 Users at a 37-row API cap. TypeScript, configured lint and production build pass. Eight optional User Details HTTP checks are covered by the separate concurrent release evidence.",
-      "acceptanceLimit": "Production remains unchanged. Approve exact 080 activity SQL and exact correction SQL separately, install activity authority before deploying its reader, verify Partner-only access and actual production Users rendering/counts/filters. Do not execute or repin the parallel seven-account cleanup.",
+      "validation": "979 prior full regressions and 15 final real PostgreSQL/Auth/PostgREST checks passed. Post-deployment: five read-only production handler checks and 18 focused activity/cache/UI regressions pass. Actual DTO renders Partner · Powerdon · Owner; real Owner RLS succeeds, Rider-only and cross-tenant access are denied. All 184 public/Auth tables fingerprinted; only authorized records changed, followed by unrelated routine Shop worker health/scheduler changes. TypeScript/configured lint pass; pinned Vercel build READY and PROMOTED.",
+      "migration": "20261021160000 / 080_authenticated_account_activity / SHA-256 45c86d41156b050f283035683fd68d65fc8a824c529b47e73d7603dabda2bf63",
+      "adminCommit": "eb32272596cb4d91765af822e19c1557176d101b",
+      "adminDeployment": "dpl_fac81Hhr7wWpNKEyzfj8fwDfdjuu",
+      "acceptanceLimit": "Chrome DevTools unavailable and computer-use inventory exposes no browsers. Live signed-in table/Details, Partner Owner login and production login/use/logout/account-switch journeys remain unperformed; no sessions or synthetic accounts fabricated. These behaviors are covered by installed-contract checks, actual production DTO/adapters and prior real local Auth/cache regressions. Parallel cleanup untouched.",
       "preservedStates": "Mobile runtime unchanged; Auth identity, Partner organisation/Owner membership and financial/audit history preserved. Deletion intake Enabled; irreversible deletion Disabled; Shop redemption Disabled."
     },
     {
       "name": "P1 User Details read-only presentation and canonical membership editing",
-      "status": "Source corrected and isolated acceptance verified; exact Admin deployment approval and authenticated production acceptance pending",
+      "status": "Fix present in newer concurrent production descendant; requested exact candidate built but promotion stopped on alias conflict; read-only production checks passed, authenticated UI acceptance pending",
       "work": "Keep View read-only with actual relationships inside Basic Information; use the existing Edit User form for explicit assignment, role Save and revocation. Serialize expected denials and disable sole-Owner removal without weakening canonical SQL safeguards.",
-      "evidence": "../verification/user-details-p1/verification.json",
+      "evidence": "../verification/user-details-p1/production.json",
       "release": "user-details-membership-p1.md",
       "validation": "966 tests across 82 files, including local PostgreSQL, GoTrue and actual membership Server Actions over PostgREST. TypeScript, configured lint, production build and local rendered design checks are recorded in the receipt.",
-      "acceptanceLimit": "No production deployment or membership mutation in this task. Complete the already grouped authenticated Users table and User Details acceptance after an approved Admin-only release. The reported Partner membership is the only active Owner and must remain protected until another authorized active Owner exists.",
+      "acceptanceLimit": "Approved fec76ef candidate dpl_bHfgrpNYDvpKLLnKy7yNgCeTD73n is READY but unpromoted: the alias changed concurrently to eb322725 / dpl_fac81Hhr7wWpNKEyzfj8fwDfdjuu, which includes the fix. Preserve that newer release. Four actual live-source production read checks passed; 184 protected tables compared with no unexpected changes. Authenticated View/Edit and mutation acceptance remains pending; no real memberships were changed for testing. Sole active Owners remain protected.",
       "preservedStates": "No new migration or permission change. Mobile/web, financial records, cleanup/account-activity work and operating gates unchanged. Deletion intake Enabled; irreversible execution Disabled; public Shop redemption Disabled."
     },
     {
