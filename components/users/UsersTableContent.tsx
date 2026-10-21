@@ -37,6 +37,7 @@ export default function UsersTableContent({
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
   const [selectedRows, setSelectedRows] = useState<User[]>([]);
 
   const {
@@ -74,7 +75,8 @@ export default function UsersTableContent({
     }
   }, [users, selectedUser, isDrawerOpen, setSelectedId]);
 
-  const openUserDrawer = (user: User) => {
+  const openUserDrawer = (user: User, mode: "view" | "edit" = "view") => {
+    setDrawerMode(mode);
     setSelectedUser(user);
     setIsDrawerOpen(true);
     setSelectedId(user.id);
@@ -87,7 +89,7 @@ export default function UsersTableContent({
 
   // Handle user actions
   const handleEdit = (user: User) => {
-    openUserDrawer(user);
+    openUserDrawer(user, "edit");
   };
 
   const handleStatusChange = async (user: User) => {
@@ -122,13 +124,11 @@ export default function UsersTableContent({
   };
 
   const handleManageAccess = (user: User) => {
-    // Independent access relationships are managed in User Details
-    openUserDrawer(user);
+    openUserDrawer(user, "edit");
   };
 
   const handleResetPassword = (user: User) => {
-    // Reset password is handled in the UserDetailsDrawer
-    openUserDrawer(user);
+    openUserDrawer(user, "edit");
   };
 
   const handleExportData = async (user: User) => {
@@ -339,9 +339,11 @@ export default function UsersTableContent({
       <UserDetailsDrawer
         user={selectedUser}
         open={isDrawerOpen}
+        initialMode={drawerMode}
         onOpenChange={(open) => {
           setIsDrawerOpen(open);
           if (!open) {
+            setDrawerMode("view");
             setSelectedUser(null);
             setSelectedId(null);
           }

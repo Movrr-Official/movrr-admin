@@ -2,24 +2,35 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import postgres from "postgres";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { provisionEmployee } from "@/features/identity/application/employeeProvisioning";
 import { provisionExternalAccount } from "@/features/identity/application/externalAccountProvisioning";
 import { synchronizeAccountAuthStatus } from "@/features/identity/application/accountAuthStatus";
 import { provisionProduct } from "@/features/identity/application/productProvisioning";
 import { CANONICAL_EMPLOYEE_ROLES, capabilitiesForEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
+const actionState = vi.hoisted(() => ({ actor: "", client: null as unknown }));
+vi.mock("server-only", () => ({}));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/admin", () => ({ requireCapability: async () => ({ authUser: { id: actionState.actor } }), requireAnyCapability: async () => ({ authUser: { id: actionState.actor } }) }));
+vi.mock("@/lib/supabase-admin", () => ({ createSupabaseAdminClient: () => actionState.client }));
+vi.mock("@/lib/env", () => ({ CUSTOMER_APP_URL: "http://localhost:3001" }));
+import { changeAccountMembership, getAccountMemberships, getAccountOrganisations, getAccountInvitations, issueAccountInvitation, revokeAccountInvitation } from "@/app/actions/accountMemberships";
 
 // Opt-in, localhost only, no .env loading and no production connection override.
 const integration = process.env.MOVRR_EMPLOYEE_POSTGRES === "1";
 describe.skipIf(!integration)("external account domains: actual services and PostgreSQL", () => {
-  const opts = { host: "127.0.0.1", port: 55442, username: "postgres", password: "isolated-local-test-only", max: 16, onnotice: () => {} };
+  const opts = { host: "127.0.0.1", port: process.env.MOVRR_DETAILS_HTTP === "1" ? 55443 : 55442, username: "postgres", password: "isolated-local-test-only", max: 16, onnotice: () => {} };
   const root = postgres({ ...opts, database: "postgres" });
   const database = `external_domains_${process.pid}`;
   const db = postgres({ ...opts, database });
   const actor = randomUUID(), restrictedActor = randomUUID(), incidentId = randomUUID(), legacyId = randomUUID();
   const input = (extra = {}) => ({ email: `${randomUUID()}@example.test`, name: "Test Employee", role: "partner_operations_manager" as const, status: "active" as const, isVerified: false, languagePreference: "en", sendWelcomeEmail: false, ...extra });
   let failPersist = false, loseAuthResponse = false, losePersistResponse = false, failActivation = false;
+  const detailsHttp = process.env.MOVRR_DETAILS_HTTP === "1", restContainer = `movrr-membership-editor-${randomUUID()}`;
+  let restStarted = false;
   const rpc = async (name: string, args: Record<string, unknown>) => {
     try {
       const value = await db.begin(async (tx) => {
@@ -79,8 +90,8 @@ describe.skipIf(!integration)("external account domains: actual services and Pos
       IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN CREATE ROLE service_role; END IF;
     END $$;
     CREATE SCHEMA auth;
-    CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
-    CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$ SELECT current_setting('request.jwt.claim.role',true) $$;
+    CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.sub',true),''),nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid $$;
+    CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.role',true),''),nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'role') $$;
     CREATE TABLE auth.users(id uuid PRIMARY KEY,email text UNIQUE NOT NULL,raw_user_meta_data jsonb DEFAULT '{}',raw_app_meta_data jsonb DEFAULT '{}',banned_until timestamptz,deleted_at timestamptz,created_at timestamptz DEFAULT now());
     CREATE TYPE public.user_role AS ENUM('super_admin','admin','moderator','support','advertiser','rider','gov');
     CREATE TYPE public.user_status AS ENUM('active','suspended','pending','deleted');
@@ -166,8 +177,18 @@ describe.skipIf(!integration)("external account domains: actual services and Pos
     await db.unsafe(`CREATE FUNCTION fail_external_membership() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
       IF current_setting('test.fail_member',true)='on' THEN RAISE EXCEPTION 'Injected membership persistence failure'; END IF; RETURN NEW; END $$;
       CREATE TRIGGER fail_external_membership BEFORE INSERT ON public.organisation_membership FOR EACH ROW EXECUTE FUNCTION fail_external_membership();`);
+    if (detailsHttp) {
+      await db.unsafe('ALTER ROLE service_role BYPASSRLS; GRANT USAGE ON SCHEMA public,auth TO service_role; GRANT SELECT ON public."user",public.rider,public.admin_users,public.organisation,public.organisation_membership,public.platform_invitations TO service_role');
+      const secret="local-membership-editor-only-secret", encode=(value: unknown)=>Buffer.from(JSON.stringify(value)).toString("base64url");
+      const payload=`${encode({alg:"HS256",typ:"JWT"})}.${encode({role:"service_role",exp:Math.floor(Date.now()/1000)+3600})}`;
+      const token=`${payload}.${createHmac("sha256",secret).update(payload).digest("base64url")}`;
+      execFileSync("docker",["run","--detach","--name",restContainer,"--label","movrr.task=user-details-p1-20261021","--publish","127.0.0.1:55446:3000","--env",`PGRST_DB_URI=postgres://postgres:isolated-local-test-only@host.docker.internal:${opts.port}/${database}`,"--env","PGRST_DB_SCHEMAS=public","--env","PGRST_DB_ANON_ROLE=anon","--env",`PGRST_JWT_SECRET=${secret}`,"--env","PGRST_DB_MAX_ROWS=2","public.ecr.aws/supabase/postgrest:v16.4"],{windowsHide:true,stdio:"pipe"});restStarted=true;
+      let ready=false,health="";for(let i=0;i<40;i++){ready=await fetch("http://127.0.0.1:55446/organisation?select=id&limit=0",{headers:{Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(500)}) .then(async r=>{health=String(r.status)+" "+await r.text();return r.ok;}).catch(e=>{health=String(e);return false;});if(ready)break;await new Promise(resolve=>setTimeout(resolve,100));}if(!ready) throw new Error("Local membership PostgREST failed: "+health+" "+execFileSync("docker",["logs","--tail","15",restContainer],{windowsHide:true}).toString());
+      actionState.client=createClient("http://127.0.0.1:55446",token,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(input,init)=>fetch(String(input).replace("/rest/v1/","/"),init)}});actionState.actor=actor;
+    }
   }, 30000);
   afterAll(async () => {
+    if(restStarted)execFileSync("docker",["rm","--force",restContainer],{windowsHide:true,stdio:"pipe"});
     await db.end({ timeout: 5 });
     await root.unsafe(`DROP DATABASE IF EXISTS "${database}" WITH (FORCE)`);
     await root.end({ timeout: 5 });
@@ -429,4 +450,79 @@ describe.skipIf(!integration)("external account domains: actual services and Pos
     await expect(command("prepare", invitation.id)).rejects.toThrow(/administrator/);
     await expect(db.begin(async tx => { await tx.unsafe('SET LOCAL ROLE service_role'); return tx`update platform_invitations set role='owner' where id=${invitation.id}`; })).rejects.toThrow(/canonical lifecycle/);
   });
+  describe.skipIf(!detailsHttp)("User Details actual Server Actions through PostgREST and PostgreSQL", () => {
+    async function person(staff = false) {
+      const id=randomUUID();await db`INSERT INTO auth.users(id,email) VALUES(${id},${id+'@example.test'})`;
+      if(staff)await db`INSERT INTO admin_users(user_id,role) VALUES(${id},'support_agent')`;
+      return id;
+    }
+    async function memberships(id: string) {
+      actionState.actor=actor;const result=await getAccountMemberships(id);expect(result.success,JSON.stringify(result)).toBe(true);if(!result.success)throw new Error(result.error.message);return result.data;
+    }
+    const command=(id:string,org:string,role:"owner"|"manager"|"partner_operations_manager"|"staff"|"viewer",status:"active"|"invited"|"revoked",expectedUpdatedAt:string|null=null)=>changeAccountMembership({userId:id,organisationId:org,role,status,expectedUpdatedAt});
+    it.each(["partner","advertiser","government"] as const)("%s assignment, readback and revocation preserve a profile-free external account",async domain=>{
+      actionState.actor=actor;const org=await organisation(domain),account=await provisionExternalAccount(client,actor,{...externalInput(domain,org),role:"viewer"});
+      const [read]=await memberships(account.id);expect(read.domain).toBe(domain);expect(read.role).toBe("viewer");
+      const result=await command(account.id,org,"viewer","revoked",read.updatedAt);expect(result.success,JSON.stringify(result)).toBe(true);
+      expect((await memberships(account.id))[0].status).toBe("revoked");
+      expect(await db`SELECT id FROM rider WHERE user_id=${account.id}`).toHaveLength(0);expect(await db`SELECT id FROM admin_users WHERE user_id=${account.id}`).toHaveLength(0);
+      expect((await db`SELECT status FROM public."user" WHERE id=${account.id}`)[0].status).toBe("active");
+    });
+    it("assigns, edits, reloads and revokes for a Rider/Staff account without touching financial or identity history",async()=>{
+      actionState.actor=actor;const id=await person(true),org=await organisation("partner");
+      await db`INSERT INTO reward_transactions SELECT ${randomUUID()},id,23 FROM rider WHERE user_id=${id}`;await db`INSERT INTO ride_history SELECT ${randomUUID()},id FROM rider WHERE user_id=${id}`;
+      const snapshot=async()=>JSON.stringify((await db`SELECT to_jsonb(u) account,(SELECT to_jsonb(r) FROM rider r WHERE r.user_id=u.id) rider,(SELECT to_jsonb(s) FROM admin_users s WHERE s.user_id=u.id) staff,(SELECT jsonb_agg(t) FROM reward_transactions t) finances,(SELECT jsonb_agg(h) FROM ride_history h) rides FROM public."user" u WHERE u.id=${id}`)[0]);
+      const before=await snapshot();expect((await command(id,org,"partner_operations_manager","active")).success).toBe(true);
+      const [first]=await memberships(id);expect(first.role).toBe("partner_operations_manager");expect(first.updatedAt).toMatch(/\.\d{4,}/);
+      expect((await command(id,org,"staff","active",first.updatedAt)).success).toBe(true);
+      const [second]=await memberships(id);expect(second.role).toBe("staff");expect(second.updatedAt).not.toBe(first.updatedAt);
+      expect((await command(id,org,"staff","revoked",second.updatedAt)).success).toBe(true);expect((await memberships(id))[0].status).toBe("revoked");
+      expect(await snapshot()).toBe(before);
+      const audits=await db`SELECT previous_state,resulting_state FROM platform_audit_record WHERE reason='organisation_membership.change' AND target_entity_id=${first.id} ORDER BY created_at`;
+      expect(audits).toHaveLength(3);expect(audits[2].previous_state.status).toBe("active");expect(audits[2].resulting_state.status).toBe("revoked");
+      const session=await db.begin(async tx=>{await tx`SELECT set_config('request.jwt.claim.sub',${id},true),set_config('request.jwt.claims','{"aal":"aal2"}',true)`;return(await tx`SELECT identity_organisation_capability(${org},'fulfilment.read') org_access,identity_has_capability('dashboard.read') staff_access,(SELECT id FROM public.rider WHERE user_id=auth.uid()) rider_id`)[0];});
+      expect(session.org_access).toBe(false);expect(session.staff_access).toBe(true);expect(session.rider_id).toBeTruthy();
+    });
+    it("uses the real invitation/read/revoke handlers without inventing profiles for an independent User",async()=>{
+      actionState.actor=actor;const org=await organisation("partner"),account=await provisionProduct(client,actor,{email:randomUUID()+"@example.test",name:"Independent invite fixture",role:null,status:"active",languagePreference:"en",isVerified:true});
+      const organisations=await getAccountOrganisations();expect(organisations.success).toBe(true);if(organisations.success)expect(organisations.data.some(row=>row.id===org)).toBe(true);
+      const issued=await issueAccountInvitation({userId:account.id,organisationId:org,role:"viewer",expectedUpdatedAt:null},createHash("sha256").update(randomUUID()).digest("hex"));
+      expect(issued.success,JSON.stringify(issued)).toBe(true);if(!issued.success)throw new Error(issued.error.message);
+      const invitations=await getAccountInvitations(account.id);expect(invitations.success,JSON.stringify(invitations)).toBe(true);if(invitations.success)expect(invitations.data[0].id).toBe(issued.data.invitationId);
+      expect((await revokeAccountInvitation(issued.data.invitationId)).success).toBe(true);expect((await memberships(account.id))[0].status).toBe("revoked");
+      expect(await db`SELECT id FROM rider WHERE user_id=${account.id}`).toHaveLength(0);expect(await db`SELECT id FROM admin_users WHERE user_id=${account.id}`).toHaveLength(0);
+      expect((await db`SELECT role,status FROM public."user" WHERE id=${account.id}`)[0]).toMatchObject({role:null,status:"active"});
+    });
+    it("returns the exact sole-Owner denial without a thrown RSC error, then permits a protected transfer",async()=>{
+      actionState.actor=actor;const id=await person(),other=await person(),org=await organisation("partner");expect((await command(id,org,"owner","active")).success).toBe(true);
+      const [sole]=await memberships(id);expect(sole.isLastActiveOwner).toBe(true);
+      const denied=await command(id,org,"owner","revoked",sole.updatedAt);expect(denied).toMatchObject({success:false,error:{code:"last_owner",message:expect.stringContaining("Cannot remove last active organisation owner")}});
+      expect((await memberships(id))[0].status).toBe("active");
+      expect((await command(other,org,"owner","active")).success).toBe(true);expect((await memberships(id))[0].isLastActiveOwner).toBe(false);
+      expect((await command(id,org,"owner","revoked",sole.updatedAt)).success).toBe(true);expect((await memberships(id))[0].status).toBe("revoked");
+      const [remaining]=await memberships(other);expect(remaining.isLastActiveOwner).toBe(true);
+      // A disabled target owner is removable when a different active Owner exists.
+      expect((await command(id,org,"owner","active",(await memberships(id))[0].updatedAt)).success).toBe(true);
+      await db`UPDATE auth.users SET banned_until=now()+interval '1 day' WHERE id=${other}`;
+      expect((await memberships(other))[0].isLastActiveOwner).toBe(false);
+    });
+    it("rejects stale and concurrent commands without a duplicate writer or audit",async()=>{
+      actionState.actor=actor;const id=await person(),org=await organisation("partner");expect((await command(id,org,"staff","active")).success).toBe(true);const [initial]=await memberships(id);
+      const results=await Promise.all([command(id,org,"viewer","active",initial.updatedAt),command(id,org,"staff","revoked",initial.updatedAt)]);
+      expect(results.filter(r=>r.success)).toHaveLength(1);expect(results.filter(r=>!r.success&&r.error.code==="conflict")).toHaveLength(1);
+      const stale=await command(id,org,"manager","active",initial.updatedAt);expect(stale).toMatchObject({success:false,error:{code:"conflict"}});
+      expect(await db`SELECT 1 FROM platform_audit_record WHERE target_entity_id=${initial.id}`).toHaveLength(2);
+    });
+    it("denies Owner escalation, cross-tenant commands and suspended/revoked actors at the canonical boundary",async()=>{
+      actionState.actor=actor;const id=await person(),org=await organisation("partner"),other=await organisation("partner");expect((await command(id,org,"staff","active")).success).toBe(true);const [initial]=await memberships(id);
+      actionState.actor=restrictedActor;expect(await command(id,org,"owner","active",initial.updatedAt)).toMatchObject({success:false,error:{code:"denied"}});
+      const operator=await provisionExternalAccount(client,actor,externalInput("partner",org));actionState.actor=operator.id;
+      expect(await command(id,other,"staff","active")).toMatchObject({success:false,error:{code:"denied"}});
+      await db`UPDATE auth.users SET banned_until=now()+interval '1 day' WHERE id=${operator.id}`;
+      expect(await command(id,org,"staff","revoked",initial.updatedAt)).toMatchObject({success:false,error:{code:"denied"}});
+      await db`UPDATE auth.users SET banned_until=NULL WHERE id=${operator.id}`;const [operatorGrant]=await memberships(operator.id);expect((await command(operator.id,org,"partner_operations_manager","revoked",operatorGrant.updatedAt)).success).toBe(true);
+      actionState.actor=operator.id;expect(await command(id,org,"staff","revoked",initial.updatedAt)).toMatchObject({success:false,error:{code:"denied"}});actionState.actor=actor;
+    });
+  });
+
 });

@@ -237,9 +237,9 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
     expect(result.success, result.error).toBe(true);
     const id = result.data!.id, original = (await db`select to_jsonb(r) value from rider r where user_id=${id}`)[0].value;
     const org = (await db`insert into organisation(name,type) values('Optional Partner','reward_partner') returning id`)[0].id;
-    await changeAccountMembership({ userId: id, organisationId: org, role: "partner_operations_manager", status: "active", expectedUpdatedAt: null });
+    expect((await changeAccountMembership({ userId: id, organisationId: org, role: "partner_operations_manager", status: "active", expectedUpdatedAt: null })).success).toBe(true);
     const member = (await db`select to_jsonb(m) value from organisation_membership m where user_id=${id}`)[0].value;
-    await changeAccountMembership({ userId: id, organisationId: org, role: member.role, status: "revoked", expectedUpdatedAt: member.updated_at });
+    expect((await changeAccountMembership({ userId: id, organisationId: org, role: member.role, status: "revoked", expectedUpdatedAt: member.updated_at })).success).toBe(true);
     expect((await db`select to_jsonb(r) value from rider r where user_id=${id}`)[0].value).toEqual(original);
     expect((await db`select role,status from public."user" where id=${id}`)[0]).toMatchObject({ role: "rider", status: "active" });
     expect((await db`select status from organisation_membership where user_id=${id}`)[0].status).toBe("revoked");
@@ -315,11 +315,11 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
       const member = async () => (await db`select to_jsonb(m) value from organisation_membership m where user_id=${id}`)[0].value;
       let prior = await member();
       const originalRole = prior.role;
-      await changeAccountMembership({ userId: id, organisationId: org, role: "viewer", status: "active", expectedUpdatedAt: prior.updated_at });
+      expect((await changeAccountMembership({ userId: id, organisationId: org, role: "viewer", status: "active", expectedUpdatedAt: prior.updated_at })).success).toBe(true);
       prior = await member(); expect(prior.role).toBe("viewer");
-      await changeAccountMembership({ userId: id, organisationId: org, role: originalRole, status: "active", expectedUpdatedAt: prior.updated_at });
+      expect((await changeAccountMembership({ userId: id, organisationId: org, role: originalRole, status: "active", expectedUpdatedAt: prior.updated_at })).success).toBe(true);
       prior = await member(); expect(prior.role).toBe(originalRole);
-      await changeAccountMembership({ userId: id, organisationId: org, role: originalRole, status: "revoked", expectedUpdatedAt: prior.updated_at });
+      expect((await changeAccountMembership({ userId: id, organisationId: org, role: originalRole, status: "revoked", expectedUpdatedAt: prior.updated_at })).success).toBe(true);
       expect((await member()).status).toBe("revoked");
     } else if (domain === "staff") {
       const changed = await updateAccountAction({ id, employeeRole: "support_agent", expectedEmployeeRole: "partner_operations_manager", expectedUpdatedAt: await version() });

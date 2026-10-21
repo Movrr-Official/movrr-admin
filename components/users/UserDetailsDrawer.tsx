@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { UserRelationships } from "@/components/users/UserRelationships";
 import { AccountStatusRecovery } from "@/components/users/AccountStatusRecovery";
 import { useCapability } from "@/hooks/useAdminUser";
-import { AccountMemberships } from "@/components/users/AccountMemberships";
+import { OrganisationMembershipEditor } from "@/components/users/OrganisationMembershipEditor";
+import { accountRoleLabel } from "@/features/identity/domain/accountDomains";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -105,6 +106,7 @@ interface UserDetailsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUserUpdate?: () => void;
+  initialMode?: "view" | "edit";
 }
 
 export function UserDetailsDrawer({
@@ -112,13 +114,18 @@ export function UserDetailsDrawer({
   open,
   onOpenChange,
   onUserUpdate,
+  initialMode = "view",
 }: UserDetailsDrawerProps) {
   const { toast } = useToast();
   const canAssignStaff = useCapability("users.role.assign");
   const canApproveStaff = useCapability("users.role.approve");
+  const canManageProfile = useCapability("users.manage");
+  const canEditUser = canManageProfile || canAssignStaff || canApproveStaff;
   const [showStaffAccess, setShowStaffAccess] = useState(false);
   const hasRider = !!user && user.riderStatus !== undefined;
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isMembershipBusy, setIsMembershipBusy] = useState(false);
+  const editBaseline = useRef<{ userId: string; updatedAt: string; employeeRole: User["employeeRole"] } | null>(null);
   const [showResetPasswordConfirmation, setShowResetPasswordConfirmation] =
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -149,8 +156,10 @@ export function UserDetailsDrawer({
   });
 
   // Reset form when user changes or edit mode is enabled
+  useEffect(() => { if (open) setIsEditMode(initialMode === "edit" && canEditUser); }, [open, user?.id, initialMode, canEditUser]);
   useEffect(() => {
     if (user && isEditMode) {
+      editBaseline.current = { userId: user.id, updatedAt: user.updatedAt, employeeRole: user.employeeRole };
       form.reset({
         name: user.name,
         email: user.email,
@@ -163,7 +172,9 @@ export function UserDetailsDrawer({
         accountNotes: user.accountNotes || "",
       });
     }
-  }, [user, isEditMode, form]);
+  // Membership readback must not discard unsaved profile fields or advance the
+  // optimistic profile/employee baseline behind the operator's back.
+  }, [user?.id, isEditMode, form]);
 
   // Reset edit mode and reset password confirmation when drawer closes
   useEffect(() => {
@@ -245,16 +256,16 @@ export function UserDetailsDrawer({
   }, [open, user, isEditMode, hasRider]);
 
   const handleSave = async (data: EditUserFormData) => {
-    if (!user) return;
+    if (!user || !editBaseline.current || editBaseline.current.userId !== user.id || isMembershipBusy || isResettingPassword) return;
 
     setIsLoading(true);
     try {
       const { employeeRole, ...profile } = data;
       const result = await updateUser({
         id: user.id,
-        expectedUpdatedAt: user.updatedAt,
+        expectedUpdatedAt: editBaseline.current.updatedAt,
         ...profile,
-        ...(employeeRole !== (user.employeeRole ?? null) ? { employeeRole, expectedEmployeeRole: user.employeeRole ?? null } : {}),
+        ...(employeeRole !== (editBaseline.current.employeeRole ?? null) ? { employeeRole, expectedEmployeeRole: editBaseline.current.employeeRole ?? null } : {}),
       });
 
       if (!result.success) {
@@ -267,6 +278,8 @@ export function UserDetailsDrawer({
       });
 
       onUserUpdate?.();
+      setShowResetPasswordConfirmation(false);
+      setShowStaffAccess(false);
       setIsEditMode(false);
     } catch (error) {
       toast({
@@ -284,6 +297,8 @@ export function UserDetailsDrawer({
 
   const handleCancel = () => {
     form.reset();
+    setShowStaffAccess(false);
+    setShowResetPasswordConfirmation(false);
     setIsEditMode(false);
   };
 
@@ -390,7 +405,7 @@ export function UserDetailsDrawer({
           <DrawerHeader className="px-6 py-4 border-b border-border">
             <div className="flex items-center justify-between">
               <DrawerTitle className="text-2xl font-bold">
-                User Details
+                {isEditMode ? "Edit User" : "User Details"}
               </DrawerTitle>
               <DrawerDescription className="sr-only">
                 View and manage user account details.
@@ -514,7 +529,12 @@ export function UserDetailsDrawer({
                                 Internal Staff Role
                               </FormLabel>
                               <Select
-                                onValueChange={(value) => field.onChange(value === "none" ? null : value)}
+                                onValueChange={(value) => {
+                                  // Radix's native form control can emit an empty
+                                  // initialization event. Only explicit choices
+                                  // may change or revoke the Staff grant.
+                                  if (value) field.onChange(value === "none" ? null : value);
+                                }}
                                 value={field.value ?? "none"}
                               >
                                 <FormControl>
@@ -634,6 +654,8 @@ export function UserDetailsDrawer({
                           </FormItem>
                         )}
                       />
+                      <OrganisationMembershipEditor key={user.id} userId={user.id} onChange={onUserUpdate} onBusyChange={setIsMembershipBusy} />
+                      <AccountStatusRecovery userId={user.id} pending={user.authSyncPending} onChange={onUserUpdate} />
                     </form>
                   </Form>
                 ) : (
@@ -650,8 +672,6 @@ export function UserDetailsDrawer({
                       <UserRelationships user={user} organisations={false} />
                       {getStatusBadge(user.status)}
                     </div>
-                    <AccountStatusRecovery userId={user.id} pending={user.authSyncPending} onChange={onUserUpdate} />
-                    <AccountMemberships userId={user.id} initialMemberships={user.memberships ?? []} onChange={onUserUpdate} />
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Mail className="h-4 w-4" />
@@ -697,14 +717,14 @@ export function UserDetailsDrawer({
                         <CopyButton value={user.id} />
                       </div>
                     </div>
-                    <div>
+                    {user.organization && <div>
                       <p className="text-sm text-muted-foreground mb-1">
                         Organization
                       </p>
                       <p className="text-sm font-medium text-foreground">
                         {user.organization || "—"}
                       </p>
-                    </div>
+                    </div>}
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">
                         Language
@@ -721,6 +741,12 @@ export function UserDetailsDrawer({
                         {user.isVerified ? "Yes" : "No"}
                       </p>
                     </div>
+                    {user.memberships?.some(member => member.status !== "revoked") && <div className="col-span-2">
+                      <p className="text-sm text-muted-foreground mb-1">Organisation Memberships</p>
+                      <ul className="space-y-1">{user.memberships.filter(member => member.status !== "revoked").map(member => <li key={member.id} className="text-sm font-medium text-foreground">
+                        {member.organisationName} · {accountRoleLabel(member.domain, member.role)}{member.status === "invited" ? " · Invited" : ""}
+                      </li>)}</ul>
+                    </div>}
                   </div>
                 </CardContent>
               </Card>
@@ -1049,7 +1075,7 @@ export function UserDetailsDrawer({
             )}
 
             {/* Reset Password Confirmation */}
-            {showResetPasswordConfirmation && !isEditMode && (
+            {showResetPasswordConfirmation && isEditMode && (
               <Card className="border-border border-warning/20 dark:border-warning/20">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
@@ -1129,7 +1155,7 @@ export function UserDetailsDrawer({
                     variant="outline"
                     size="sm"
                     onClick={handleCancel}
-                    disabled={isLoading}
+                    disabled={isLoading || isMembershipBusy || isResettingPassword}
                   >
                     <X className="mr-2 h-4 w-4" />
                     Cancel
@@ -1137,7 +1163,7 @@ export function UserDetailsDrawer({
                   <Button
                     size="sm"
                     onClick={form.handleSubmit(handleSave)}
-                    disabled={isLoading}
+                    disabled={isLoading || isMembershipBusy || isResettingPassword}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     {isLoading ? (
@@ -1152,6 +1178,9 @@ export function UserDetailsDrawer({
                       </>
                     )}
                   </Button>
+                  {canManageProfile && <Button variant="outline" size="sm" onClick={() => setShowResetPasswordConfirmation(true)} disabled={showResetPasswordConfirmation || isMembershipBusy}>
+                    <KeyRound className="mr-2 h-4 w-4" />Reset Password
+                  </Button>}
                 </>
               ) : (
                 <>
@@ -1159,18 +1188,10 @@ export function UserDetailsDrawer({
                     variant="outline"
                     size="sm"
                     onClick={() => setIsEditMode(true)}
+                    disabled={!canEditUser}
                   >
                     <Edit className="mr-2 h-4 w-4" />
                     Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowResetPasswordConfirmation(true)}
-                    disabled={showResetPasswordConfirmation}
-                  >
-                    <KeyRound className="mr-2 h-4 w-4" />
-                    Reset Password
                   </Button>
                   <Button
                     variant="outline"

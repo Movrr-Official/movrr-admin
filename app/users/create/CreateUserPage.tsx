@@ -61,6 +61,7 @@ import { DASHBOARD_COUNTS_QUERY_KEY } from "@/providers/CountProvider";
 import { getAccountOrganisations } from "@/app/actions/accountMemberships";
 import { ACCOUNT_CREATION_OPTIONS, rolesForDomain, accountRoleLabel, ORGANISATION_TYPES, type AccountDomain } from "@/features/identity/domain/accountDomains";
 import { accountCreationSchema } from "@/features/identity/domain/accountCreation";
+import type { AccountOrganisation } from "@/features/identity/domain/membershipManagement";
 import { CANONICAL_EMPLOYEE_ROLES } from "@/features/organisations/domain/employeeRoleTemplates";
 
 const createUserFormSchema = accountCreationSchema;
@@ -146,12 +147,12 @@ export default function CreateUserPage() {
   });
 
   const watchedValues = form.watch();
-  const [organisations, setOrganisations] = useState<Awaited<ReturnType<typeof getAccountOrganisations>>>([]);
+  const [organisations, setOrganisations] = useState<AccountOrganisation[]>([]);
   const [organisationError, setOrganisationError] = useState("");
   useEffect(() => {
     if (!["partner", "advertiser", "government"].includes(watchedValues.domain)) return;
     let cancelled = false;
-    getAccountOrganisations().then(rows => { if (!cancelled) setOrganisations(rows); }).catch(error => { if (!cancelled) setOrganisationError(error.message); });
+    getAccountOrganisations().then(result => { if (cancelled) return; if (result.success) setOrganisations(result.data); else setOrganisationError(result.error.message); }).catch(() => { if (!cancelled) setOrganisationError("Unable to load organisations. Reload and try again."); });
     return () => { cancelled = true; };
   }, [watchedValues.domain]);
 

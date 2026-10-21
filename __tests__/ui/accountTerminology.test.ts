@@ -17,7 +17,7 @@ const state = vi.hoisted(() => ({
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: state.push, back: vi.fn() }), useSearchParams: () => new URLSearchParams() }));
 vi.mock("@/app/actions/users", () => ({ createUser: state.create }));
-vi.mock("@/app/actions/accountMemberships", () => ({ getAccountOrganisations: state.organisations }));
+vi.mock("@/app/actions/accountMemberships", () => ({ getAccountOrganisations: async () => ({ success: true, data: await state.organisations() }) }));
 vi.mock("@/providers/CountProvider", () => ({ DASHBOARD_COUNTS_QUERY_KEY: ["counts"] }));
 vi.mock("@/hooks/useToast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock("@/hooks/useUsersData", () => ({ useUsersData: () => ({ data: state.users, isLoading: false, isFetching: false, refetch: vi.fn() }) }));
