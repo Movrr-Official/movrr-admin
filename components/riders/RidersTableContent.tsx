@@ -119,7 +119,7 @@ export default function RidersTableContent({
     setIsBulkPending(true);
     try {
       const result = await bulkUpdateRiderStatus(
-        selectedRows.map((r) => r.id),
+        selectedRows.map((r) => ({ id: r.id, expectedStatus: r.profileStatus ?? (r.status === "active" ? "active" : "inactive") })),
         status,
       );
       if (result.success) {

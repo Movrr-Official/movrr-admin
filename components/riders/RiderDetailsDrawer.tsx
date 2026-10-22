@@ -198,7 +198,7 @@ export function RiderDetailsDrawer({
       name: rider.name,
       email: rider.email,
       phone: rider.phone || "",
-      status: rider.status,
+      status: rider.profileStatus ?? rider.status,
       city: rider.city || "",
       country: rider.country || "",
       languagePreference: rider.languagePreference || "en",
@@ -286,7 +286,7 @@ export function RiderDetailsDrawer({
     if (!rider) return;
     setIsLoading(true);
     try {
-      const result = await updateRiderProfile({ id: rider.id, ...data });
+      const result = await updateRiderProfile({ id: rider.id, ...data, expectedStatus: rider.profileStatus });
       if (!result.success)
         throw new Error(result.error || "Failed to update rider");
       toast({

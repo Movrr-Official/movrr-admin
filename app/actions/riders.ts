@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 
@@ -75,11 +76,29 @@ const mapDbStatusToUi = (value?: string | null): Rider["status"] => {
   return "active";
 };
 
-const mapUiStatusToDb = (value?: Rider["status"]) => {
-  if (!value) return undefined;
-  if (value === "inactive") return "suspended";
-  return value;
-};
+type RiderProfileStatus = "active" | "inactive";
+
+/** Atomic, audited Rider status change (scripts/081_rider_status_command.sql). */
+async function changeRiderStatus(
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+  params: { actorId: string; riderId: string; status: RiderProfileStatus; expectedStatus: RiderProfileStatus; correlationId: string; bulk: boolean },
+): Promise<{ success: true } | { success: false; error: string }> {
+  const { error } = await supabaseAdmin.rpc("admin_set_rider_status", {
+    p_actor: params.actorId,
+    p_rider: params.riderId,
+    p_active: params.status === "active",
+    p_expected_active: params.expectedStatus === "active",
+    p_correlation: params.correlationId,
+    p_bulk: params.bulk,
+  });
+  if (!error) return { success: true };
+  const message =
+    error.code === "40001" ? "This rider's status was changed by someone else. Reload and try again."
+      : error.code === "42501" ? "You do not have permission to change this rider's status."
+        : error.code === "P0002" ? "Rider profile not found"
+          : "Failed to update rider status";
+  return { success: false, error: message };
+}
 
 const computeProfileCompleteness = (
   rider: {
@@ -191,6 +210,7 @@ const mapRiderRow = ({
     avatarUrl: user?.avatar_url ?? undefined,
     role: "rider",
     status: mapDbStatusToUi(user?.status && user.status !== "active" ? user.status : rider.status),
+    profileStatus: rider.status === "active" ? "active" : "inactive",
     isVerified: Boolean(user?.is_verified ?? false),
     city: rider.city ?? undefined,
     country: rider.country ?? undefined,
@@ -463,12 +483,12 @@ export async function getRiders(
 }
 
 /**
- * Bulk status update — suspend or activate multiple riders atomically.
- * Each rider update is attempted independently; partial failures are reported.
+ * Bulk status update — suspend or activate multiple riders.
+ * Each change commits atomically with its audit; partial failures are reported.
  */
 export async function bulkUpdateRiderStatus(
-  riderIds: string[],
-  status: "active" | "inactive",
+  riders: Array<{ id: string; expectedStatus: RiderProfileStatus }>,
+  status: RiderProfileStatus,
 ): Promise<{
   success: boolean;
   updated: number;
@@ -478,54 +498,29 @@ export async function bulkUpdateRiderStatus(
   try {
     const auth = await requireCapability("riders.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
-    const dbStatus = mapUiStatusToDb(status);
-
-    const { data: riderRows, error: lookupError } = await supabaseAdmin
-      .from("rider")
-      .select("id, user_id")
-      .in("id", riderIds);
-
-    if (lookupError)
-      return {
-        success: false,
-        updated: 0,
-        failed: riderIds.length,
-        error: lookupError.message,
-      };
-
-    const rows = riderRows ?? [];
-    const { error: riderError } = await supabaseAdmin.from("rider")
-      .update({ status: dbStatus, updated_at: new Date().toISOString() }).in("id", riderIds);
-    if (riderError) return { success: false, updated: 0, failed: riderIds.length, error: riderError.message };
-
-    // Audit trail for each rider
-    const action =
-      dbStatus === "suspended" ? "Rider suspended" : "Rider activated";
-    await Promise.all(
-      rows.map((row) =>
-        row.user_id
-          ? writeUserActivity(supabaseAdmin, {
-              user_id: row.user_id,
-              actor_user_id: auth.authUser.id,
-              source: "account",
-              action: `${action} (bulk)`,
-              description: `${action} in a bulk operation by admin.`,
-              related_entity_type: "rider",
-              related_entity_id: row.id,
-              metadata: { riderId: row.id, newStatus: dbStatus, bulk: true },
-            }).catch(() => undefined)
-          : Promise.resolve(),
-      ),
-    );
+    const correlationId = randomUUID();
+    let updated = 0;
+    let firstError: string | undefined;
+    for (const rider of riders) {
+      const result = await changeRiderStatus(supabaseAdmin, {
+        actorId: auth.authUser.id, riderId: rider.id, status,
+        expectedStatus: rider.expectedStatus, correlationId, bulk: true,
+      });
+      if (result.success) updated++;
+      else firstError ??= result.error;
+    }
 
     revalidatePath("/riders");
-    return { success: true, updated: rows.length, failed: 0 };
+    const failed = riders.length - updated;
+    return failed
+      ? { success: false, updated, failed, error: firstError }
+      : { success: true, updated, failed: 0 };
   } catch (error) {
     console.error("bulkUpdateRiderStatus error:", error);
     return {
       success: false,
       updated: 0,
-      failed: riderIds.length,
+      failed: riders.length,
       error:
         error instanceof Error ? error.message : "Failed to bulk update riders",
     };
@@ -670,12 +665,26 @@ export async function updateRiderProfile(
       };
     }
 
+    // Status first: a stale or denied change saves nothing else.
+    if (validatedData.status === "pending")
+      return { success: false, error: "A rider profile can only be Active or Inactive" };
+    const requestedStatus: RiderProfileStatus | undefined = validatedData.status === undefined ? undefined
+      : validatedData.status === "active" ? "active" : "inactive";
+    if (requestedStatus !== undefined && requestedStatus !== validatedData.expectedStatus) {
+      if (!validatedData.expectedStatus)
+        return { success: false, error: "This rider's status was changed by someone else. Reload and try again." };
+      const statusResult = await changeRiderStatus(supabaseAdmin, {
+        actorId: auth.authUser.id, riderId: validatedData.id, status: requestedStatus,
+        expectedStatus: validatedData.expectedStatus, correlationId: randomUUID(), bulk: false,
+      });
+      if (!statusResult.success) return statusResult;
+    }
+
     const userUpdate: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
-    const riderUpdate: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    };
+    // rider has no updated_at column; status is written only by admin_set_rider_status.
+    const riderUpdate: Record<string, unknown> = {};
 
     if (validatedData.name !== undefined) userUpdate.name = validatedData.name;
     if (validatedData.email !== undefined)
@@ -683,9 +692,6 @@ export async function updateRiderProfile(
     if (validatedData.phone !== undefined) {
       userUpdate.phone = validatedData.phone;
       riderUpdate.phone = validatedData.phone;
-    }
-    if (validatedData.status !== undefined) {
-      riderUpdate.status = mapUiStatusToDb(validatedData.status);
     }
     if (validatedData.languagePreference !== undefined) {
       userUpdate.language_preference = validatedData.languagePreference;
@@ -726,7 +732,7 @@ export async function updateRiderProfile(
             .update(userUpdate)
             .eq("id", riderRow.user_id)
         : Promise.resolve({ error: null }),
-      Object.keys(riderUpdate).length > 1
+      Object.keys(riderUpdate).length > 0
         ? supabaseAdmin
             .from("rider")
             .update(riderUpdate)
@@ -740,29 +746,6 @@ export async function updateRiderProfile(
         error:
           userError?.message || riderError?.message || "Failed to update rider",
       };
-    }
-
-    // Audit trail — record status changes (suspension/activation) to user_activity
-    if (validatedData.status !== undefined && riderRow.user_id) {
-      const dbStatus = mapUiStatusToDb(validatedData.status);
-      const action =
-        dbStatus === "suspended"
-          ? "Rider suspended"
-          : dbStatus === "active"
-            ? "Rider activated"
-            : `Rider status changed to ${dbStatus}`;
-      await writeUserActivity(supabaseAdmin, {
-        user_id: riderRow.user_id,
-        actor_user_id: auth.authUser.id,
-        source: "account",
-        action,
-        description: `${action} by admin.`,
-        related_entity_type: "rider",
-        related_entity_id: validatedData.id,
-        metadata: { riderId: validatedData.id, newStatus: dbStatus },
-      }).catch((err) =>
-        console.warn("Rider status change activity write failed:", err),
-      );
     }
 
     revalidatePath("/riders");

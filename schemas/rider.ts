@@ -71,6 +71,8 @@ export const riderSchema = userSchema.extend({
   id: z.string(),
   userId: z.string(),
   status: riderStatusSchema,
+  /** The Rider profile's own status, independent of the User account status. */
+  profileStatus: z.enum(["active", "inactive"]).optional(),
   city: z.string().optional(),
   country: z.string().optional(),
   isCertified: z.boolean().default(false),
@@ -133,6 +135,8 @@ export const updateRiderSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   status: riderStatusSchema.optional(),
+  /** Rider profile status the editor loaded; a status change is rejected if it is stale. */
+  expectedStatus: z.enum(["active", "inactive"]).optional(),
   city: z.string().optional(),
   country: z.string().optional(),
   languagePreference: z.string().optional(),

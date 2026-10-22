@@ -50,7 +50,7 @@ describe("Users/Riders direct server-action authorization", () => {
     ["assign employee role", () => updateUser({ id: "target", employeeRole: "support_agent" })],
     ["approve privileged role", () => updateUser({ id: "target", employeeRole: "super_admin" })],
     ["edit rider", () => updateRiderProfile({} as never)],
-    ["suspend riders", () => bulkUpdateRiderStatus(["target"], "inactive")],
+    ["suspend riders", () => bulkUpdateRiderStatus([{ id: "target", expectedStatus: "active" }], "inactive")],
     ["grant ride creator", () => setCommunityRideCreatorAccess({} as never)],
     ["export full account data", () => exportUserData("target")],
   ] as const;
