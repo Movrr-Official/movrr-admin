@@ -1,0 +1,507 @@
+{
+  "method": "Released source adapters/handlers against production reads with controlled token verification; no browser session, login or production write",
+  "productionWrites": 0,
+  "before": {
+    "rider_status": {
+      "active": 8,
+      "inactive": 2
+    },
+    "status_audits": 0,
+    "status_activity": 0,
+    "shop_state": "disabled",
+    "redemption_enabled": false,
+    "deletion_intake": true,
+    "deletion_execution": false
+  },
+  "accounts": 12,
+  "principalOutcomes": {
+    "/api/v1/riders/me/campaigns rider->rider": 8,
+    "/api/v1/community-rides rider->rider": 8,
+    "/api/v1/rewards/catalog rider->rider": 8,
+    "/api/v1/riders/me/campaigns organisation->organisation": 2,
+    "/api/v1/community-rides organisation->organisation": 2,
+    "/api/v1/rewards/catalog organisation->organisation": 2,
+    "/api/v1/riders/me/campaigns staff->admin": 2,
+    "/api/v1/community-rides staff->admin": 2,
+    "/api/v1/rewards/catalog staff->admin": 2
+  },
+  "ridersListed": 10,
+  "profileStatus": {
+    "active": 8,
+    "inactive": 2
+  },
+  "staffRidersManage": [
+    {
+      "role": "super_admin",
+      "manage": true
+    },
+    {
+      "role": "operations_manager",
+      "manage": true
+    }
+  ],
+  "commandPrivileges": {
+    "anon": false,
+    "authenticated": false,
+    "service_role": true
+  },
+  "after": {
+    "rider_status": {
+      "active": 8,
+      "inactive": 2
+    },
+    "status_audits": 0,
+    "status_activity": 0,
+    "shop_state": "disabled",
+    "redemption_enabled": false,
+    "deletion_intake": true,
+    "deletion_execution": false
+  },
+  "recordedAt": "2026-10-22T14:01:14.983Z",
+  "requests": [
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/admin_users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/organisation_membership",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider",
+      "method": "GET"
+    },
+    {
+      "path": "/auth/v1/admin/users",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user_activity",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user_activity",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider_route",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/campaign_assignment",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/campaign_signup",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/rider_reward_balance",
+      "method": "GET"
+    },
+    {
+      "path": "/rest/v1/user",
+      "method": "GET"
+    }
+  ]
+}

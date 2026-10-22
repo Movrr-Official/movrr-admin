@@ -1,0 +1,38 @@
+{
+  "mode": "--verify",
+  "sha256": "5301433910a8c7fe086cab4ea1985b79105ec83d61a53918df4c66110ceca742",
+  "verifiedAt": "2026-10-22T13:50:45.275Z",
+  "journal": {
+    "version": "20261022150000",
+    "name": "081_rider_status_command",
+    "checksum": "5301433910a8c7fe086cab4ea1985b79105ec83d61a53918df4c66110ceca742",
+    "created_by": "owner-approved",
+    "rollback": [
+      "DROP FUNCTION public.admin_set_rider_status(uuid,uuid,boolean,boolean,text,boolean);"
+    ]
+  },
+  "function": [
+    {
+      "sig": "admin_set_rider_status(uuid,uuid,boolean,boolean,text,boolean)",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "anon": false,
+      "authenticated": false,
+      "service_role": true,
+      "body": "64c81108b20a2612351ec405ff3e25920a7e396e613e81140c0941dc22ec77a9"
+    }
+  ],
+  "gates": {
+    "deletion": {
+      "requests_enabled": true,
+      "managed_resources_execution_enabled": false
+    },
+    "shop": {
+      "state": "disabled",
+      "redemption_enabled": false
+    }
+  }
+}
