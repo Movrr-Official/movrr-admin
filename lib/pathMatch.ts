@@ -16,6 +16,15 @@ export function matchesAnyPathPrefix(
   return prefixes.some((prefix) => matchesPathPrefix(pathname, prefix));
 }
 
+/**
+ * Rider-owned Platform paths: these handlers act on the caller's own active Rider
+ * profile, so it is selected before any Staff or organisation relationship.
+ * Without an active Rider profile resolution is unchanged and remains denied.
+ */
+export function isRiderOwnedApiPath(pathname: string): boolean {
+  return /^\/api\/v1\/(?:rewards|riders\/me|community-rides)(?:\/|$)/.test(pathname);
+}
+
 export function isPlatformBearerApiPath(pathname: string): boolean {
   // These exact Platform paths enforce bearer identity and capabilities in their
   // handlers. Partner commands additionally authorize the actual target in SQL.

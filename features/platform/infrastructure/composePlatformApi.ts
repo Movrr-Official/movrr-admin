@@ -8,6 +8,7 @@ import type { RequestContext } from "@/features/identity/domain/Principal";
 import type { AuthenticateRequestDeps } from "@/features/identity/application/contracts/AuthenticateRequest";
 import { authorisationService } from "@/features/organisations/application/commands/authorisationService";
 import { platformRoute } from "@/lib/http/platformRoute";
+import { isRiderOwnedApiPath } from "@/lib/pathMatch";
 import { createWalletQueries } from "@/features/wallet/application/queries/walletQueries";
 import type { CatalogItem } from "@/features/rewards/application/contracts/RedeemRewardCommand";
 import {
@@ -201,7 +202,7 @@ export async function createPlatformApiForTests(
       authorisation,
       handle,
       preferRider: (capability === "wallet.read" && !new URL(request.url).searchParams.has("riderId")) ||
-        /^\/api\/v1\/rewards(?:\/|$)/.test(new URL(request.url).pathname),
+        isRiderOwnedApiPath(new URL(request.url).pathname),
     });
 
   return {

@@ -2,6 +2,7 @@ import "server-only";
 import type { AuthenticateRequestDeps } from "@/features/identity/application/contracts/AuthenticateRequest";
 import type { PlatformApiHandlers } from "@/features/platform/infrastructure/composePlatformApi";
 import { platformRoute } from "@/lib/http/platformRoute";
+import { isRiderOwnedApiPath } from "@/lib/pathMatch";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { fail, ok } from "@/lib/result/ApplicationResult";
 import { createSupabaseRateLimitStore } from "@/features/fraud/infrastructure/supabaseRateLimitStore";
@@ -30,7 +31,7 @@ export async function shopRpc(name: string, args: Record<string, unknown>) {
 export function attachShopLifecycle(api: PlatformApiHandlers, authDeps: AuthenticateRequestDeps): PlatformApiHandlers {
   const route = (request: Request, capability: string, handle: Parameters<typeof platformRoute>[0]["handle"]) =>
     platformRoute({ request, capability, authDeps, handle,
-      preferRider: /^\/api\/v1\/rewards(?:\/|$)/.test(new URL(request.url).pathname) });
+      preferRider: isRiderOwnedApiPath(new URL(request.url).pathname) });
   const mutate = (request: Request, id: string | null, command: "cancel" | "refund" | "collect" | "consume" | "retry") =>
     route(request, `fulfilment.${command === "collect" ? "confirm" : command === "consume" ? "validate" : command === "retry" ? "cancel" : command}`, async (ctx, req) => {
       const key = operation.safeParse(req.headers.get("Idempotency-Key"));

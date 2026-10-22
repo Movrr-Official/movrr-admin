@@ -4,6 +4,7 @@ import type { Capability, RequestContext } from "@/features/identity/domain/Prin
 import type { AuthenticateRequestDeps } from "@/features/identity/application/contracts/AuthenticateRequest";
 import { authenticateRequest } from "@/features/identity/application/commands/authenticateRequest";
 import { authorisationService } from "@/features/organisations/application/commands/authorisationService";
+import { isRiderOwnedApiPath } from "@/lib/pathMatch";
 import type { AuthorisationService } from "@/features/organisations/application/contracts/AuthorisationService";
 
 export type PlatformRouteConfig<T> = {
@@ -89,11 +90,12 @@ export async function platformRoute<T>(
 
   const accessToken = extractBearerToken(config.request);
   const correlationIdHeader = config.request.headers.get("x-correlation-id");
+  const preferRider = config.preferRider ?? isRiderOwnedApiPath(new URL(config.request.url).pathname);
 
   const auth = await authenticate(
     { accessToken, correlationIdHeader, requiredCapability: config.capability,
       organisationId: config.request.headers.get("x-organisation-id") || undefined,
-      ...(config.preferRider ? { preferRider: true } : {}) },
+      ...(preferRider ? { preferRider: true } : {}) },
     config.authDeps,
   );
   if (!auth.ok) {
