@@ -1,5 +1,25 @@
 {
   "date": "2026-10-23",
+  "governanceFinalization": {
+    "date": "2026-10-23",
+    "status": "internal_signoff_package_complete_with_scoped_processing_dependencies",
+    "authorizationSource": "Owner instruction: MOVRR — Finalize Community Safety Privacy Governance",
+    "ordinaryDataPurposeBalancingAndExactInventory": "finalized internally; conditional fields require recorded necessity",
+    "externalLegalOpinionOrFormalApprovalIdentifierCreated": false,
+    "productionRegistryApprovalCreated": false,
+    "enNlDisclosureCopy": "finalized internally; not published before described behavior is operational",
+    "specificDependencies": [
+      "Actual Article 9 condition or Article 10/UAVG authority and restricted handling for material within those scopes",
+      "Justified Safety-disposal-receipt lifecycle; no extra period invented or receipt-access approval borrowed",
+      "Exact canonical registry/manifests and verified conditional minimization/deletion transformations before dependent processing"
+    ],
+    "runtimeSourceChanged": false,
+    "canonicalMigrationChanged": false,
+    "completedRuntimeAuditsRepeated": false,
+    "retainedEvidenceOrDisposalActivated": false,
+    "productionMutations": false,
+    "decisionRecord": "../operations/community-safety-policy-assessment.md"
+  },
   "currentRemediation": {
     "date": "2026-10-23",
     "verdict": "INDEPENDENT_SOURCE_VERIFIED_PRODUCTION_NO_GO",
@@ -154,7 +174,7 @@
   },
   "nativeMetroVerification": false,
   "releaseBlockers": [
-    "Real lawful-basis/necessity, exact field allowlists, disclosure and deletion/retained-evidence manifest approvals",
+    "Scoped sensitive-data authority, Safety-receipt lifecycle and exact canonical registry/manifests with minimization conformance; ordinary internal basis/inventory/disclosure package finalized",
     "Compatible binary distribution and demonstrated adoption across supported installations; no retirement or minimum build invented",
     "Approved original-object recovery/relocation/reference manifest, old public/signed URL CDN containment and hosted route acceptance",
     "Physical iOS/Android acceptance and assigned moderation coverage/escalation",

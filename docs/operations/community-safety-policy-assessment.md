@@ -1,122 +1,222 @@
-# Community Safety policy approval and implementation assessment
+# Community Safety privacy governance decision
 
-## Final approval matrix — 23 October 2026
+## Internal decision and scope — 23 October 2026
 
-**Recommendation for Owner/Privacy approval; not a recorded legal approval.**
-The approved 12-month report / 24-month closed-case evidence periods, blocks until
-unblock, internal MOVRR moderation ownership and 24-hour urgent / 3-business-day
-routine initial-review targets remain fixed. No retained-evidence rule or disposal
-behaviour is activated by this document.
+**Finalized under the owner's instruction “MOVRR — Finalize Community Safety Privacy Governance”.**
+The authorization is the owner's instruction to finalize the internal package and
+operational choices. This document records MOVRR's internal controller assessment;
+it is not an external legal opinion, regulator determination or production approval.
+No separately issued approval identifier exists: do not invent one. The existing
+[decision register](../../../movrr-mobile/docs/implementation/account-deletion-production-decision-register.json)
+records this source and scope. No production policy/manifest version, registry
+approval, retained-evidence processing or disposal job is activated here.
 
-The independent source controls are implemented in candidate 082 and the existing
-Admin/Mobile integrations. No approval reference, approved retention rule or
-scheduler was created. This is the remaining approval package, not a request to
-reconsider the fixed periods or operating targets.
+The ordinary-data purpose assessment, minimum-field inventory, lifecycle rules and
+EN/NL publication copy below are adopted as the internal governance package. Only
+the explicitly identified dependent processing remains withheld. Earlier proposed
+matrices and historical gap inventories do not override this decision.
 
-| Technical implementation | Activation dependency |
-| --- | --- |
-| `resolved_at` on the first final report outcome; separate versioned case closure; first-review/urgency; reopening preserves original `closed_at` | Owner/Privacy confirms the proposed semantics and final fields below. Publication decisions do not silently close cases. |
-| Existing hold registry extended with an exclusive case/job link; staff actor, authority, review date and release event; case lock shared with disposal | Real documented authority and canonical `community.manage` plus `privacy.deletion.compliance.review`. Review-date expiry never releases a hold. Default closure cannot strip held evidence. |
-| Reported-field snapshots; default closure drops moderation content snapshots; retaining necessary content requires explicit opt-in and approved `evidence.<key>` allowlist | Purpose-specific legitimate-interest/necessity assessment, sensitive-material handling and case-specific necessity. Existing resolved-report identifiers/narrative are not silently erased or deemed approved: approve their necessity or authorise exact minimisation before activation. |
-| Separate 12/24-month expiry; durable object claim/lease, Storage removal, recheck/confirmation and finite receipt expiry | Canonical **active** policy version with genuinely approved reference, basis, fields and start event for every category. No rules/pointers are inserted by 082. Receipt lifetime must be an actually approved existing governance rule; no duration is proposed here. |
-| Requester-only export in existing JSON/CSV; unavailable Safety contract explicitly requires Privacy review; deletion inventories and Edge orchestration stop at the canonical review gate | Approve final rights/redaction projection and exact erasure/retained-evidence manifests. No retained deletion copy or automatic Safety erasure is created. Full erasure acceptance is deliberately not claimed. |
+Fixed operating policy: reports **12 months from resolution**; necessary moderation
+decisions/evidence **24 months from case closure**; blocks **while active**. Authorized
+internal MOVRR administrators own moderation. Urgent initial review targets **24
+hours**, routine initial review **3 business days**. These are internal objectives,
+not public guarantees. Documented holds restrict disposal until authorized release;
+they do not create another routine retention period.
 
-The implementation uses these logical registry allowlists (the exact underlying
-columns must be included in the approval, not just a label):
+## Purpose, necessity and balancing record
 
-| Rule / start event | Required inventory for approval |
-| --- | --- |
-| `community_reports` / `report_resolution`, 12 months | `case_id` = report/case/ride/revision links; `category` = target/reason; `timestamps` = created/resolved; `outcome` = status/version. Conditional `reporter_reference` = reporter_user_id, `subject_reference` = subject_rider_id, `description`, and each actual `evidence.<key>` must be explicitly allowed if present. The gate refuses a rule omitting these present conditional fields. |
-| `community_moderation` / `case_closure`, 24 months | `case_id` = case/ride/revision and operation links; `decision` = action and concise necessary reason; `reviewer` = actor/closure reviewer references; `timestamps` = creation, initial review, original closure and reopening. Case event audit includes scoped hold authority/review/release and operation/version; approve its necessary fields too. Retained content checks every actual `evidence.<key>` separately. |
-| `community_disposal_receipt` / `disposal_completed` | operation_id, case_digest, counts, completed_at, policy version and approved expiry. The digest remains linkable personal data; it is not claimed anonymous. Pending object tasks retain only path/case/operation and lease/attempt/confirmation state until confirmed disposal and approved receipt expiry. |
+| Processing / basis | Present purpose and necessary data | Less intrusive alternatives considered | Rider impact, proportionality and outcome |
+| --- | --- | --- | --- |
+| Reporting and investigation — Article 6(1)(f) | Receive a concrete concern about a ride, its text/image or organizer; identify the affected revision, prevent repeated submissions and investigate it. Use report metadata, opaque reporter reference, relevant organizer reference and only the explanation/extract needed to understand it. | Doing nothing leaves abuse unaddressed. External email alone moves the same data into an unstructured duplicate archive. Fully anonymous reports would prevent the implemented requester-only follow-up/export and same-revision deduplication. A separate hashed identity adds another linkable identifier without eliminating those needs. | Allegations can harm reputation; reporter identity can enable retaliation. Limit staff access, show allegations as unverified, separate findings from allegations, keep reporter identity out of rider/staff queue projections and routine disclosures, and allow reviewed correction/objection. The limited, human-reviewed ordinary-data processing is proportionate; a general dossier is not. |
+| Publication review and moderation accountability — Article 6(1)(f) | Inspect submitted Community content and explain a specific publication/restriction/removal decision. Keep the decision/operation reference, authorized reviewer, original closure clock and concise necessary reason. Exact content/revision evidence is conditional. | Review only after publication would expose riders first. A decision code alone can be insufficient to review an error; a complete ride/account snapshot is unnecessary. Prefer an extract or existing immutable object reference over copying the ride or whole image. | Incorrect restrictions affect creators' expression and participation. Human review, version/conflict checks, a recorded reason, Privacy/support review and independent case closure limit that impact. No automated moderation or scoring is authorized. Ordinary decision metadata is justified; blanket content retention is rejected. |
+| User blocking — Article 6(1)(f) | Honor the rider's safety choice through directional canonical rider IDs, creation time and, only for usable unblock controls, a bounded known display label. | Hiding a card locally cannot enforce new joining/invitation restrictions across devices. A block-history archive or recipient notification is unnecessary. | Blocks limit discovery/new joining/invitations; they do not silently cancel existing shared participation or remove authorized shared-ride access. No block-specific notification, advertising use or access to who blocked the requester. Unblock removes the relationship. This limited processing respects both riders' interests. |
+| Necessary closed-case records — Article 6(1)(f) | Explain or contest an actual past decision and investigate recurrence within the fixed 12/24-month windows. Keep only the entity-specific fields below; closure requires a case-specific reason for any retained content. | Retaining every submission/full image is rejected. Immediate erasure of all decision metadata would prevent meaningful review; anonymous aggregates cannot resolve an individual disputed decision. | Time limits, separate report/decision expiry, identity minimization on deletion, restricted evidence, recorded necessity and objection review limit continuing linkage. Approved periods are ceilings; unnecessary conditional data must be removed sooner. No new period or automatic retained-deletion archive is approved. |
+| Rights handling — Article 6(1)(c) | Fulfil the applicable GDPR Articles 12/15/16/17/18/21 request duties through existing Privacy governance. Identify the requester, inspect relevant records, redact third parties and explain any lawful limitation. | Raw staff-queue export would disclose other people; an unexplained empty export would conceal outstanding review. Use narrow self-service metadata plus reviewed disclosure. | The identified duty supports necessary request handling, not general Safety retention. Keep credentials/contact handling in existing request systems; do not copy them into Safety records. |
+| Case-specific hold — Article 6(1)(f), or 6(1)(c) only for an identified duty | Preserve specified existing fields/objects for an actual safety investigation or legal claim. Record purpose, necessity, basis, scope, authorized owner, actual authority reference and review/release. For 6(1)(c), cite the applicable law/order and the obligation imposed on MOVRR. | Blanket holds, speculative future claims and retaining entire accounts are rejected. Preserve a narrower extract/reference where sufficient. | A hold may delay erasure and requires heightened review/restricted use. Article 17(3)(e) is an erasure exception for necessary claims, not an Article 6 basis. Review-date expiry never silently releases a hold. No generic statutory Safety-retention duty is asserted. |
 
-Owner/Privacy must record the real decision through existing governance, approve
-the purpose/basis/necessity and exact conditional fields, legal-hold scope/release,
-rights/deletion projections and EN/NL wording below. Only then can an additive
-canonical policy/manifest version be prepared and separately authorised. If the
-approved fields differ from this source's present inventory, minimise/migrate them
-under that decision and rerun the relevant acceptance checks before activation.
+The positive balancing conclusion is limited to these concrete purposes and the
+inventory below, with the stated safeguards implemented before activation. Riders
+can reasonably expect handling of Community abuse and their block choice; they
+would not reasonably expect unrelated tracking, public allegations or indefinite
+evidence archives. Objections require an individual documented assessment, not an
+automatic rejection. Reassess for a changed purpose, population, scale or intrusive
+processing; this ordinary-data assessment does not pre-clear high-risk processing.
 
-| Decision requiring approval | Exact recommendation |
-| --- | --- |
-| Lawful basis: pre-publication review, reports/investigation, active blocks, decision accountability | Article 6(1)(f), with a documented purpose-specific legitimate-interest, necessity and balancing assessment: protect Community participants, honour safety choices, investigate abuse and support proportionate review of decisions. Use this explicit recommendation for blocks as well; no unspecified alternative basis or consent assumption. |
-| Rights and deletion handling | Article 6(1)(c) for the specific applicable GDPR duties, including Articles 12, 15 and 17; apply existing request governance. This does not authorise general Safety-evidence retention. |
-| Legal/safety holds | Article 6(1)(f) for an actual justified safety purpose or legal claim; 6(1)(c) only where the authoriser identifies a specific applicable legal duty. Article 17(3)(e) may limit erasure for necessary claims; it is not an Article 6 basis. |
-| Special-category / alleged-offence material | Do not add structured sensitive fields. Privacy must determine any applicable Article 9 condition / Article 10 and Dutch-law authority before retaining such material. Segregate access to unsolicited allegations for authorised review; do not treat ordinary Article 6 approval as permission for a sensitive-data archive. |
-| Open-report minimum | Report/case ID, ride/revision reference, target, reason category, created_at, status/version and operation reference; reporter reference for deduplication/follow-up, subject reference when applicable. Optional explanation limited to the relevant allegation. Initial-review timestamp/urgency and reviewer reference only for triage/accountability. No contact details, GPS, Wallet or rewards data. |
-| Resolved-report minimum, 12 months from resolution | ID, target/revision, reason category, outcome, resolved_at, version and necessary case link. Keep reporter/subject references or an explanation/extract only under a recorded case-specific necessity decision within the approved allowlist; otherwise remove them at resolution. Do not retain a complete ride snapshot by default. |
-| Moderation minimum, 24 months from case closure | Case/revision ID, decision/action, concise necessary reason, authorised reviewer reference, decision time, closed_at/closure actor, operation/version audit. Subject reference and exact text/image evidence only where needed to explain or defend that decision, with necessity recorded. Exclude reporter identity by default. |
-| Active blocks | Directional rider IDs and created_at; obtain the display label from the existing authorised projection where possible. Remove the relationship on unblock; do not create a separate block-history archive or invent an audit TTL. |
-| Evidence minimisation | Keep the reported field/extract, or necessary immutable image plus integrity/reference metadata. Full description, organiser display name, meeting address and image are not a universal snapshot. No duplicate bearer URLs or image copies in logs/notifications/general support. Record why an original is needed before preserving it; redact irrelevant third parties without compromising necessary evidence. |
-| Report resolution / case closure | Commit resolved_at atomically with final dismissed/actioned outcome and audit. Authorised staff explicitly close the case separately and record actor/time/reason; publication approval alone does not close it. Reopening/retry must not reset the original retention deadline. A new issue requires its own necessity assessment, not a copy made to extend old evidence. |
-| Holds and release | Reuse canonical lifecycle governance/capabilities; extend its linkage to ordinary Safety cases without creating deletion jobs or another approval authority. Require case/field/object scope, actual authority reference, purpose, authoriser, owner and review date. Release requires authorised reason/time/audit; review-date expiry alone does not release. Original retention deadlines remain; overdue unheld data becomes due immediately after release. |
-| Secure disposal | Serialize expiry, hold and release on the same case/job lock. Separately expire report fields and decision evidence. Recheck live ride/case/hold references before object disposal; use Storage API byte deletion, durable operation IDs and confirmed receipts. Uncertain failures remain retryable/pending; never claim completed disposal from metadata deletion alone. Minimal disposal receipts need the existing approved governance rule; no new indefinite audit archive. |
-| Account deletion | Use existing Safety principal bindings and account fence. Add exact approved manifest actions, nested-evidence/object handling, permitted minimum retained fields, holds and residual verification. Remove identity/contact linkage unless necessary under the approved exception; a keyed reference remains personal data. Preserve shared rides/rosters and unrelated financial history. Missing disposition stays in review, never completed or silently retained forever. |
-| Export | Add a narrow requester-owned projection through the existing export service after approval. Include appropriate own reports/block choices and reviewed information about them; redact third-party identity/evidence. Never expose another reporter, who blocked the requester, staff-wide snapshots or cover tokens. Preserve manual Privacy review for restricted material and explain any lawful limitation. |
+**Sensitive-data limitation:** a category such as harassment or spam does not by
+itself establish an offence or reveal special-category data. Actual narratives or
+images may reveal health, sex life/orientation, ethnicity, beliefs or substantiated
+offence allegations. Article 6(1)(f) alone is insufficient for that material.
+No Article 9 condition or Article 10/UAVG authority is established by this package.
+Stop deliberate collection/retention/use of that dependent material until its
+specific authority, restricted handling and minimization are assessed. Unsolicited
+material needs restricted Privacy triage; do not circulate it, copy it to support
+logs or pretend the current general queue implements separate sensitive access.
+An ordinary non-sensitive extract may be used where sufficient and lawfully
+produced. A legal hold does not cure a missing sensitive-data authorization.
 
-The exact field names above are the proposed logical allowlist, not a new deployed
-schema. Privacy must approve which conditional identifiers/evidence may survive
-resolution and the case-specific necessity recording. Unresolved cases require
-necessity review; no extra retention or review interval is introduced.
+Sources for the legal framework: [AP lawful bases and criminal-data rules](https://autoriteitpersoonsgegevens.nl/themas/basis-avg/avg-algemeen/grondslagen-avg-uitgelegd),
+[EDPB lawful processing and sensitive data](https://www.edpb.europa.eu/sme/be-compliant/process-personal-data-lawfully_en).
+The balancing outcomes and field choices above are MOVRR's internal assessment of
+its implemented purposes, not findings made by those authorities.
 
-Record the actual approval in the existing Mobile
-`docs/implementation/account-deletion-production-decision-register.json` and
-publish an additive version through the canonical policy/retention/action
-registries only after approval and separate migration authorisation. Preserve
-immutable prior versions and unrelated pending rules. The receipt-access approval
-`MOVRR-owner-2026-10-20-receipt-access-30d` does not cover Safety.
-Irreversible account deletion remains Disabled; approved intake stays independent.
+## Adopted minimum-field inventory
 
-### Privacy Policy text for approval, EN/NL
+“Core” means necessary while the entity serves its purpose, not permission to keep
+it indefinitely. “Conditional” means a reviewer records the specific necessity in
+the existing case reason/event and minimizes it when that necessity ends. A global
+allowlist is a ceiling, never proof that every allowed field is necessary in every
+case. Unlisted JSON keys, identity/contact snapshots, meeting addresses/coordinates,
+GPS histories, Wallet/Rewards/financial data and bearer image URLs are prohibited.
+Canonical Community/Rider records remain the only identity/participation authority;
+evidence references and display labels cannot authorize access or reconstruct a rider.
 
-Publish at actual activation, after approving the basis, allowlist and implemented
-clocks. Mobile `lib/legal/documents.json` remains the editable authority; use
-`scripts/sync-legal-documents.cjs` for the Website mirror. Update Community,
-lawful-basis, retention and rights/objection sections together. Public profile
-photos remain distinct from private Community covers; add the existing provider
-information by reference without inventing a provider/transfer change.
+| Entity / exact permitted fields | Necessity and purpose | Access | Trigger, expiry and disposal | Export / account deletion |
+| --- | --- | --- | --- | --- |
+| `community_report`: `id, ride_id, content_version, target, reason, created_at, status, version, resolved_at` | Core: report/revision identity, category, outcome, concurrency and original resolution clock. `resolved_at` is null until final outcome. | Existing `community.manage` staff via authorized service projection; no rider table access. | First committed dismissed/actioned outcome starts 12 months. Delete expired report independently of decision retention. Open reports require necessity review; no extra open-case term is invented. | Own metadata projection only; reviewed additional access below. Remove on deletion unless an exact necessary exception applies. |
+| Report `reporter_user_id` | Core opaque linkage for implemented same-revision deduplication, own export and deletion inventory during ordinary report handling. No email/name/contact copy. On account deletion deduplication no longer justifies keeping this link; erase it with the report or approved canonical transformation. | Narrow RPC/service operations; excluded from moderation queue and other riders. | No longer than the report's original 12-month deadline; earlier removal when purpose ends. | No reporter identity in another person's routine export. Never invent a replacement identity authority. |
+| Report `subject_rider_id` | Conditional: the rider organizer actually implicated by the reported content/organizer and necessary follow-up. Null where not applicable; not a general association register. | Authorized staff/Privacy review. | Report deadline; remove earlier if the allegation no longer needs the link. | Individual reviewed disclosure; deletion removes linkage unless a justified exact exception remains. |
+| Report `description, evidence` | Conditional relevant allegation/extract only. `description` stays empty where category/revision suffice. `evidence` permits only `title, description, cover_image_path, moderation_version`; the first three require target-specific necessity, while version binds the record to the reported revision without authorizing publication. | Authorized case reviewers; sensitive limitation applies. | Same report clock. Minimize irrelevant/third-party details before retained use; no blanket snapshots. | Requester-authored content considered in reviewed access; third-party redaction. No automatic copy on account deletion. |
+| `community_safety_case`: `id, report_id, ride_id, created_at, first_review_at, urgency, closed_at, closed_by, reopened_at, version` | Core lifecycle identity/review/concurrency. `report_id` conditional and cleared when report expires; timestamps/reviewer nullable until events occur. Original `closed_at/closed_by` establish closure accountability; reopening is a state event, not an extension. | Existing `community.manage`; Privacy for rights/holds. | 24 months from original case closure. Explicit closure also applies to standalone publication cases. Case/event metadata is removed on due unheld disposal. | Reviewed own information, not raw staff-wide case rows. Canonical deletion inventory includes reviewer/event references; detach unnecessary identity under an exact manifest. |
+| `community_moderation_audit`: `id, operation_id, case_id, report_id, ride_id, actor_user_id, action, reason, created_at, evidence` | Core decision identity, idempotence, reviewer and concise necessary decision reason; `report_id` conditional until report expiry. `evidence` is conditional under the four-key allowlist above, never a universal snapshot. | Existing `community.manage`; restricted Privacy review. | 24 months from linked original case closure. Default closure drops content snapshots; explicit necessary retention must pass the approved field gate. | Redact third-party/reporter identity. Retain a reviewer link after account deletion only if necessary to the actual decision/claim and covered by the canonical exception. |
+| `community_safety_event`: `operation_id, case_id, actor_user_id, action, reason, payload, created_at` | Core command accountability and retry. `reason` is concise decision/necessity text, not a duplicate report. `payload` allows only `hold, authority, review, policy, retain`, with values only for the command that needs them; otherwise null/empty. | Authorized case staff; hold/release requires additional `privacy.deletion.compliance.review`. | Same original case deadline; holds suspend disposal of their scope. No separate event archive. | Reviewed disclosure only; actor linkage follows the same necessity/deletion rule as decisions. |
+| `community_block`: `blocker_rider_id, blocked_rider_id, created_at, display_name` | Directional IDs/time are core enforcement. `display_name` is conditional, at most the existing 200-character known label needed to identify an unblock choice; generic label where sufficient. It is a non-authoritative display copy, never identity evidence. | Requester-owned block RPC; enforcement internally. No inverse “who blocked me” projection. | While active; canonical unblock deletes it. No separate unblock history/audit retention is authorized. | Own directional choices only. Delete relationships involving the deleted account through canonical dispositions; preserve shared rides/rosters. |
+| Existing `account_deletion_hold`: `id, job_id, community_case_id, category, authority_reference, owner_capability, review_due_at, released_at` | One job OR case link, never both. Core scoped authorization/owner/review/release metadata. Case event records authorizer, actual purpose/basis, scope and release reason/time without duplicating evidence. | Both existing moderation and Privacy compliance capabilities for Safety commands. | Until explicitly released; then original deadlines apply. Released case holds expire with their case; deletion-job holds retain canonical governance. | Reviewed rights response; account deletion cannot bypass a hold. No blanket indefinite retention. |
+| `community_cover_disposal`: `path, case_id, operation_id, lease_until, confirmed_at, attempts` | Core minimal retry/reference/confirmation state. Path can contain account linkage: treat it as personal data. No image bytes/narrative in task rows. | Controlled internal disposal service only. | Pending work remains pending until confirmed byte removal; confirmed rows are eligible with approved receipt cleanup. No independent task-retention period. | Operational status may be reviewed; no path/token disclosure in routine export. A new hold or surviving reference prevents deletion. |
+| `community_safety_disposal_receipt`: `operation_id, case_digest, policy_version, counts, completed_at, expires_at` | Core only for idempotent, auditable confirmation. `counts` contains report/decision totals, no identifiers/narratives. Digest is linkable personal data, not anonymous. | Controlled disposal/authorized Privacy audit. | **Fields adopted; processing withheld:** no applicable Safety-receipt horizon is approved. Current SQL requires a positive finite `community_disposal_receipt` rule. Do not borrow the 30-day receipt-access approval or choose an arbitrary period. | Reviewed status only; no duplicate identity archive. No receipt creation/disposal activation until the specific lifecycle issue below is resolved. |
 
-**EN:** “We review Community Ride text and covers before publication and process
-necessary reports, blocking choices and moderation records to protect participants
-and investigate abuse. Our proposed basis is legitimate interests in Community
-safety and proportionate decision accountability, subject to the approved
-assessment. We keep reports for 12 months after resolution and necessary moderation
-decisions/evidence for 24 months after case closure. Active blocks remain until
-unblocked. Only necessary case evidence is retained; separately authorised,
-documented legal or safety holds may delay its disposal. Authorised internal MOVRR
-administrators handle moderation. Community covers use private, authorised access;
-we cannot recall copies already saved independently. Rider features do not reveal
-the reporter or another person's blocking choice. Privacy access, erasure and
-objection requests receive individual review, including other people's rights.
-Contact privacy@movrr.nl for rights or support@movrr.nl for Safety help.”
+Registry mapping remains `community_reports` / `report_resolution` (12 months),
+`community_moderation` / `case_closure` (24 months), and the unactivated
+`community_disposal_receipt` / `disposal_completed`. Logical keys in 082 map to the
+exact columns above: `case_id` covers entity/revision/operation links, `category`
+target/reason, `timestamps` lifecycle clocks, `outcome` status/version, `decision`
+action/necessary reason, `reviewer` actor/closure references. Conditional report
+keys are `reporter_reference, subject_reference, description` and actual
+`evidence.<key>`; moderation evidence checks actual keys too. Approval of the
+logical key never authorizes more columns than this inventory.
 
-**NL:** “We beoordelen teksten en omslagfoto's van communityritten vóór publicatie
-en verwerken noodzakelijke meldingen, blokkeerkeuzes en moderatiegegevens om
-deelnemers te beschermen en misbruik te onderzoeken. De voorgestelde grondslag
-is ons gerechtvaardigd belang bij communityveiligheid en evenredige
-verantwoording van besluiten, onder voorbehoud van de goedgekeurde afweging.
-Meldingen bewaren we 12 maanden na afhandeling; noodzakelijke moderatiebesluiten
-en bewijsstukken 24 maanden na sluiting van de zaak. Actieve blokkeringen blijven
-totdat ze worden opgeheven. We bewaren alleen noodzakelijk bewijs. Afzonderlijk
-bevoegde en vastgelegde juridische of veiligheidsbewaring kan verwijdering
-uitstellen. Bevoegde interne MOVRR-beheerders verzorgen de moderatie. Omslagfoto's
-zijn privé en alleen toegankelijk na autorisatie; onafhankelijk opgeslagen kopieën
-kunnen we niet terughalen. Via fietsersfuncties tonen we niet wie de melding heeft
-gedaan of wat een ander heeft geblokkeerd. Verzoeken om inzage, verwijdering of
-bezwaar beoordelen we individueel, met aandacht voor de rechten van anderen.
-Mail privacy@movrr.nl voor privacyrechten of support@movrr.nl voor veiligheidshulp.”
+## Lifecycle, rights and execution rules
 
-These are approval drafts: replace “proposed / voorgestelde” with the actual
-approved basis wording only when that approval exists. Add the specific rights
-handling legal duty to the existing rights section. Do not publish unimplemented
-retention guarantees, anonymity guarantees or internal review targets as an SLA.
+1. Resolve a report atomically with its final outcome/audit. Close the case
+   explicitly after resolution; publication approval alone is not closure. Retries
+   are idempotent; reopening preserves the original deadline. A new case must
+   represent a new issue, not copy expired evidence to extend retention.
+2. Record content necessity and use the smallest relevant extract. Keep an
+   immutable image only when its relevant features/context are needed to review
+   the decision and a narrower record is insufficient. Prefer an existing private
+   reference; never duplicate full images by default. An expired report cannot
+   extend its reporter/narrative fields through the 24-month decision window.
+3. Holds require actual purpose/basis, field/object scope, authority, authorized
+   owner and review date. The case reason must identify these, with a controlled
+   reference for detail if needed. Case-level locks/holds must conservatively
+   protect all scoped evidence; field-specific minimization needs reviewed
+   controls, not an inferred exemption. Release requires both capabilities,
+   reason/actor/time and audit; then overdue unheld data is due without a new clock.
+4. Disposal rechecks eligibility, active holds and every live/case reference.
+   Serialize hold/release/expiry with canonical locks. Delete bytes through Storage,
+   then confirm; metadata deletion alone is not proof. Lost responses, live leases,
+   new holds and failed confirmations remain retryable/pending under the same
+   operation. Confirmed receipts/tasks must also expire under applicable governance.
+5. Account deletion uses existing restrictions, exact canonical manifests and
+   residual verification. Default is erasure of Safety links/records whose purpose
+   has ended, and both directional block relationships. An actual ongoing case,
+   necessary closed-case decision or hold needs a recorded exception: preserve only
+   the inventory's necessary fields and original deadline, restrict access, and
+   erase unrelated identity/contact links. No automatic retained-deletion archive.
+   If a canonical move into deletion evidence is necessary, approve the exact
+   source/target/action, avoid a duplicate active copy and preserve original clocks.
+   Missing exact transformations stay in existing Privacy review, never “completed”.
+   Shared rides, rosters/history and unrelated financial obligations remain intact.
+6. Existing self-service export permits own report `id,target,category,createdAt,
+   status,resolvedAt` and own block `riderId,createdAt`; retain the explicit Privacy
+   review notice. Review requester-authored narrative, relevant decisions, evidence
+   and hold information individually. Redact other reporters, private block choices,
+   third parties and credentials; record the specific reason for any limitation.
+   An unavailable Safety contract is pending review, not an empty completed export.
 
-References: [AP lawful bases](https://autoriteitpersoonsgegevens.nl/themas/basis-avg/avg-algemeen/grondslagen-avg-uitgelegd),
-[AP retention](https://autoriteitpersoonsgegevens.nl/nl/over-privacy/persoonsgegevens/bewaren-van-persoonsgegevens),
-[EDPB legitimate interests](https://www.edpb.europa.eu/system/files/2024-10/edpb_guidelines_202401_legitimateinterest_en.pdf).
-The latter linked document is a consultation draft, used as explanatory guidance;
-it does not certify MOVRR's basis. None of these sources substitutes for the
-controller's necessity/field approval.
+**Specific remaining dependencies:** (a) additional authority/restricted handling
+for actual Article 9/10 material; (b) a justified finite Safety-disposal-receipt
+lifecycle decision, or a separately reviewed source design that avoids such
+post-disposal retention—no new duration is selected here; (c) exact canonical
+registry/manifests and verified conditional minimization/deletion transformations.
+Current report `reporter_user_id` is non-null and current commands cannot redact
+every conditional report field. Do not authorize a registry-wide narrative/image
+allowlist as a substitute: retained processing needing those transformations stays
+disabled until they conform. These are scoped activation dependencies, not another
+open ordinary-data basis/field policy question. No migration or previous regression
+audit is rerun by this governance-only finalization.
+
+## Final EN/NL Privacy Policy copy
+
+Internally finalized for the Community Safety activation. **Not published now.**
+Apply through Mobile `lib/legal/documents.json` and its existing Website sync only
+when the described behavior and approved governance are operational. Keep existing
+controller, recipient/provider/transfer and general rights sections; this additive
+copy creates no new provider or transfer claim. Public profile photos remain a
+separate purpose. Internal review targets are deliberately omitted.
+
+**EN**
+
+You can report a Community Ride, its text or cover image, or its organizer for
+harassment, hate, sexual or violent content, spam, impersonation or another safety
+concern. Blocking limits discovery and new joining or invitations between you and
+that rider. It does not automatically end existing shared-ride participation;
+authorized shared-ride access can remain. We do not send block-specific notifications.
+
+MOVRR processes account/rider references, the relevant ride and content version,
+report category, necessary explanation or evidence, blocking choices and moderation
+decisions/timestamps. Authorized internal MOVRR administrators review reports and
+content. We use this information for our legitimate interests in protecting
+participants, investigating abuse, honoring blocking choices and reviewing our
+decisions. We use a legal-obligation basis only for an applicable identified duty,
+including handling privacy-rights requests. We do not use automated moderation.
+
+Reports are retained for 12 months after resolution; necessary moderation decisions
+and evidence for 24 months after case closure. Active blocks remain until unblocked.
+We minimize unnecessary information sooner. Separately authorized, documented
+legal or safety holds can delay disposal of necessary evidence. Community covers
+use authorized private delivery; independently saved copies cannot be recalled.
+Rider-facing features do not disclose reporter identities or who blocked you.
+
+You may request access, correction, erasure or restriction and object to processing
+based on legitimate interests. We review requests individually, including other
+people's rights and applicable lawful limitations. Contact privacy@movrr.nl for
+privacy rights or support@movrr.nl for Community Safety help. You can complain to
+the Autoriteit Persoonsgegevens. Please avoid including irrelevant personal or
+sensitive details in a report.
+
+**NL**
+
+Je kunt een communityrit, de tekst of omslagfoto, of de organisator melden vanwege
+intimidatie, haat, seksuele of gewelddadige inhoud, spam, identiteitsmisbruik of een
+ander veiligheidsprobleem. Blokkeren beperkt het ontdekken van ritten en nieuwe
+deelname of uitnodigingen tussen jou en die fietser. Bestaande deelname aan een
+gedeelde rit eindigt niet automatisch; toegestane toegang tot die rit kan blijven
+bestaan. We sturen geen afzonderlijke melding over een blokkering.
+
+MOVRR verwerkt account- en fietsersverwijzingen, de betreffende rit en inhoudsversie,
+de meldingscategorie, noodzakelijke toelichting of bewijsstukken, blokkeerkeuzes en
+moderatiebesluiten met tijdstippen. Bevoegde interne MOVRR-beheerders beoordelen
+meldingen en inhoud. We verwerken deze gegevens voor onze gerechtvaardigde belangen:
+deelnemers beschermen, misbruik onderzoeken, blokkeerkeuzes uitvoeren en onze
+besluiten kunnen beoordelen. Een wettelijke verplichting gebruiken we alleen als
+grondslag voor een concrete toepasselijke plicht, waaronder de behandeling van
+privacyverzoeken. We gebruiken geen geautomatiseerde moderatie.
+
+Meldingen bewaren we 12 maanden na afhandeling; noodzakelijke moderatiebesluiten en
+bewijsstukken 24 maanden na sluiting van de zaak. Actieve blokkeringen blijven tot
+ze worden opgeheven. Onnodige gegevens beperken of verwijderen we eerder.
+Afzonderlijk bevoegde en vastgelegde juridische of veiligheidsbewaring kan de
+verwijdering van noodzakelijk bewijs uitstellen. Omslagfoto's van communityritten
+worden privé en na autorisatie aangeboden; onafhankelijk opgeslagen kopieën kunnen
+we niet terughalen. Fietsersfuncties tonen niet wie een melding heeft gedaan of wie
+jou heeft geblokkeerd.
+
+Je kunt inzage, correctie, verwijdering of beperking vragen en bezwaar maken tegen
+verwerking op basis van gerechtvaardigde belangen. We beoordelen verzoeken
+individueel, met aandacht voor de rechten van anderen en toepasselijke wettelijke
+beperkingen. Mail privacy@movrr.nl voor privacyrechten of support@movrr.nl voor hulp
+bij communityveiligheid. Je kunt een klacht indienen bij de Autoriteit Persoonsgegevens.
+Vermeld in een melding geen onnodige persoonlijke of gevoelige details.
 
 ---
 

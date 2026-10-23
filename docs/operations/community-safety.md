@@ -3,13 +3,18 @@
 Latest source/decision update, 23 October 2026: the canonical Safety write-fence
 gap is corrected in candidate 082 and verified against the captured 192-table
 schema plus real SQL/HTTP/Storage tests. Production remains no-go. The owner
-confirms no Safety lawful-basis reference/final minimum fields are approved;
-retained deletion evidence is not activated. Fresh EAS/ASC/Play records confirm
+has now authorized finalization of the ordinary-data internal basis/balancing,
+exact field inventory and EN/NL disclosure package. This is an internal controller
+decision, not external counsel approval or a production registry authorization.
+Actual sensitive-data authority, Safety-receipt lifecycle and exact canonical
+minimization/deletion transformations remain scoped dependencies; see the final
+decision in `community-safety-policy-assessment.md`. Retained deletion evidence
+and disposal remain inactive. Existing EAS/ASC/Play records confirm
 incompatible available clients, including iOS build 9, and no verified enforcement
 or adoption boundary. The current decision package and results are at the top of
 `community-safety-policy-assessment.md` and `community-safety-rollout.md`.
 The final approval matrix and client/cache decision in those two documents now
-supersede the earlier proposals: recommend purpose-specific legitimate interests,
+supersede the earlier proposals: adopt scoped purpose-specific legitimate interests,
 client-first verified replacement and authenticated uncached private-image media
 delivery. The media route, restrictive direct-read policy, mounted account-bound
 Mobile reader and independent lifecycle controls are now implemented and tested

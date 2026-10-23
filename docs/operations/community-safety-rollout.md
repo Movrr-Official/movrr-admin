@@ -107,10 +107,13 @@ repeat the release inventory or constitute production/native acceptance.
 
 ### Launch roadmap and remaining approvals
 
-1. **Owner/Privacy:** approve the final purpose/basis/field matrix, sensitive-data
-   handling, closure semantics, canonical hold linkage/release and disposal/export
-   projections in community-safety-policy-assessment.md. Record the real approval;
-   no fabricated reference or activation of retained evidence.
+1. **Internal governance finalized:** the owner-authorized ordinary-data balancing,
+   exact inventory, lifecycle/rights rules and EN/NL publication copy are adopted in
+   community-safety-policy-assessment.md. No external legal approval or invented
+   reference is asserted. Resolve only the scoped dependencies: authority/handling
+   for actual Article 9/10 material, the Safety-disposal-receipt lifecycle, and exact
+   canonical registry/manifests with conditional minimization conformance. No
+   retained-evidence/disposal activation follows from this documentation decision.
 2. **Source implementation:** completed independent lifecycle controls, media route,
    restrictive Storage policy, transitional Mobile renderer and Admin/owner previews.
    The final canonical 082 passes disposable full-schema restoration. Retained
