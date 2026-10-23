@@ -5,6 +5,12 @@ controlled backend/Admin production rollout only after successful preflight.
 **Current status: stopped before migration/deployment because preflight failed.**
 Mobile builds, OTA delivery and store submissions remain outside authorization.
 No synthetic production users, reports, blocks or moderation decisions are authorized.
+The owner's separate policy approval was also confirmed in the final acceptance
+task. Additional fresh isolated/component/browser results and the dependency-
+ordered [rollout procedure](community-safety-rollout.md) supplement this policy;
+the [implementation assessment](community-safety-policy-assessment.md) records
+the remaining governance/disclosure work. MOVRR has no dedicated staging
+environment: isolated tests and separately authorised production gates apply.
 The production and isolated receipts are in
 [`preflight.json`](../verification/community-safety-rollout/preflight.json)
 and [`rehearsal.json`](../verification/community-safety-rollout/rehearsal.json).
@@ -225,8 +231,9 @@ permit authorised private previews and approved visible covers; update-in-place
 is denied. A storage trigger retains objects referenced by a ride, report or
 moderation audit, including against service cleanup. Unreferenced owner uploads
 can be removed. Riders receive 60-second signed reads; staff evidence uses
-five-minute reads. Existing signed URLs remain usable until their expiry; copies
-already downloaded cannot be recalled.
+five-minute reads. Token expiry is not a guaranteed production cache-revocation
+bound; warmed CDN entries require separate containment verification. Downloaded
+copies cannot be recalled. See the final rollout's Supabase Smart CDN reference.
 
 The existing backend-supplied cover URL remains authoritative for ordinary
 readers. Do not discard it and require owner-only signed reads on today's public
@@ -313,7 +320,8 @@ installation was diagnosed or changed.
    measurable timely-response process. A 24-hour initial triage target is proposed
    for operational approval, not represented as an already staffed SLA.
 5. Obtain the exact privacy disclosure/retention updates below, then conduct
-   staging and physical-device acceptance using authorised accounts.
+   isolated rehearsal and controlled production/physical-device acceptance using
+   separately authorised accounts.
 
 ## Exact privacy disclosure work still required
 
@@ -352,7 +360,7 @@ staff decisions and preservation of reward/tracked-ride tables.
 The image classification cases are **human decision workflow fixtures**, not
 simulated machine detections. Actual Supabase Storage byte transfer, human
 classification effectiveness, staffing response times and physical-device
-acceptance require staging/operational verification. There is no external model
+acceptance require controlled operational verification. There is no external model
 acceptance claim because no external model is used.
 
 Admin's full suite passed 932 tests with 105 opt-in tests skipped. Mobile's final

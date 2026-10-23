@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-23",
+  "verdict": "FAIL",
+  "productionMutations": false,
+  "sourceChanges": "test tooling and documentation only",
+  "runtimeBaseline": {
+    "admin": "f765f1b7f4879bdc91de7530e5ad34d89aa20814",
+    "mobile": "0aeb626f28c9761f486e8b5fb17aad4bb6a29dae"
+  },
+  "consolidatedDocumentation": {
+    "admin": "6dec5e98fba2eaa17cc26b18d9f5d01817dab046",
+    "mobile": "621c3cf29eaf12a8ea7b31e8a4533c861b479003"
+  },
+  "policyStatus": "Owner confirmed separate internal approval; remaining implementation/disclosure gates unresolved",
+  "sourceFiles": {
+    "scripts/082_community_safety.sql": "6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0",
+    "scripts/test-community-safety-rehearsal.cjs": "b963eb1c36e2ac7e3e862b8b557fce26f04c5f5d05ef4c478aa922cadb7497c7",
+    "scripts/test-community-safety.cjs": "09a8b682e293c648ceb2436e86da81c5afe972d4b377d48d1523e95641b6caa8",
+    "scripts/test-community-safety-http.cjs": "9731ab68d8fb69632303b3c8eaf3a7add367ab4c046edfda26aff145be8283cb",
+    "scripts/test-community-safety-storage.cjs": "04e86f4a47565daf5c76fbc02e16f5dd8924b8d8492d3e7689667f2887e7c0e7"
+  },
+  "scoped": {
+    "sql": 96,
+    "http": 21,
+    "storage": 28,
+    "storageApi": "1.79.36",
+    "actualByteTransfer": true
+  },
+  "expandedRehearsal": {
+    "assertions": 16,
+    "migrationSha256": "6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0",
+    "existingPublicRidePreserved": true,
+    "participantsPreserved": true,
+    "deletionBarrierRollback": true,
+    "prerequisiteDriftRollback": true,
+    "safetyDeletionBindings": [],
+    "restrictedAccountWrites": {
+      "report": "succeeded",
+      "block": "succeeded"
+    },
+    "governanceGate": "Review ownership bindings and approved retention/disposition before release; migration success alone is not readiness",
+    "productionMutations": false
+  },
+  "components": {
+    "mobileTests": 204,
+    "mobileSuites": 20,
+    "adminTests": 31,
+    "adminSuites": 3
+  },
+  "checks": {
+    "mobileTypeScript": true,
+    "adminTypeScript": true,
+    "mobileFocusedESLint": true,
+    "iosJavaScriptExport": true,
+    "androidJavaScriptExport": true,
+    "bytecode": false
+  },
+  "browser": {
+    "states": 192,
+    "javaScriptErrors": 0,
+    "horizontalOverflows": 0,
+    "homeGeometryComparisons": 24,
+    "io": "synthetic",
+    "physicalDeviceAcceptance": false
+  },
+  "nativeMetroVerification": false,
+  "releaseBlockers": [
+    "Canonical account-deletion Safety write-fence and disposition integration",
+    "Supported installed-client/private-cover coordinated cutover",
+    "Approved disclosure/basis/minimum fields and disposal/closure implementation",
+    "Staffing coverage and authenticated production/device/CDN acceptance"
+  ],
+  "retainedVisualEvidence": "Existing curated audit images retained; fresh matrix reproduced through Mobile scripts/fixtures/community-safety-visual without committing redundant screenshot iterations"
+}

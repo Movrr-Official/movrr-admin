@@ -10,7 +10,7 @@ module.exports=async function startStorage(db){
  async function request(user,url,method='GET',body,role='authenticated') {return fetch(base+url,{method,headers:{...(user?{Authorization:'Bearer '+token(user,role)}:{}),...(body?{'Content-Type':Buffer.isBuffer(body)?'image/png':'application/json'}:{})},body:body?(Buffer.isBuffer(body)?body:JSON.stringify(body)):undefined,signal:AbortSignal.timeout(10000)});}
  try{
   docker(['run','--pull=never','--detach','--name',container,'--publish','127.0.0.1::5000',
-   '--env',`DATABASE_URL=postgres://postgres:isolated-local-test-only@host.docker.internal:55439/${db.options.database}`,
+   '--env',`DATABASE_URL=postgres://postgres:isolated-local-test-only@host.docker.internal:${db.options.port}/${db.options.database}`,
    '--env',`AUTH_JWT_SECRET=${secret}`,'--env','DB_INSTALL_ROLES=true','--env','STORAGE_BACKEND=file','--env','FILE_STORAGE_BACKEND_PATH=/var/lib/storage','--env','FILE_SIZE_LIMIT=5242880','--env','REGION=local','--env','GLOBAL_S3_BUCKET=local','--env','TENANT_ID=isolated-audit','public.ecr.aws/supabase/storage-api:v1.79.36']);
   base='http://'+docker(['port',container,'5000/tcp']).toString().trim();
   let ready=false;for(let i=0;i<40;i++){try{if((await fetch(base+'/status',{signal:AbortSignal.timeout(1000)})).ok){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,250))}

@@ -1,7 +1,7 @@
 // Real local PostgREST over the candidate PostgreSQL schema; synthetic JWTs only.
 const {execFileSync}=require('node:child_process'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 module.exports=async({db,owner,organiser,outsider,third,create,review})=>{
- const container='movrr-safety-api-'+process.pid,base='http://127.0.0.1:55440',secret='isolated-community-safety-test-secret-2026';let count=0;
+ const container='movrr-safety-api-'+process.pid,secret='isolated-community-safety-test-secret-2026';let count=0,base;
  const equal=(a,b)=>{assert.deepEqual(a,b);count++};
  const token=sub=>{const a=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),b=Buffer.from(JSON.stringify({sub,role:'authenticated',exp:Math.floor(Date.now()/1000)+300})).toString('base64url');return a+'.'+b+'.'+crypto.createHmac('sha256',secret).update(a+'.'+b).digest('base64url')};
  async function request(user,path,body,method=body===undefined?'GET':'POST'){
@@ -9,7 +9,9 @@ module.exports=async({db,owner,organiser,outsider,third,create,review})=>{
   const text=await r.text();return{status:r.status,data:text?JSON.parse(text):null};
  }
  try{
-  execFileSync('docker',['--context','desktop-linux','run','--pull=never','--detach','--name',container,'--publish','127.0.0.1:55440:3000','--env',`PGRST_DB_URI=postgres://postgres:isolated-local-test-only@host.docker.internal:55439/${db.options.database}`,'--env','PGRST_DB_ANON_ROLE=anon','--env',`PGRST_JWT_SECRET=${secret}`,'--env','PGRST_DB_SCHEMAS=public','public.ecr.aws/supabase/postgrest:v16.4'],{stdio:'pipe'});
+  execFileSync('docker',['--context','desktop-linux','run','--pull=never','--detach','--name',container,'--publish','127.0.0.1::3000','--env',`PGRST_DB_URI=postgres://postgres:isolated-local-test-only@host.docker.internal:${db.options.port}/${db.options.database}`,'--env','PGRST_DB_ANON_ROLE=anon','--env',`PGRST_JWT_SECRET=${secret}`,'--env','PGRST_DB_SCHEMAS=public','public.ecr.aws/supabase/postgrest:v16.4'],{stdio:'pipe'});
+  const endpoint=execFileSync('docker',['--context','desktop-linux','port',container,'3000/tcp'],{encoding:'utf8'}).trim();
+  assert.match(endpoint,/^127\.0\.0\.1:\d+$/);base='http://'+endpoint;
   let ready=false;for(let i=0;i<40;i++){try{if((await fetch(base,{signal:AbortSignal.timeout(1000)})).ok){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,250))}assert(ready,'Local API unavailable');
   const ride=await create();
   equal((await request(outsider,`/community_ride?id=eq.${ride.id}&select=id`)).data.length,0);

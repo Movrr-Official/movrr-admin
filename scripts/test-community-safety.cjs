@@ -1,7 +1,9 @@
 // Real isolated PostgreSQL 17. Synthetic fixture only, no .env or remote connection.
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict'), crypto = require('node:crypto');
 const postgres = require('postgres');
-const options = { host: '127.0.0.1', port: 55439, username: 'postgres', password: 'isolated-local-test-only', max: 8, onnotice() {} };
+const testPort = Number(process.env.MOVRR_COMMUNITY_TEST_PORT || 55439);
+if (!Number.isInteger(testPort) || testPort < 1024 || testPort > 65535) throw new Error('Invalid isolated test port');
+const options = { host: '127.0.0.1', port: testPort, username: 'postgres', password: 'isolated-local-test-only', max: 8, onnotice() {} };
 const root = postgres({ ...options, database: 'postgres' }), name = 'movrr_safety_' + process.pid, db = postgres({ ...options, database: name });
 const id = () => crypto.randomUUID(); let assertions = 0;
 const equal = (a,b) => { assert.deepEqual(a,b); assertions++; };
