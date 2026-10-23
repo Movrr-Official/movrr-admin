@@ -4,7 +4,9 @@ import { logger } from "./logger";
 import { coordinatedManagedFetch } from "./managedWritePermit";
 import { createSupabaseServerClient } from "./supabase-server";
 
-export const createSupabaseAdminClient = () => {
+/** verifiedActor is supplied only by an already authenticated Platform API
+ * context; dashboard callers keep the existing cookie session authority. */
+export const createSupabaseAdminClient = (verifiedActor?: () => Promise<string>) => {
   try {
     const rpcClient = createClient(NEXT_PUBLIC_SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, { auth: { autoRefreshToken: false, persistSession: false } });
     return createClient(
@@ -13,12 +15,12 @@ export const createSupabaseAdminClient = () => {
       {
         global: { fetch: coordinatedManagedFetch({
           rpc: (name, args) => rpcClient.rpc(name, args),
-          actor: async () => {
+          actor: verifiedActor ?? (async () => {
             const session = await createSupabaseServerClient();
             const { data, error } = await session.auth.getUser();
             if (error || !data.user) throw new Error("authenticated_managed_writer_required");
             return data.user.id;
-          },
+          }),
         }) },
         auth: {
           autoRefreshToken: false,

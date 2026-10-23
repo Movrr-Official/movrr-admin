@@ -1,9 +1,9 @@
 // Real local PostgREST over the candidate PostgreSQL schema; synthetic JWTs only.
 const {execFileSync}=require('node:child_process'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-module.exports=async({db,owner,organiser,outsider,third,create,review})=>{
+module.exports=async({db,owner,organiser,outsider,third,create,review,storage})=>{
  const container='movrr-safety-api-'+process.pid,secret='isolated-community-safety-test-secret-2026';let count=0,base;
  const equal=(a,b)=>{assert.deepEqual(a,b);count++};
- const token=sub=>{const a=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),b=Buffer.from(JSON.stringify({sub,role:'authenticated',exp:Math.floor(Date.now()/1000)+300})).toString('base64url');return a+'.'+b+'.'+crypto.createHmac('sha256',secret).update(a+'.'+b).digest('base64url')};
+ const token=(sub,exp=Math.floor(Date.now()/1000)+300,role='authenticated')=>{const a=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),b=Buffer.from(JSON.stringify({sub,role,exp})).toString('base64url');return a+'.'+b+'.'+crypto.createHmac('sha256',secret).update(a+'.'+b).digest('base64url')};
  async function request(user,path,body,method=body===undefined?'GET':'POST'){
   const r=await fetch(base+path,{method,headers:{...(user?{Authorization:'Bearer '+token(user)}:{}),'Content-Type':'application/json',Prefer:'return=representation'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
   const text=await r.text();return{status:r.status,data:text?JSON.parse(text):null};
@@ -38,6 +38,7 @@ module.exports=async({db,owner,organiser,outsider,third,create,review})=>{
   equal((await request(owner,`/community_ride?id=eq.${ride.id}`,{moderation_state:'approved'},'PATCH')).status,403);
   const denied=await request(outsider,'/rpc/moderate_community_content',{p_operation:crypto.randomUUID(),p_actor:outsider,p_ride:ride.id,p_version:1,p_action:'approve',p_reason:'Unauthorised review'});
   equal(denied.status,403);
+  if(storage){const mediaAssertions=await require('./test-community-safety-media.cjs')({db,base,token,owner,outsider,organiser,third,create,review,storage});console.log(JSON.stringify({mediaAssertions,actualNextHandler:true,realRlsAndBytes:true,authPorts:'isolated PostgREST JWT verifier; not production Auth',productionMutations:false}));}
   // Canonical account deletion fence must cover new, replayed and no-op writes.
   await db`INSERT INTO account_deletion_jobs(id,user_id,policy_version) VALUES(${crypto.randomUUID()},${outsider},1)`;
   equal((await request(outsider,'/rpc/report_community_content',report)).status,403);

@@ -8,6 +8,35 @@ unblock, internal MOVRR moderation ownership and 24-hour urgent / 3-business-day
 routine initial-review targets remain fixed. No retained-evidence rule or disposal
 behaviour is activated by this document.
 
+The independent source controls are implemented in candidate 082 and the existing
+Admin/Mobile integrations. No approval reference, approved retention rule or
+scheduler was created. This is the remaining approval package, not a request to
+reconsider the fixed periods or operating targets.
+
+| Technical implementation | Activation dependency |
+| --- | --- |
+| `resolved_at` on the first final report outcome; separate versioned case closure; first-review/urgency; reopening preserves original `closed_at` | Owner/Privacy confirms the proposed semantics and final fields below. Publication decisions do not silently close cases. |
+| Existing hold registry extended with an exclusive case/job link; staff actor, authority, review date and release event; case lock shared with disposal | Real documented authority and canonical `community.manage` plus `privacy.deletion.compliance.review`. Review-date expiry never releases a hold. Default closure cannot strip held evidence. |
+| Reported-field snapshots; default closure drops moderation content snapshots; retaining necessary content requires explicit opt-in and approved `evidence.<key>` allowlist | Purpose-specific legitimate-interest/necessity assessment, sensitive-material handling and case-specific necessity. Existing resolved-report identifiers/narrative are not silently erased or deemed approved: approve their necessity or authorise exact minimisation before activation. |
+| Separate 12/24-month expiry; durable object claim/lease, Storage removal, recheck/confirmation and finite receipt expiry | Canonical **active** policy version with genuinely approved reference, basis, fields and start event for every category. No rules/pointers are inserted by 082. Receipt lifetime must be an actually approved existing governance rule; no duration is proposed here. |
+| Requester-only export in existing JSON/CSV; unavailable Safety contract explicitly requires Privacy review; deletion inventories and Edge orchestration stop at the canonical review gate | Approve final rights/redaction projection and exact erasure/retained-evidence manifests. No retained deletion copy or automatic Safety erasure is created. Full erasure acceptance is deliberately not claimed. |
+
+The implementation uses these logical registry allowlists (the exact underlying
+columns must be included in the approval, not just a label):
+
+| Rule / start event | Required inventory for approval |
+| --- | --- |
+| `community_reports` / `report_resolution`, 12 months | `case_id` = report/case/ride/revision links; `category` = target/reason; `timestamps` = created/resolved; `outcome` = status/version. Conditional `reporter_reference` = reporter_user_id, `subject_reference` = subject_rider_id, `description`, and each actual `evidence.<key>` must be explicitly allowed if present. The gate refuses a rule omitting these present conditional fields. |
+| `community_moderation` / `case_closure`, 24 months | `case_id` = case/ride/revision and operation links; `decision` = action and concise necessary reason; `reviewer` = actor/closure reviewer references; `timestamps` = creation, initial review, original closure and reopening. Case event audit includes scoped hold authority/review/release and operation/version; approve its necessary fields too. Retained content checks every actual `evidence.<key>` separately. |
+| `community_disposal_receipt` / `disposal_completed` | operation_id, case_digest, counts, completed_at, policy version and approved expiry. The digest remains linkable personal data; it is not claimed anonymous. Pending object tasks retain only path/case/operation and lease/attempt/confirmation state until confirmed disposal and approved receipt expiry. |
+
+Owner/Privacy must record the real decision through existing governance, approve
+the purpose/basis/necessity and exact conditional fields, legal-hold scope/release,
+rights/deletion projections and EN/NL wording below. Only then can an additive
+canonical policy/manifest version be prepared and separately authorised. If the
+approved fields differ from this source's present inventory, minimise/migrate them
+under that decision and rerun the relevant acceptance checks before activation.
+
 | Decision requiring approval | Exact recommendation |
 | --- | --- |
 | Lawful basis: pre-publication review, reports/investigation, active blocks, decision accountability | Article 6(1)(f), with a documented purpose-specific legitimate-interest, necessity and balancing assessment: protect Community participants, honour safety choices, investigate abuse and support proportionate review of decisions. Use this explicit recommendation for blocks as well; no unspecified alternative basis or consent assumption. |

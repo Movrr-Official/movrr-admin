@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 /** Private Community covers. Each upload gets an immutable UUID path under the
- * organiser and ride. All replacements require staff review; signed URLs are previews.
+ * organiser and ride. Private previews use the authorised Platform media route.
  */
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -89,7 +89,7 @@ export interface CommunityRideImageUploadResult {
 }
 
 /**
- * Upload an immutable private cover and return its path and signed preview.
+ * Upload an immutable cover and return its path and pre-082 public-field candidate.
  *
  * Takes the file's bytes rather than a stream: this runs in a Next server action, where
  * the uploaded `File` has already been buffered, so there is nothing to gain from
@@ -117,12 +117,9 @@ export async function uploadCommunityRideImage(
     throw new Error(`Cover image could not be uploaded: ${error.message}`);
   }
 
-  const { data, error: signError } = await supabase.storage
-    .from(COMMUNITY_RIDE_IMAGE_BUCKET)
-    .createSignedUrl(path, 300);
-  if (signError || !data) throw new Error("Cover preview unavailable");
-
-  return { path, publicUrl: data.signedUrl };
+  // Only a pre-activation public-field candidate; private 082 clears it.
+  const { data } = supabase.storage.from(COMMUNITY_RIDE_IMAGE_BUCKET).getPublicUrl(path);
+  return { path, publicUrl: data.publicUrl };
 }
 
 /**

@@ -67,6 +67,12 @@ async function main() {
   // This narrow fixture supplies only its queue prerequisite; the production-
   // schema rehearsal separately exercises the complete deployed lifecycle.
   await db.begin(tx=>tx.unsafe(fs.readFileSync(path.join(__dirname,'../../movrr-mobile/scripts/035_account_deletion_write_barrier.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'')));
+  const governance=fs.readFileSync(path.join(__dirname,'../../movrr-mobile/scripts/034_account_deletion_governance.sql'),'utf8');
+  for(const table of ['account_deletion_policy_version','account_deletion_retention_rule','account_deletion_hold','account_deletion_contract_gate']) {
+    const start=governance.indexOf('CREATE TABLE public.'+table+' (');
+    await db.unsafe(governance.slice(start,governance.indexOf('\n);',start)+4));
+  }
+  await db.unsafe('ALTER TABLE account_deletion_contract_gate ADD COLUMN active_policy_version integer; INSERT INTO account_deletion_contract_gate(singleton,active_policy_version) VALUES(true,900001)');
   await db`INSERT INTO community_ride_creator_grant(user_id) VALUES(${owner})`;
   const existing=await create({cover_image_url:'https://isolated.invalid/storage/v1/object/public/community-rides/existing.png'});
   const participantBefore=(await db`SELECT rider_id,status,joined_at FROM community_ride_participant WHERE community_ride_id=${existing.id}`)[0];
@@ -143,7 +149,8 @@ async function main() {
     // This metadata-only fixture has no bytes; real API deletion is tested below.
     if(storage)await tx`SELECT set_config('storage.allow_delete_query','true',true)`;
     return tx`DELETE FROM storage.objects WHERE name=${orphanPath} RETURNING name`;
-  })).length,1);
+  })).length,0);
+  equal((await as(owner,tx=>tx`SELECT community_cover_orphan_authorized(${orphanRide.id},${orphanPath}) allowed`))[0].allowed,true);
   const concurrentRide=await create(); await review(concurrentRide);
   await Promise.allSettled([
     as(outsider,tx=>tx`SELECT join_community_ride(${concurrentRide.id},${third})`),
@@ -160,11 +167,11 @@ async function main() {
   await as(owner,tx=>tx`UPDATE community_ride SET cover_image_path=${cover},cover_image_url='https://untrusted.invalid/image' WHERE id=${imageRide.id}`);
   equal((await db`SELECT cover_image_url FROM community_ride WHERE id=${imageRide.id}`)[0].cover_image_url,null);
   equal((await as(reporter,tx=>tx`SELECT * FROM storage.objects WHERE name=${cover}`)).length,0);
-  equal((await as(owner,tx=>tx`SELECT * FROM storage.objects WHERE name=${cover}`)).length,1);
+  equal((await as(owner,tx=>tx`SELECT * FROM storage.objects WHERE name=${cover}`)).length,0);
   equal((await db`SELECT public FROM storage.buckets WHERE id='community-rides'`)[0].public,false);
   equal((await as(owner,tx=>tx`UPDATE storage.objects SET name=${cover+'.replacement'} WHERE name=${cover} RETURNING name`)).length,0);
   const img = (await db`SELECT * FROM community_ride WHERE id=${imageRide.id}`)[0];
-  await review(img); equal((await as(reporter,tx=>tx`SELECT * FROM storage.objects WHERE name=${cover}`)).length,1);
+  await review(img); equal((await as(reporter,tx=>tx`SELECT * FROM storage.objects WHERE name=${cover}`)).length,0);
   const imgReport = await report(img,'image');
   // Replacement is a new immutable private image and revokes publication immediately.
   const replacement = `${owner}/${imageRide.id}/${id()}.png`;
@@ -261,9 +268,10 @@ async function main() {
   await deny(()=>report(c,'text'));
   equal((await db`SELECT count(*)::int n FROM reward_transactions`)[0].n,0);
   equal((await db`SELECT count(*)::int n FROM ride_session`)[0].n,0);
+  const lifecycleAssertions=await require('./test-community-safety-lifecycle.cjs')({db,owner,outsider,admin,create,review,report,as});
   if(storage)await storage.run({owner,organiser,outsider,create,review,report,as});
   // HTTP's final denial scenario permanently fences its synthetic account.
-  const httpAssertions=process.argv.includes('--http')?await require('./test-community-safety-http.cjs')({db,owner,organiser,outsider,third,create,review}):0;
-  console.log(JSON.stringify({assertions,httpAssertions,database:'isolated PostgreSQL 17',classifier:'human pre-publication review; no simulated provider',productionMutations:false}));
+  const httpAssertions=process.argv.includes('--http')?await require('./test-community-safety-http.cjs')({db,owner,organiser,outsider,third,create,review,storage}):0;
+  console.log(JSON.stringify({assertions,httpAssertions,lifecycleAssertions,database:'isolated PostgreSQL 17',classifier:'human pre-publication review; no simulated provider',productionMutations:false}));
 }
 main().catch(e=>{ console.error(e.stack,e.where??'');process.exitCode=1; }).finally(async()=>{if(storage)storage.stop();await db.end();await root.unsafe('DROP DATABASE IF EXISTS '+name+' WITH(FORCE)');await root.end();});

@@ -18,6 +18,8 @@ export type PlatformRouteConfig<T> = {
   authenticate?: typeof authenticateRequest;
   authorisation?: AuthorisationService;
   preferRider?: boolean;
+  /** Binary transport after the same canonical authentication/authorisation. */
+  respond?: (value: T) => Response;
 };
 
 /**
@@ -112,6 +114,8 @@ export async function platformRoute<T>(
   if (!result.ok) {
     return errorResponse(result, ctx.correlationId);
   }
+
+  if (config.respond) return config.respond(result.value);
 
   return NextResponse.json(
     { data: result.value, correlationId: ctx.correlationId },

@@ -2,7 +2,8 @@
 
 import { useId, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCommunitySafetyQueue, moderateCommunityContent } from "@/app/actions/communitySafety";
+import { getCommunitySafetyQueue, moderateCommunityContent, commandCommunitySafetyCase } from "@/app/actions/communitySafety";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +15,53 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type Queue = Awaited<ReturnType<typeof getCommunitySafetyQueue>>;
 type Decision = Parameters<typeof moderateCommunityContent>[0];
+type CaseCommand = Parameters<typeof commandCommunitySafetyCase>[0];
+function CaseControls({ item }: { item: Queue["cases"][number] }) {
+  const { toast } = useToast();
+  const cache = useQueryClient();
+  const [reason, setReason] = useState("");
+  const [authority, setAuthority] = useState("");
+  const [hold, setHold] = useState("");
+  const [review, setReview] = useState("");
+  const [policy, setPolicy] = useState("");
+  const [retain, setRetain] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [retry, setRetry] = useState<CaseCommand | null>(null);
+  const retainId = useId();
+  async function save(action: CaseCommand["action"]) {
+    const request: CaseCommand = retry ?? { operation: crypto.randomUUID(), caseId: item.id, version: item.version, action, reason,
+      ...(hold ? { hold } : action === "hold" ? { hold: crypto.randomUUID() } : {}),
+      ...(authority ? { authority } : {}), ...(review ? { review: new Date(review).toISOString() } : {}),
+      ...(policy ? { policy: Number(policy) } : {}), retain };
+    setRetry(request); setBusy(true);
+    try {
+      const result = await bounded(commandCommunitySafetyCase(request));
+      if (!result.success) {
+        toast({ title: result.error, variant: "destructive" });
+        if (result.conflict) { setRetry(null); await cache.invalidateQueries({ queryKey: ["communitySafety"] }); }
+      } else {
+        if (action === "hold") setHold(request.hold ?? "");
+        setRetry(null); setReason(""); await cache.invalidateQueries({ queryKey: ["communitySafety"] });
+        toast({ title: "Case command recorded" });
+      }
+    } catch { toast({ title: "Could not save. Retry the same case command.", variant: "destructive" }); }
+    finally { setBusy(false); }
+  }
+  return <article className="space-y-3 rounded-xl border border-border bg-card p-4">
+    <p className="font-semibold">Safety case · {item.urgency} · {item.closed_at ? item.reopened_at ? "Reopened" : "Closed" : "Open"}</p>
+    <p className="text-sm text-muted-foreground break-all">{item.id}</p>
+    {item.holds.map(active => <p key={active.id} className="text-sm text-muted-foreground break-all">Active hold: {active.id} · Review: {active.reviewDueAt}</p>)}
+    <p className="text-sm text-muted-foreground">Initial review target: urgent within 24 hours; routine within 3 business days. Reopening does not extend retention.</p>
+    <Textarea aria-label="Case reason" placeholder="Record the case decision and necessary reason" maxLength={500} value={reason} disabled={busy || !!retry} onChange={e => setReason(e.target.value)} />
+    <div className="flex flex-wrap gap-2">{(["triage_urgent", "triage_routine", "close", "reopen"] as const).map(action => <Button key={action} variant="outline" disabled={busy || (!retry && reason.trim().length < 3) || (!!retry && retry.action !== action)} onClick={() => void save(action)}>{action === "triage_urgent" ? "Urgent review" : action === "triage_routine" ? "Routine review" : action === "close" ? "Close case" : "Reopen case"}</Button>)}</div>
+    <div className="flex items-start gap-3"><Checkbox id={retainId} checked={retain} disabled={busy || !!retry} onCheckedChange={value => setRetain(value === true)} /><label htmlFor={retainId} className="text-sm text-muted-foreground">Retain necessary content evidence only under an approved field allowlist.</label></div>
+    <Input aria-label="Approved policy version" type="number" min={1} placeholder="Approved policy version for retained evidence" value={policy} disabled={busy || !!retry} onChange={e => setPolicy(e.target.value)} />
+    <Input aria-label="Hold authority reference" placeholder="Actual hold authority reference" value={authority} disabled={busy || !!retry} onChange={e => setAuthority(e.target.value)} />
+    <Input aria-label="Hold review date" type="datetime-local" value={review} disabled={busy || !!retry} onChange={e => setReview(e.target.value)} />
+    <Input aria-label="Hold ID" placeholder="Hold ID for release (shown after creation)" value={hold} disabled={busy || !!retry} onChange={e => setHold(e.target.value)} />
+    <div className="flex flex-wrap gap-2">{(["hold", "release"] as const).map(action => <Button key={action} variant="outline" disabled={busy || (!retry && (reason.trim().length < 3 || (action === "hold" ? !authority || !review : !hold))) || (!!retry && retry.action !== action)} onClick={() => void save(action)}>{action === "hold" ? "Authorise scoped hold" : "Release scoped hold"}</Button>)}</div>
+  </article>;
+}
 async function bounded<T>(work: Promise<T>): Promise<T> {
   let timeout: ReturnType<typeof setTimeout> | undefined;
   try { return await Promise.race([work, new Promise<never>((_, reject) => {
@@ -105,5 +153,7 @@ export function CommunitySafetyQueue() {
     <h3 className="font-semibold">Awaiting publication review</h3>
     {query.data?.pending.map(ride => <PendingReview key={`${ride.id}-${ride.moderation_version}`} ride={ride} />)}
     {query.data && query.data.pending.length === 0 && <p>No content awaiting review.</p>}
+    <h3 className="font-semibold">Case lifecycle</h3>
+    {query.data?.cases?.map(item => <CaseControls key={item.id} item={item} />)}
   </CardContent></Card>;
 }

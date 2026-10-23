@@ -15,7 +15,7 @@ module.exports=async function startStorage(db){
   base='http://'+docker(['port',container,'5000/tcp']).toString().trim();
   let ready=false;for(let i=0;i<40;i++){try{if((await fetch(base+'/status',{signal:AbortSignal.timeout(1000)})).ok){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,250))}
   if(!ready)throw Error('Local Storage startup failed: '+docker(['logs','--tail','15',container]).toString());
-  return {stop,seedExisting:async({owner,ride,as})=>{
+  return {stop,base,token,image,request,seedExisting:async({owner,ride,as})=>{
    const path=`${owner}/${ride.id}/cover.png`;
    equal((await request(owner,'/object/community-rides/'+path,'POST',image)).status,200);
    const publicUrl=base+'/object/public/community-rides/'+path;
@@ -24,8 +24,8 @@ module.exports=async function startStorage(db){
    return {path,publicUrl};
   },verifyExisting:async({viewer,fixture})=>{
    denied(await fetch(fixture.publicUrl));
-   const signed=await request(viewer,'/object/sign/community-rides/'+fixture.path,'POST',{expiresIn:60});equal(signed.status,200);
-   const bytes=await fetch(base+(await signed.json()).signedURL);equal(bytes.status,200);equal(Buffer.from(await bytes.arrayBuffer()),image);
+   denied(await request(viewer,'/object/sign/community-rides/'+fixture.path,'POST',{expiresIn:60}));
+   const bytes=await request(viewer,'/object/authenticated/community-rides/'+fixture.path,'GET',undefined,'service_role');equal(bytes.status,200);equal(Buffer.from(await bytes.arrayBuffer()),image);
   },run:async({owner,outsider,create,review,report,as})=>{
    const c=await create(),path=`${owner}/${c.id}/${crypto.randomUUID()}.png`,url='/object/community-rides/'+path;
    const uploaded=await request(owner,url,'POST',image);equal(uploaded.status,200);
@@ -34,26 +34,62 @@ module.exports=async function startStorage(db){
    denied(await request(null,'/object/sign/community-rides/'+path,'POST',{expiresIn:60}));
    denied(await request(outsider,'/object/authenticated/community-rides/'+path));
    denied(await request(null,'/object/public/community-rides/'+path));
-   const ownSign=await request(owner,'/object/sign/community-rides/'+path,'POST',{expiresIn:60});equal(ownSign.status,200);
-   const ownUrl=(await ownSign.json()).signedURL;equal((await fetch(base+ownUrl)).status,200);
+   denied(await request(owner,'/object/sign/community-rides/'+path,'POST',{expiresIn:60}));
    const current=(await db`SELECT * FROM community_ride WHERE id=${c.id}`)[0];await review(current);
-   const signed=await request(outsider,'/object/sign/community-rides/'+path,'POST',{expiresIn:60});equal(signed.status,200);const signedUrl=(await signed.json()).signedURL;
-   const bytes=await fetch(base+signedUrl);equal(bytes.status,200);equal(Buffer.from(await bytes.arrayBuffer()),image);
-   const short=await request(outsider,'/object/sign/community-rides/'+path,'POST',{expiresIn:1});equal(short.status,200);const shortUrl=(await short.json()).signedURL;
-   await new Promise(resolve=>setTimeout(resolve,2100));denied(await fetch(base+shortUrl));
+   denied(await request(outsider,'/object/sign/community-rides/'+path,'POST',{expiresIn:60}));
+   denied(await request(outsider,'/object/authenticated/community-rides/'+path));
+   const bytes=await request(owner,'/object/authenticated/community-rides/'+path,'GET',undefined,'service_role');equal(bytes.status,200);equal(Buffer.from(await bytes.arrayBuffer()),image);
    denied(await request(owner,url,'PUT',image));
    await report(current,'image',outsider);
    await review((await db`SELECT * FROM community_ride WHERE id=${c.id}`)[0],'restrict');
    denied(await request(outsider,'/object/sign/community-rides/'+path,'POST',{expiresIn:60}));
    denied(await request(outsider,'/object/authenticated/community-rides/'+path));
    denied(await request(null,'/object/public/community-rides/'+path));
-   // A previously issued bearer URL survives until expiry, never immediate recall.
-   equal((await fetch(base+signedUrl)).status,200);
-   denied(await request(owner,'/object/community-rides','DELETE',{prefixes:[path]}));
+   // No new bearer image URLs can be minted by either approved viewer or owner.
+   // With SELECT denied, Storage may return idempotent 200 with no visible
+   // objects. Assert the real retained bytes/metadata, not a guessed HTTP code.
+   await request(owner,'/object/community-rides','DELETE',{prefixes:[path]});
    equal((await db`SELECT count(*)::int n FROM storage.objects WHERE bucket_id='community-rides' AND name=${path}`)[0].n,1);
    const orphan=`${owner}/${c.id}/${crypto.randomUUID()}.png`;equal((await request(owner,'/object/community-rides/'+orphan,'POST',image)).status,200);
    equal((await request(owner,'/object/community-rides','DELETE',{prefixes:[orphan]})).status,200);
+   equal((await db`SELECT count(*)::int n FROM storage.objects WHERE bucket_id='community-rides' AND name=${orphan}`)[0].n,1);
+   equal((await request(owner,'/object/community-rides','DELETE',{prefixes:[orphan]},'service_role')).status,200);
    equal((await db`SELECT count(*)::int n FROM storage.objects WHERE bucket_id='community-rides' AND name=${orphan}`)[0].n,0);
+   // Actual byte disposal: approved synthetic policy, late hold, failed cleanup,
+   // durable lease retry and confirmation. No production policy is created.
+   const disposable=await create(), disposalPath=`${owner}/${disposable.id}/${crypto.randomUUID()}.png`;
+   equal((await request(owner,'/object/community-rides/'+disposalPath,'POST',image)).status,200);
+   await as(owner,tx=>tx`UPDATE community_ride SET cover_image_path=${disposalPath} WHERE id=${disposable.id}`);
+   await review((await db`SELECT * FROM community_ride WHERE id=${disposable.id}`)[0]);
+   const reportId=await report(disposable,'image',outsider), reportRow=(await db`SELECT * FROM community_report WHERE id=${reportId}`)[0];
+   await review((await db`SELECT * FROM community_ride WHERE id=${disposable.id}`)[0],'dismiss',reportRow);
+   const caseCommand=async(action,hold=null)=>{
+    const version=(await db`SELECT version FROM community_safety_case WHERE id=${reportId}`)[0].version;
+    return as(null,tx=>tx`SELECT command_community_safety_case(${crypto.randomUUID()},${owner},${reportId},${version},${action},'Synthetic byte lifecycle check',${hold},${action==='hold'?'Synthetic isolated authority':null},${action==='hold'?new Date(Date.now()+86400000):null})`,'service_role');
+   };
+   await caseCommand('close');
+   await db`DELETE FROM community_ride_participant WHERE community_ride_id=${disposable.id}`;await db`DELETE FROM community_ride WHERE id=${disposable.id}`;
+   // The standalone publication decision is a separate evidence reference.
+   for(const other of await db`SELECT id,version FROM community_safety_case WHERE ride_id=${disposable.id} AND report_id IS NULL`) {
+    await as(null,tx=>tx`SELECT command_community_safety_case(${crypto.randomUUID()},${owner},${other.id},${other.version},'close','Synthetic publication case closure')`,'service_role');
+   }
+   await db.unsafe('ALTER TABLE community_report DISABLE TRIGGER community_report_clock');
+   await db`UPDATE community_report SET resolved_at=clock_timestamp()-interval '13 months' WHERE id=${reportId}`;
+   await db.unsafe('ALTER TABLE community_report ENABLE TRIGGER community_report_clock');
+   const disposalOperation=crypto.randomUUID();
+   await as(null,tx=>tx`SELECT dispose_community_safety(${disposalOperation},${reportId},900001)`,'service_role');
+   const claim=()=>as(null,tx=>tx`SELECT claim_community_cover_disposal(${disposalOperation}) path`,'service_role');
+   equal((await claim()).map(x=>x.path),[disposalPath]);equal((await claim()).length,0);
+   const hold=crypto.randomUUID();await caseCommand('hold',hold);
+   denied(await request(owner,'/object/community-rides','DELETE',{prefixes:[disposalPath]},'service_role'));
+   equal((await request(owner,'/object/authenticated/community-rides/'+disposalPath,'GET',undefined,'service_role')).status,200);
+   await caseCommand('release',hold);
+   await db`UPDATE community_cover_disposal SET lease_until=clock_timestamp()-interval '1 second' WHERE path=${disposalPath}`;
+   equal((await claim()).length,1);
+   equal((await request(owner,'/object/community-rides','DELETE',{prefixes:[disposalPath]},'service_role')).status,200);
+   await as(null,tx=>tx`SELECT confirm_community_cover_disposal(${disposalOperation},${disposalPath})`,'service_role');
+   denied(await request(owner,'/object/authenticated/community-rides/'+disposalPath,'GET',undefined,'service_role'));
+   equal((await as(null,tx=>tx`SELECT community_safety_disposal_status(${disposalOperation}) data`,'service_role'))[0].data.remaining,0);
    console.log(JSON.stringify({storageAssertions:count,storageApi:'1.79.36',actualByteTransfer:true,productionMutations:false}));return count;
   }};
  }catch(e){try{stop()}catch{}throw e;}

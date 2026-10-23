@@ -79,6 +79,27 @@ async function main(){
  const restrictedAccountWrites={};
  await reverted(async tx=>{
    await tx`INSERT INTO account_deletion_jobs(id,user_id,policy_version) VALUES(${crypto.randomUUID()},${viewer},1)`;
+   const token=crypto.randomUUID();
+   await tx`UPDATE account_deletion_jobs SET status='processing',lease_token=${token},lease_until=clock_timestamp()+interval '5 minutes' WHERE user_id=${viewer}`;
+   await tx`SELECT set_config('request.jwt.claim.role','service_role',true)`;
+   const gate=(await tx`SELECT prepare_account_deletion_community_safety(id,${token}) result FROM account_deletion_jobs WHERE user_id=${viewer}`)[0].result;
+   equal(gate,{state:'review',completionAuthorized:false});
+   equal((await tx`SELECT count(*)::int n FROM account_deletion_review WHERE category='community_safety'`)[0].n,1);
+   // Execute the actual Edge orchestration against the real Safety SQL gate.
+   // Earlier independently approved steps are inert here; no external effects.
+   const ts=require('typescript'),vm=require('node:vm'),exports={};
+   vm.runInNewContext(ts.transpileModule(read(path.join(mobile,'supabase/functions/_shared/deletionExecution.ts')),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports,require:()=>({}),Date,JSON});
+   const calls=[];
+   const job=(await tx`SELECT id,user_id,lease_token FROM account_deletion_jobs WHERE user_id=${viewer}`)[0];
+   const api={rpc:async(name,args)=>{
+    calls.push(name);
+    if(name==='renew_account_deletion') return {data:true,error:null};
+    if(['apply_account_deletion_privacy_manifest','detach_account_deletion_reviewed_authorship'].includes(name))return {data:{state:'confirmed'},error:null};
+    assert.equal(name,'prepare_account_deletion_community_safety');
+    return {data:(await tx`SELECT prepare_account_deletion_community_safety(${args.p_job},${args.p_token}) r`)[0].r,error:null};
+   }};
+   equal(await exports.executeDeletionClosure(api,job),false);
+   equal(calls.at(-1),'prepare_account_deletion_community_safety');
    await tx.unsafe('SET LOCAL ROLE authenticated');
    await tx`SELECT set_config('request.jwt.claim.sub',${viewer},true),set_config('request.jwt.claim.role','authenticated',true)`;
    await assert.rejects(()=>tx.savepoint(s=>s`UPDATE community_ride_participant SET status='joined' WHERE community_ride_id=${ride} AND rider_id=${viewerRider}`),e=>e.code==='42501');assertions++;

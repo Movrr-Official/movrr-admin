@@ -62,6 +62,7 @@ describe("Platform API bearer boundary", () => {
     "/api/v1/partners/resources",
     "/api/v1/riders/me/campaigns/confirm",
     "/api/v1/community-rides/id/join",
+    "/api/v1/community-rides/id/cover",
   ])("allows %s to reach its JWT handler", (path) =>
     expect(isPlatformBearerApiPath(path)).toBe(true),
   );
@@ -72,6 +73,7 @@ describe("Platform API bearer boundary", () => {
     "/api/v1/rewards/admin",
     "/api/v1/wallet/balance/other",
     "/api/v1/wallet/statement/other",
+    "/api/v1/community-rides/id/cover/unsafe",
     "/api/v1/government/me/other",
     "/riders",
   ])("keeps %s behind its existing dashboard gate", (path) =>

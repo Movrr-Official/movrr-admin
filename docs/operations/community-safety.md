@@ -11,10 +11,14 @@ or adoption boundary. The current decision package and results are at the top of
 The final approval matrix and client/cache decision in those two documents now
 supersede the earlier proposals: recommend purpose-specific legitimate interests,
 client-first verified replacement and authenticated uncached private-image media
-delivery. The proposed media route/policies remain unimplemented. Independent
-Mobile source correction strips signed cover credentials from presentation
-snapshots; 26 focused snapshot/Home/cover tests and TypeScript pass. No retention
-execution or production activation follows from these source/document changes.
+delivery. The media route, restrictive direct-read policy, mounted account-bound
+Mobile reader and independent lifecycle controls are now implemented and tested
+against isolated SQL/HTTP/Storage services and the restored 192-table schema.
+See the current verification receipt for results. Retained evidence/disposal have
+no approved active rules or scheduled worker. Safety account erasure remains in
+canonical Privacy review pending exact approved manifests. No compatible binary,
+installed adoption, hosted-CDN or physical-device acceptance is established.
+No retention execution or production activation follows from these source changes.
 The remaining historical gap inventory below must be read with those updates.
 
 Policy approved by the MOVRR owner on 23 October 2026. The owner authorizes a

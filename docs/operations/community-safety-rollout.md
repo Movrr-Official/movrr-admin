@@ -1,9 +1,9 @@
 # Community Safety final acceptance and controlled rollout
 
-## Final client / containment decision — 23 October 2026
+## Source implementation / controlled activation — 23 October 2026
 
-**Recommend client-first controlled replacement; defer 082 until adoption and
-containment are demonstrated. Production remains no-go.** This replaces the prior
+**Source implemented; client-first controlled replacement remains required. Defer
+082 until adoption and containment are demonstrated. Production remains no-go.** This replaces the prior
 proposed signed-URL delivery approach for the future private-cover launch. No
 release, production mutation, Storage policy or lifecycle execution is authorised.
 
@@ -12,7 +12,7 @@ release, production mutation, Storage policy or lifecycle execution is authorise
 | Step / owner | Concrete action and exit condition |
 | --- | --- |
 | Product / release owner | Keep existing public rides and their current cover contract working while a replacement is prepared. Do not publish new private/pending material into today's public bucket. All known incompatible installations remain supported until a real replacement boundary is established. |
-| Mobile / backend source | Prepare a transitional replacement that accepts today's canonical public cover field, and uses the authorised media delivery below when the backend supplies a private path. Use the existing Community API/data model; no parallel Community endpoint or permanent public-image shim. Include account-safe image loading, existing placeholders and actionable update/retry copy using established controls. |
+| Mobile / backend source | Implemented: the existing canonical public cover field works before activation; a private path with no public URL uses the authorised byte route below. Existing Community APIs/data model remain authoritative. Account-bound memory, cancellation, existing placeholders and unchanged image styles are implemented. No compatible binary has been distributed by this work. |
 | Release owner, separately authorised | Deliver the tested replacement to the existing iOS internal group and relevant Android tracks. Record resulting artifact IDs/source/runtime/build numbers only when they exist. Store approval/availability is a prerequisite, not adoption. Do not assign a speculative minimum build. |
 | Operations / internal iOS fleet | Reconcile the existing tester/device roster, ad-hoc and preview artifacts; obtain device-by-device successful replacement/Community-image evidence. Separately authorise any withdrawal/expiry of old TestFlight availability. Do not assume testers cannot choose a previous build. |
 | Operations / Android production | Reconcile Play installed-version/active-device evidence, known sideloads/internal installs and available MOVRR runtime diagnostics. Observing a replacement on one account/device does not exclude its other old installations; aggregate active-version metrics do not account for dormant copies. Establish whether this is genuinely a completely controlled population. |
@@ -45,16 +45,27 @@ decision. It is not an alternative that silently satisfies today's constraints.
 ### Private-cover access and cache decision
 
 **Recommend authenticated, uncached media delivery within the existing platform
-API, rather than rider/staff bearer image URLs.** Proposed route:
+API, rather than rider/staff bearer image URLs.** Implemented route:
 GET /api/v1/community-rides/[id]/cover. This transports bytes; it does not duplicate
 Community discovery, participation or moderation APIs.
+
+Source dependency: the byte route can be prepared before private activation;
+Safety case commands/queue, orphan-authorisation RPC and changed deletion execution
+adapter require 082. Do not deploy the deletion adapter against the older schema.
+Keep Safety/private-content operations and all retained-evidence/disposal execution
+disabled until their dependencies and approvals are satisfied. Missing Safety
+export support is shown as an explicit Privacy review, preserving the older export.
+
+Final candidate 082 SHA-256 (LF):
+`888c95b5d684838ee1202bb432848d7d6cba6918c01810d1c6964a5dee97ae4d`.
+Any change requires repinning and relevant rehearsal. This is not an apply approval.
 
 | Boundary | Required implementation / acceptance |
 | --- | --- |
 | Authorisation | Use the existing request identity and caller-scoped Supabase client to reselect the current ride under canonical RLS/content visibility on every request. Derive the current immutable path server-side. Only then fetch those bytes with server-only Storage credentials. Staff evidence/owner staged-upload previews require their existing capability/ownership authorities; no arbitrary path parameter or client-supplied actor. Preserve account restrictions and shared-ride visibility policy. |
 | Direct Storage | At private activation, deny direct Community SELECT/signing to anon/authenticated roles with restrictive policy coverage; preserve authorised immutable uploads. The server media path is the sole image reader for riders/staff. Otherwise a caller could still mint bearer URLs directly, even if the UI stopped doing so. Update owner preview and Admin evidence rendering before enforcing this restriction. No service key reaches a client. |
 | Caches | Media responses, denials and redirects use private, no-store semantics; no redirect to a signed/public URL, CDN/image optimiser cache, ETag/304 reuse or shared rendered image cache. Verify hosted platform behaviour, not just headers in a mock. Mobile fetches authorised bytes into account-scoped session memory; do not put tokens or private bytes in disk snapshots/native URL caches. Use immutable revision keys; discard stale/in-flight results on account change, access failure, refresh removal, background/session exit. Revalidate on foreground/display; do not claim recall of pixels/copies already delivered. |
-| Signed URL expiry | Current source requests 60 seconds for riders and 300 for staff. Tokens are bearer credentials, not tied to the later account session; their expiry does not purge warmed CDN entries. The replacement/private launch must remove all display/preview signing paths and direct signing grants above. Previously issued tokens remain a transition containment concern; changing Auth keys is not a revocation plan. |
+| Signed URL expiry | Display/preview signing is removed from this source and 082 denies direct Community SELECT/signing. Earlier source requested 60 seconds for riders and 300 for staff. Existing bearer tokens remain a transition concern: expiry does not purge warmed CDN entries. Changing Auth keys is not a revocation plan. |
 | Offline / switching | Retain established offline ride metadata and public covers; a private cover that cannot be reauthorised uses the existing placeholder. No cross-account reuse. Existing readForAccount and account-keyed queries remain canonical; extend their guarantees through image byte completion, decoder lifecycle and foreground refresh. Native verification must establish disk-cache behaviour. |
 | Moderation / revocation | Restriction changes the canonical publication authority; the next media request must deny before fetching bytes. Stop rendering on an authoritative removal/denial. Uncertain refresh is not new authorisation. Define this as denial of subsequent requests, not instantaneous erasure of a previously displayed/downloaded image. Race already in flight may finish; use publication version checks and cancel/drop stale client results. |
 | Previously public objects | Never reuse formerly public paths for new moderated/private bytes. Under later explicit data-operation approval, preserve exact originals/recovery/evidence privately, create fresh immutable delivery paths, verify byte integrity and all reference mappings, then retire old origin objects only after live/evidence/hold references are safely reconciled. Preserve ride IDs, publication, image appearance and all participation/history. Do not bypass evidence guards. Existing public downloads/browser copies cannot be recalled. |
@@ -63,11 +74,13 @@ Community discovery, participation or moderation APIs.
 [Supabase private access](https://supabase.com/docs/guides/storage/serving/downloads)
 and [signed/CDN semantics](https://supabase.com/docs/guides/storage/cdn/smart-cdn)
 support the distinction between authorisation, bearer expiry and cache lifetime.
-They do not establish this project's hosted cache behaviour. The proposed media
-route/policy/native byte path is **not implemented or runtime verified**. It must
-pass an isolated warm-cache sequence: authorised read; restriction; fresh request
-denied; anonymous/direct/signing denied; account switch/offline/background denied
-reuse; owner/staff allowed only in their contexts; original bytes/evidence intact.
+They do not establish this project's hosted cache behaviour. The media handler,
+restrictive policy and Mobile reader are **implemented and isolated-test verified**:
+authorised reads, subsequent/in-flight restriction denial, anonymous/direct/signing
+denial, account switch/offline/background clearing, owner/staff scope and preserved
+bytes/evidence. Mobile revalidates every 30 seconds while mounted and on foreground;
+already delivered pixels can remain until revalidation. The 20-second request
+timeout clears failures. There are no image tokens or private bytes in disk snapshots.
 Actual CDN/native probes need separately authorised deployment/device access.
 
 Cover-path relocation must be an explicitly authorised, integrity-verified
@@ -88,8 +101,9 @@ Existing encrypted old snapshot bytes expire under the existing cache lifecycle;
 this correction prevents replay and does not claim physical secure erasure or
 native/CDN cache containment. TypeScript and 26 focused snapshot/Home/cover tests
 pass. No UI layout, segmentation, participation, roster or history source changed.
-Earlier SQL/HTTP/Storage/lifecycle results and the canonical account-fence fix
-remain recorded in the existing verification receipt; those audits were not rerun.
+Current focused SQL/HTTP/Storage/lifecycle and rendered-state results are recorded
+in the existing verification receipt. These verify the changed source; they do not
+repeat the release inventory or constitute production/native acceptance.
 
 ### Launch roadmap and remaining approvals
 
@@ -97,11 +111,13 @@ remain recorded in the existing verification receipt; those audits were not reru
    handling, closure semantics, canonical hold linkage/release and disposal/export
    projections in community-safety-policy-assessment.md. Record the real approval;
    no fabricated reference or activation of retained evidence.
-2. **Source preparation:** implement only that approved lifecycle design; implement
-   the proposed media delivery/restrictive Storage policy and transitional Mobile
-   renderer; reconcile Admin/owner previews. Rehearse the final canonical migration
-   and object transition/recovery tooling, repinning its hash after source changes.
-   Current 082 alone is insufficient for this proposed cache strategy.
+2. **Source implementation:** completed independent lifecycle controls, media route,
+   restrictive Storage policy, transitional Mobile renderer and Admin/owner previews.
+   The final canonical 082 passes disposable full-schema restoration. Retained
+   evidence/disposal gates have no real approved rules, worker route or schedule.
+   Account erasure with Safety data deliberately stays in canonical Privacy review
+   until exact approved manifests exist. Object relocation/recovery and hosted cache
+   acceptance remain separately controlled prerequisites; 082 alone cannot purge caches.
 3. **Separate build/release authorisation:** deliver the replacement, validate real
    first-time carousel/returning compact Home, existing rides/images and account/
    offline behaviour, then complete the adoption exit conditions above.
@@ -116,7 +132,7 @@ remain recorded in the existing verification receipt; those audits were not reru
    targets remain unchanged. Shop redemption and irreversible deletion execution
    remain under their separate operating gates.
 
-**Verdict: NO-GO pending approval, implementation and demonstrated adoption/cache
+**Verdict: source controls verified; production NO-GO pending approval, native acceptance and demonstrated adoption/cache
 containment.** No production rollout, EAS/OTA, store submission/withdrawal,
 retained-evidence execution or unrelated product/design change occurred here.
 

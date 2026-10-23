@@ -120,13 +120,14 @@ BEGIN
  END IF;
  -- Covers may only reference an immutable object belonging to this organiser/ride.
  IF NEW.cover_image_path IS NOT NULL AND (TG_OP='INSERT' OR NEW.cover_image_path IS DISTINCT FROM OLD.cover_image_path) THEN
+   IF EXISTS(SELECT 1 FROM public.community_cover_disposal WHERE path=NEW.cover_image_path) THEN RAISE EXCEPTION 'Cover disposal is pending' USING ERRCODE='42501'; END IF;
    IF split_part(NEW.cover_image_path,'/',1) IS DISTINCT FROM NEW.organizer_user_id::text
       OR split_part(NEW.cover_image_path,'/',2) IS DISTINCT FROM NEW.id::text
       OR NOT EXISTS(SELECT 1 FROM storage.objects WHERE bucket_id='community-rides' AND name=NEW.cover_image_path) THEN
      RAISE EXCEPTION 'Invalid private cover' USING ERRCODE='22023';
    END IF;
  END IF;
- -- Never trust a user-supplied URL, including remote images. Clients sign the path.
+ -- Never trust a user-supplied URL. The Platform API authorises private bytes.
  NEW.cover_image_url:=NULL;
  RETURN NEW;
 END $$;
@@ -155,7 +156,7 @@ BEGIN
    RAISE EXCEPTION 'Content unavailable' USING ERRCODE='42501'; END IF;
  INSERT INTO public.community_report(reporter_user_id,ride_id,subject_rider_id,target,reason,description,content_version,evidence)
  VALUES(auth.uid(),c.id,c.organizer_rider_id,p_target,p_reason,coalesce(p_description,''),c.moderation_version,
- jsonb_build_object('title',c.title,'description',c.description,'organizer_name',c.organizer_name,'meeting_point_name',c.meeting_point_name,'meeting_point_address',c.meeting_point_address,'cover_image_path',c.cover_image_path,'moderation_version',c.moderation_version)) RETURNING id INTO result;
+ jsonb_strip_nulls(jsonb_build_object('title',CASE WHEN p_target IN ('ride','text') THEN c.title END,'description',CASE WHEN p_target IN ('ride','text') THEN c.description END,'cover_image_path',CASE WHEN p_target='image' THEN c.cover_image_path END,'moderation_version',c.moderation_version))) RETURNING id INTO result;
  RETURN result;
 END $$;
 
@@ -237,9 +238,7 @@ CREATE POLICY community_cover_authorized_read ON storage.objects FOR SELECT TO a
  USING(bucket_id='community-rides' AND EXISTS(SELECT 1 FROM public.community_ride c
  WHERE c.cover_image_path=name AND public.community_content_visible(c.id)));
 CREATE POLICY community_cover_read ON storage.objects AS RESTRICTIVE FOR SELECT TO anon,authenticated
- USING(bucket_id<>'community-rides' OR EXISTS(SELECT 1 FROM public.community_ride c WHERE
- (c.cover_image_path=name AND public.community_content_visible(c.id)) OR
- (c.organizer_user_id=auth.uid() AND split_part(name,'/',1)=auth.uid()::text AND split_part(name,'/',2)=c.id::text)));
+ USING(bucket_id<>'community-rides');
 CREATE POLICY community_cover_insert ON storage.objects AS RESTRICTIVE FOR INSERT TO anon,authenticated
  WITH CHECK(bucket_id<>'community-rides' OR EXISTS(SELECT 1 FROM public.community_ride c WHERE c.organizer_user_id=auth.uid() AND split_part(name,'/',1)=auth.uid()::text AND split_part(name,'/',2)=c.id::text));
 CREATE POLICY community_cover_no_replace ON storage.objects AS RESTRICTIVE FOR UPDATE TO anon,authenticated
@@ -249,6 +248,10 @@ CREATE POLICY community_cover_delete_owner ON storage.objects AS RESTRICTIVE FOR
 -- Preserve referenced evidence even through service-role cleanup calls.
 CREATE FUNCTION public.community_cover_evidence_guard() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 BEGIN
+ IF OLD.bucket_id='community-rides' THEN
+  PERFORM 1 FROM public.community_safety_case WHERE id IN(SELECT case_id FROM public.community_cover_disposal WHERE path=OLD.name) ORDER BY id FOR UPDATE;
+  IF EXISTS(SELECT 1 FROM public.community_cover_disposal d JOIN public.account_deletion_hold h ON h.community_case_id=d.case_id WHERE d.path=OLD.name AND h.released_at IS NULL) THEN RAISE EXCEPTION 'Community evidence is held' USING ERRCODE='42501'; END IF;
+ END IF;
  IF OLD.bucket_id='community-rides' AND (TG_OP='UPDATE' OR EXISTS(SELECT 1 FROM public.community_report WHERE evidence->>'cover_image_path'=OLD.name)
  OR EXISTS(SELECT 1 FROM public.community_moderation_audit WHERE evidence->>'cover_image_path'=OLD.name)
  OR EXISTS(SELECT 1 FROM public.community_ride WHERE cover_image_path=OLD.name)) THEN
@@ -256,6 +259,21 @@ BEGIN
  IF TG_OP='DELETE' THEN RETURN OLD; END IF; RETURN NEW;
 END $$;
 CREATE TRIGGER community_cover_evidence_guard BEFORE UPDATE OR DELETE ON storage.objects FOR EACH ROW EXECUTE FUNCTION public.community_cover_evidence_guard();
+
+CREATE FUNCTION public.community_cover_orphan_authorized(p_ride uuid,p_path text) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+BEGIN
+ PERFORM public.assert_active_account();
+ PERFORM public.account_deletion_assert_writable(auth.uid());
+ RETURN public.community_rider_account_active(auth.uid()) AND EXISTS(SELECT 1 FROM public.community_ride WHERE id=p_ride AND organizer_user_id=auth.uid())
+ AND split_part(p_path,'/',1)=auth.uid()::text AND split_part(p_path,'/',2)=p_ride::text
+ AND NOT EXISTS(SELECT 1 FROM public.community_ride WHERE cover_image_path=p_path)
+ AND NOT EXISTS(SELECT 1 FROM public.community_report WHERE evidence->>'cover_image_path'=p_path)
+ AND NOT EXISTS(SELECT 1 FROM public.community_cover_disposal WHERE path=p_path)
+ AND NOT EXISTS(SELECT 1 FROM public.community_moderation_audit WHERE evidence->>'cover_image_path'=p_path);
+END $$;
+REVOKE ALL ON FUNCTION public.community_cover_orphan_authorized(uuid,text) FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION public.community_cover_orphan_authorized(uuid,text) TO authenticated;
 
 CREATE FUNCTION public.moderate_community_content(p_operation uuid,p_actor uuid,p_ride uuid,p_version bigint,p_action text,p_reason text,p_report uuid DEFAULT NULL,p_report_version bigint DEFAULT NULL) RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
@@ -285,8 +303,311 @@ BEGIN
  IF p_report IS NOT NULL THEN UPDATE public.community_report SET status=CASE WHEN p_action='dismiss' THEN 'dismissed' ELSE 'actioned' END,version=version+1 WHERE id=p_report; END IF;
  INSERT INTO public.community_moderation_audit(operation_id,actor_user_id,report_id,ride_id,action,reason,evidence)
  VALUES(p_operation,p_actor,p_report,p_ride,p_action,p_reason,coalesce(r.evidence,
- jsonb_build_object('title',c.title,'description',c.description,'organizer_name',c.organizer_name,'meeting_point_name',c.meeting_point_name,'meeting_point_address',c.meeting_point_address,'cover_image_path',c.cover_image_path,'moderation_version',c.moderation_version)));
+ jsonb_build_object('title',c.title,'description',c.description,'cover_image_path',c.cover_image_path,'moderation_version',c.moderation_version)));
 END $$;
+
+-- Safety lifecycle: clocks and controls, not approval or worker activation.
+ALTER TABLE public.community_report ADD COLUMN resolved_at timestamptz;
+CREATE TABLE public.community_safety_case (
+ id uuid PRIMARY KEY, report_id uuid, ride_id uuid NOT NULL,
+ created_at timestamptz NOT NULL DEFAULT now(), first_review_at timestamptz,
+ urgency text NOT NULL DEFAULT 'routine' CHECK(urgency IN ('routine','urgent')),
+ closed_at timestamptz, closed_by uuid, reopened_at timestamptz,
+ version bigint NOT NULL DEFAULT 1 CHECK(version>0)
+);
+CREATE TABLE public.community_safety_event (
+ operation_id uuid PRIMARY KEY, case_id uuid NOT NULL REFERENCES public.community_safety_case,
+ actor_user_id uuid NOT NULL, action text NOT NULL, reason text NOT NULL,
+ payload jsonb NOT NULL DEFAULT '{}', created_at timestamptz NOT NULL DEFAULT now()
+);
+-- Extend the existing hold authority; never manufacture deletion jobs for Safety.
+ALTER TABLE public.account_deletion_hold ALTER COLUMN job_id DROP NOT NULL;
+ALTER TABLE public.account_deletion_hold ADD COLUMN community_case_id uuid REFERENCES public.community_safety_case;
+ALTER TABLE public.account_deletion_hold ADD CHECK(num_nonnulls(job_id,community_case_id)=1);
+CREATE TABLE public.community_cover_disposal (
+ path text PRIMARY KEY, case_id uuid NOT NULL, operation_id uuid NOT NULL, lease_until timestamptz,
+ confirmed_at timestamptz, attempts integer NOT NULL DEFAULT 0
+);
+CREATE TABLE public.community_safety_disposal_receipt (
+ operation_id uuid PRIMARY KEY, case_digest text NOT NULL, policy_version integer NOT NULL,
+ counts jsonb NOT NULL, completed_at timestamptz NOT NULL DEFAULT now(), expires_at timestamptz NOT NULL
+);
+DO $$ DECLARE t text; BEGIN
+ FOREACH t IN ARRAY ARRAY['community_safety_case','community_safety_event','community_cover_disposal','community_safety_disposal_receipt'] LOOP
+  EXECUTE format('ALTER TABLE public.%I OWNER TO postgres',t);
+  EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY',t);
+  EXECUTE format('REVOKE ALL ON public.%I FROM PUBLIC,anon,authenticated,service_role',t);
+  EXECUTE format('CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR UPDATE OR DELETE ON public.%I FOR EACH ROW EXECUTE FUNCTION public.account_deletion_write_barrier()',t);
+  EXECUTE format('ALTER TABLE public.%I ENABLE ALWAYS TRIGGER zzzz_account_deletion_write_barrier',t);
+  EXECUTE format('CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.%I FOR EACH STATEMENT EXECUTE FUNCTION public.account_deletion_truncate_barrier()',t);
+  EXECUTE format('ALTER TABLE public.%I ENABLE ALWAYS TRIGGER account_deletion_truncate_barrier',t);
+ END LOOP;
+END $$;
+GRANT SELECT ON public.community_safety_case,public.community_safety_event TO service_role;
+INSERT INTO public.account_deletion_barrier_binding VALUES
+ ('public','community_safety_case','closed_by','user'),
+ ('public','community_safety_event','actor_user_id','user');
+INSERT INTO public.account_deletion_barrier_parent(table_name,column_name,parent_table) VALUES
+ ('community_safety_case','report_id','community_report'),
+ ('community_safety_event','case_id','community_safety_case');
+
+CREATE FUNCTION public.community_safety_clock() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+BEGIN
+ IF TG_TABLE_NAME='community_report' THEN
+  IF TG_OP='INSERT' THEN
+   INSERT INTO public.community_safety_case(id,report_id,ride_id) VALUES(NEW.id,NEW.id,NEW.ride_id);
+  ELSIF NEW.status IS DISTINCT FROM OLD.status THEN
+   IF OLD.status<>'open' OR NEW.status='open' THEN RAISE EXCEPTION 'Final report outcome is immutable' USING ERRCODE='40001'; END IF;
+   NEW.resolved_at:=clock_timestamp();
+  ELSIF NEW.resolved_at IS DISTINCT FROM OLD.resolved_at THEN RAISE EXCEPTION 'Resolution clock is immutable' USING ERRCODE='42501';
+  END IF;
+ ELSE
+  INSERT INTO public.community_safety_case(id,report_id,ride_id,first_review_at)
+   VALUES(coalesce(NEW.report_id,NEW.operation_id),NEW.report_id,NEW.ride_id,clock_timestamp()) ON CONFLICT DO NOTHING;
+  UPDATE public.community_safety_case SET first_review_at=coalesce(first_review_at,clock_timestamp()) WHERE id=coalesce(NEW.report_id,NEW.operation_id);
+ END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER community_report_clock BEFORE INSERT OR UPDATE ON public.community_report FOR EACH ROW EXECUTE FUNCTION public.community_safety_clock();
+CREATE TRIGGER community_decision_case BEFORE INSERT ON public.community_moderation_audit FOR EACH ROW EXECUTE FUNCTION public.community_safety_clock();
+
+CREATE FUNCTION public.community_safety_policy(p_policy integer,p_category text,p_period interval,p_fields text[]) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE r public.account_deletion_retention_rule;
+BEGIN
+ SELECT * INTO r FROM public.account_deletion_retention_rule WHERE policy_version=p_policy AND category=p_category;
+ IF p_policy IS DISTINCT FROM (SELECT active_policy_version FROM public.account_deletion_contract_gate WHERE singleton)
+ OR r.start_event IS DISTINCT FROM (CASE p_category WHEN 'community_reports' THEN 'report_resolution' WHEN 'community_moderation' THEN 'case_closure' WHEN 'community_disposal_receipt' THEN 'disposal_completed' END)
+ OR r.approval_status IS DISTINCT FROM 'approved' OR nullif(trim(r.approval_reference),'') IS NULL
+ OR nullif(trim(r.lawful_basis),'') IS NULL OR r.period IS NULL OR r.period<=interval '0'
+ OR (p_period IS NOT NULL AND r.period<>p_period) OR NOT p_fields <@ r.minimum_fields
+ THEN RAISE EXCEPTION 'Safety privacy approval and field allowlist required' USING ERRCODE='42501'; END IF;
+END $$;
+CREATE FUNCTION public.community_safety_hold_lock() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE c uuid;
+BEGIN
+ c:=CASE WHEN TG_OP='DELETE' THEN OLD.community_case_id ELSE NEW.community_case_id END;
+ IF TG_OP='UPDATE' AND NEW.community_case_id IS DISTINCT FROM OLD.community_case_id THEN RAISE EXCEPTION 'Hold scope is immutable'; END IF;
+ IF c IS NOT NULL THEN PERFORM 1 FROM public.community_safety_case WHERE id=c FOR UPDATE; END IF;
+ IF TG_OP='DELETE' THEN RETURN OLD; END IF; RETURN NEW;
+END $$;
+CREATE TRIGGER community_safety_hold_lock BEFORE INSERT OR UPDATE OR DELETE ON public.account_deletion_hold FOR EACH ROW EXECUTE FUNCTION public.community_safety_hold_lock();
+
+CREATE FUNCTION public.command_community_safety_case(p_operation uuid,p_actor uuid,p_case uuid,p_version bigint,p_action text,p_reason text,p_hold uuid DEFAULT NULL,p_authority text DEFAULT NULL,p_review timestamptz DEFAULT NULL,p_policy integer DEFAULT NULL,p_retain boolean DEFAULT false) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE c public.community_safety_case; prior public.community_safety_event; payload jsonb;
+BEGIN
+ IF auth.role() IS DISTINCT FROM 'service_role' OR p_actor IS NULL THEN RAISE EXCEPTION 'Staff command required' USING ERRCODE='42501'; END IF;
+ PERFORM public.account_deletion_assert_writable(p_actor);
+ IF p_operation IS NULL OR p_case IS NULL OR p_action IS NULL OR p_reason IS NULL OR p_action NOT IN ('triage_urgent','triage_routine','close','reopen','hold','release') OR length(trim(p_reason)) NOT BETWEEN 3 AND 500 THEN RAISE EXCEPTION 'Invalid case command' USING ERRCODE='22023'; END IF;
+ payload:=jsonb_build_object('hold',p_hold,'authority',p_authority,'review',p_review,'policy',p_policy,'retain',p_retain);
+ PERFORM pg_advisory_xact_lock(hashtextextended(p_operation::text,764));
+ SELECT * INTO prior FROM public.community_safety_event WHERE operation_id=p_operation;
+ IF FOUND THEN
+  IF ROW(prior.case_id,prior.actor_user_id,prior.action,prior.reason,prior.payload) IS DISTINCT FROM ROW(p_case,p_actor,p_action,p_reason,payload) THEN RAISE EXCEPTION 'Operation conflict' USING ERRCODE='40001'; END IF;
+  RETURN;
+ END IF;
+ SELECT * INTO c FROM public.community_safety_case WHERE id=p_case FOR UPDATE;
+ IF NOT FOUND OR c.version IS DISTINCT FROM p_version THEN RAISE EXCEPTION 'Case changed' USING ERRCODE='40001'; END IF;
+ IF p_action='close' THEN
+  IF (c.closed_at IS NOT NULL AND c.reopened_at IS NULL) OR EXISTS(SELECT 1 FROM public.community_report WHERE id=c.report_id AND status='open') THEN RAISE EXCEPTION 'Resolve the report before closure' USING ERRCODE='40001'; END IF;
+  IF p_retain THEN
+   PERFORM public.community_safety_policy(p_policy,'community_moderation',interval '24 months',ARRAY['case_id','decision','reviewer','timestamps'] || ARRAY(
+    SELECT DISTINCT 'evidence.'||k FROM public.community_moderation_audit a CROSS JOIN LATERAL jsonb_object_keys(a.evidence) k WHERE a.case_id=p_case));
+  ELSE
+   IF EXISTS(SELECT 1 FROM public.account_deletion_hold WHERE community_case_id=p_case AND released_at IS NULL) THEN RAISE EXCEPTION 'Held evidence requires approved preservation before closure' USING ERRCODE='42501'; END IF;
+   -- No default retained content archive. Required decision metadata stays separate.
+   INSERT INTO public.community_cover_disposal(path,case_id,operation_id)
+   SELECT DISTINCT evidence->>'cover_image_path',p_case,p_operation FROM public.community_moderation_audit WHERE case_id=p_case AND evidence->>'cover_image_path' IS NOT NULL ON CONFLICT DO NOTHING;
+   UPDATE public.community_moderation_audit SET evidence='{}' WHERE case_id=p_case;
+  END IF;
+  UPDATE public.community_safety_case SET closed_at=coalesce(closed_at,clock_timestamp()),closed_by=coalesce(closed_by,p_actor),reopened_at=NULL WHERE id=p_case;
+ ELSIF p_action='reopen' THEN
+  IF c.closed_at IS NULL THEN RAISE EXCEPTION 'Case is already open' USING ERRCODE='40001'; END IF;
+  -- Keep the original expiry clock; reopening never creates a retention extension.
+  UPDATE public.community_safety_case SET reopened_at=clock_timestamp() WHERE id=p_case;
+ ELSIF p_action='hold' THEN
+  IF p_hold IS NULL OR nullif(trim(p_authority),'') IS NULL OR p_review IS NULL OR p_review<=clock_timestamp() THEN RAISE EXCEPTION 'Explicit hold authority and review required' USING ERRCODE='22023'; END IF;
+  INSERT INTO public.account_deletion_hold(id,community_case_id,category,authority_reference,owner_capability,review_due_at)
+   VALUES(p_hold,p_case,'community_safety',p_authority,'privacy.deletion.compliance.review',p_review);
+ ELSIF p_action='release' THEN
+  UPDATE public.account_deletion_hold SET released_at=clock_timestamp() WHERE id=p_hold AND community_case_id=p_case AND released_at IS NULL;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Active scoped hold required' USING ERRCODE='40001'; END IF;
+ ELSE
+  UPDATE public.community_safety_case SET first_review_at=coalesce(first_review_at,clock_timestamp()),urgency=CASE p_action WHEN 'triage_urgent' THEN 'urgent' ELSE 'routine' END WHERE id=p_case;
+ END IF;
+ UPDATE public.community_safety_case SET version=version+1 WHERE id=p_case;
+ INSERT INTO public.community_safety_event(operation_id,case_id,actor_user_id,action,reason,payload) VALUES(p_operation,p_case,p_actor,p_action,p_reason,payload);
+END $$;
+
+CREATE FUNCTION public.dispose_community_safety(p_operation uuid,p_case uuid,p_policy integer) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE c public.community_safety_case; r public.community_report; prior public.community_safety_disposal_receipt; paths text[]; n integer:=0; m integer:=0; receipt_rule public.account_deletion_retention_rule;
+BEGIN
+ IF auth.role() IS DISTINCT FROM 'service_role' OR p_operation IS NULL THEN RAISE EXCEPTION 'Controlled worker required' USING ERRCODE='42501'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(p_operation::text,765));
+ SELECT * INTO prior FROM public.community_safety_disposal_receipt WHERE operation_id=p_operation;
+ IF FOUND THEN
+  IF prior.case_digest<>encode(sha256(convert_to(p_case::text,'UTF8')),'hex') OR prior.policy_version<>p_policy THEN RAISE EXCEPTION 'Operation conflict' USING ERRCODE='40001'; END IF;
+  RETURN prior.counts;
+ END IF;
+ PERFORM public.community_safety_policy(p_policy,'community_reports',interval '12 months',ARRAY['case_id','category','timestamps','outcome'] || ARRAY(
+  SELECT DISTINCT field FROM public.community_report rep JOIN public.community_safety_case scase ON scase.report_id=rep.id CROSS JOIN LATERAL (
+   SELECT 'reporter_reference' field WHERE rep.reporter_user_id IS NOT NULL
+   UNION SELECT 'subject_reference' WHERE rep.subject_rider_id IS NOT NULL
+   UNION SELECT 'description' WHERE rep.description<>''
+   UNION SELECT 'evidence.'||k FROM jsonb_object_keys(rep.evidence) k
+  ) fields WHERE scase.id=p_case));
+ PERFORM public.community_safety_policy(p_policy,'community_moderation',interval '24 months',ARRAY['case_id','decision','reviewer','timestamps'] || ARRAY(
+  SELECT DISTINCT 'evidence.'||k FROM public.community_moderation_audit a CROSS JOIN LATERAL jsonb_object_keys(a.evidence) k WHERE a.case_id=p_case));
+ -- A receipt's finite period and minimal allowlist must be approved too. No TTL invented.
+ PERFORM public.community_safety_policy(p_policy,'community_disposal_receipt',NULL,ARRAY['operation_id','case_digest','counts','completed_at']);
+ SELECT * INTO receipt_rule FROM public.account_deletion_retention_rule WHERE policy_version=p_policy AND category='community_disposal_receipt';
+ SELECT * INTO c FROM public.community_safety_case WHERE id=p_case FOR UPDATE;
+ IF NOT FOUND THEN RETURN jsonb_build_object('state','absent'); END IF;
+ SELECT * INTO r FROM public.community_report WHERE id=c.report_id FOR UPDATE;
+ IF EXISTS(SELECT 1 FROM public.account_deletion_hold WHERE community_case_id=p_case AND released_at IS NULL)
+ OR EXISTS(SELECT 1 FROM public.account_deletion_hold h JOIN public.account_deletion_jobs j ON j.id=h.job_id WHERE h.released_at IS NULL AND h.category IN ('all','community_safety','community_reports','community_moderation') AND
+ (j.user_id=ANY(public.account_deletion_row_subjects('public','community_report',coalesce(to_jsonb(r),'{}'))) OR j.user_id=c.closed_by
+ OR EXISTS(SELECT 1 FROM public.community_moderation_audit a WHERE a.case_id=p_case AND a.actor_user_id=j.user_id)
+ OR EXISTS(SELECT 1 FROM public.community_safety_event e WHERE e.case_id=p_case AND e.actor_user_id=j.user_id))) THEN RETURN jsonb_build_object('state','held'); END IF;
+ SELECT coalesce(array_agg(DISTINCT path),'{}') INTO paths FROM (
+  SELECT evidence->>'cover_image_path' path FROM public.community_report WHERE id=c.report_id
+  UNION SELECT evidence->>'cover_image_path' FROM public.community_moderation_audit WHERE case_id=p_case
+  UNION SELECT path FROM public.community_cover_disposal WHERE case_id=p_case AND confirmed_at IS NULL
+ ) x WHERE path IS NOT NULL;
+ IF r.resolved_at IS NOT NULL AND r.resolved_at+interval '12 months'<=clock_timestamp() THEN
+  UPDATE public.community_moderation_audit SET report_id=NULL WHERE report_id=r.id;
+  -- Keep the audit-to-case link after report expiry through an explicit case_id.
+  UPDATE public.community_safety_case SET report_id=NULL WHERE id=p_case;
+  DELETE FROM public.community_report WHERE id=r.id; GET DIAGNOSTICS n=ROW_COUNT;
+ END IF;
+ IF c.closed_at IS NOT NULL AND c.closed_at+interval '24 months'<=clock_timestamp() THEN
+  -- Reopening does not extend the clock. A separately authorised hold is the
+  -- only way to preserve necessary evidence beyond the approved deadline.
+  DELETE FROM public.community_moderation_audit WHERE case_id=p_case; GET DIAGNOSTICS m=ROW_COUNT;
+  DELETE FROM public.account_deletion_hold WHERE community_case_id=p_case AND released_at IS NOT NULL;
+  DELETE FROM public.community_safety_event WHERE case_id=p_case;
+  DELETE FROM public.community_safety_case WHERE id=p_case;
+ END IF;
+ SELECT coalesce(array_agg(p),'{}') INTO paths FROM unnest(paths) p WHERE NOT EXISTS(SELECT 1 FROM public.community_ride WHERE cover_image_path=p)
+ AND NOT EXISTS(SELECT 1 FROM public.community_report WHERE evidence->>'cover_image_path'=p)
+ AND NOT EXISTS(SELECT 1 FROM public.community_moderation_audit WHERE evidence->>'cover_image_path'=p);
+ IF n=0 AND m=0 AND cardinality(paths)=0 THEN RETURN jsonb_build_object('state','not_due'); END IF;
+ INSERT INTO public.community_cover_disposal(path,case_id,operation_id)
+ SELECT p,p_case,p_operation FROM unnest(paths) p ON CONFLICT(path) DO UPDATE SET operation_id=excluded.operation_id WHERE public.community_cover_disposal.confirmed_at IS NULL AND (public.community_cover_disposal.lease_until IS NULL OR public.community_cover_disposal.lease_until<clock_timestamp());
+ INSERT INTO public.community_safety_disposal_receipt(operation_id,case_digest,policy_version,counts,expires_at)
+ VALUES(p_operation,encode(sha256(convert_to(p_case::text,'UTF8')),'hex'),p_policy,jsonb_build_object('reports',n,'decisions',m),clock_timestamp()+receipt_rule.period);
+ RETURN jsonb_build_object('reports',n,'decisions',m);
+END $$;
+ALTER TABLE public.community_moderation_audit ADD COLUMN case_id uuid;
+-- The trigger always binds the audit to the canonical case before insertion.
+CREATE FUNCTION public.community_safety_bind_audit() RETURNS trigger LANGUAGE plpgsql SET search_path='' AS $$
+BEGIN NEW.case_id:=coalesce(NEW.report_id,NEW.operation_id);RETURN NEW;END $$;
+CREATE TRIGGER community_safety_bind_audit BEFORE INSERT ON public.community_moderation_audit FOR EACH ROW EXECUTE FUNCTION public.community_safety_bind_audit();
+
+CREATE FUNCTION public.my_community_safety_export() RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE reports jsonb; blocks jsonb;
+BEGIN
+ PERFORM public.assert_active_account();
+ SELECT coalesce(jsonb_agg(jsonb_build_object('id',id,'target',target,'category',reason,'createdAt',created_at,'status',status,'resolvedAt',resolved_at)),'[]') INTO reports FROM public.community_report WHERE reporter_user_id=auth.uid();
+ SELECT coalesce(jsonb_agg(jsonb_build_object('riderId',b.blocked_rider_id,'createdAt',b.created_at)),'[]') INTO blocks FROM public.community_block b JOIN public.rider r ON r.id=b.blocker_rider_id WHERE r.user_id=auth.uid();
+ RETURN jsonb_build_object('reports',reports,'blocks',blocks,'restrictedEvidenceReview','privacy@movrr.nl');
+END $$;
+CREATE FUNCTION public.community_safety_deletion_inventory(p_user uuid) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+BEGIN
+ IF auth.role() IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'Privacy review required' USING ERRCODE='42501'; END IF;
+ RETURN jsonb_build_object('reports',(SELECT coalesce(jsonb_agg(id),'[]') FROM public.community_report WHERE reporter_user_id=p_user OR subject_rider_id IN(SELECT id FROM public.rider WHERE user_id=p_user)),
+ 'decisions',(SELECT coalesce(jsonb_agg(id),'[]') FROM public.community_moderation_audit WHERE actor_user_id=p_user),
+ 'blocks',(SELECT coalesce(jsonb_agg(jsonb_build_object('blocker',blocker_rider_id,'blocked',blocked_rider_id)),'[]') FROM public.community_block WHERE blocker_rider_id IN(SELECT id FROM public.rider WHERE user_id=p_user) OR blocked_rider_id IN(SELECT id FROM public.rider WHERE user_id=p_user)),
+ 'cases',(SELECT coalesce(jsonb_agg(c.id),'[]') FROM public.community_safety_case c WHERE c.closed_by=p_user OR EXISTS(SELECT 1 FROM public.community_safety_event e WHERE e.case_id=c.id AND e.actor_user_id=p_user)),
+ 'disposition','canonical_manifest_and_retention_approval_required');
+END $$;
+DO $$ DECLARE f record; BEGIN
+ FOR f IN SELECT p.oid::regprocedure signature,p.proname FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname IN
+ ('community_safety_clock','community_safety_policy','community_safety_hold_lock','command_community_safety_case','dispose_community_safety','community_safety_bind_audit','my_community_safety_export','community_safety_deletion_inventory') LOOP
+  EXECUTE format('ALTER FUNCTION %s OWNER TO postgres',f.signature);
+  EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC,anon,authenticated,service_role',f.signature);
+ END LOOP;
+END $$;
+GRANT EXECUTE ON FUNCTION public.command_community_safety_case(uuid,uuid,uuid,bigint,text,text,uuid,text,timestamptz,integer,boolean),public.dispose_community_safety(uuid,uuid,integer),public.community_safety_deletion_inventory(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.my_community_safety_export() TO authenticated;
+
+
+-- Object work is claim/recheck/Storage API/confirm, never metadata-only erasure.
+CREATE FUNCTION public.claim_community_cover_disposal(p_operation uuid) RETURNS SETOF text
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE task public.community_cover_disposal; receipt public.community_safety_disposal_receipt;
+BEGIN
+ IF auth.role() IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'Controlled worker required' USING ERRCODE='42501'; END IF;
+ SELECT * INTO receipt FROM public.community_safety_disposal_receipt WHERE operation_id=p_operation;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Approved disposal receipt required' USING ERRCODE='42501'; END IF;
+ PERFORM public.community_safety_policy(receipt.policy_version,'community_disposal_receipt',NULL,ARRAY['operation_id','case_digest','counts','completed_at']);
+ FOR task IN SELECT * FROM public.community_cover_disposal WHERE operation_id=p_operation AND confirmed_at IS NULL AND (lease_until IS NULL OR lease_until<clock_timestamp()) ORDER BY path FOR UPDATE SKIP LOCKED LOOP
+  IF NOT EXISTS(SELECT 1 FROM public.community_ride WHERE cover_image_path=task.path)
+  AND NOT EXISTS(SELECT 1 FROM public.account_deletion_hold WHERE community_case_id=task.case_id AND released_at IS NULL)
+  AND NOT EXISTS(SELECT 1 FROM public.community_report WHERE evidence->>'cover_image_path'=task.path)
+  AND NOT EXISTS(SELECT 1 FROM public.community_moderation_audit WHERE evidence->>'cover_image_path'=task.path) THEN
+   UPDATE public.community_cover_disposal SET attempts=attempts+1,lease_until=clock_timestamp()+interval '2 minutes' WHERE path=task.path;
+   RETURN NEXT task.path;
+  END IF;
+ END LOOP;
+END $$;
+CREATE FUNCTION public.confirm_community_cover_disposal(p_operation uuid,p_path text) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+BEGIN
+ IF auth.role() IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'Controlled worker required' USING ERRCODE='42501'; END IF;
+ IF EXISTS(SELECT 1 FROM storage.objects WHERE bucket_id='community-rides' AND name=p_path) THEN RAISE EXCEPTION 'Object deletion not confirmed' USING ERRCODE='40001'; END IF;
+ UPDATE public.community_cover_disposal SET confirmed_at=coalesce(confirmed_at,clock_timestamp()),lease_until=NULL WHERE operation_id=p_operation AND path=p_path;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Disposal task unavailable' USING ERRCODE='40001'; END IF;
+END $$;
+CREATE FUNCTION public.expire_community_safety_receipts(p_policy integer) RETURNS integer
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE n integer;
+BEGIN
+ IF auth.role() IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'Controlled worker required' USING ERRCODE='42501'; END IF;
+ PERFORM public.community_safety_policy(p_policy,'community_disposal_receipt',NULL,ARRAY['operation_id','case_digest','counts','completed_at']);
+ DELETE FROM public.community_cover_disposal t USING public.community_safety_disposal_receipt r WHERE t.operation_id=r.operation_id AND r.policy_version=p_policy AND r.expires_at<=clock_timestamp() AND t.confirmed_at IS NOT NULL;
+ DELETE FROM public.community_safety_disposal_receipt r WHERE policy_version=p_policy AND expires_at<=clock_timestamp() AND NOT EXISTS(SELECT 1 FROM public.community_cover_disposal t WHERE t.operation_id=r.operation_id);
+ GET DIAGNOSTICS n=ROW_COUNT;RETURN n;
+END $$;
+REVOKE ALL ON FUNCTION public.claim_community_cover_disposal(uuid),public.confirm_community_cover_disposal(uuid,text),public.expire_community_safety_receipts(integer) FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION public.claim_community_cover_disposal(uuid),public.confirm_community_cover_disposal(uuid,text),public.expire_community_safety_receipts(integer) TO service_role;
+
+
+CREATE FUNCTION public.community_safety_case_holds(p_cases uuid[]) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+BEGIN
+ IF auth.role() IS DISTINCT FROM 'service_role' OR cardinality(p_cases)>100 THEN RAISE EXCEPTION 'Staff review required' USING ERRCODE='42501'; END IF;
+ RETURN (SELECT coalesce(jsonb_agg(jsonb_build_object('id',id,'caseId',community_case_id,'reviewDueAt',review_due_at)),'[]') FROM public.account_deletion_hold WHERE community_case_id=ANY(p_cases) AND released_at IS NULL);
+END $$;
+CREATE FUNCTION public.community_safety_disposal_status(p_operation uuid) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+BEGIN
+ IF auth.role() IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'Controlled worker required' USING ERRCODE='42501'; END IF;
+ RETURN jsonb_build_object('remaining',(SELECT count(*) FROM public.community_cover_disposal WHERE operation_id=p_operation AND confirmed_at IS NULL));
+END $$;
+REVOKE ALL ON FUNCTION public.community_safety_case_holds(uuid[]),public.community_safety_disposal_status(uuid) FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION public.community_safety_case_holds(uuid[]),public.community_safety_disposal_status(uuid) TO service_role;
+
+
+CREATE FUNCTION public.prepare_account_deletion_community_safety(p_job uuid,p_token uuid) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE j public.account_deletion_jobs; inventory jsonb;
+BEGIN
+ IF auth.role() IS DISTINCT FROM 'service_role' THEN RAISE EXCEPTION 'Privacy worker required' USING ERRCODE='42501'; END IF;
+ j:=public.account_deletion_assert_claim(p_job,p_token);
+ inventory:=public.community_safety_deletion_inventory(j.user_id);
+ IF jsonb_array_length(inventory->'reports')=0 AND jsonb_array_length(inventory->'decisions')=0 AND jsonb_array_length(inventory->'blocks')=0 AND jsonb_array_length(inventory->'cases')=0 THEN
+  RETURN jsonb_build_object('state','confirmed','completionAuthorized',false);
+ END IF;
+ -- A retained copy or a destructive projection requires the approved exact
+ -- canonical manifest. Never convert this inventory into an evidence archive.
+ INSERT INTO public.account_deletion_review(job_id,category,reason_code,owner_capability,due_at)
+ VALUES(j.id,'community_safety','approved_safety_disposition_required','privacy.deletion.compliance.review',clock_timestamp()) ON CONFLICT DO NOTHING;
+ INSERT INTO public.account_deletion_audit(job_id,event_code) VALUES(j.id,'community_safety_disposition_review_required');
+ RETURN jsonb_build_object('state','review','completionAuthorized',false);
+END $$;
+REVOKE ALL ON FUNCTION public.prepare_account_deletion_community_safety(uuid,uuid) FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION public.prepare_account_deletion_community_safety(uuid,uuid) TO service_role;
 
 -- Explicit execution and ownership; helpers are not general rider APIs.
 DO $$ DECLARE f record; BEGIN
