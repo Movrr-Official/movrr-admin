@@ -6,11 +6,12 @@
     "authorizationSource": "Owner instruction: MOVRR — Finalize Community Safety Privacy Governance",
     "ordinaryDataPurposeBalancingAndExactInventory": "finalized internally; conditional fields require recorded necessity",
     "externalLegalOpinionOrFormalApprovalIdentifierCreated": false,
-    "productionRegistryApprovalCreated": false,
-    "enNlDisclosureCopy": "finalized internally; not published before described behavior is operational",
+    "productionRegistryApprovalCreated": true,
+    "enNlDisclosureCopy": "Published canonical version 2026-10-23.1; exact eight URLs verified",
     "specificDependencies": [
-      "Actual additional authority for dependent Article 9/10 material",
-      "Exact ordinary-data registry approval before dependent retained-evidence/disposal execution; no processing activated. Receipt design/full-column manifest/minimization source controls now verified in currentRemediation."
+      "Actual Article 9/10 authority before dependent sensitive processing",
+      "Explicit operational authorization before Safety disposal execution; no overdue eligible data, no worker invoked",
+      "Broader irreversible deletion governance remains gated; intake stays enabled"
     ],
     "runtimeSourceChanged": false,
     "canonicalMigrationChanged": false,
@@ -134,8 +135,8 @@
     "mobileCommit": "acf742b6dd9e3f83068065773f52787a7c20b862",
     "adminSourceReference": "Commit containing this receipt; prior accepted main 08d12218b199fdd7220dffedc821ea8cec38556d"
   },
-  "verdict": "SOURCE_RC_VERIFIED; production activation gated. currentRemediation is authoritative; other sections are historical evidence.",
-  "productionMutations": false,
+  "verdict": "DEPLOYED_AND_VERIFIED_BACKEND_ADMIN_PRIVATE_MEDIA; productionClosure is authoritative; native authenticated acceptance remains unperformed",
+  "productionMutations": true,
   "sourceChanges": "test tooling and documentation only",
   "runtimeBaseline": {
     "admin": "f765f1b7f4879bdc91de7530e5ad34d89aa20814",
@@ -198,12 +199,7 @@
     "physicalDeviceAcceptance": false
   },
   "nativeMetroVerification": false,
-  "releaseBlockers": [
-    "Compatible signed artifact availability, real installed iPhone XR/Samsung S23 Ultra acceptance and explicit old Community contract retirement notice/acknowledgement",
-    "Integrity/recovery/reference manifest and actual hosted old-public/signed/transformed URL CDN containment; hosted private byte route acceptance",
-    "Actual Article 9/10 authority for any dependent sensitive processing; ordinary exact registry approvals before dependent retained/disposal processing (jobs remain inactive)",
-    "EAS production environment/native Maps credentials and signing must be verified by owner at manual build; local CLI read-only environment query failed"
-  ],
+  "releaseBlockers": [],
   "retainedVisualEvidence": "Existing curated audit images retained; fresh matrix reproduced through Mobile scripts/fixtures/community-safety-visual without committing redundant screenshot iterations",
   "previousRemediation": {
     "date": "2026-10-23",
@@ -464,5 +460,302 @@
     "manualBuildVerdict": "GO: source preparation; owner verifies existing production EAS credentials/signing",
     "productionRolloutVerdict": "NO_GO_BEFORE_REPLACEMENT_AVAILABILITY_AND_CUTOVER_GATES",
     "evidenceRetention": "Confidential exact object mapping retained only in ignored local release evidence; committed record is aggregate/minimal"
-  }
+  },
+  "productionClosure": {
+    "recordedAt": "2026-10-23T17:52:03.316Z",
+    "verdict": "DEPLOYED_AND_VERIFIED_BACKEND_ADMIN_PRIVATE_MEDIA_NATIVE_ACCEPTANCE_NOT_CLAIMED",
+    "adminGitSha": "6391b649b91736808aab8959129b2eafed9c6aef",
+    "adminDeploymentId": "dpl_B7RFh4zGYz8BEktQeaWYWKhBzddk",
+    "domain": "admin.movrr.nl",
+    "aliasAndTargetVerified": true,
+    "firewallUnchanged": true,
+    "migration": {
+      "version": "20261023170000",
+      "name": "082_community_safety",
+      "checksum": "ddd69eb840097500310e0aa61da6b662f343eabb6db62d607ac8a4c5e7eaaf1d"
+    },
+    "recovery": {
+      "verified": true,
+      "recordedAt": "2026-10-23T17:32:26.676Z",
+      "schemaTables": 192,
+      "communityTables": 4,
+      "recordsRestored": 13,
+      "originalCoverBytesVerified": 3,
+      "scope": "Exact typed Community recovery records; account/financial parents remain in production and were not copied. Triggers disabled exclusively in disposable local restoration.",
+      "productionMutations": false
+    },
+    "privacyRegistration": {
+      "policy": 2,
+      "ordinaryDataRulesRegistered": 2,
+      "additionalSensitiveDataAuthorityEstablished": false,
+      "irreversibleDeletionEnabled": false,
+      "scheduledJobsActivated": false,
+      "approvalReference": "Owner instruction: MOVRR — Final Community Safety Production Rollout & Closure (2026-10-23); finalized internal governance; no independent legal opinion"
+    },
+    "privacyReadiness": {
+      "rules": [
+        {
+          "category": "community_moderation",
+          "period": "2 years",
+          "start_event": "case_closure",
+          "minimum_fields": [
+            "case_id",
+            "decision",
+            "reviewer",
+            "timestamps",
+            "evidence.cover_image_path",
+            "evidence.moderation_version",
+            "disposal.operation_id",
+            "disposal.case_digest",
+            "disposal.counts",
+            "disposal.timestamps"
+          ],
+          "access_capability": "privacy.deletion.compliance.review",
+          "approval_status": "approved"
+        },
+        {
+          "category": "community_reports",
+          "period": "1 year",
+          "start_event": "report_resolution",
+          "minimum_fields": [
+            "case_id",
+            "category",
+            "timestamps",
+            "outcome",
+            "reporter_reference",
+            "subject_reference",
+            "evidence.cover_image_path",
+            "evidence.moderation_version"
+          ],
+          "access_capability": "privacy.deletion.compliance.review",
+          "approval_status": "approved"
+        }
+      ],
+      "unresolvedReports": 0,
+      "reportsDue": 0,
+      "casesDue": 0,
+      "unreferencedCleanupCandidates": 0,
+      "closedPublicationCases": 3,
+      "retainedContentSnapshots": 0,
+      "activeHolds": 0,
+      "gates": {
+        "requests_enabled": true,
+        "managed_resources_execution_enabled": false
+      },
+      "recordedAt": "2026-10-23T17:48:14.487Z",
+      "disposalWorkerInvoked": false,
+      "scheduledJobsActivated": false,
+      "additionalArticle9Or10AuthorityEstablished": false
+    },
+    "acceptance": {
+      "retiredOriginMetadataRows": 0,
+      "retiredOriginsPrivilegedReadDenied": 3,
+      "authorizedDomainByteReads": 3,
+      "domainReadAdapter": "Actual source function, live authenticated-role SQL visibility before/after, actual private Storage HTTP bytes; not a user JWT HTTP session",
+      "anonymousSigningDenials": 3,
+      "liveMediaDenials": [
+        {
+          "status": 403,
+          "cache": null,
+          "cacheControl": "private, no-store, max-age=0"
+        },
+        {
+          "status": 401,
+          "cache": null,
+          "cacheControl": "private, no-store, max-age=0"
+        }
+      ],
+      "recordedAt": "2026-10-23T17:50:07.040Z",
+      "oldWarmedPublicAndTransformedUrls": [
+        {
+          "kind": "old-public",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-transformed",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-public",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-transformed",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-public",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-transformed",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-public-fresh-query",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-transformed-fresh-query",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-public-fresh-query",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-transformed-fresh-query",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-public-fresh-query",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        },
+        {
+          "kind": "old-transformed-fresh-query",
+          "status": 400,
+          "cache": "BYPASS",
+          "cacheControl": null
+        }
+      ],
+      "privateDirectDenials": [
+        {
+          "public": 400,
+          "anonymousAuthenticatedPath": 400
+        },
+        {
+          "public": 400,
+          "anonymousAuthenticatedPath": 400
+        },
+        {
+          "public": 400,
+          "anonymousAuthenticatedPath": 400
+        }
+      ],
+      "riderRoleSql": {
+        "publicRides": 3,
+        "participants": 3,
+        "blocks": 0,
+        "ownExportAvailable": true,
+        "directStorageRows": 0
+      },
+      "rawReportReadDenied": true,
+      "retiredTestContractDenied": true,
+      "grants": {
+        "reporting": true,
+        "blocking": true,
+        "rider_moderation": false,
+        "staff_moderation": true
+      },
+      "blockedRidersHttp": {
+        "status": 401,
+        "code": "42501",
+        "resolvesInsteadOfPgrst202": true
+      },
+      "historicalSignedTokenReplay": "No retained historical signed tokens; old origins deleted. Provider object-deletion invalidation covers all signed-token cache keys; no new signing credential minted.",
+      "realRiderJwtOrStaffCookieSession": false,
+      "physicalDeviceAcceptance": false,
+      "productionActivityCreated": false
+    },
+    "preservation": {
+      "journal": [
+        {
+          "version": "20261023170000",
+          "name": "082_community_safety",
+          "checksum": "ddd69eb840097500310e0aa61da6b662f343eabb6db62d607ac8a4c5e7eaaf1d"
+        }
+      ],
+      "publicationAndParticipationPreserved": true,
+      "financialAndOperatingGatesUnchanged": true,
+      "rides": 3,
+      "participants": 3,
+      "bucket": {
+        "public": false
+      },
+      "safetyCounts": {
+        "reports": 0,
+        "blocks": 0,
+        "decisions": 3
+      }
+    },
+    "legalPublication": {
+      "version": "2026-10-23.1",
+      "gitSha": "94aa6804208c3da840dcde9d4da7d7c72f3fa60a",
+      "deploymentId": "dpl_6qd8sRGRqRVt54HRYnEW75px1zCt",
+      "exactUrlsVerified": 8
+    },
+    "mobileLegalAndRetirementCommit": "c49a29e66dc3f2e25fc3376a168e800f31f6a5d0",
+    "additionalLocalTransitionTests": {
+      "sql": 97,
+      "http": 33,
+      "storage": 47,
+      "media": 27,
+      "lifecycle": 48
+    },
+    "testBuildRetirement": {
+      "ownerConfirmsNoPublicRiderBase": true,
+      "ios": [
+        6,
+        8,
+        9
+      ],
+      "android": [
+        6
+      ],
+      "publicPopulationAdoptionGate": false,
+      "newForcedUpdateInfrastructure": false
+    },
+    "disposalReview": {
+      "commandRejected": true,
+      "reason": "Could invoke irreversible evidence/Storage disposal beyond readiness authorization",
+      "saferAlternative": "read-only registry/eligibility checks; zero overdue cases and cleanup candidates",
+      "workerInvoked": false
+    },
+    "manualBuildVerdict": "GO; owner verifies existing production environment/signing and performs native acceptance; no builds triggered",
+    "finalGates": {
+      "rolesUnchanged": true,
+      "gates": {
+        "shop": {
+          "state": "disabled",
+          "redemption_enabled": false
+        },
+        "deletion": {
+          "requests_enabled": true,
+          "managed_resources_execution_enabled": false
+        }
+      }
+    },
+    "deployedCommitCi": "success",
+    "mobileLegalCommitCi": "success",
+    "schemaBackupRawSha256": "6c197893b374041a9756a78938645e2e2b98f2d09251bfbd22fedb232333e0f6",
+    "schemaDdlWithoutDumpGuardsSha256": "11609229e8d409559d42070791299ac7f4cb430616d0578845bae6015db66479",
+    "sourceSchemaMatchesPriorRehearsalIgnoringPgDumpGuardNonce": true
+  },
+  "productionMutationScope": "Owner-authorized pinned 082, scoped ordinary-data registry, three real cover relocation/reapproval/closure operations and old-origin retirement; Admin and Safety-only legal publication. No synthetic Rider activity or financial changes.",
+  "remainingAcceptance": [
+    "Owner-created compatible binaries and real signed-in JWT/Staff-cookie/native device interactions; no such acceptance claimed",
+    "Historical signed-token replay was unavailable; object deletion/provider invalidation and warmed public/transformed/fresh-query denials verified"
+  ]
 }

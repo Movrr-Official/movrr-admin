@@ -7,6 +7,87 @@ stopped this task at source preparation. No deployment or production mutation wa
 performed. No new approval is needed merely to resume the already-authorized
 deployment after its factual gates pass.
 
+## Production closure ? 23 October 2026
+
+**DEPLOYED & VERIFIED for backend/Admin/private-media controls.** Migration journal
+20261023170000 / 082_community_safety contains the exact pinned LF SHA-256
+`ddd69eb840097500310e0aa61da6b662f343eabb6db62d607ac8a4c5e7eaaf1d`.
+Applied atomically at 17:39:27 UTC. Admin Git
+6391b649b91736808aab8959129b2eafed9c6aef is READY as deployment
+`dpl_B7RFh4zGYz8BEktQeaWYWKhBzddk`; admin.movrr.nl and the production target
+both point to it. Production firewall rules remain unchanged. This candidate
+contains the previously deployed Rider-principal correction; no older app was restored.
+Later commits containing only this closure record/operator checks do not change
+that deployed runtime or require another deployment.
+
+All three current covers were backed up and hash-verified, copied to fresh private
+immutable paths, rebound and canonically reapproved in one transaction. Publication
+never blanket-changed: three legitimate public rides and all three participant rows
+remain; invitations/creator grants and all other ride fields preserve exact baseline
+values. Seventeen protected financial/account/operating-table digests match. There
+are three real relocation moderation decisions, three closed publication cases and
+no retained content snapshots, reports or blocks created as tests. Original cover
+origins were deleted through Storage API after references moved; metadata rows are
+absent and privileged reads deny. Private recovery originals and the typed 13-record
+Community recovery backup are retained in confidential ignored release evidence;
+restoration passed against the 192-table schema in a disposable database.
+
+Twelve observed old-public/transformed/fresh-query URLs deny with HTTP 400/BYPASS,
+after previously returning HIT/200. All three new private paths deny public and
+anonymous direct access/signing. Actual media-domain source performs authorized
+before/after live Rider-RLS selection and private Storage HTTP reads; all three
+byte hashes match originals. The deployed API denies missing/invalid credentials
+with 403/401 and private,no-store plus CDN no-store. No direct signing credential
+was minted. Historical signed tokens were not retained for replay: provider object
+retirement invalidates all such object cache keys; this is not a claim that every
+historical token or global edge was individually probed, nor recall of saved copies.
+
+Blocked Riders resolves through refreshed PostgREST (anonymous 401/42501, no longer
+404/PGRST202); the real authenticated SQL Rider role returns its empty block list,
+three visible rides/participants and own export. Raw reports/direct private Storage
+rows are denied; report/block execution grants belong to authenticated Riders,
+moderation execution to the trusted server authority. Old pre-launch contracts deny
+426 and are unsupported per the owner's product decision. New production report,
+block/unblock or invitation mutations were not fabricated; their existing isolated
+SQL/HTTP/concurrency evidence remains applicable. Real user JWT/Staff-cookie and
+physical-device interactions were not performed, so native acceptance remains with
+the owner's replacement builds. Completed EN/NL/light/dark browser visual acceptance
+is not reopened.
+
+Privacy-governance activation readiness is complete for ordinary data: policy 2 now
+contains exact approved community_reports (12 months/resolution) and
+community_moderation (24 months/original closure, including minimal receipts)
+allowlists with the actual owner-instruction approval reference. No external legal
+opinion or invented formal identifier is claimed. Article 9/10-dependent material
+remains withheld; necessary ordinary-evidence retention still needs version-bound
+Privacy review. Canonical deletion/export/hold controls are installed. Irreversible
+account execution remains disabled, so its broader personal.erase approvals are
+not bypassed. Read-only eligibility shows zero overdue reports/cases or unreferenced
+cleanup candidates, zero active case holds and zero archived content snapshots.
+No disposal worker/schedule was invoked or activated. Automatic approval review
+rejected an attempted readiness command that could invoke irreversible disposal;
+strict read-only eligibility/registry checks completed the readiness verification
+instead. Future disposal execution needs its own explicit operational authorization;
+this does not reopen the approved retention periods.
+
+The finalized legal version 2026-10-23.1 is published through the canonical
+movrr.nl EN/NL legal source, Git 94aa6804208c3da840dcde9d4da7d7c72f3fa60a /
+deployment `dpl_6qd8sRGRqRVt54HRYnEW75px1zCt`. All eight legal URLs pass exact
+source/HTML/language/navigation checks. Only approved Safety copy and the necessary
+public-cover wording changed; Mobile mirrors the source. No unrelated website
+features or visual system were deployed. Mobile runtime includes acf742b; legal/
+retirement source commit c49a29e66dc3f2e25fc3376a168e800f31f6a5d0 adds the final copy.
+
+Operating gates remain Shop Disabled, deletion intake Enabled, irreversible
+execution Disabled. No EAS build, OTA, Apple/Google upload/submission/withdrawal,
+synthetic production identity/activity, role grant or financial transaction occurred.
+**GO for the owner's manual production builds**, using the production profile and
+existing production Supabase/hosted API environment, native Maps keys and signing.
+Record assigned artifact/source/runtime/build identifiers rather than guessing
+numbers. Install on iPhone XR/Samsung S23 Ultra and complete real login, reporting,
+block/unblock, native image/account-switch/offline and first/returning Home checks.
+Apple submission follows device acceptance of the operational Safety backend.
+
 ## Owner-authorized pre-launch execution ? 23 October 2026
 
 The owner's latest instruction confirms MOVRR has not publicly launched and has no

@@ -1,5 +1,7 @@
 # Community safety operating policy and release contract
 
+Production activation record, 23 October 2026: exact 082 and compatible Admin are deployed. Policy 2 holds the approved ordinary Safety allowlists with the actual owner-instruction reference; canonical EN/NL version 2026-10-23.1 is published. Article 9/10-dependent processing remains withheld; no external legal opinion is claimed. No Safety disposal worker/schedule was activated, no overdue eligible records exist, and irreversible deletion/Shop remain disabled. The production closure at the top of community-safety-rollout.md supersedes older source-only/no-go statements below.
+
 Final release-candidate update, 23 October 2026: the current source controls and
 protocol-retirement procedure at the top of community-safety-rollout.md supersede
 the older gap summaries below. Private-media-v1 is an enforced Community transport

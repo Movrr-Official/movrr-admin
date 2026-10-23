@@ -3,8 +3,10 @@
 The owner authorized a controlled production rollout on 23 October 2026 only after
 successful preflight. It stopped before apply/deployment. See the authoritative
 [operating policy](../../../docs/operations/community-safety.md). This directory
-contains read-only production inspection and disposable local verification only;
-there is deliberately no production apply/promote command for a failed gate.
+now also contains explicit owner-authorized pre-launch apply/relocate/deploy commands.
+The earlier support-population gate is superseded by the owner?s no-public-rider-base
+decision. The pinned migration has been applied: do not reapply it. Use read-only
+verify/acceptance commands for follow-up and inspect journal/receipts after interruption.
 
 From `movrr-admin`:
 
@@ -67,3 +69,5 @@ compatibility, retention/closure/hold/disposal controls, disclosures, operationa
 coverage and recovery readiness. Prior to any future apply, re-read production
 source/alias/journal and recheck the final changed checksum. Do not promote an
 older Admin revision or enable unrelated operating gates.
+
+Production closure: `production.cjs verify`, `accept-production.cjs` and `privacy-readiness.cjs` preserve exact source/receipt evidence in `.tmp/community-safety-production-20261023`. The latter is strictly read-only and never invokes a disposal worker. No disposal worker/schedule was activated; future irreversible disposal needs explicit operational authority. Keep confidential recovery records/originals out of Git. Source, data-preservation and guarded transition checks are recorded in the rollout procedure and current verification receipt.
