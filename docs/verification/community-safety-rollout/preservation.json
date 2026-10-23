@@ -1,0 +1,10 @@
+{
+  "startedAt": "2026-10-23T11:38:28.263Z",
+  "verifiedAt": "2026-10-23T11:50:30.045Z",
+  "productionMutations": false,
+  "communityFingerprintsUnchanged": true,
+  "operatingGatesUnchanged": true,
+  "coverBucketUnchanged": true,
+  "safetyMigrationStillAbsent": true,
+  "policiesAndHelpersMatch": true
+}

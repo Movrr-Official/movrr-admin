@@ -1,7 +1,148 @@
-# Community safety source and release contract
+# Community safety operating policy and release contract
 
-Source phase, 23 October 2026. No production migration, deployment, build delivery,
-test-account creation or financial/account action is authorised by this document.
+Policy approved by the MOVRR owner on 23 October 2026. The owner authorizes a
+controlled backend/Admin production rollout only after successful preflight.
+**Current status: stopped before migration/deployment because preflight failed.**
+Mobile builds, OTA delivery and store submissions remain outside authorization.
+No synthetic production users, reports, blocks or moderation decisions are authorized.
+The production and isolated receipts are in
+[`preflight.json`](../verification/community-safety-rollout/preflight.json)
+and [`rehearsal.json`](../verification/community-safety-rollout/rehearsal.json).
+
+## Approved internal operating policy
+
+| Record or activity | Approved rule |
+| --- | --- |
+| Safety reports | Retain for 12 months after resolution |
+| Moderation decisions and evidence | Retain for 24 months after case closure |
+| Active rider blocks | Retain while active, until unblocked |
+| Legal/safety holds | Retain the relevant evidence until its documented hold is released |
+| Moderation ownership | Authorized internal MOVRR administrators, through existing `community.manage` and session/MFA checks |
+| Urgent reports | Target initial review within 24 hours |
+| Routine reports | Target initial review within 3 business days |
+
+These are approved internal targets, not public service guarantees. They do not
+approve any broader account-deletion policy, change an operating gate or establish
+another retention period for unresolved reports, backups or general audit data.
+Unblock removes the active relationship; do not create an unapproved block-history
+archive. Do not duplicate report narratives into general operational logs.
+
+Administrators must inspect the existing queue and triage urgency manually; its
+reason filter is not an urgency classifier. Record initial review and outcome in
+authorized case evidence, with a responsible administrator and a reference.
+Escalate capacity shortfalls to the operating owner; do not automatically publish
+content, close reports or promise a response to meet a target. Ownership and the
+targets are approved; an assigned coverage rota, monitored escalation route and
+reliable first-review measurement have not been demonstrated. No public SLA is
+published by this policy.
+
+At resolution/closure, record the authoritative event and applicable period.
+Retain only necessary fields and evidence with restricted access. A hold needs a
+specific reason/authority, scope, responsible authorized owner and recorded release;
+an account deletion request does not by itself erase or indefinitely hold evidence.
+Assess rights requests through the existing privacy/deletion process. Preserve
+legitimate shared rides and financial history independently of Safety case disposal.
+Never reveal a reporter's identity or a private block relationship to another rider
+through a routine export, notification or moderation response. Rights responses
+require third-party/confidentiality review rather than copying the staff projection.
+
+Image evidence is private and follows the applicable case retention, including a
+documented hold. Check every live ride and case reference before object disposal:
+removing expired report data must not destroy evidence still legitimately needed
+by an open/retained case or an active ride. A surviving live asset reference does
+not justify retaining an expired report narrative or unrelated identifiers.
+
+### Privacy and lifecycle assessment
+
+The approved durations alone do not prove necessity or lawful processing. GDPR
+requires purpose limitation, minimization, storage limitation, a lawful basis,
+retention disclosure and rights handling. A specific legal-claims exception can
+justify necessary evidence, not blanket profile/location retention. See
+[GDPR Articles 5, 6, 13, 15 and 17](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng).
+The internal periods must be supported by MOVRR's documented necessity/balancing
+assessment and minimum-field inventory, including sensitive allegations in free
+text/images. This assessment is not recorded as completed or legally certified.
+
+Current implementation gaps are release blockers:
+
+- `082` has report status/version and audit creation times, but no authoritative
+  moderation case-closure event, hold/release workflow or constrained evidence
+  disposal command. Do not start a 24-month clock at an arbitrary earlier decision
+  or purge shared images by age. Report resolution can be linked to its transactional
+  decision audit; that is not a general case-closure authority.
+- The canonical account-deletion retention registry has no Safety-specific rules
+  for these periods/minimum fields. Its existing immutable policies must not be
+  silently edited, and irreversible deletion must remain Disabled. Safety period
+  approval does not approve the remaining legal/financial deletion rules.
+- New Safety tables are absent from the existing deletion write barriers. In the
+  current-schema local rehearsal, a queued/restricted account cannot update its
+  Community participation (`42501`), yet can call `set_community_block` and
+  `report_community_content`. Integrate the canonical fence and disposition/export
+  inventory; any intentional Safety exception needs an explicit product decision.
+  Do not add a parallel authorization or deletion engine.
+- Mobile's shared EN/NL privacy source still describes public Community assets
+  and omits Safety-specific data, periods and confidentiality/rights limits. The
+  corresponding website copy must remain synchronized through the existing
+  `sync-legal-documents.cjs` process. No future-state disclosure was silently
+  published while the backend remains unchanged.
+
+No deletion job, retention scheduler, new infrastructure or additional retention
+period has been introduced. The controls above are an operational instruction and
+release gate, not a claim that timed disposal is implemented.
+
+## Controlled rollout preflight — 23 October 2026
+
+Canonical migration `scripts/082_community_safety.sql`, byte and LF SHA-256:
+`6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0`.
+Production Supabase project: `kzdvunpuxaxlphqvmzxw`; latest journal is
+`20261022150000 / 081_rider_status_command`. All six required Community signatures,
+the captured 23 policies and six helper bodies match; 082 is absent. Three public
+rides retain paths and URLs. Shop remains Disabled; deletion intake Enabled and
+irreversible execution Disabled. Production access was read-only.
+
+A fresh schema-only dump of all 192 public/Auth/Storage tables was restored to a
+separate disposable PostgreSQL instance. Fourteen targeted assertions verify
+installation, rollback before commit, existing public discovery, cover-path
+preservation, roster/counts and block/unblock participation preservation. It also
+reproduces the unresolved lifecycle exception above. Restore uses no production
+rows, no production role memberships and `--no-owner`; extension prerequisites
+are local and the push trigger is inert. It is a schema/lifecycle integration
+probe, not full account-erasure or production authorization acceptance. Previously
+passing 96 SQL / 21 authenticated HTTP / 28 real Storage checks are reused; the
+unchanged suites were not rerun.
+
+**Installed-client gate fails.** `082` clears `cover_image_url` and makes the bucket
+private. Pre-Safety Mobile `2c110d3` maps that URL directly and does not sign paths.
+The rehearsal confirms null URLs/private storage after migration, and prior real
+Storage tests confirm old public routes fail while authorized signed reads work.
+The documented device artifacts predate Safety; their currently installed identity
+is unverified. There is no verified supported-client transition. Applying 082 now
+would risk broken covers and old image-replacement flows. No public fallback or
+split schema contract is authorized. Resolve delivery/adoption before the private
+transition; the present no-build/no-OTA boundary remains in force.
+
+Current Admin alias `admin.movrr.nl` is READY at
+`dpl_7mCqnZszEdxyjgPHSkccpeWZjNnD`, source
+`e0bbd5cadc858282b3796dcde5e510b1c386b460`. No candidate was built or promoted.
+Any later rollout must re-read the alias, pin a compatible descendant of its then
+current revision, verify 082 first, and abort on concurrent alias/source changes.
+
+Recovery: a failure before transaction commit rolls back 082 (locally verified).
+Post-commit reversal is not approved or rehearsed: dropping Safety tables loses
+evidence/blocks, and making the bucket public exposes pending evidence. Before an
+apply, record the exact journal/source/record and gate baseline, verify platform
+backup recovery, and prepare scoped containment that preserves evidence and
+visibility decisions. Do not use a blanket schema downgrade or public-bucket
+toggle as rollback. No recovery readiness is claimed from a metadata digest alone.
+
+Resume sequence: resolve client/privacy/lifecycle/coverage blockers; verify the
+final changed source and migration checksum in isolation; refresh read-only
+production baselines; apply/journal 082 atomically using the established migration
+process; verify grants/RLS/data and schema reload; deploy the pinned matching
+Admin descendant; perform authorized Rider/Staff verification without synthetic
+production records; recheck Community journeys and all operating gates. Stop
+before Mobile builds, OTA or store submissions. Physical-device acceptance remains
+open and no native visual acceptance is claimed.
 
 The independent post-implementation audit corrected the publication/block policy
 below. Its detailed regression matrix and remaining acceptance requirements are
@@ -20,7 +161,7 @@ to the existing `community_ride`, plus `community_block`, `community_report` and
 The migration is transactional, has a five-second lock timeout, explicit table
 and function ownership, constraints, RLS and narrow grants, and requests a
 PostgREST schema refresh. Preserve existing migration history; do not apply the
-candidate remotely during this source phase.
+candidate while the preflight blockers above remain.
 
 Reports use `report_community_content`. Active authenticated riders can report a
 ride, its text or image, or its rider organiser. Seven reasons and an optional
@@ -154,7 +295,7 @@ query mismatch (`42703` for a not-yet-deployed column), its removal, and the exa
 200/three-row read-only result afterward. It does not claim an affected physical
 installation was diagnosed or changed.
 
-## Rollout dependencies requiring separate approval
+## Earlier source-handoff dependencies (superseded by approved policy above)
 
 1. Review and rehearse 082 against the current full Supabase schema, including
    account lifecycle barriers and actual Storage service behavior. The isolated
@@ -174,7 +315,7 @@ installation was diagnosed or changed.
 5. Obtain the exact privacy disclosure/retention updates below, then conduct
    staging and physical-device acceptance using authorised accounts.
 
-## Exact privacy disclosure work required
+## Exact privacy disclosure work still required
 
 The current Mobile privacy document's `community` section says community covers
 use public asset URLs. Before rollout it must distinguish still-public profile
@@ -189,8 +330,8 @@ lawful basis; restricted staff access and reporter/block confidentiality limits;
 manual review and account/content enforcement; retention/end criteria, evidence
 holds and rights/appeal routes. The `retention` section and operational retention
 registry must cover these new records and retained private images, including
-account deletion. Approve a minimal retention schedule and disposal process
-before release. No blanket deletion promise, legal basis, consent claim or
+account deletion. The approved schedule above still requires a verified disposal
+process before release. No blanket deletion promise, legal basis, consent claim or
 indefinite-retention justification is invented here.
 
 Only Guidelines sections in Mobile's shared legal JSON were changed; unrelated

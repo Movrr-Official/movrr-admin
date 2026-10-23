@@ -1,0 +1,322 @@
+{
+    "capturedAt":  "2026-10-23T11:38:28.263Z",
+    "project":  "kzdvunpuxaxlphqvmzxw",
+    "productionMutations":  false,
+    "isolation":  "repeatable read read only; default_transaction_read_only=on",
+    "sourceRevision":  "f765f1b7f4879bdc91de7530e5ad34d89aa20814",
+    "migration":  {
+                      "file":  "scripts/082_community_safety.sql",
+                      "sha256Bytes":  "6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0",
+                      "sha256Utf8Lf":  "6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0"
+                  },
+    "latestMigrations":  [
+                             {
+                                 "version":  "20261022150000",
+                                 "name":  "081_rider_status_command",
+                                 "checksum":  "5301433910a8c7fe086cab4ea1985b79105ec83d61a53918df4c66110ceca742"
+                             },
+                             {
+                                 "version":  "20261021180000",
+                                 "name":  "six_synthetic_cleanup_case_6ace3e3d",
+                                 "checksum":  "76eb4bd3715da0b6c1aa9a0517a7e355cadf0ee99dd08b63f3be02ec0d2c96df"
+                             },
+                             {
+                                 "version":  "20261021160000",
+                                 "name":  "080_authenticated_account_activity",
+                                 "checksum":  "45c86d41156b050f283035683fd68d65fc8a824c529b47e73d7603dabda2bf63"
+                             },
+                             {
+                                 "version":  "20261021144000",
+                                 "name":  "079_users_dashboard_sync_read",
+                                 "checksum":  "6d29a01faa98716c0b6d073f8863bdd5154cfe6e89d65a24d47cfe09e9e1ee4b"
+                             },
+                             {
+                                 "version":  "20261021131000",
+                                 "name":  "078_independent_user_accounts",
+                                 "checksum":  "4508df3709a058777661d3aff6cff1e834e4d855acb42abb7a2cda910514d516"
+                             },
+                             {
+                                 "version":  "20261021110700",
+                                 "name":  "077_invitation_authority_boundaries",
+                                 "checksum":  "e0958f74b88c9aeec0f1dd93752a235833667c33b39e80e74b99c1ff1107be68"
+                             },
+                             {
+                                 "version":  "20261021110600",
+                                 "name":  "076_identity_notification_audiences",
+                                 "checksum":  "4e55c0a5b543f97d02eecfc27b3eaae651a3ff20208151749b40930d00f89d69"
+                             },
+                             {
+                                 "version":  "20261021110500",
+                                 "name":  "075_identity_rls_capability_boundaries",
+                                 "checksum":  "6c1531254028c098700ed6c6f1b90f23dfe9512d171d20b7b33561260a72f7ec"
+                             }
+                         ],
+    "safetyInstalled":  [
+                            {
+                                "reports":  null,
+                                "blocks":  null,
+                                "reporting":  null,
+                                "moderation":  null
+                            }
+                        ],
+    "prerequisites":  [
+                          {
+                              "signature":  "public.community_rider_account_active(uuid)",
+                              "installed":  true
+                          },
+                          {
+                              "signature":  "public.join_community_ride(uuid,uuid)",
+                              "installed":  true
+                          },
+                          {
+                              "signature":  "public.update_community_ride(uuid,timestamptz,text,text,timestamptz,text,text,integer,numeric,text,text,double precision,double precision,text)",
+                              "installed":  true
+                          },
+                          {
+                              "signature":  "public.create_or_get_community_ride_invite(uuid,uuid,text)",
+                              "installed":  true
+                          },
+                          {
+                              "signature":  "public.resolve_invite_code(text)",
+                              "installed":  true
+                          },
+                          {
+                              "signature":  "public.assert_active_account()",
+                              "installed":  true
+                          }
+                      ],
+    "capturedPolicyCount":  23,
+    "currentPolicyCount":  23,
+    "policiesMatchCaptured":  true,
+    "helperDrift":  [
+
+                    ],
+    "communityRecords":  {
+                             "community_ride":  {
+                                                    "records":  3,
+                                                    "digest":  "6b4a528dde9e07cab0db09c6d44330c7"
+                                                },
+                             "community_ride_participant":  {
+                                                                "records":  3,
+                                                                "digest":  "8412e85ee651731b7c80f92a83edba04"
+                                                            },
+                             "community_ride_invites":  {
+                                                            "records":  5,
+                                                            "digest":  "56fe44c40a2a2f8f4949e223d19c74c3"
+                                                        },
+                             "community_ride_creator_grant":  {
+                                                                  "records":  2,
+                                                                  "digest":  "c62b2d7824fdbef4212a9c9571ba3b4b"
+                                                              }
+                         },
+    "publicRides":  {
+                        "total":  3,
+                        "with_paths":  3,
+                        "with_urls":  3,
+                        "url_only":  0
+                    },
+    "coverBucket":  {
+                        "id":  "community-rides",
+                        "public":  true,
+                        "file_size_limit":  "5242880",
+                        "allowed_mime_types":  [
+                                                   "image/jpeg",
+                                                   "image/png",
+                                                   "image/webp"
+                                               ]
+                    },
+    "gates":  {
+                  "deletion":  {
+                                   "requests_enabled":  true,
+                                   "managed_resources_execution_enabled":  false
+                               },
+                  "shop":  {
+                               "state":  "disabled",
+                               "redemption_enabled":  false
+                           }
+              },
+    "retentionRegistry":  [
+                              {
+                                  "policy_version":  1,
+                                  "category":  "campaign_carry",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "campaign_evidence",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "campaign_supplemental",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "deletion_journal",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "deletion_receipt",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "equipment_custody_event",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "equipment_obligation",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "financial_evidence",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "receipt_access",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "redemption_obligation",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "restore_recovery",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "restore_suppression",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  1,
+                                  "category":  "support_obligation",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "campaign_carry",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "campaign_evidence",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "campaign_supplemental",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "deletion_journal",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "deletion_receipt",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "equipment_custody_event",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "equipment_obligation",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "financial_evidence",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "receipt_access",
+                                  "period":  "30 days",
+                                  "start_event":  "barrier_established",
+                                  "approval_status":  "approved"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "redemption_obligation",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "restore_recovery",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "restore_suppression",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              },
+                              {
+                                  "policy_version":  2,
+                                  "category":  "support_obligation",
+                                  "period":  null,
+                                  "start_event":  null,
+                                  "approval_status":  "pending"
+                              }
+                          ]
+}

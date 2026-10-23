@@ -1,8 +1,27 @@
 {
-  "updatedAt": "2026-10-21",
+  "updatedAt": "2026-10-23",
   "scope": "MOVRR integrated production acceptance across Mobile, Admin, web and Supabase; owner device and external-provider acceptance remain open",
   "evidence": "../verification/final-dashboard-performance/production.json",
   "milestones": [
+    {
+      "name": "Community Safety operating policy and controlled rollout",
+      "status": "Internal policy approved; production rollout stopped at failed preflight; migration 082 and matching Admin deployment not applied",
+      "work": "Approved: reports 12 months after resolution, decisions/evidence 24 months after case closure, active blocks until unblock, documented holds until release; authorized internal administrators; internal initial-review targets 24 hours urgent and 3 business days routine. No public SLA.",
+      "release": "../operations/community-safety.md",
+      "evidence": "../verification/community-safety-rollout/rehearsal.json",
+      "productionBaseline": "../verification/community-safety-rollout/preflight.json",
+      "migration": "082_community_safety / SHA-256 6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0; absent in production",
+      "validation": "Fresh read-only production schema export: 192 public/Auth/Storage tables. Fourteen targeted local assertions verify installation, transactional rollback, existing discovery, private cover transition and preserved block/unblock participation/roster. Earlier 96 SQL/21 authenticated HTTP/28 real Storage checks reused without repeating unchanged suites. Production: six prerequisites and captured policies/helpers match; three public rides remain; no production mutations.",
+      "blockers": [
+        "Existing public-URL Mobile clients do not sign private cover paths; current installed-client adoption is unverified. 082 clears URLs and privatizes storage, so the supported-client transition must precede apply. No fallback contract, build or OTA authorized.",
+        "Current deletion fence denies existing participation writes but permits new Safety report/block writes; integrate canonical lifecycle contracts and classify/export/dispose the new evidence safely.",
+        "Implement authoritative closure/hold/disposal controls and Safety-specific minimum fields in the canonical retention policy; complete necessity/lawful-basis assessment and synchronized EN/NL disclosures.",
+        "Demonstrate moderation coverage/escalation and first-review measurement; verify recovery/containment and authorized Rider/Staff production journeys after backend readiness."
+      ],
+      "adminProductionPreserved": "e0bbd5cadc858282b3796dcde5e510b1c386b460 / dpl_7mCqnZszEdxyjgPHSkccpeWZjNnD; no candidate promoted",
+      "mobileReadiness": "Source prepared; backend activation blocked. Native visual/device acceptance remains open; no EAS build, OTA or store submission.",
+      "preservedStates": "Existing public rides, participation, counts, rosters, invitations and history unchanged. Shop redemption Disabled; deletion intake Enabled; irreversible deletion Disabled. No operating gates changed."
+    },
     {
       "name": "P1 unintended Partner Rider identity and Last Active",
       "status": "Approved production correction and activity migration deployed; backend, real handler, authorization and integrity verified; live authenticated browser acceptance unavailable",

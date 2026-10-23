@@ -1,0 +1,32 @@
+{
+  "capturedAt": "2026-10-23T11:46:19.759Z",
+  "productionMutations": false,
+  "migrationSha256": "6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0",
+  "schemaSha256": "3930a9082a74505ca611a5bbffa6bbf9f907c56aec65017b1ff325f57419c3aa",
+  "sourceTables": 192,
+  "assertions": 14,
+  "rollbackBeforeCommitVerified": true,
+  "existingParticipationAndRosterPreserved": true,
+  "fullCurrentSchemaInstalled": true,
+  "externalAdapter": "webhook_send_push_notification replaced with inert local trigger; no outbound push",
+  "oldClient": {
+    "baseline": "2c110d3",
+    "sourceSha256": "1fd6daefb170e8d333d12db1bcd446d4ecfdba14154ad4979a2a4e61b93530cd",
+    "usesPublicCoverField": true,
+    "signsPrivateCoverPaths": false,
+    "postMigrationCoverUrl": null,
+    "bucketPublic": false,
+    "supportedClientTransitionVerified": false
+  },
+  "missingLifecycleTableBarriers": [
+    "community_block",
+    "community_moderation_audit",
+    "community_report"
+  ],
+  "restrictedAccountWrites": {
+    "block": "succeeded",
+    "report": "succeeded"
+  },
+  "retentionLifecycleColumns": [],
+  "fullErasureAcceptance": false
+}
