@@ -7,6 +7,115 @@ stopped this task at source preparation. No deployment or production mutation wa
 performed. No new approval is needed merely to resume the already-authorized
 deployment after its factual gates pass.
 
+## Owner-authorized pre-launch execution ? 23 October 2026
+
+The owner's latest instruction confirms MOVRR has not publicly launched and has no
+public rider base. TestFlight 6/8/9 and Android 6 are obsolete testing artifacts,
+unsupported at this cutover. Earlier installed-population/adoption/replacement-
+availability gates below are superseded by this explicit product/support decision.
+No forced-update infrastructure, numeric version gate, legacy API or public-media
+exception is introduced. Existing protocol negotiation remains part of the pinned
+private-media contract. Remaining testers install the owner's forthcoming compatible
+replacement via their existing TestFlight/Play testing channel; old copies cannot
+use the retired online Community contract meanwhile. No store withdrawal or user
+message is sent by the rollout tooling.
+
+Approved execution: exact 082 plus compatible Admin/private-object transition,
+read-only acceptance and canonical EN/NL Safety-policy publication. Retain tested
+private recovery artifacts, use the canonical publication command for unchanged
+image relocation and retire old origins only after references and hashes verify.
+Article 9/10-dependent retention remains withheld. No independent legal opinion,
+financial-policy approval, Shop activation or irreversible deletion is authorized.
+
+## Completed pre-build acceptance ? 23 October 2026
+
+**GO for owner-created compatible binaries; NO-GO for 082/Admin activation before
+replacement availability.** The pinned runtime candidates remain Admin
+7e78fe9664ed9fdf709d539400e2b454b8ee7efc and Mobile
+acf742b6dd9e3f83068065773f52787a7c20b862. Both original CI runs completed successfully:
+[Admin](https://github.com/Movrr-Official/movrr-admin/actions/runs/39990321248),
+[Mobile](https://github.com/Movrr-Official/movrr-mobile-app/actions/runs/39990309734).
+No implementation, visual matrix or passing broad audit was restarted.
+
+082 has one top-level BEGIN/COMMIT. Reporting/blocking/moderation creation, public
+URL clearing, private-bucket policy and the supported-client boundary are atomic.
+The compatible Admin queue/commands/deletion adapter require that schema; its
+Platform routes also enforce the new contract. There is no safe independent
+pre-build activation in this finalized release. No split migration, preview pointed
+at an incompatible production schema, public-media exception or fallback was added.
+
+Fresh read-only production results:
+
+- Latest registered migration remains 081_rider_status_command; prerequisites and
+  captured Community policy/helper definitions match. 082/Safety tables/RPCs remain
+  absent. The pinned LF checksum is unchanged.
+- Three existing public rides, three participant rows and three referenced cover
+  objects remain. All URLs match their paths, all three original byte hashes are
+  verified, no unreferenced bucket objects exist, and before/after publication,
+  object and participation snapshots match.
+- The existing active organizer's real authenticated SQL role sees all three
+  public rides under current RLS. Anonymous REST discovery is denied (401/42501).
+  This is not a real Rider JWT/session acceptance or a change to approved access.
+- Staff capability metadata confirms super_admin has moderation plus Privacy
+  review; tested trust_safety_analyst/support_agent roles lack both in the current
+  authority. Anonymous dashboard access redirects to sign-in. New moderation and
+  reporting mutations were not invoked; source/isolated acceptance remains valid.
+- Blocked Riders still returns 404/PGRST202 because 082 is undeployed. The new
+  media path currently redirects to sign-in through the old deployment; this is
+  not acceptance of the candidate's media route or private cache headers.
+- admin.movrr.nl remains on READY deployment dpl_7mCqnZszEdxyjgPHSkccpeWZjNnD,
+  Git e0bbd5cadc858282b3796dcde5e510b1c386b460. That production commit is an
+  ancestor of the candidate, so accepted Rider-principal fixes are included.
+  No alias/promotion/deployment change was performed.
+- Shop stays disabled, deletion intake enabled and irreversible execution disabled.
+  All database transactions were read-only; all production HTTP requests were GET.
+  No production report/block, financial change, object upload/signing/retirement,
+  purge, schema refresh or lifecycle job was performed.
+
+The confidential reference/recovery manifest is retained in ignored local release
+evidence at .tmp/community-safety-prebuild-20261023/object-reference-manifest.json.
+It contains exact old object/ride references, original byte hashes, proposed fresh
+immutable private destinations and per-object recovery/retirement checks. It is
+preparation, not permission to erase or an assertion that private copies exist.
+Refresh it for concurrent changes immediately before cutover. The sanitized receipt
+is in docs/verification/community-safety-final-acceptance.json.
+
+**CDN baseline and exact remaining containment:** all three current public URLs
+and their 320px transformed variants return 200; observed edge responses are HIT
+and browser Cache-Control is public,max-age=3600. This is expected public behavior
+before cutover, not private revocation acceptance. No globally cold-edge claim is
+made. Stage/hash-verify protected originals first; reconcile live/evidence/hold
+references and guarded publication mappings; retire old origins through Storage API
+only after recovery is safe; verify warmed public/transformed and available prior
+signed URLs deny after provider propagation. Do not reuse old public paths or rely
+on signed-token expiry/bucket privacy as a purge. Supabase documents Smart CDN
+invalidation on object deletion, including transforms and all signed-token entries,
+with propagation up to a minute; project capability and actual hosted denial must
+still be verified. Browser/already-delivered copies cannot be recalled.
+[Provider cache behavior](https://supabase.com/docs/guides/storage/cdn/smart-cdn).
+
+**Operational checks that do not require binaries:** provider database backup/PITR
+availability and restore access remain unverified: no Supabase management token or
+browser session is available here. Database backups omit Storage object bytes,
+so the reference manifest is not a verified private object backup.
+[Provider backup scope](https://supabase.com/docs/guides/platform/backups).
+Confirm those existing recovery facilities before production mutation; do not
+perform a production restore merely as a test. A read-only EAS environment-name
+query also failed; owner must verify production Maps keys/signing during ordinary
+build preparation. Neither gap requires changing Community source or UI.
+
+**Only binary-dependent acceptance remains:** record actual artifact/source/runtime
+and installed IDs; install on iPhone XR/Samsung S23 Ultra; exercise native report,
+block/unblock, image rendering/decoder/cache, account switch/background/offline,
+full first-time carousel and returning compact entry against the appropriate
+accepted backend. Publish replacement availability and the prepared EN/NL notice
+before retiring old Community contracts; prove the update path, not universal
+dormant adoption. Existing browser EN/NL/light/dark visual acceptance is complete.
+Hosted private-byte/CDN acceptance depends on the coordinated backend/object
+cutover, not binary compilation; it remains required before launch. Production
+mutation workflows are not newly claimed as tested. Apple submission/review follows
+an operational Safety backend and actual device acceptance, not build creation alone.
+
 ## Pinned candidate and changed-source verification
 
 Compatible Mobile commit: acf742b6dd9e3f83068065773f52787a7c20b862.

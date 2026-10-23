@@ -324,5 +324,145 @@
     "clientContract": "../../../movrr-mobile/docs/implementation/community-safety-private-covers.md",
     "decisionPackage": "../operations/community-safety-policy-assessment.md",
     "rolloutProposal": "../operations/community-safety-rollout.md"
+  },
+  "preBuildAcceptance": {
+    "date": "2026-10-23",
+    "runtimeAdminCommit": "7e78fe9664ed9fdf709d539400e2b454b8ee7efc",
+    "mobileCommit": "acf742b6dd9e3f83068065773f52787a7c20b862",
+    "migrationSha256Lf": "ddd69eb840097500310e0aa61da6b662f343eabb6db62d607ac8a4c5e7eaaf1d",
+    "atomicMigrationPreserved": true,
+    "independentReportingBlockingAdminActivationSafe": false,
+    "reason": "Same transaction clears public URLs, privatizes Storage and retires non-negotiating Community requests; matching Admin needs 082",
+    "ci": {
+      "admin": "success",
+      "mobile": "success",
+      "adminRun": 39990321248,
+      "mobileRun": 39990309734
+    },
+    "productionReadOnly": {
+      "capturedAt": "2026-10-23T17:20:47.068Z",
+      "project": "kzdvunpuxaxlphqvmzxw",
+      "productionMutations": false,
+      "publicRides": 3,
+      "mappedCovers": 3,
+      "storageObjects": 3,
+      "unreferencedObjects": 0,
+      "originalsByteVerified": 3,
+      "publicationAndParticipationSnapshotUnchanged": true,
+      "participantCount": 3,
+      "publicDiscovery": {
+        "status": 401,
+        "rows": null,
+        "code": "42501"
+      },
+      "blockedRiders": {
+        "status": 404,
+        "code": "PGRST202"
+      },
+      "authenticatedRoleSqlReads": {
+        "accountsChecked": 1,
+        "results": [
+          {
+            "role": "authenticated",
+            "visiblePublicRides": 3
+          }
+        ],
+        "realJwtHttpSession": false
+      },
+      "staffCapabilityMapping": [
+        {
+          "role": "super_admin",
+          "moderation": true,
+          "privacy": true
+        },
+        {
+          "role": "trust_safety_analyst",
+          "moderation": false,
+          "privacy": false
+        },
+        {
+          "role": "support_agent",
+          "moderation": false,
+          "privacy": false
+        }
+      ],
+      "anonymousAdmin": {
+        "status": 307,
+        "redirectPath": "/auth/signin"
+      },
+      "undeployedMediaEndpoint": {
+        "status": 307,
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      "currentPublicCdn": [
+        {
+          "first": 200,
+          "repeat": 200,
+          "firstCache": "HIT",
+          "repeatCache": "HIT",
+          "cacheControl": "public, max-age=3600",
+          "transformed": 200
+        },
+        {
+          "first": 200,
+          "repeat": 200,
+          "firstCache": "HIT",
+          "repeatCache": "HIT",
+          "cacheControl": "public, max-age=3600",
+          "transformed": 200
+        },
+        {
+          "first": 200,
+          "repeat": 200,
+          "firstCache": "HIT",
+          "repeatCache": "HIT",
+          "cacheControl": "public, max-age=3600",
+          "transformed": 200
+        }
+      ],
+      "mappingSha256": "8cbb948c70b289cba4f438334f8b06b100a996bb1d43309e7dc179c86588f0b5",
+      "privateCopyStaged": false,
+      "privateRecoveryVerified": false,
+      "cdnRevocationVerified": false,
+      "mutationWorkflowsExercised": false
+    },
+    "currentDeployment": {
+      "capturedAt": "2026-10-23T17:20:27.217Z",
+      "domain": "admin.movrr.nl",
+      "deploymentId": "dpl_7mCqnZszEdxyjgPHSkccpeWZjNnD",
+      "readyState": "READY",
+      "gitSha": "e0bbd5cadc858282b3796dcde5e510b1c386b460",
+      "projectId": "prj_VdWMMAnBPo7u5G9RPmlA6t9hMgCT",
+      "productionMutations": false
+    },
+    "currentDeploymentIsCandidateAncestor": true,
+    "latestMigration": {
+      "version": "20261022150000",
+      "name": "081_rider_status_command",
+      "checksum": "5301433910a8c7fe086cab4ea1985b79105ec83d61a53918df4c66110ceca742"
+    },
+    "prerequisitesPresent": true,
+    "policiesMatchCaptured": true,
+    "helperDrift": [],
+    "gates": {
+      "deletion": {
+        "requests_enabled": true,
+        "managed_resources_execution_enabled": false
+      },
+      "shop": {
+        "state": "disabled",
+        "redemption_enabled": false
+      }
+    },
+    "databaseBackupAndPitrVerified": false,
+    "managementBrowserSessionAvailable": false,
+    "remoteEasEnvironmentVerified": false,
+    "privateRecoveryCopiesStaged": false,
+    "productionCutoverExecuted": false,
+    "productionMutationAcceptance": false,
+    "existingVisualAcceptanceComplete": true,
+    "manualBuildVerdict": "GO: source preparation; owner verifies existing production EAS credentials/signing",
+    "productionRolloutVerdict": "NO_GO_BEFORE_REPLACEMENT_AVAILABILITY_AND_CUTOVER_GATES",
+    "evidenceRetention": "Confidential exact object mapping retained only in ignored local release evidence; committed record is aggregate/minimal"
   }
 }

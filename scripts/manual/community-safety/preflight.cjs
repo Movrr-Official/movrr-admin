@@ -3,7 +3,8 @@ const fs = require('node:fs'), path = require('node:path'), crypto = require('no
 const postgres = require('postgres');
 const repo = path.resolve(__dirname, '../../..');
 const project = 'kzdvunpuxaxlphqvmzxw';
-const out = path.join(repo, '.tmp/community-safety-rollout-20261023');
+const out = path.resolve(repo, process.env.MOVRR_COMMUNITY_PREFLIGHT_DIR || '.tmp/community-safety-rollout-20261023');
+assert(out.startsWith(path.join(repo, '.tmp') + path.sep), 'Preflight output must stay in ignored task storage');
 fs.mkdirSync(out, { recursive: true });
 const env = Object.fromEntries(fs.readFileSync(path.join(repo, '.env'), 'utf8').split(/\r?\n/).flatMap(line => {
   const match = line.match(/^([A-Z_0-9]+)=(.*)$/);
@@ -33,7 +34,7 @@ const quote = name => '"' + name.replaceAll('"', '""') + '"';
     return {
       capturedAt: new Date().toISOString(), project, productionMutations: false,
       isolation: 'repeatable read read only; default_transaction_read_only=on',
-      sourceRevision: cp.execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim(),
+      sourceRevision: cp.execFileSync('git', ['-c', 'safe.directory=' + repo.replaceAll('\\', '/'), 'rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim(),
       migration: { file: 'scripts/082_community_safety.sql', sha256Bytes: hash(migration), sha256Utf8Lf: hash(migration.toString('utf8').replace(/\r\n/g, '\n')) },
       latestMigrations: await tx`SELECT version,name,encode(sha256(convert_to(statements[1],'UTF8')),'hex') checksum FROM supabase_migrations.schema_migrations ORDER BY version DESC LIMIT 8`,
       safetyInstalled: await tx`SELECT to_regclass('public.community_report')::text reports,to_regclass('public.community_block')::text blocks,to_regprocedure('public.report_community_content(uuid,text,text,text)')::text reporting,to_regprocedure('public.moderate_community_content(uuid,uuid,uuid,bigint,text,text,uuid,bigint)')::text moderation`,

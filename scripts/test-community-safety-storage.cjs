@@ -21,11 +21,28 @@ module.exports=async function startStorage(db){
    const publicUrl=base+'/object/public/community-rides/'+path;
    equal((await fetch(publicUrl)).status,200);
    await as(owner,tx=>tx`UPDATE community_ride SET cover_image_path=${path},cover_image_url=${publicUrl} WHERE id=${ride.id}`);
-   return {path,publicUrl};
+   return {path,publicUrl,rideId:ride.id,owner};
   },verifyExisting:async({viewer,fixture})=>{
    denied(await fetch(fixture.publicUrl));
    denied(await request(viewer,'/object/sign/community-rides/'+fixture.path,'POST',{expiresIn:60}));
    const bytes=await request(viewer,'/object/authenticated/community-rides/'+fixture.path,'GET',undefined,'service_role');equal(bytes.status,200);equal(Buffer.from(await bytes.arrayBuffer()),image);
+   // Exact rollout operation: fresh private copy, canonical path edit/reapproval
+   // in one transaction, then guarded Storage retirement of the old origin.
+   const next=`${fixture.owner}/${fixture.rideId}/${crypto.randomUUID()}.png`;
+   equal((await request(fixture.owner,'/object/community-rides/'+next,'POST',image,'service_role')).status,200);
+   const participants=JSON.parse(JSON.stringify(await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${fixture.rideId} ORDER BY rider_id`));
+   await db.begin(async tx=>{
+    await tx`SELECT set_config('request.jwt.claim.role','service_role',true)`;
+    await tx`UPDATE community_ride SET cover_image_path=${next} WHERE id=${fixture.rideId}`;
+    const row=(await tx`SELECT * FROM community_ride WHERE id=${fixture.rideId}`)[0];
+    equal(row.moderation_state,'pending');
+    await tx`SELECT moderate_community_content(${crypto.randomUUID()},${fixture.owner},${fixture.rideId},${row.moderation_version},'approve','Integrity-verified unchanged original cover relocation',NULL,NULL)`;
+   });
+   equal((await db`SELECT moderation_state FROM community_ride WHERE id=${fixture.rideId}`)[0].moderation_state,'approved');
+   equal(JSON.parse(JSON.stringify(await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${fixture.rideId} ORDER BY rider_id`)),participants);
+   equal((await request(fixture.owner,'/object/community-rides','DELETE',{prefixes:[fixture.path]},'service_role')).status,200);
+   denied(await fetch(fixture.publicUrl));
+   const relocated=await request(fixture.owner,'/object/authenticated/community-rides/'+next,'GET',undefined,'service_role');equal(relocated.status,200);equal(Buffer.from(await relocated.arrayBuffer()),image);
   },run:async({owner,outsider,create,review,report,as})=>{
    const c=await create(),path=`${owner}/${c.id}/${crypto.randomUUID()}.png`,url='/object/community-rides/'+path;
    const uploaded=await request(owner,url,'POST',image);if(uploaded.status!==200)console.error('ISOLATED Storage fixture:',await uploaded.clone().text());equal(uploaded.status,200);

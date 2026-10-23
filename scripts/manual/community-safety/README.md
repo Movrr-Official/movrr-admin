@@ -8,6 +8,25 @@ there is deliberately no production apply/promote command for a failed gate.
 
 From `movrr-admin`:
 
+For pre-build read-only acceptance, preserve earlier captures with a separate output
+directory. Neither command applies migrations, signs/uploads/deletes objects, purges
+caches or invokes a production mutation:
+
+```powershell
+$env:MOVRR_COMMUNITY_PREFLIGHT_DIR='.tmp/community-safety-prebuild-20261023'
+node scripts/manual/community-safety/preflight.cjs
+node scripts/manual/community-safety/prebuild.cjs
+```
+
+The second command records current public CDN behavior and exact cover/reference
+mapping with byte hashes and proposed immutable destinations. Its private recovery
+copy and CDN revocation flags remain false: a reference manifest is not an object
+backup or a completed cutover. Keep the exact mapping confidential in ignored local
+release evidence. It uses existing Rider IDs only in read-only authenticated-role
+SQL; that is not a real Auth/JWT session or new mutation acceptance. No installed
+adoption is inferred. Unexpected non-public covers in the public bucket fail closed.
+See the current pre-build decision in the rollout procedure before any execution.
+
 ```powershell
 node scripts/manual/community-safety/preflight.cjs --schema-only
 docker run --detach --pull=never --name movrr-safety-rollout-rehearsal-20261023 --publish 127.0.0.1:55469:5432 --env POSTGRES_PASSWORD=isolated-local-test-only public.ecr.aws/supabase/postgres:17.11.0.004
