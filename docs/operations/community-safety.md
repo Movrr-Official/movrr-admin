@@ -8,6 +8,13 @@ retained deletion evidence is not activated. Fresh EAS/ASC/Play records confirm
 incompatible available clients, including iOS build 9, and no verified enforcement
 or adoption boundary. The current decision package and results are at the top of
 `community-safety-policy-assessment.md` and `community-safety-rollout.md`.
+The final approval matrix and client/cache decision in those two documents now
+supersede the earlier proposals: recommend purpose-specific legitimate interests,
+client-first verified replacement and authenticated uncached private-image media
+delivery. The proposed media route/policies remain unimplemented. Independent
+Mobile source correction strips signed cover credentials from presentation
+snapshots; 26 focused snapshot/Home/cover tests and TypeScript pass. No retention
+execution or production activation follows from these source/document changes.
 The remaining historical gap inventory below must be read with those updates.
 
 Policy approved by the MOVRR owner on 23 October 2026. The owner authorizes a
