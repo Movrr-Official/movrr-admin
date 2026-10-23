@@ -1,5 +1,139 @@
 # Community Safety final acceptance and controlled rollout
 
+## Current source remediation and decision boundary — 23 October 2026
+
+The latest owner instruction stops at the remaining privacy/client decisions.
+**Production verdict remains FAIL / no-go.** The account-restriction source defect
+is corrected and tested; privacy lifecycle implementation and supported-client
+transition remain dependent on genuine approval and verified adoption. Historical
+results/procedure below are retained as evidence, not current rollout authority.
+
+Candidate 082 now calls `account_deletion_assert_writable(auth.uid())` before
+report/block duplicate/no-op processing and registers five principal bindings
+plus ALWAYS write/truncate barriers on all three new Safety tables. It uses the
+existing locked lifecycle authority and its existing controlled permits. Active
+accounts retain report/block/unblock permissions; inactive riders and suspended,
+deleted and deletion-restricted accounts are denied. No account authority,
+participation policy, roster/history logic, Home UI or operating gate is replaced.
+
+Final candidate LF SHA-256:
+`29de9a9406311fa5c30b7647c83be9429ebdc5107b3c904eb66c8a345782ed7d`.
+Fresh isolated verification:
+
+| Check | Result |
+| --- | --- |
+| Actual captured 192-table schema restoration | 29 assertions; canonical migration/rollback; existing public ride/path, participants and roster preserved; status denial matrix; restricted report, block and no-op unblock denied; concurrent write waits on an uncommitted deletion fence then denies |
+| Captured foundation + 55 lifecycle migrations | 18 assertions; five bindings; restricted writes denied; migration rollback on deletion barrier and prerequisite drift |
+| PostgreSQL / authenticated PostgREST / actual private Storage | 96 SQL / 24 HTTP / 28 Storage assertions; real bytes, signed reads, pending/publication denial, immutable evidence and expiry; new HTTP deletion-fence replay/block/unblock denials |
+| Mobile Community regression | 137 tests / 16 suites, including first-time/returning Home, covers, forms, block cache, reporting, offline and account switching |
+| Admin authorization regression | 31 tests / 3 suites |
+| TypeScript | Mobile and Admin pass |
+| Admin production build | Local `next build` passes; no deployment |
+
+The narrow Storage suite uses plain PostgreSQL; the full restoration uses a
+separate disposable Supabase PostgreSQL image with production extensions. An
+initial Storage bootstrap on the latter failed on preinstalled role memberships;
+the final plain-PostgreSQL run passes. The full-schema push webhook remains inert.
+No production Rider session, CDN containment, installed-device rendering or
+retention/disposal acceptance is inferred. No UI source changed in this remediation;
+reuse the prior rendered matrix with its documented native-acceptance limits.
+
+### Verified release inventory and support boundary
+
+Read-only EAS pagination returned **51 build jobs**. The sanitised complete build,
+source-contract, update-channel and store receipt is Mobile
+`docs/implementation/community-safety-release-inventory.json`.
+Apple GETs use the existing EAS-assigned submission credential in memory;
+`scripts/inspect-community-safety-apple.cjs` is read-only reproducible tooling.
+Google's tracks read required a temporary uncommitted edit; it was deleted without
+track writes, commit, upload or submission. No release state was changed.
+
+| Distribution verified on 23 October | EAS source | Cover contract / availability |
+| --- | --- | --- |
+| iOS build 9, EAS `a21ebaed-d877-4591-8ef5-9682939e29c7` | `2c110d3816bbe78b0c3fe39942a9c7db9e297f23` | Public URL only; ASC VALID/unexpired, IN_BETA_TESTING, available in Team (Expo) internal group |
+| iOS build 8, EAS `44d458fe-ba6d-4a0e-980e-9387ccedf55a` | `b3583dd954d07fe3d6998835b17c7b0d0db10ab6` | Same; available in same group |
+| iOS build 6, EAS `c9a6bf20-1e49-44f9-afb0-30d852cfdb47` | `5435f067066776d6d0bcd8cd6d246824c3bcec80` | Same; available in same group |
+| Android versionCode 6, store EAS `c8985680-d109-422d-bdc5-d7d711e1859d` | `b3583dd954d07fe3d6998835b17c7b0d0db10ab6` | Public URL only; Google production/internal tracks completed at 6 |
+| Android versionCode 5, store EAS `611dce9e-7493-4922-a3e1-3f209baf718a` | `5435f067066776d6d0bcd8cd6d246824c3bcec80` | Public URL only; historical built artifact, not current track selection |
+| Android versionCode 2, store EAS `26f0a56b-2090-45dd-a429-6c854e449d58` | `9e4131314cde7c4264ab604e81ae706f63b157e9` | Public URL only; historical built artifact, not current track selection |
+
+The ASC app has one public version record (`1.0`) in REJECTED state linked to
+build 9; it is not evidence of a live public iOS release. Its `downloadable` flag
+alone does not establish approval. External beta states are READY_FOR_BETA_SUBMISSION;
+the only returned beta group is internal. Earlier iOS ad-hoc/preview and Android
+internal/development jobs are in the receipt; FINISHED is not proof of installation.
+Android development versionCode 6 has a different EAS job/source (`3a4793b`):
+build number alone is not an artifact identity. Country/device eligibility, all
+sideload copies and installed population remain unverified.
+
+The three recent store source revisions have the identical public-only service
+hash `1fd6daefb170e8d333d12db1bcd446d4ecfdba14154ad4979a2a4e61b93530cd`.
+None signs private paths. No distributed private-cover-compatible store build
+is established; no numerical retirement or minimum build is selected.
+
+Current `eas.json` uses remote versions and autoIncrement: app.config's local
+buildNumber/versionCode 1 is not the distributed counter. Runtime policy is
+appVersion (`1.0.0`), an update compatibility selector, not support enforcement.
+Existing channels are development-ios, preview-ios, prelaunch-test, preview and
+development. Production profile has no channel, and no production channel is
+listed. Existing updates do not implement private cover signing. Source inspection
+found no enforced minimum-version or Play in-app-update flow. Existing API account
+barriers constrain accounts, not client builds; direct Supabase access is not a
+client adoption inventory. A backend version-header check cannot retroactively
+make these installed cover readers compatible.
+
+### Safest proposed transition, conditional on owner decisions
+
+1. Keep 082 unapplied and do not launch moderated/private content under today's
+   public storage policy. Preserve existing legitimate public rides and images.
+2. Approve the focused privacy/basis/field package in
+   `community-safety-policy-assessment.md`, then implement and verify the exact
+   approved closure/hold/disposal/deletion/export controls; no retained deletion
+   evidence or new policy approval is created by this remediation.
+3. Separately authorise and validate a Mobile replacement from the reviewed
+   corrected source. Its existing cover reader works with today's canonical
+   public URL and signs the retained path after the private transition. This is
+   the planned contract change, not a new fallback API or permanent shim. Verify
+   both backend states on actual devices, expired/replaced covers, fresh/cached/
+   offline states and EN/NL first-time/returning Home. Record exact resulting
+   EAS/ASC/Play build IDs only after they exist; do not assume the next number.
+4. Release that replacement before backend activation under separate approval.
+   Verify who can obtain/run old TestFlight, ad-hoc, preview, store and sideload
+   artifacts and establish adoption. TestFlight allows previous builds and
+   optional automatic updates; store publication alone is insufficient. For a
+   genuinely controlled internal fleet, obtain device-by-device replacement
+   evidence and separately approve any old TestFlight availability action. Android
+   production distribution requires its own support/adoption decision; internal
+   tester attestations do not account for public installs. If incompatible clients
+   can still run, **defer private-cover activation**. Do not declare them retired.
+5. Only after a demonstrated client boundary, approved lifecycle implementation,
+   verified database/Storage recovery and separate production approval: apply
+   pinned 082, deploy compatible Admin/backend, confirm schema reload, exercise
+   authorised rider/staff journeys, verify private bytes and cache containment,
+   then activate the approved Safety launch. Keep uncertain submissions pending.
+
+Old readers would lose Community cover rendering when 082 clears public URLs;
+cached copies may linger and cannot demonstrate compatibility or revocation.
+Private covers must remain private. Signed URL expiry does not purge a warmed
+CDN entry; no 60-second revocation guarantee is established. Resolve the actual
+provider/cache containment procedure and acceptable residual exposure before
+activation, preserving evidence separately. See
+[Supabase cache semantics](https://supabase.com/docs/guides/storage/cdn/smart-cdn).
+See [Expo runtime compatibility](https://docs.expo.dev/eas-update/runtime-versions/)
+and [Apple previous-build/optional-update behaviour](https://beta.itunes.apple.com/).
+
+**Remaining decisions:** genuine Privacy approval/allowlist and sensitive-data
+handling; case/hold/disposal implementation after that approval; verified installed
+and obtainable-client population plus a support transition that accounts for it;
+private-cover CDN containment and authenticated native acceptance. The new source
+fence correction does not resolve these dependencies. Shop redemption, deletion
+execution, production migrations/deployment, EAS builds, OTA and store submissions
+remain untouched. Stop at this decision boundary.
+
+---
+
+## Historical final acceptance and controlled rollout record
+
 23 October 2026. **Release verdict: FAIL (production no-go).** Source preparation
 and isolated checks pass, but the client cutover, Safety account-deletion
 integration, remaining governance/disclosure approvals and production cache/private-cover

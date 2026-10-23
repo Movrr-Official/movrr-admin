@@ -1,5 +1,15 @@
 # Community safety operating policy and release contract
 
+Latest source/decision update, 23 October 2026: the canonical Safety write-fence
+gap is corrected in candidate 082 and verified against the captured 192-table
+schema plus real SQL/HTTP/Storage tests. Production remains no-go. The owner
+confirms no Safety lawful-basis reference/final minimum fields are approved;
+retained deletion evidence is not activated. Fresh EAS/ASC/Play records confirm
+incompatible available clients, including iOS build 9, and no verified enforcement
+or adoption boundary. The current decision package and results are at the top of
+`community-safety-policy-assessment.md` and `community-safety-rollout.md`.
+The remaining historical gap inventory below must be read with those updates.
+
 Policy approved by the MOVRR owner on 23 October 2026. The owner authorizes a
 controlled backend/Admin production rollout only after successful preflight.
 **Current status: stopped before migration/deployment because preflight failed.**

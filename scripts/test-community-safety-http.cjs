@@ -38,6 +38,11 @@ module.exports=async({db,owner,organiser,outsider,third,create,review})=>{
   equal((await request(owner,`/community_ride?id=eq.${ride.id}`,{moderation_state:'approved'},'PATCH')).status,403);
   const denied=await request(outsider,'/rpc/moderate_community_content',{p_operation:crypto.randomUUID(),p_actor:outsider,p_ride:ride.id,p_version:1,p_action:'approve',p_reason:'Unauthorised review'});
   equal(denied.status,403);
+  // Canonical account deletion fence must cover new, replayed and no-op writes.
+  await db`INSERT INTO account_deletion_jobs(id,user_id,policy_version) VALUES(${crypto.randomUUID()},${outsider},1)`;
+  equal((await request(outsider,'/rpc/report_community_content',report)).status,403);
+  equal((await request(outsider,'/rpc/set_community_block',{p_rider:organiser,p_blocked:true})).status,403);
+  equal((await request(outsider,'/rpc/set_community_block',{p_rider:organiser,p_blocked:false})).status,403);
   return count;
  }finally{execFileSync('docker',['--context','desktop-linux','rm','-f',container],{stdio:'pipe'})}
 };

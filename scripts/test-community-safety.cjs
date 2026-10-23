@@ -63,6 +63,10 @@ async function main() {
     await db`INSERT INTO "user"(id,status,role,name) VALUES(${user},'active','rider','Synthetic')`;
     await db`INSERT INTO rider(id,user_id,status) VALUES(${rid},${user},'active')`;
   }
+  // Use the canonical write fence, not a permissive Safety-specific mock.
+  // This narrow fixture supplies only its queue prerequisite; the production-
+  // schema rehearsal separately exercises the complete deployed lifecycle.
+  await db.begin(tx=>tx.unsafe(fs.readFileSync(path.join(__dirname,'../../movrr-mobile/scripts/035_account_deletion_write_barrier.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'')));
   await db`INSERT INTO community_ride_creator_grant(user_id) VALUES(${owner})`;
   const existing=await create({cover_image_url:'https://isolated.invalid/storage/v1/object/public/community-rides/existing.png'});
   const participantBefore=(await db`SELECT rider_id,status,joined_at FROM community_ride_participant WHERE community_ride_id=${existing.id}`)[0];
@@ -257,8 +261,9 @@ async function main() {
   await deny(()=>report(c,'text'));
   equal((await db`SELECT count(*)::int n FROM reward_transactions`)[0].n,0);
   equal((await db`SELECT count(*)::int n FROM ride_session`)[0].n,0);
-  const httpAssertions=process.argv.includes('--http')?await require('./test-community-safety-http.cjs')({db,owner,organiser,outsider,third,create,review}):0;
   if(storage)await storage.run({owner,organiser,outsider,create,review,report,as});
+  // HTTP's final denial scenario permanently fences its synthetic account.
+  const httpAssertions=process.argv.includes('--http')?await require('./test-community-safety-http.cjs')({db,owner,organiser,outsider,third,create,review}):0;
   console.log(JSON.stringify({assertions,httpAssertions,database:'isolated PostgreSQL 17',classifier:'human pre-publication review; no simulated provider',productionMutations:false}));
 }
 main().catch(e=>{ console.error(e.stack,e.where??'');process.exitCode=1; }).finally(async()=>{if(storage)storage.stop();await db.end();await root.unsafe('DROP DATABASE IF EXISTS '+name+' WITH(FORCE)');await root.end();});

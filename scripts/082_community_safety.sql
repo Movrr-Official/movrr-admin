@@ -60,6 +60,24 @@ REVOKE ALL ON public.community_block,public.community_report,public.community_mo
 GRANT SELECT ON public.community_report,public.community_moderation_audit TO service_role;
 -- All writes and block reads use narrow RPCs; ordinary rider APIs see no reports.
 
+-- Register later-created Safety data with the existing lifecycle authority.
+-- Include referenced principals, as the canonical barrier does for other tables;
+-- a service claim must never bypass an account deletion fence.
+INSERT INTO public.account_deletion_barrier_binding(schema_name,table_name,column_name,identity_kind) VALUES
+ ('public','community_block','blocker_rider_id','rider'),
+ ('public','community_block','blocked_rider_id','rider'),
+ ('public','community_report','reporter_user_id','user'),
+ ('public','community_report','subject_rider_id','rider'),
+ ('public','community_moderation_audit','actor_user_id','user');
+DO $$ DECLARE t text; BEGIN
+ FOREACH t IN ARRAY ARRAY['community_block','community_report','community_moderation_audit'] LOOP
+  EXECUTE format('CREATE TRIGGER zzzz_account_deletion_write_barrier BEFORE INSERT OR UPDATE OR DELETE ON public.%I FOR EACH ROW EXECUTE FUNCTION public.account_deletion_write_barrier()',t);
+  EXECUTE format('ALTER TABLE public.%I ENABLE ALWAYS TRIGGER zzzz_account_deletion_write_barrier',t);
+  EXECUTE format('CREATE TRIGGER account_deletion_truncate_barrier BEFORE TRUNCATE ON public.%I FOR EACH STATEMENT EXECUTE FUNCTION public.account_deletion_truncate_barrier()',t);
+  EXECUTE format('ALTER TABLE public.%I ENABLE ALWAYS TRIGGER account_deletion_truncate_barrier',t);
+ END LOOP;
+END $$;
+
 CREATE FUNCTION public.community_pair_blocked(a uuid,b uuid) RETURNS boolean
 LANGUAGE sql VOLATILE SECURITY DEFINER SET search_path='' AS $$
  SELECT EXISTS(SELECT 1 FROM public.community_block WHERE
@@ -120,6 +138,8 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE c public.community_ride; existing uuid; result uuid;
 BEGIN
  PERFORM public.assert_active_account();
+ -- Check even idempotent/no-op requests before inspecting existing Safety data.
+ PERFORM public.account_deletion_assert_writable(auth.uid());
  IF NOT public.community_rider_account_active(auth.uid()) THEN RAISE EXCEPTION 'Rider required' USING ERRCODE='42501'; END IF;
  PERFORM pg_advisory_xact_lock(hashtextextended(auth.uid()::text,761));
  IF p_target IS NULL OR p_target NOT IN ('ride','text','image','organiser') OR p_reason IS NULL OR p_reason NOT IN ('harassment','sexual','violence','hate','spam','impersonation','other') OR length(coalesce(p_description,''))>2000 THEN
@@ -144,6 +164,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE me uuid; label text;
 BEGIN
  PERFORM public.assert_active_account();
+ PERFORM public.account_deletion_assert_writable(auth.uid());
  IF NOT public.community_rider_account_active(auth.uid()) THEN RAISE EXCEPTION 'Rider required' USING ERRCODE='42501'; END IF;
  SELECT id INTO me FROM public.rider WHERE user_id=auth.uid();
  IF p_rider IS NULL OR p_rider=me OR p_blocked IS NULL THEN RAISE EXCEPTION 'Invalid rider' USING ERRCODE='22023'; END IF;

@@ -73,22 +73,21 @@ async function main(){
  equal((await as(viewer,tx=>tx`SELECT * FROM my_community_blocks()`)).length,0);
  const report=(await as(viewer,tx=>tx`SELECT report_community_content(${ride},'ride','other','Synthetic rehearsal') id`))[0].id;
  equal((await as(user,tx=>tx`SELECT * FROM community_report WHERE id=${report}`).catch(e=>[{code:e.code}]))[0].code,'42501');
- // Explicitly expose (rather than hide) the remaining governance dependency.
- // 035's catalogue-time registration cannot cover tables created later by 082.
+ // 082 explicitly registers its later-created tables with the canonical fence.
  const bindings=await db`SELECT table_name,column_name FROM account_deletion_barrier_binding WHERE table_name IN ('community_block','community_report','community_moderation_audit')`;
+ equal(bindings.length,5);
  const restrictedAccountWrites={};
  await reverted(async tx=>{
    await tx`INSERT INTO account_deletion_jobs(id,user_id,policy_version) VALUES(${crypto.randomUUID()},${viewer},1)`;
    await tx.unsafe('SET LOCAL ROLE authenticated');
    await tx`SELECT set_config('request.jwt.claim.sub',${viewer},true),set_config('request.jwt.claim.role','authenticated',true)`;
    await assert.rejects(()=>tx.savepoint(s=>s`UPDATE community_ride_participant SET status='joined' WHERE community_ride_id=${ride} AND rider_id=${viewerRider}`),e=>e.code==='42501');assertions++;
-   // Diagnostic probes, never accepted as release success: the established
-   // lifecycle fence above must also govern new Safety writes before rollout.
    for(const [key,operation] of [
      ['report',s=>s`SELECT report_community_content(${ride},'organiser','other','Synthetic lifecycle probe')`],
      ['block',s=>s`SELECT set_community_block(${rider},true)`]
    ]){try{await tx.savepoint(operation);restrictedAccountWrites[key]='succeeded';}catch(e){restrictedAccountWrites[key]=e.code;}}
  });
+ equal(restrictedAccountWrites,{report:'42501',block:'42501'});
  console.log(JSON.stringify({assertions,migrationSha256:crypto.createHash('sha256').update(migration).digest('hex'),existingPublicRidePreserved:true,participantsPreserved:true,deletionBarrierRollback:true,prerequisiteDriftRollback:true,safetyDeletionBindings:bindings,restrictedAccountWrites,governanceGate:'Review ownership bindings and approved retention/disposition before release; migration success alone is not readiness',productionMutations:false}));
 }
 main().catch(e=>{console.error(e.stack,e.where??'');process.exitCode=1}).finally(async()=>{await db.end();await root.unsafe('DROP DATABASE IF EXISTS '+name+' WITH(FORCE)');await root.end()});
