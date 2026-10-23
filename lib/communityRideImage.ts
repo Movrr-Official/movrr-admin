@@ -1,24 +1,6 @@
-/**
- * Community ride cover images — admin side.
- *
- * The rider app writes cover images to the same bucket, so the PATH CONTRACT here is not
- * an admin implementation detail: it must match the mobile app's exactly, or the two will
- * write different objects for the same ride and the last one to save wins silently.
- *
- * The contract, defined by the mobile app in lib/utils/communityRideImageUpload.ts:
- *
- *   bucket : community-rides       (public read, owner-scoped write)
- *   path   : {organizerUserId}/{rideId}/cover.{ext}
- *
- * The first segment is the ORGANISER's user id, not the admin's. That is what makes the
- * bucket's owner-scoped write policy work for riders, and it means a rider can later
- * replace a cover an admin set for them from their own phone. The path is deterministic
- * so a re-upload upserts over the previous object rather than accumulating orphans.
- *
- * Admin writes through the service-role client, which bypasses RLS and Storage policies —
- * so an admin can set a cover on a ride they do not organise. That is the point of an
- * admin tool, but it is also why the path must still be the organiser's: the object has
- * to remain reachable and replaceable by the rider who owns the ride.
+import { randomUUID } from "node:crypto";
+/** Private Community covers. Each upload gets an immutable UUID path under the
+ * organiser and ride. All replacements require staff review; signed URLs are previews.
  */
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -59,7 +41,7 @@ export function buildCommunityRideImagePath(
   rideId: string,
   mimeType: CommunityRideAllowedMimeType,
 ): string {
-  return `${organizerUserId}/${rideId}/cover.${extensionFor(mimeType)}`;
+  return `${organizerUserId}/${rideId}/${randomUUID()}.${extensionFor(mimeType)}`;
 }
 
 /**
@@ -107,7 +89,7 @@ export interface CommunityRideImageUploadResult {
 }
 
 /**
- * Upload a cover image and return the storage path and public URL.
+ * Upload an immutable private cover and return its path and signed preview.
  *
  * Takes the file's bytes rather than a stream: this runs in a Next server action, where
  * the uploaded `File` has already been buffered, so there is nothing to gain from
@@ -124,7 +106,7 @@ export async function uploadCommunityRideImage(
 
   const { error } = await supabase.storage
     .from(COMMUNITY_RIDE_IMAGE_BUCKET)
-    .upload(path, bytes, { contentType: mimeType, upsert: true });
+    .upload(path, bytes, { contentType: mimeType, upsert: false });
 
   if (error) {
     logger.error("Community ride cover upload failed", error, {
@@ -135,11 +117,12 @@ export async function uploadCommunityRideImage(
     throw new Error(`Cover image could not be uploaded: ${error.message}`);
   }
 
-  const { data } = supabase.storage
+  const { data, error: signError } = await supabase.storage
     .from(COMMUNITY_RIDE_IMAGE_BUCKET)
-    .getPublicUrl(path);
+    .createSignedUrl(path, 300);
+  if (signError || !data) throw new Error("Cover preview unavailable");
 
-  return { path, publicUrl: data.publicUrl };
+  return { path, publicUrl: data.signedUrl };
 }
 
 /**

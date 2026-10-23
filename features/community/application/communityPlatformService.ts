@@ -46,6 +46,13 @@ export async function listCommunityRides(
     all.push(...(data ?? []));
     if ((data?.length ?? 0) < 500) break;
   }
+  await Promise.all(all.map(async row => {
+    if (row.cover_image_url) return;
+    row.cover_image_url = null;
+    if (typeof row.cover_image_path !== "string") return;
+    const { data } = await supabase.storage.from("community-rides").createSignedUrl(row.cover_image_path, 60);
+    row.cover_image_url = data?.signedUrl ?? null;
+  }));
   return ok(
     all.map((row) => ({
       ...row,

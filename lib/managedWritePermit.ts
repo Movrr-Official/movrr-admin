@@ -11,7 +11,10 @@ export function coordinatedManagedFetch(options: {
     const url = new URL(request.url);
     const method = request.method.toUpperCase();
     const managed = url.pathname.startsWith('/auth/v1/') || url.pathname.startsWith('/storage/v1/');
-    if (!managed || method === 'GET' || method === 'HEAD') return transport(request);
+    // Supabase signs private reads via POST; this does not mutate an object or
+    // its ownership. The caller's normal capability/RLS checks still apply.
+    const signedRead = method === 'POST' && url.pathname.startsWith('/storage/v1/object/sign/');
+    if (!managed || method === 'GET' || method === 'HEAD' || signedRead) return transport(request);
     const path = decodeURIComponent(url.pathname);
     const subjects = new Set<string>();
     let identity: Record<string, unknown> = {};

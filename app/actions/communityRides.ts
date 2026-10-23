@@ -384,6 +384,7 @@ export async function getCommunityRides(
 
     const rows = (ridesData ?? []) as Record<string, unknown>[];
     if (rows.length === 0) return { success: true, data: [] };
+    await signCommunityCovers(supabase, rows);
 
     const rideIds = rows.map((r) => String(r.id));
 
@@ -491,6 +492,7 @@ export async function getCommunityRideById(
     );
     const nameMap = await fetchRiderNames(supabase, allRiderIds);
 
+    await signCommunityCovers(supabase, [row]);
     return { success: true, data: buildRide(row, nameMap, participants) };
   } catch (err) {
     console.error("getCommunityRideById error:", err);
@@ -986,4 +988,14 @@ export async function removeCommunityRideCoverImage(
       error: err instanceof Error ? err.message : "Failed to remove cover image",
     };
   }
+}
+
+async function signCommunityCovers(db: ReturnType<typeof createSupabaseAdminClient>, rows: Record<string, unknown>[]) {
+  await Promise.all(rows.map(async row => {
+    if (typeof row.cover_image_url === "string" && row.cover_image_url) return;
+    row.cover_image_url = null;
+    if (typeof row.cover_image_path !== "string") return;
+    const { data } = await db.storage.from("community-rides").createSignedUrl(row.cover_image_path, 300);
+    row.cover_image_url = data?.signedUrl ?? null;
+  }));
 }
