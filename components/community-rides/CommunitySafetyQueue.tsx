@@ -58,19 +58,21 @@ function DecisionButtons({ ride, version, report, reportVersion, canApprove = tr
     </div>
   </div>;
 }
-function Evidence({ title, description, image, onImageReady, onImageError }: { title?: string; description?: string | null; image?: string | null; onImageReady?: () => void; onImageError?: () => void }) {
+function Evidence({ title, description, image, imageRequired = false, onImageReady, onImageError }: { title?: string; description?: string | null; image?: string | null; imageRequired?: boolean; onImageReady?: () => void; onImageError?: () => void }) {
+  const [failed, setFailed] = useState(false);
   return <div className="space-y-2 break-words"><p className="font-semibold">{title}</p><p className="whitespace-pre-wrap">{description}</p>
-    {image && <img src={image} alt="Community cover for staff review" className="max-h-72 max-w-full object-contain" onLoad={onImageReady} onError={onImageError} />}</div>;
+    {((imageRequired && !image) || failed) && <p role="alert" className="text-sm text-destructive">The image could not be reviewed. Refresh evidence before deciding.</p>}
+    {image && <img src={image} alt="Community cover for staff review" className="max-h-72 max-w-full object-contain" onLoad={() => { setFailed(false); onImageReady?.(); }} onError={() => { setFailed(true); onImageError?.(); }} />}</div>;
 }
 function PendingReview({ ride }: { ride: Queue["pending"][number] }) {
-  const [imageReady, setImageReady] = useState(!ride.image);
+  const [imageReady, setImageReady] = useState(!ride.cover_image_path);
   const [imageError, setImageError] = useState(false);
   return <article className="space-y-4 rounded-xl border border-border bg-card p-4">
-    <Evidence title={ride.title} description={ride.description} image={ride.image}
+    <Evidence title={ride.title} description={ride.description} image={ride.image} imageRequired={!!ride.cover_image_path}
       onImageReady={() => { setImageReady(true); setImageError(false); }} onImageError={() => { setImageReady(false); setImageError(true); }} />
     {imageError && <p role="alert" className="text-sm text-destructive">The image could not be reviewed. Refresh evidence before approving.</p>}
     <p>Organiser: {ride.organizer_name}</p><p>{ride.meeting_point_name} · {ride.meeting_point_address}</p>
-    <DecisionButtons ride={ride.id} version={ride.moderation_version} canApprove={imageReady} />
+    <DecisionButtons ride={ride.id} version={ride.moderation_version} canApprove={imageReady && !imageError && (!ride.cover_image_path || !!ride.image)} />
   </article>;
 }
 export function CommunitySafetyQueue() {
@@ -90,12 +92,12 @@ export function CommunitySafetyQueue() {
       <h3 className="font-semibold">{report.target} report · {report.reason} <Badge variant="outline">{report.status}</Badge></h3>
       <p>{new Date(report.created_at).toLocaleString()} · {report.description}</p>
       <p className="font-medium">Evidence at submission</p>
-      <Evidence title={report.evidence.title} description={report.evidence.description} image={report.image} />
+      <Evidence title={report.evidence.title} description={report.evidence.description} image={report.image} imageRequired={!!report.evidence.cover_image_path} />
       <p>Organiser: {report.evidence.organizer_name}</p>
       <p>{report.evidence.meeting_point_name} · {report.evidence.meeting_point_address}</p>
       {report.subject_rider_id && <a className="underline" href={`/riders/${encodeURIComponent(report.subject_rider_id)}`}>Open existing Rider operations</a>}
       <p className="font-medium">Current content {report.current ? `· ${report.current.moderation_state}` : "· removed"}</p>
-      {report.current && <Evidence title={report.current.title} description={report.current.description} image={report.currentImage} />}
+      {report.current && <Evidence title={report.current.title} description={report.current.description} image={report.currentImage} imageRequired={!!report.current.cover_image_path} />}
       {report.audit.map((a, i) => <p key={i}>{a.action}: {a.reason} · {a.created_at}</p>)}
       {report.status === "open" && <DecisionButtons ride={report.ride_id} version={report.current?.moderation_version ?? null} report={report.id} reportVersion={report.version} />}
     </article>)}

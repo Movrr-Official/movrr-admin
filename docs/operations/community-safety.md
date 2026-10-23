@@ -3,6 +3,13 @@
 Source phase, 23 October 2026. No production migration, deployment, build delivery,
 test-account creation or financial/account action is authorised by this document.
 
+The independent post-implementation audit corrected the publication/block policy
+below. Its detailed regression matrix and remaining acceptance requirements are
+in Mobile `docs/implementation/community-safety-regression-audit.md`. The latest
+isolated run passes 95 SQL, 21 HTTP and 28 actual Storage API assertions using
+`node scripts/test-community-safety.cjs --http --storage`. Historical results below
+describe the original source handoff, not a release acceptance decision.
+
 ## Implementation
 
 The canonical migration is `scripts/082_community_safety.sql`, following the
@@ -41,13 +48,17 @@ content remains reportable. SQL and Mobile tests protect this distinction.
 
 Backend enforcement includes restrictive discovery/detail and participant RLS,
 the canonical joining RPC and a participant write trigger (including direct API
-writes). Discovery hides organisers blocked by the requesting rider. Joining is
-denied if either the rider or organiser has blocked the other. Pair locks
-serialize joins with blocks. Blocking ends `joined` participation in either
-person's current/upcoming organised rides by setting it to `left`, without a
-block-specific notification. Completed/cancelled participation is retained;
-unblocking does not automatically rejoin. Wallet, financial transactions,
-tracked rides and reward records are not modified by blocking.
+writes). Discovery hides other rides from organisers blocked by the requesting
+rider. Existing participants and the organiser retain the previously authorised
+shared-ride details, roster/count and completed/cancelled history. Joining and
+new invite creation are denied if either rider has blocked the other. Existing
+invitations remain stored but cannot bypass the join guard. Pair locks serialize
+joins with blocks. Blocking and unblocking never change participation, timestamps,
+counts, invitations, Wallet, financial transactions, tracked rides or rewards.
+Departures and removals use existing explicit authorised workflows. No
+block-specific notification, private relationship projection or additional
+personal/location data is introduced. This policy was explicitly approved during
+the independent post-implementation audit on 23 October 2026.
 
 ## Filtering strategy
 
@@ -152,9 +163,11 @@ installation was diagnosed or changed.
    installed clients that use public cover URLs require an update. Verify legacy
    cache/CDN behavior before relying on old URLs being unavailable; do not promise
    recall of downloaded copies. No legacy public-URL fallback is supplied.
-3. Existing content starts pending rather than being automatically grandfathered.
-   Staff must review it and explicitly approve legitimate rides. Rehearse that
-   transition with a reviewed inventory to avoid an unintended operational gap.
+3. Preserve the publication decision on existing rides: 082 initializes their
+   moderation state to approved without changing is_public or lifecycle status.
+   New content and changes to public text/images start pending. Restrict existing
+   content only through a specific justified audited decision. Blanket moderation
+   of existing rides was explicitly rejected during the independent audit.
 4. Confirm staffing, ownership, escalation, monitored `support@movrr.nl` and a
    measurable timely-response process. A 24-hour initial triage target is proposed
    for operational approval, not represented as an already staffed SLA.

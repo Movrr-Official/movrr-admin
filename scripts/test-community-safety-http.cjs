@@ -25,12 +25,12 @@ module.exports=async({db,owner,organiser,outsider,third,create,review})=>{
   equal((await request(outsider,'/community_report?select=*')).status,403);
   equal((await request(outsider,'/rpc/set_community_block',{p_rider:third,p_blocked:true})).status,400);
   equal((await request(outsider,'/rpc/set_community_block',{p_rider:organiser,p_blocked:true})).status,204);
-  equal((await request(outsider,`/community_ride?id=eq.${ride.id}&select=id`)).data.length,0);
+  equal((await request(outsider,`/community_ride?id=eq.${ride.id}&select=id`)).data.length,1);
   equal((await request(outsider,'/rpc/join_community_ride',{p_community_ride_id:ride.id,p_rider_id:third})).status,403);
   equal((await request(outsider,'/rpc/my_community_blocks',{})).data.length,1);
   equal((await request(owner,'/rpc/my_community_blocks',{})).data.length,0);
   equal((await request(outsider,'/rpc/set_community_block',{p_rider:organiser,p_blocked:false})).status,204);
-  equal((await db`SELECT status FROM community_ride_participant WHERE community_ride_id=${ride.id} AND rider_id=${third}`)[0].status,'left');
+  equal((await db`SELECT status FROM community_ride_participant WHERE community_ride_id=${ride.id} AND rider_id=${third}`)[0].status,'joined');
   equal((await request(owner,`/community_ride?id=eq.${ride.id}`,{title:'Edited through the direct API'},'PATCH')).status,200);
   equal((await request(outsider,`/community_ride?id=eq.${ride.id}&select=id`)).data.length,0);
   equal((await request(owner,`/community_ride?id=eq.${ride.id}`,{moderation_state:'approved'},'PATCH')).status,403);

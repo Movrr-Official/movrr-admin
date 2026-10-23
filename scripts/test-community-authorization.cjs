@@ -9,7 +9,8 @@ const payload={title:'Isolated approved ride',scheduledAt:'2099-01-01T12:00:00Z'
 async function main(){
  await root.unsafe('CREATE DATABASE '+name);
  await require('./test-alignment-database.cjs').fixture(db);
- await db.unsafe(`CREATE TABLE auth.users(id uuid PRIMARY KEY,banned_until timestamptz,deleted_at timestamptz);
+ await db.unsafe(`DROP VIEW auth.users;
+ CREATE TABLE auth.users(id uuid PRIMARY KEY,banned_until timestamptz,deleted_at timestamptz);
  CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.role',true),''),nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'role') $$;
  ALTER TABLE community_ride ENABLE ROW LEVEL SECURITY;ALTER TABLE community_ride_creator_grant ENABLE ROW LEVEL SECURITY;
  GRANT SELECT,INSERT,UPDATE ON community_ride,community_ride_creator_grant,community_ride_participant TO authenticated;

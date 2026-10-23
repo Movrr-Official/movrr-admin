@@ -29,9 +29,12 @@ export async function getCommunitySafetyQueue(input: z.input<typeof filters>) {
   if (reports.error || pending.error) throw new Error("Safety queue unavailable. Please retry.");
   async function image(path: unknown) {
     if (typeof path !== "string" || !path) return null;
-    const { data, error } = await db.storage.from("community-rides").createSignedUrl(path, 300);
-    if (error) throw new Error("Evidence image unavailable. Do not approve until it can be reviewed.");
-    return data.signedUrl;
+    try {
+      const { data, error } = await db.storage.from("community-rides").createSignedUrl(path, 300);
+      // Isolate a failed preview to its item. The path remains in the response
+      // so the UI can hold approval without hiding unrelated reports/rides.
+      return error ? null : data?.signedUrl ?? null;
+    } catch { return null; }
   }
   const reportRows = await Promise.all((reports.data ?? []).map(async report => {
     const current = await db.from("community_ride")

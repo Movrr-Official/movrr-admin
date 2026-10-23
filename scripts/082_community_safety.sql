@@ -2,8 +2,11 @@
 BEGIN;
 SET LOCAL lock_timeout='5s';
 
-ALTER TABLE public.community_ride ADD COLUMN moderation_state text NOT NULL DEFAULT 'pending'
+-- Preserve the publication decision for existing content. Only later submissions
+-- start pending; existing content is restricted through an audited staff decision.
+ALTER TABLE public.community_ride ADD COLUMN moderation_state text NOT NULL DEFAULT 'approved'
  CHECK(moderation_state IN ('pending','approved','restricted'));
+ALTER TABLE public.community_ride ALTER COLUMN moderation_state SET DEFAULT 'pending';
 ALTER TABLE public.community_ride ADD COLUMN moderation_version bigint NOT NULL DEFAULT 1 CHECK(moderation_version>0);
 CREATE INDEX community_review_queue ON public.community_ride(created_at) WHERE moderation_state='pending';
 -- The private path becomes the only cover authority. Existing public URL strings
@@ -14,7 +17,7 @@ DO $$ DECLARE previous_role text:=current_setting('request.jwt.claim.role',true)
  PERFORM set_config('request.jwt.claim.role',coalesce(previous_role,''),true);
 END $$;
 
--- No public grandfathering: existing content also requires a staff decision.
+-- Existing is_public and lifecycle values remain authoritative alongside review.
 CREATE TABLE public.community_block (
  blocker_rider_id uuid NOT NULL REFERENCES public.rider(id) ON DELETE CASCADE,
  blocked_rider_id uuid NOT NULL REFERENCES public.rider(id) ON DELETE CASCADE,
@@ -67,19 +70,19 @@ CREATE FUNCTION public.community_content_visible(p_ride uuid) RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
  SELECT EXISTS(SELECT 1 FROM public.community_ride c WHERE c.id=p_ride AND
  (c.organizer_user_id=auth.uid() OR
- (c.moderation_state='approved' AND c.is_public AND NOT EXISTS(
+ (c.moderation_state='approved' AND ((c.is_public AND NOT EXISTS(
  SELECT 1 FROM public.community_block b JOIN public.rider r ON r.id=b.blocker_rider_id
- WHERE r.user_id=auth.uid() AND c.organizer_type='rider' AND b.blocked_rider_id=c.organizer_rider_id))))
-$$;
-CREATE FUNCTION public.community_participant_visible(p_ride uuid,p_rider uuid) RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
- SELECT public.community_content_visible(p_ride) AND NOT EXISTS(
- SELECT 1 FROM public.rider r WHERE r.user_id=auth.uid() AND public.community_pair_blocked(r.id,p_rider))
+ WHERE r.user_id=auth.uid() AND c.organizer_type='rider' AND b.blocked_rider_id=c.organizer_rider_id))
+ OR EXISTS(SELECT 1 FROM public.community_ride_participant p JOIN public.rider r ON r.id=p.rider_id
+ WHERE p.community_ride_id=c.id AND r.user_id=auth.uid()
+ AND (p.status='joined' OR c.status IN ('completed','cancelled')))))))
 $$;
 CREATE POLICY community_safety_visibility ON public.community_ride AS RESTRICTIVE FOR SELECT TO anon,authenticated
  USING(organizer_user_id=auth.uid() OR public.community_content_visible(id));
+-- Preserve the approved roster and count for accessible shared rides. A block
+-- prevents new interactions; it does not erase an existing participant.
 CREATE POLICY community_participant_safety_visibility ON public.community_ride_participant AS RESTRICTIVE FOR SELECT TO anon,authenticated
- USING(public.community_participant_visible(community_ride_id,rider_id));
+ USING(public.community_content_visible(community_ride_id));
 
 CREATE FUNCTION public.community_safety_content_guard() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
@@ -152,10 +155,8 @@ BEGIN
  AND NOT EXISTS(SELECT 1 FROM public.community_ride_participant p WHERE p.rider_id=p_rider AND p.status='joined' AND public.community_content_visible(p.community_ride_id)) THEN
    RAISE EXCEPTION 'Rider unavailable' USING ERRCODE='42501'; END IF;
  INSERT INTO public.community_block(blocker_rider_id,blocked_rider_id,display_name) VALUES(me,p_rider,left(coalesce(label,'Rider'),200)) ON CONFLICT DO NOTHING;
- -- Safe policy: leave either organiser's current/future ride, retain every row.
- UPDATE public.community_ride_participant p SET status='left',left_at=now() FROM public.community_ride c
- WHERE p.community_ride_id=c.id AND c.organizer_type='rider' AND p.status='joined' AND c.status IN ('upcoming','active') AND
- ((c.organizer_rider_id=p_rider AND p.rider_id=me) OR (c.organizer_rider_id=me AND p.rider_id=p_rider));
+ -- A block does not cancel commitments. Departure/removal uses the existing
+ -- explicit authorised workflows; joining guards prevent new interactions.
 END $$;
 CREATE FUNCTION public.my_community_blocks() RETURNS TABLE(rider_id uuid,display_name text,created_at timestamptz)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
@@ -176,6 +177,9 @@ BEGIN
  IF c.organizer_type='rider' AND c.organizer_rider_id IS NOT NULL THEN
    PERFORM pg_advisory_xact_lock(hashtextextended(least(NEW.rider_id,c.organizer_rider_id)::text||greatest(NEW.rider_id,c.organizer_rider_id)::text,762));
  END IF;
+ -- Serialize direct writes with publication decisions, in the same pair/ride
+ -- lock order as the canonical join RPC. Re-read after acquiring the locks.
+ SELECT * INTO c FROM public.community_ride WHERE id=NEW.community_ride_id FOR SHARE;
  IF NOT public.community_rider_account_active(account) OR c.moderation_state<>'approved' OR NOT c.is_public
  OR (c.organizer_type='rider' AND public.community_pair_blocked(NEW.rider_id,c.organizer_rider_id)) THEN
    RAISE EXCEPTION 'Ride unavailable' USING ERRCODE='42501'; END IF;
@@ -198,7 +202,7 @@ END $$;
 -- Invite creation and resolution must not expose unpublished or blocked rides.
 DO $$ DECLARE body text; BEGIN
  body:=pg_get_functiondef('public.create_or_get_community_ride_invite(uuid,uuid,text)'::regprocedure);
- EXECUTE regexp_replace(body,'BEGIN',E'BEGIN\n PERFORM public.assert_active_account();\n IF NOT EXISTS(SELECT 1 FROM public.rider WHERE id=p_rider_id AND user_id=auth.uid() AND public.community_rider_account_active(auth.uid())) OR NOT EXISTS(SELECT 1 FROM public.community_ride c WHERE c.id=p_community_ride_id AND c.moderation_state=''approved'' AND c.is_public AND public.community_content_visible(c.id)) THEN RAISE EXCEPTION ''Ride unavailable'' USING ERRCODE=''42501''; END IF;');
+ EXECUTE regexp_replace(body,'BEGIN',E'BEGIN\n PERFORM public.assert_active_account();\n IF NOT EXISTS(SELECT 1 FROM public.rider WHERE id=p_rider_id AND user_id=auth.uid() AND public.community_rider_account_active(auth.uid())) OR NOT EXISTS(SELECT 1 FROM public.community_ride c WHERE c.id=p_community_ride_id AND c.moderation_state=''approved'' AND c.is_public AND public.community_content_visible(c.id) AND (c.organizer_type<>''rider'' OR NOT public.community_pair_blocked(p_rider_id,c.organizer_rider_id))) THEN RAISE EXCEPTION ''Ride unavailable'' USING ERRCODE=''42501''; END IF;');
  body:=pg_get_functiondef('public.resolve_invite_code(text)'::regprocedure);
  IF body NOT LIKE '%IF v_invite.id IS NULL THEN%' THEN RAISE EXCEPTION 'Invite resolution contract drift'; END IF;
  EXECUTE replace(body,'IF v_invite.id IS NULL THEN','IF v_invite.id IS NULL OR NOT EXISTS(SELECT 1 FROM public.community_ride c WHERE c.id=v_invite.community_ride_id AND c.moderation_state=''approved'' AND c.is_public AND public.community_content_visible(c.id)) THEN');
@@ -266,12 +270,12 @@ END $$;
 -- Explicit execution and ownership; helpers are not general rider APIs.
 DO $$ DECLARE f record; BEGIN
  FOR f IN SELECT p.oid::regprocedure signature,p.proname FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
- WHERE n.nspname='public' AND p.proname IN ('community_pair_blocked','community_participant_visible','community_content_visible','community_safety_content_guard','report_community_content','set_community_block','my_community_blocks','community_safety_participation_guard','community_cover_evidence_guard','moderate_community_content') LOOP
+ WHERE n.nspname='public' AND p.proname IN ('community_pair_blocked','community_content_visible','community_safety_content_guard','report_community_content','set_community_block','my_community_blocks','community_safety_participation_guard','community_cover_evidence_guard','moderate_community_content') LOOP
  EXECUTE format('ALTER FUNCTION %s OWNER TO postgres',f.signature);
  EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC,anon,authenticated,service_role',f.signature);
  END LOOP;
 END $$;
-GRANT EXECUTE ON FUNCTION public.community_content_visible(uuid),public.community_participant_visible(uuid,uuid) TO anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.community_content_visible(uuid) TO anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.report_community_content(uuid,text,text,text),public.set_community_block(uuid,boolean),public.my_community_blocks() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.moderate_community_content(uuid,uuid,uuid,bigint,text,text,uuid,bigint) TO service_role;
 NOTIFY pgrst, 'reload schema';

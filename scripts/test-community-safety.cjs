@@ -16,12 +16,13 @@ const rideInput = { title: 'Canal ride', description: 'A relaxed ride together',
 const create = (extra = {}) => as(owner, async tx => (await tx`INSERT INTO community_ride ${tx({ id: id(), ...rideInput, ...extra })} RETURNING *`)[0]);
 const review = (ride, action = 'approve', report = null, operation = id(), reason = 'Reviewed all text and image against Community Guidelines') => as(null, tx => tx`SELECT moderate_community_content(${operation},${admin},${ride.id},${ride.moderation_version},${action},${reason},${report?.id ?? null},${report?.version ?? null})`, 'service_role');
 const report = (ride, target = 'ride', user = reporter) => as(user, async tx => (await tx`SELECT report_community_content(${ride.id},${target},'harassment','Please review') id`)[0].id);
+let storage;
 async function main() {
   await root.unsafe('CREATE DATABASE ' + name);
   await require('./test-alignment-database.cjs').fixture(db);
+  if(process.argv.includes('--storage')) storage=await require('./test-community-safety-storage.cjs')(db);
   await db.unsafe(`CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.role',true),''),nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'role') $$;
-    CREATE SCHEMA storage; CREATE TABLE storage.buckets(id text PRIMARY KEY,public boolean); INSERT INTO storage.buckets VALUES('community-rides',true);
-    CREATE TABLE storage.objects(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),bucket_id text,name text,UNIQUE(bucket_id,name));
+    ${storage?"INSERT INTO storage.buckets(id,name,public) VALUES('community-rides','community-rides',true);":"CREATE SCHEMA storage; CREATE TABLE storage.buckets(id text PRIMARY KEY,public boolean); INSERT INTO storage.buckets VALUES('community-rides',true); CREATE TABLE storage.objects(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),bucket_id text,name text,UNIQUE(bucket_id,name));"}
     ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY; GRANT USAGE ON SCHEMA storage TO anon,authenticated,service_role;
     GRANT ALL ON storage.objects TO anon,authenticated,service_role;
     CREATE POLICY existing_owner_read ON storage.objects FOR SELECT TO authenticated USING(bucket_id='community-rides' AND split_part(name,'/',1)=auth.uid()::text);
@@ -31,11 +32,15 @@ async function main() {
     ALTER TABLE community_ride ENABLE ROW LEVEL SECURITY; ALTER TABLE community_ride_participant ENABLE ROW LEVEL SECURITY;
     GRANT SELECT,INSERT,UPDATE ON community_ride,community_ride_participant TO authenticated; GRANT SELECT ON community_ride,community_ride_participant TO anon;
     GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
-    CREATE POLICY rider_ride ON community_ride FOR SELECT TO authenticated,anon USING(is_public OR organizer_user_id=auth.uid());
-    CREATE POLICY owner_insert ON community_ride FOR INSERT TO authenticated WITH CHECK(organizer_user_id=auth.uid());
-    CREATE POLICY owner_update ON community_ride FOR UPDATE TO authenticated USING(organizer_user_id=auth.uid()) WITH CHECK(organizer_user_id=auth.uid());
-    CREATE POLICY participant_read ON community_ride_participant FOR SELECT TO authenticated USING(true);
-    CREATE POLICY participant_write ON community_ride_participant FOR ALL TO authenticated USING(rider_id IN(SELECT id FROM rider WHERE user_id=auth.uid())) WITH CHECK(rider_id IN(SELECT id FROM rider WHERE user_id=auth.uid()));`);
+    GRANT SELECT ON admin_users TO authenticated;`);
+  const captured=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/community/production-contracts.json'),'utf8'));
+  await db.unsafe(fs.readFileSync(path.join(__dirname,'fixtures/community/participant-read.sql'),'utf8'));
+  // Use the actual permissive AND restrictive Community policies. A permissive
+  // synthetic replacement cannot establish compatibility with deployed RLS.
+  for(const policy of captured.policies) {
+    await db.unsafe(`DROP POLICY IF EXISTS "${policy.policyname}" ON public.${policy.tablename}`);
+    await db.unsafe(`CREATE POLICY "${policy.policyname}" ON public.${policy.tablename} AS ${policy.permissive} FOR ${policy.cmd} TO ${policy.roles.join(',')} ${policy.qual?'USING ('+policy.qual+')':''} ${policy.with_check?'WITH CHECK ('+policy.with_check+')':''}`);
+  }
   await db.begin(tx=>tx.unsafe(fs.readFileSync(path.join(__dirname,'065_community_approved_rider_authorization.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'')));
   await db.unsafe(`CREATE TABLE community_ride_invites(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),community_ride_id uuid,inviter_rider_id uuid,invite_code text,source_screen text,expires_at timestamptz,UNIQUE(community_ride_id,inviter_rider_id));`);
   const referralSource=fs.readFileSync(path.join(__dirname,'../../movrr-mobile/scripts/017_referral_tables.sql'),'utf8');
@@ -43,7 +48,6 @@ async function main() {
     const start=referralSource.indexOf('CREATE OR REPLACE FUNCTION public.'+fn+'(');
     await db.unsafe(referralSource.slice(start,referralSource.indexOf('$$;',start)+3));
   }
-  const captured=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/community/production-contracts.json'),'utf8'));
   for(const fn of captured.functions.filter(f=>['community_ride_enrol_organizer()','set_community_ride_updated_at()','enforce_community_ride_status_transition()'].includes(f.signature))) await db.unsafe(fn.definition);
   for(const trigger of captured.triggers.filter(t=>!t.definition.includes('account_deletion'))) await db.unsafe(trigger.definition);
   for (const [user,rid] of [[owner,organiser],[reporter,rider],[outsider,third]]) {
@@ -53,10 +57,13 @@ async function main() {
   await db`INSERT INTO community_ride_creator_grant(user_id) VALUES(${owner})`;
   const existing=await create({cover_image_url:'https://isolated.invalid/storage/v1/object/public/community-rides/existing.png'});
   const participantBefore=(await db`SELECT rider_id,status,joined_at FROM community_ride_participant WHERE community_ride_id=${existing.id}`)[0];
+  const existingCover=storage?await storage.seedExisting({owner,ride:existing,as}):null;
   await db.begin(tx=>tx.unsafe(fs.readFileSync(path.join(__dirname,'082_community_safety.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'')));
   const retainedExisting=(await db`SELECT * FROM community_ride WHERE id=${existing.id}`)[0];
-  equal(retainedExisting.title,existing.title);equal(retainedExisting.cover_image_url,null);equal(retainedExisting.moderation_state,'pending');
+  equal(retainedExisting.title,existing.title);equal(retainedExisting.cover_image_url,null);equal(retainedExisting.moderation_state,'approved');
+  equal((await as(reporter,tx=>tx`SELECT id FROM community_ride WHERE id=${existing.id}`)).length,1);
   equal((await db`SELECT rider_id,status,joined_at FROM community_ride_participant WHERE community_ride_id=${existing.id}`)[0],participantBefore);
+  if(storage)await storage.verifyExisting({viewer:reporter,fixture:existingCover});
   // Remove only this synthetic fixture after proving migration preservation.
   await db`DELETE FROM community_ride_participant WHERE community_ride_id=${existing.id}`;
   await db`DELETE FROM community_ride WHERE id=${existing.id}`;
@@ -78,18 +85,37 @@ async function main() {
   await deny(()=>as(owner,tx=>tx`SELECT * FROM community_report`));
   await deny(()=>as(reporter,tx=>tx`INSERT INTO community_report(reporter_user_id) VALUES(${reporter})`));
   await deny(()=>as(reporter,tx=>tx`SELECT set_community_block(${rider},true)`),'22023');
+  const commitmentBefore=(await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${c.id} AND rider_id=${rider}`)[0];
+  const rosterBefore=await as(reporter,tx=>tx`SELECT * FROM community_ride_participant WHERE community_ride_id=${c.id} ORDER BY rider_id`);
+  const notificationsBefore=(await db`SELECT count(*)::int n FROM notifications`)[0].n;
   await as(reporter,tx=>tx`SELECT set_community_block(${organiser},true)`);
   await as(reporter,tx=>tx`SELECT set_community_block(${organiser},true)`);
   equal((await as(reporter,tx=>tx`SELECT * FROM my_community_blocks()`)).length,1);
   equal((await as(outsider,tx=>tx`SELECT * FROM my_community_blocks()`)).length,0);
   await deny(()=>as(outsider,tx=>tx`SELECT community_pair_blocked(${rider},${organiser})`));
-  equal((await as(reporter,tx=>tx`SELECT id FROM community_ride`)).length,0);
-  equal((await as(reporter,tx=>tx`SELECT resolve_invite_code(${invite}) result`))[0].result.valid,false);
-  equal((await db`SELECT status FROM community_ride_participant WHERE community_ride_id=${c.id} AND rider_id=${rider}`)[0].status,'left');
+  equal((await as(reporter,tx=>tx`SELECT id FROM community_ride`)).length,1);
+  equal((await as(reporter,tx=>tx`SELECT resolve_invite_code(${invite}) result`))[0].result.valid,true);
+  equal((await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${c.id} AND rider_id=${rider}`)[0],commitmentBefore);
+  equal(await as(reporter,tx=>tx`SELECT * FROM community_ride_participant WHERE community_ride_id=${c.id} ORDER BY rider_id`),rosterBefore);
+  equal((await db`SELECT count(*)::int n FROM notifications`)[0].n,notificationsBefore);
+  await deny(()=>as(reporter,tx=>tx`SELECT create_or_get_community_ride_invite(${rider},${c.id},'blocked')`));
+  const unshared=await create(); await review(unshared);
+  const storedInvite=(await as(owner,tx=>tx`SELECT create_or_get_community_ride_invite(${organiser},${unshared.id},'existing') code`))[0].code;
+  equal((await as(reporter,tx=>tx`SELECT id FROM community_ride WHERE id=${unshared.id}`)).length,0);
+  equal((await as(reporter,tx=>tx`SELECT resolve_invite_code(${storedInvite}) result`))[0].result.valid,false);
+  await deny(()=>as(reporter,tx=>tx`SELECT join_community_ride(${unshared.id},${rider})`));
+  await deny(()=>as(reporter,tx=>tx`INSERT INTO community_ride_participant(community_ride_id,rider_id,status) VALUES(${unshared.id},${rider},'joined')`));
+  equal((await db`SELECT invite_code FROM community_ride_invites WHERE community_ride_id=${unshared.id}`)[0].invite_code,storedInvite);
+  // An organiser's reverse block must also preserve every commitment and count.
+  await as(owner,tx=>tx`SELECT set_community_block(${rider},true)`);
+  equal((await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${c.id} AND rider_id=${rider}`)[0],commitmentBefore);
+  equal(await as(owner,tx=>tx`SELECT * FROM community_ride_participant WHERE community_ride_id=${c.id} ORDER BY rider_id`),rosterBefore);
+  await as(owner,tx=>tx`SELECT set_community_block(${rider},false)`);
   await deny(()=>as(reporter,tx=>tx`SELECT join_community_ride(${c.id},${rider})`));
   equal((await as(outsider,tx=>tx`SELECT join_community_ride(${c.id},${third}) result`))[0].result.success,true);
   await as(reporter,tx=>tx`SELECT set_community_block(${organiser},false)`);
-  equal((await db`SELECT status FROM community_ride_participant WHERE community_ride_id=${c.id} AND rider_id=${rider}`)[0].status,'left');
+  equal((await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${c.id} AND rider_id=${rider}`)[0],commitmentBefore);
+  equal((await db`SELECT count(*)::int n FROM community_ride_participant WHERE community_ride_id=${unshared.id} AND rider_id=${rider}`)[0].n,0);
   equal((await as(reporter,tx=>tx`SELECT join_community_ride(${c.id},${rider}) result`))[0].result.success,true);
   // Allowed text, prohibited text, uncertainty and no reviewer all stay private until an explicit decision.
   for (const title of ['City coffee ride','[synthetic prohibited text fixture]','[synthetic uncertain fixture]','[review unavailable fixture]']) {
@@ -99,13 +125,22 @@ async function main() {
   }
   const orphanRide=await create(), orphanPath=`${owner}/${orphanRide.id}/${id()}.png`;
   await as(owner,tx=>tx`INSERT INTO storage.objects(bucket_id,name) VALUES('community-rides',${orphanPath})`);
-  equal((await as(owner,tx=>tx`DELETE FROM storage.objects WHERE name=${orphanPath} RETURNING name`)).length,1);
+  equal((await as(owner,async tx=>{
+    // The real Storage service uses this transaction flag for its own deletes.
+    // This metadata-only fixture has no bytes; real API deletion is tested below.
+    if(storage)await tx`SELECT set_config('storage.allow_delete_query','true',true)`;
+    return tx`DELETE FROM storage.objects WHERE name=${orphanPath} RETURNING name`;
+  })).length,1);
   const concurrentRide=await create(); await review(concurrentRide);
   await Promise.allSettled([
     as(outsider,tx=>tx`SELECT join_community_ride(${concurrentRide.id},${third})`),
     as(outsider,tx=>tx`SELECT set_community_block(${organiser},true)`),
   ]);
-  equal((await db`SELECT count(*)::int n FROM community_ride_participant WHERE community_ride_id=${concurrentRide.id} AND rider_id=${third} AND status='joined'`)[0].n,0);
+  // Whichever operation commits first wins. A successful pre-block join is a
+  // commitment; a join after the block must fail without rewriting that row.
+  const racedParticipation=await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${concurrentRide.id} AND rider_id=${third}`;
+  await deny(()=>as(outsider,tx=>tx`SELECT join_community_ride(${concurrentRide.id},${third})`));
+  equal(await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${concurrentRide.id} AND rider_id=${third}`,racedParticipation);
   await as(outsider,tx=>tx`SELECT set_community_block(${organiser},false)`);
   const imageRide = await create(); const cover = `${owner}/${imageRide.id}/${id()}.png`;
   await as(owner,tx=>tx`INSERT INTO storage.objects(bucket_id,name) VALUES('community-rides',${cover})`);
@@ -147,6 +182,8 @@ async function main() {
   await as(null,tx=>tx`UPDATE community_ride SET status='completed' WHERE id=${history.id}`,'service_role');
   await as(outsider,tx=>tx`SELECT set_community_block(${organiser},true)`);
   equal((await db`SELECT status FROM community_ride_participant WHERE community_ride_id=${history.id} AND rider_id=${third}`)[0].status,'joined');
+  equal((await as(outsider,tx=>tx`SELECT id FROM community_ride WHERE id=${history.id}`)).length,1);
+  equal((await as(outsider,tx=>tx`SELECT * FROM community_ride_participant WHERE community_ride_id=${history.id}`)).length,2);
   await as(outsider,tx=>tx`SELECT set_community_block(${organiser},false)`);
   // MOVRR/Admin identities cannot be blocked as organisers. Even a linked
   // rider's individual block must not hide or end participation in platform rides.
@@ -165,6 +202,30 @@ async function main() {
     equal((await as(outsider,tx=>tx`SELECT join_community_ride(${platform.id},${third}) result`))[0].result.success,true);
     await as(outsider,tx=>tx`SELECT set_community_block(${organiser},false)`);
   }
+  // Existing canonical create/edit/leave/cancel RPCs remain usable after 082.
+  const createdByRpc=(await as(owner,tx=>tx`SELECT create_my_community_ride(${id()},${tx.json({title:'RPC canal ride',scheduledAt:'2099-02-01T10:00:00Z',category:'social',maxParticipants:20})}) result`))[0].result;
+  let rpcRide=(await db`SELECT * FROM community_ride WHERE id=${createdByRpc.id}`)[0];
+  equal(rpcRide.moderation_state,'pending');
+  equal((await db`SELECT count(*)::int n FROM community_ride_participant WHERE community_ride_id=${rpcRide.id}`)[0].n,1);
+  await review(rpcRide);
+  equal((await as(reporter,tx=>tx`SELECT join_community_ride(${rpcRide.id},${rider}) result`))[0].result.success,true);
+  const edited=await as(owner,tx=>tx`SELECT * FROM update_community_ride(${rpcRide.id},NULL,'RPC revised ride','Revised description','2099-02-02T10:00:00Z'::timestamptz,'Public station','social',20)`);
+  equal(edited[0].success,true);
+  rpcRide=(await db`SELECT * FROM community_ride WHERE id=${rpcRide.id}`)[0];
+  equal(rpcRide.moderation_state,'pending');
+  equal((await as(reporter,tx=>tx`SELECT id FROM community_ride WHERE id=${rpcRide.id}`)).length,0);
+  await review(rpcRide);
+  await as(reporter,tx=>tx`SELECT set_community_block(${organiser},true)`);
+  equal((await as(reporter,tx=>tx`SELECT leave_community_ride(${rpcRide.id},${rider}) result`))[0].result.success,true);
+  const explicitDeparture=(await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${rpcRide.id} AND rider_id=${rider}`)[0];
+  equal(explicitDeparture.status,'left');
+  await as(reporter,tx=>tx`SELECT set_community_block(${organiser},false)`);
+  equal((await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${rpcRide.id} AND rider_id=${rider}`)[0],explicitDeparture);
+  // PostgREST retains timestamp microseconds; a JavaScript Date would truncate
+  // them and manufacture an optimistic-concurrency conflict in this fixture.
+  await as(owner,tx=>tx`SELECT cancel_my_community_ride(id,updated_at) FROM community_ride WHERE id=${rpcRide.id}`);
+  equal((await db`SELECT status FROM community_ride WHERE id=${rpcRide.id}`)[0].status,'cancelled');
+  equal((await db`SELECT * FROM community_ride_participant WHERE community_ride_id=${rpcRide.id} AND rider_id=${rider}`)[0],explicitDeparture);
   // Force audit failure: content/report mutation must roll back with it.
   await db.unsafe(`CREATE FUNCTION fail_safety_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected audit failure'; END $$;
     CREATE TRIGGER fail_safety_audit BEFORE INSERT ON community_moderation_audit FOR EACH ROW EXECUTE FUNCTION fail_safety_audit()`);
@@ -188,6 +249,7 @@ async function main() {
   equal((await db`SELECT count(*)::int n FROM reward_transactions`)[0].n,0);
   equal((await db`SELECT count(*)::int n FROM ride_session`)[0].n,0);
   const httpAssertions=process.argv.includes('--http')?await require('./test-community-safety-http.cjs')({db,owner,organiser,outsider,third,create,review}):0;
+  if(storage)await storage.run({owner,organiser,outsider,create,review,report,as});
   console.log(JSON.stringify({assertions,httpAssertions,database:'isolated PostgreSQL 17',classifier:'human pre-publication review; no simulated provider',productionMutations:false}));
 }
-main().catch(e=>{ console.error(e.stack,e.where??'');process.exitCode=1; }).finally(async()=>{await db.end();await root.unsafe('DROP DATABASE IF EXISTS '+name+' WITH(FORCE)');await root.end();});
+main().catch(e=>{ console.error(e.stack,e.where??'');process.exitCode=1; }).finally(async()=>{if(storage)storage.stop();await db.end();await root.unsafe('DROP DATABASE IF EXISTS '+name+' WITH(FORCE)');await root.end();});

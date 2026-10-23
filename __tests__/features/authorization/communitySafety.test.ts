@@ -1,11 +1,11 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { CANONICAL_EMPLOYEE_ROLES, employeeHasCapability } from "@/features/organisations/domain/employeeRoleTemplates";
-const state = vi.hoisted(() => ({ role: "operations_manager", rpc: vi.fn(), from: vi.fn(), select: vi.fn(), revalidate: vi.fn() }));
+const state = vi.hoisted(() => ({ role: "operations_manager", rpc: vi.fn(), from: vi.fn(), select: vi.fn(), sign: vi.fn(), revalidate: vi.fn() }));
 vi.mock("@/lib/admin", () => ({ requireCapability: vi.fn(async (capability: string) => {
   if (!employeeHasCapability(state.role, capability)) throw new Error("Not authorised");
   return { authUser: { id: "11111111-1111-4111-8111-111111111111" } };
 }) }));
-vi.mock("@/lib/supabase-admin", () => ({ createSupabaseAdminClient: () => ({ rpc: state.rpc, from: state.from }) }));
+vi.mock("@/lib/supabase-admin", () => ({ createSupabaseAdminClient: () => ({ rpc: state.rpc, from: state.from, storage: { from: () => ({ createSignedUrl: state.sign }) } }) }));
 vi.mock("next/cache", () => ({ revalidatePath: state.revalidate }));
 import { requireCapability } from "@/lib/admin";
 import { getCommunitySafetyQueue, moderateCommunityContent } from "@/app/actions/communitySafety";
@@ -47,4 +47,18 @@ it("preserves conflict state and never revalidates an unsuccessful decision", as
 it("fails safely when the moderation command is unavailable", async () => {
   state.rpc.mockResolvedValue({ error: { code: "57014" } });
   expect(await moderateCommunityContent(input)).toMatchObject({ success: false, conflict: false });
+});
+it.each([false,true])("keeps unrelated review items available when one image preview fails (throws: %s)", async throws => {
+  const rows = [{ id: "unavailable-image", cover_image_path: "owner/ride/missing.png" }, { id: "text-only", cover_image_path: null }];
+  state.from.mockImplementation((table: string) => {
+    const builder = { select: vi.fn(), eq: vi.fn(), order: vi.fn(), limit: vi.fn(),
+      then: (resolve: (value: unknown) => unknown) => Promise.resolve(resolve({ data: table === "community_ride" ? rows : [], error: null })) };
+    for (const method of [builder.select,builder.eq,builder.order,builder.limit]) method.mockReturnValue(builder);
+    return builder;
+  });
+  if (throws) state.sign.mockRejectedValue(new Error("Storage unavailable"));
+  else state.sign.mockResolvedValue({ data: null, error: { message: "Object unavailable" } });
+  const queue = await getCommunitySafetyQueue({ status: "open" });
+  expect(queue.pending).toEqual(rows.map(row => ({ ...row, image: null })));
+  expect(queue.pending[0].cover_image_path).toBe("owner/ride/missing.png");
 });
