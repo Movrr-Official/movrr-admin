@@ -50,6 +50,12 @@ function mapRedemptionRow(data: {
 
 export function createSupabaseRedemptionRepository(): RedemptionRepository &
   RedemptionListPort {
+  async function withFinancial(row: RewardRedemption): Promise<RewardRedemption> {
+    const { data, error } = await createSupabaseAdminClient().rpc("shop_redemption_financials", { p_id: row.id });
+    throwOnError(error, "redemption.financial");
+    if (!data) throw new Error("Redemption financial state unavailable");
+    return { ...row, redemptionStatus: data.redemptionStatus, financial: data };
+  }
   return {
     async findById(id) {
       const supabase = createSupabaseAdminClient();
@@ -62,7 +68,7 @@ export function createSupabaseRedemptionRepository(): RedemptionRepository &
         .maybeSingle();
       throwOnError(error, "redemption.findById");
       if (!data) return null;
-      return mapRedemptionRow(data);
+      return withFinancial(mapRedemptionRow(data));
     },
 
     async listByRider(riderId) {
@@ -73,7 +79,16 @@ export function createSupabaseRedemptionRepository(): RedemptionRepository &
          .select("id,rider_id,reward_id,points_spent,status,requested_at,metadata,reward_title,reward_catalog:reward_id(thumbnail_url)")
          .eq("rider_id",riderId).order("requested_at",{ascending:false}).order("id",{ascending:false}).range(offset,offset+499);
         throwOnError(error,"redemption.listByRider");result.push(...(data??[]).map(mapRedemptionRow));
-        if((data?.length??0)<500)return result;
+        if((data?.length??0)<500){
+          const enriched: RewardRedemption[] = [];
+          for(let i=0;i<result.length;i+=500) {
+            const batch=result.slice(i,i+500);
+            const {data,error}=await createSupabaseAdminClient().rpc("shop_redemption_financials_many",{p_ids:batch.map(row=>row.id)});
+            throwOnError(error,"redemption.financials");
+            for(const row of batch){if(!data?.[row.id])throw new Error("Redemption financial state unavailable");enriched.push({...row,redemptionStatus:data[row.id].redemptionStatus,financial:data[row.id]});}
+          }
+          return enriched;
+        }
       }
     },
   };

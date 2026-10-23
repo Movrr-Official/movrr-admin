@@ -141,6 +141,14 @@ export function FulfilmentDetailPanel({
           <Field label="Recovery" value={fulfilment.recovery ? `${fulfilment.recovery.attempts} attempts; ${fulfilment.recovery.lastError ?? "Queued"}; ${fulfilment.recovery.availableAt}` : "No pending recovery"} />
           <Field label="Version" value={fulfilment.version} />
           <Field label="Price" value={fulfilment.isFree ? "Free" : fulfilment.pointsSpent === undefined ? "Unavailable" : `${fulfilment.pointsSpent} points`} />
+          {fulfilment.financial && <>
+            <Field label="Originally charged" value={fulfilment.financial.originalPointsCharged ?? "Review required"}/>
+            <Field label="Confirmed refund" value={fulfilment.financial.pointsRefunded ?? "Review required"}/>
+            <Field label="Reservation released" value={fulfilment.financial.reservationReleased}/>
+            <Field label="Refund outstanding" value={fulfilment.financial.outstandingRefund ?? "Review required"}/>
+            <Field label="Net points spent" value={fulfilment.financial.netPointsSpent ?? "Review required"}/>
+            <Field label="Cancellation actor" value={fulfilment.financial.cancellationActor ?? "Unavailable"}/>
+          </>}
           <Field label="Partner Org" value={fulfilment.partnerOrgId ?? "—"} />
           <Field label="Rider" value={fulfilment.riderId} />
           <Field label="Redemption" value={fulfilment.redemptionId} />

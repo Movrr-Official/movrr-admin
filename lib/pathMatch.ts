@@ -39,7 +39,7 @@ export function isPlatformBearerApiPath(pathname: string): boolean {
     pathname === "/api/v1/fulfilment/health" ||
     pathname === "/api/v1/fulfilment/exceptions" ||
     pathname.startsWith("/api/sessions/") ||
-    /^\/api\/v1\/(?:partners\/(?:locations|me|resources|validate|collections\/confirm|fulfilments\/pending|rewards(?:\/[^/]+)?|settings|staff)|wallet\/(?:balance|transactions)|rewards\/(?:catalog(?:\/[^/]+)?|redeem|redemptions(?:\/[^/]+(?:\/cancel)?)?)|riders\/me\/(?:rides|achievements|accessories|brands|impact)|riders\/me\/campaigns(?:\/(?:opt-in|withdraw|confirm))?|community-rides(?:\/[^/]+(?:\/(?:join|leave|cancel|cover))?)?|fulfilment(?:\/tokens\/consume|\/[^/]+(?:\/(?:timeline|token|cancel|refund|confirm-collection|retry))?)?)$/.test(
+    /^\/api\/v1\/(?:partners\/(?:locations|me|resources|validate|collections\/confirm|fulfilments\/pending|rewards(?:\/[^/]+)?|settings|staff)|wallet\/(?:balance|transactions)|rewards\/(?:catalog(?:\/[^/]+)?|redeem|redemptions(?:\/[^/]+(?:\/(?:cancel|reconcile-refund))?)?)|riders\/me\/(?:rides|achievements|accessories|brands|impact)|riders\/me\/campaigns(?:\/(?:opt-in|withdraw|confirm))?|community-rides(?:\/[^/]+(?:\/(?:join|leave|cancel|cover))?)?|fulfilment(?:\/tokens\/consume|\/[^/]+(?:\/(?:timeline|token|cancel|refund|confirm-collection|retry))?)?)$/.test(
       pathname,
     )
   );

@@ -45,6 +45,7 @@ export function FulfilmentActionsDialog({
 }: FulfilmentActionsDialogProps) {
   const { toast } = useToast();
   const [reason, setReason] = useState("");
+  const [riderReason,setRiderReason]=useState("");
   const [token, setToken] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const pendingOperation = useRef<string | null>(null);
@@ -60,6 +61,7 @@ export function FulfilmentActionsDialog({
 
   const reset = () => {
     setReason("");
+    setRiderReason("");
     setToken("");
     pendingOperation.current = null;
   };
@@ -93,6 +95,7 @@ export function FulfilmentActionsDialog({
       } else await mutate({
         id: fulfilmentId,
         reason: trimmed,
+        ...(riderReason.trim()?{riderReason:riderReason.trim()}:{}),
         expectedVersion,
       });
       toast({
@@ -139,6 +142,7 @@ export function FulfilmentActionsDialog({
         </DialogHeader>
 
         <div className="space-y-3">
+          {(action==="cancel"||action==="refund") && <div className="space-y-2"><Label htmlFor="rider-cancellation-reason">Reason shown to the rider (optional)</Label><Textarea id="rider-cancellation-reason" maxLength={1000} value={riderReason} onChange={event=>setRiderReason(event.target.value)} placeholder="Rider-safe explanation; internal audit notes remain separate."/></div>}
           <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground font-mono">
             id={fulfilmentId} · expectedVersion={expectedVersion}
           </div>

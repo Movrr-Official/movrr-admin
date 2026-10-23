@@ -11,6 +11,7 @@ import { deriveProgress, type RiderProgress } from "@/features/fulfilment/domain
 import type { FulfilmentOutcome } from "@/features/fulfilment/domain/outcome";
 
 export type FulfilmentReadModel = {
+  financial?: import("@/features/rewards/application/contracts/RedeemRewardCommand").RedemptionFinancialState;
   pointsSpent?: number;
   isFree?: boolean;
   recovery?: { attempts: number; lastError: string | null; availableAt: string } | null;
@@ -72,6 +73,7 @@ export type FulfilmentQueries = {
 function toReadModel(f: Fulfilment): FulfilmentReadModel {
   const points = typeof f.metadata.pointsSpent === "number" && Number.isFinite(f.metadata.pointsSpent) ? f.metadata.pointsSpent : undefined;
   return {
+    financial: f.metadata.financial as FulfilmentReadModel["financial"],
     pointsSpent: points,
     isFree: points === undefined ? undefined : points === 0,
     recovery: f.metadata.recovery as FulfilmentReadModel["recovery"],

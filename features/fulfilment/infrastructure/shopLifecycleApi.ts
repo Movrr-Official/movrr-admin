@@ -11,7 +11,7 @@ import { z } from "zod";
 const uuid = z.string().uuid();
 const operation = z.string().trim().min(1).max(200);
 const checkout = z.object({ catalogItemId: uuid, expectedPointsPrice: z.number().int().nonnegative() }).strict();
-const action = z.object({ reason: z.string().trim().min(1).max(1000), expectedVersion: z.number().int().nonnegative() });
+const action = z.object({ reason: z.string().trim().min(1).max(1000), expectedVersion: z.number().int().nonnegative(), riderReason:z.string().trim().min(1).max(1000).optional() });
 const scan = z.object({ token: z.string().min(32).max(512), fulfilmentId: uuid.optional(), expectedVersion: z.number().int().nonnegative().optional() });
 
 export async function shopRpc(name: string, args: Record<string, unknown>) {
@@ -40,11 +40,13 @@ export function attachShopLifecycle(api: PlatformApiHandlers, authDeps: Authenti
       if (!key.success || !parsed.success || (id !== null && !uuid.safeParse(id).success)) return fail("validation", "Operation, target and current version are required");
       const limiter = createSupabaseRateLimitStore({ max: 60, windowMs: 60_000, requireAtomic: true });
       if (!await limiter.hit(`shop.command:${ctx.principal.userId}`)) return fail("rate_limited", "Please retry shortly using the same operation");
-      return shopRpc("shop_fulfilment_command", {
+      const riderReason = "riderReason" in parsed.data ? parsed.data.riderReason : undefined;
+      return shopRpc(riderReason ? "shop_fulfilment_command_with_feedback" : "shop_fulfilment_command", {
         p_actor: ctx.principal.userId, p_id: id ?? ("fulfilmentId" in parsed.data ? parsed.data.fulfilmentId : null), p_action: command,
         p_version: parsed.data.expectedVersion ?? null, p_operation: key.data,
         p_reason: "reason" in parsed.data ? parsed.data.reason : "partner_validation",
         p_correlation: ctx.correlationId, p_token: "token" in parsed.data ? parsed.data.token : null,
+        ...(riderReason ? {p_rider_reason:riderReason} : {}),
       });
     });
   return {

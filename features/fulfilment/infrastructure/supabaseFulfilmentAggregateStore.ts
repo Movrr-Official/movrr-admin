@@ -143,7 +143,11 @@ export function createSupabaseFulfilmentAggregateStore(): FulfilmentAggregateSto
       const events = await loadEvents(id);
       const { data: recovery, error: recoveryError } = await supabase.from("shop_recovery").select("attempts, available_at, last_error").eq("fulfilment_id", id).maybeSingle();
       throwOnError(recoveryError, "fulfilment.recovery");
-      return mapRow(data as FulfilmentRow, events, recovery ? { attempts: recovery.attempts, availableAt: recovery.available_at, lastError: recovery.last_error } : null);
+      const {data:financial,error:financialError}=await supabase.rpc("shop_redemption_financials",{p_id:data.redemption_id});
+      throwOnError(financialError,"fulfilment.financial");
+      const aggregate=mapRow(data as FulfilmentRow, events, recovery ? { attempts: recovery.attempts, availableAt: recovery.available_at, lastError: recovery.last_error } : null);
+      aggregate.fulfilment.metadata.financial=financial;
+      return aggregate;
     },
 
     async exists(id) {

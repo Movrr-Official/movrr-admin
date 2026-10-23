@@ -11,6 +11,7 @@ export type RedeemRewardCommand = {
 };
 
 export type RewardRedemption = {
+  financial?: RedemptionFinancialState;
   rewardTitle?: string | null;
   thumbnailUrl?: string | null;
   redemptionStatus?: string;
@@ -24,6 +25,18 @@ export type RewardRedemption = {
   ledgerTransactionId: string | null;
   isFree?: boolean;
   createdAt: string;
+};
+
+export type RedemptionFinancialState = {
+  originalPointsCharged: number | null;
+  pointsRefunded: number | null;
+  reservationReleased: number;
+  outstandingRefund: number | null;
+  netPointsSpent: number | null;
+  cancellationActor: "admin" | "merchant" | "system" | null;
+  cancellationReason: string | null;
+  reconciliationRequired: boolean;
+  state: "charged" | "refund_outstanding" | "refunded" | "reservation_released" | "reconciliation_required";
 };
 
 export type RedeemRewardResult = {

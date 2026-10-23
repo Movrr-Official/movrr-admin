@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
-const { rpc, send } = vi.hoisted(() => ({ rpc: vi.fn(), send: vi.fn() }));
+const { rpc, send, invoke } = vi.hoisted(() => ({ rpc: vi.fn(), send: vi.fn(), invoke:vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/supabase-admin", () => ({ createSupabaseAdminClient: () => ({ rpc }) }));
+vi.mock("@/lib/supabase-admin", () => ({ createSupabaseAdminClient: () => ({ rpc,functions:{invoke} }) }));
 vi.mock("@/features/notifications/infrastructure/resendTransactionalEmailPort", () => ({ createResendTransactionalEmailPort: () => ({ sendRewardLifecycle: send }) }));
 import { runShopRecovery } from "@/features/fulfilment/application/commands/runShopRecovery";
 
@@ -9,11 +9,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   rpc.mockImplementation(async (name: string) => ({ error: null, data: name === "shop_recover" ? { recovered: 0, failed: 0 } : name === "shop_claim_outbox" ? [{ id: "intent", kind: "email", lease_token: "lease", fulfilment_id: "reward", payload: { state: "ready", pointsSpent: 0 } }] : null }));
   send.mockResolvedValue(undefined);
+  invoke.mockResolvedValue({error:null});
 });
 it("acknowledges delivery with a stable provider identity and no repeated financial command", async () => {
   expect(await runShopRecovery()).toMatchObject({ delivered: 1, notificationFailures: 0 });
   expect(send).toHaveBeenCalledWith(expect.objectContaining({ idempotencyKey: "shop:intent", pointsSpent: 0 }));
-  expect(rpc.mock.calls.map(([name]) => name)).toEqual(["shop_recover", "shop_claim_outbox", "shop_ack_email", "shop_finish_recovery"]);
+  expect(rpc.mock.calls.map(([name]) => name)).toEqual(["shop_recover", "shop_claim_outbox", "shop_ack_email", "shop_pending_push", "shop_finish_recovery"]);
 });
 it("persists failed delivery for retry instead of acknowledging success", async () => {
   send.mockRejectedValue(new Error("provider unavailable"));
@@ -42,7 +43,7 @@ it("leaves unprocessed leases for durable recovery when its execution budget exp
   try {
     expect(await runShopRecovery()).toMatchObject({ delivered: 0, notificationFailures: 0 });
     expect(send).not.toHaveBeenCalled();
-    expect(rpc.mock.calls.map(([name]) => name)).toEqual(["shop_recover", "shop_claim_outbox", "shop_finish_recovery"]);
+    expect(rpc.mock.calls.map(([name]) => name)).toEqual(["shop_recover", "shop_claim_outbox", "shop_pending_push", "shop_finish_recovery"]);
   } finally { now.mockRestore(); }
 });
 it("fails closed when the worker outcome cannot be persisted", async () => {

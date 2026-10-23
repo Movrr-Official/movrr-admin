@@ -12,6 +12,7 @@ export type FulfilmentOpsFilters = {
 };
 
 export type FulfilmentActionInput = {
+  riderReason?: string;
   id: string;
   reason: string;
   expectedVersion: number;
@@ -123,6 +124,7 @@ async function postFulfilmentAction(
       },
       body: {
         reason: input.reason,
+        ...(input.riderReason ? {riderReason:input.riderReason} : {}),
         expectedVersion: input.expectedVersion,
       },
     },

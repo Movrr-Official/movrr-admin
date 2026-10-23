@@ -35,7 +35,19 @@ export async function runShopRecovery() {
     const { error: retryError } = await db.rpc("shop_retry_outbox", { p_id: intent.id, p_lease: intent.lease_token, p_error: deliveryError.code || "delivery_failed" });
     if (retryError) throw new Error("Shop outbox retry persistence failed");
   }
-  const result = { ...recovery, delivered, notificationFailures: failed };
+  // Reuse the existing Edge sender and scheduler. Inbox delivery is distinct
+  // from provider acceptance and from confirmed device delivery.
+  const {data:pushDue,error:pushError}=await db.rpc("shop_pending_push");
+  if(pushError)throw new Error("Push delivery queue unavailable");
+  let pushDispatchFailures=0;
+  const {error:receiptError}=await db.functions.invoke("send-push-notifications",{body:{type:"RECEIPTS",table:"notifications"}});
+  if(receiptError)pushDispatchFailures++;
+  for(const notification of pushDue ?? []) {
+    if(Date.now()-startedAt>45_000)break;
+    const {error}=await db.functions.invoke("send-push-notifications",{body:{type:"INSERT",table:"notifications",schema:"public",record:notification,old_record:null}});
+    if(error)pushDispatchFailures++;
+  }
+  const result = { ...recovery, delivered, notificationFailures: failed, pushDispatchFailures };
   const { error: heartbeatError } = await db.rpc("shop_finish_recovery", { p_result: result });
   if (heartbeatError) throw new Error("Shop worker outcome persistence failed");
   return result;
