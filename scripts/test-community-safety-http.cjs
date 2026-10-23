@@ -4,8 +4,8 @@ module.exports=async({db,owner,organiser,outsider,third,create,review,storage})=
  const container='movrr-safety-api-'+process.pid,secret='isolated-community-safety-test-secret-2026';let count=0,base;
  const equal=(a,b)=>{assert.deepEqual(a,b);count++};
  const token=(sub,exp=Math.floor(Date.now()/1000)+300,role='authenticated')=>{const a=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),b=Buffer.from(JSON.stringify({sub,role,exp})).toString('base64url');return a+'.'+b+'.'+crypto.createHmac('sha256',secret).update(a+'.'+b).digest('base64url')};
- async function request(user,path,body,method=body===undefined?'GET':'POST'){
-  const r=await fetch(base+path,{method,headers:{...(user?{Authorization:'Bearer '+token(user)}:{}),'Content-Type':'application/json',Prefer:'return=representation'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
+ async function request(user,path,body,method=body===undefined?'GET':'POST',contract='private-media-v1'){
+  const r=await fetch(base+path,{method,headers:{...(user?{Authorization:'Bearer '+token(user)}:{}),...(contract?{'x-movrr-community-contract':contract}:{}),'Content-Type':'application/json',Prefer:'return=representation'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
   const text=await r.text();return{status:r.status,data:text?JSON.parse(text):null};
  }
  try{
@@ -17,9 +17,18 @@ module.exports=async({db,owner,organiser,outsider,third,create,review,storage})=
   equal((await request(outsider,`/community_ride?id=eq.${ride.id}&select=id`)).data.length,0);
   equal((await request(outsider,'/rpc/join_community_ride',{p_community_ride_id:ride.id,p_rider_id:third})).status,403);
   await review(ride);
+  // Known distributed public-URL binaries send no contract. The same boundary
+  // covers direct database reads, RPCs and participant mutations after 082.
+  for(const contract of [null,'public-covers-v0']){
+   equal((await request(outsider,`/community_ride?id=eq.${ride.id}&select=id`,undefined,'GET',contract)).status,426);
+   equal((await request(outsider,'/rpc/my_community_blocks',{},'POST',contract)).status,426);
+   equal((await request(outsider,'/rpc/set_community_block',{p_rider:organiser,p_blocked:true},'POST',contract)).status,426);
+   equal((await request(outsider,'/rpc/join_community_ride',{p_community_ride_id:ride.id,p_rider_id:third},'POST',contract)).status,426);
+  }
   equal((await request(outsider,`/community_ride?id=eq.${ride.id}&select=id`)).data.length,1);
   equal((await request(outsider,'/rpc/join_community_ride',{p_community_ride_id:ride.id,p_rider_id:third})).data.success,true);
-  const report={p_ride:ride.id,p_target:'ride',p_reason:'spam',p_description:'Synthetic non-offensive review fixture'};
+  const report={p_ride:ride.id,p_target:'ride',p_reason:'spam',p_description:''};
+  equal((await request(outsider,'/rpc/report_community_content',{...report,p_description:'Unnecessary allegation'})).status,400);
   const submitted=await request(outsider,'/rpc/report_community_content',report);equal(submitted.status,200);
   equal((await request(outsider,'/rpc/report_community_content',report)).data,submitted.data);
   equal((await request(null,'/rpc/report_community_content',report)).status,401);

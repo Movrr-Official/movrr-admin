@@ -1,3 +1,4 @@
+import { COMMUNITY_CLIENT_CONTRACT } from "@/features/community/domain/clientContract";
 import { createSupabaseRequestClient } from "@/lib/supabase-request";
 import { platformRoute } from "@/lib/http/platformRoute";
 import { productionAuthDeps } from "@/features/platform/infrastructure/productionPlatformApi";
@@ -9,7 +10,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  return platformRoute({
+  return platformRoute({ clientContract: COMMUNITY_CLIENT_CONTRACT,
     request,
     capability: "rewards.catalog.read",
     authDeps: productionAuthDeps,
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-  return platformRoute({
+  return platformRoute({ clientContract: COMMUNITY_CLIENT_CONTRACT,
     request,
     capability: "rewards.catalog.read",
     authDeps: productionAuthDeps,

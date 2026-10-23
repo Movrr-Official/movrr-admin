@@ -1,5 +1,19 @@
 # Community safety operating policy and release contract
 
+Final release-candidate update, 23 October 2026: the current source controls and
+protocol-retirement procedure at the top of community-safety-rollout.md supersede
+the older gap summaries below. Private-media-v1 is an enforced Community transport
+contract, not an account/build authority. It is inactive in production. Reports
+collect structured categories only; raw Safety evidence needs both moderation and
+Privacy compliance capability. Version-bound minimization/clearance and exact
+canonical deletion manifest support are implemented. Receipts use the original
+24-month case accountability clock, with pending cleanup preserved until confirmed.
+No production policy registry, evidence/disposal job or operating gate is activated.
+Replacement availability, device acceptance, supported-contract retirement notice
+and object/CDN containment remain required before 082. See the current verification
+receipt and privacy assessment addendum for exact source scope and evidence.
+
+
 Latest source/decision update, 23 October 2026: the canonical Safety write-fence
 gap is corrected in candidate 082 and verified against the captured 192-table
 schema plus real SQL/HTTP/Storage tests. Production remains no-go. The owner

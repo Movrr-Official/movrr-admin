@@ -6,7 +6,7 @@ const postgres=require('postgres');
 const mobile=path.resolve(__dirname,'../../movrr-mobile'),admin=path.resolve(__dirname,'..');
 const port=Number(process.env.MOVRR_COMMUNITY_TEST_PORT||55439);
 if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid isolated test port');
-const opts={host:'127.0.0.1',port,username:'postgres',password:'isolated-local-test-only',max:1,onnotice(){}};
+const opts={host:'127.0.0.1',port,username:'postgres',password:'isolated-local-test-only',max:1,connection:{'request.headers':'{"x-movrr-community-contract":"private-media-v1"}'},onnotice(){}};
 const name='movrr_safety_full_'+process.pid,root=postgres({...opts,database:'postgres'}),db=postgres({...opts,database:name});
 const read=file=>fs.readFileSync(file,'utf8');
 let assertions=0;
@@ -71,19 +71,22 @@ async function main(){
  equal((await as(viewer,tx=>tx`SELECT id FROM community_ride WHERE id=${ride}`)).length,1);
  equal((await db`SELECT public FROM storage.buckets WHERE id='community-rides'`)[0].public,false);
  equal((await as(viewer,tx=>tx`SELECT * FROM my_community_blocks()`)).length,0);
- const report=(await as(viewer,tx=>tx`SELECT report_community_content(${ride},'ride','other','Synthetic rehearsal') id`))[0].id;
+ const report=(await as(viewer,tx=>tx`SELECT report_community_content(${ride},'ride','other','') id`))[0].id;
  equal((await as(user,tx=>tx`SELECT * FROM community_report WHERE id=${report}`).catch(e=>[{code:e.code}]))[0].code,'42501');
  // 082 explicitly registers its later-created tables with the canonical fence.
  const bindings=await db`SELECT table_name,column_name FROM account_deletion_barrier_binding WHERE table_name IN ('community_block','community_report','community_moderation_audit')`;
  equal(bindings.length,5);
  const restrictedAccountWrites={};
+ for(const held of [false,true])await reverted(async tx=>{
+  assertions+=await require('./test-community-safety-deletion.cjs')({tx,user,viewer,ride,report,held});
+ });
  await reverted(async tx=>{
    await tx`INSERT INTO account_deletion_jobs(id,user_id,policy_version) VALUES(${crypto.randomUUID()},${viewer},1)`;
    const token=crypto.randomUUID();
    await tx`UPDATE account_deletion_jobs SET status='processing',lease_token=${token},lease_until=clock_timestamp()+interval '5 minutes' WHERE user_id=${viewer}`;
    await tx`SELECT set_config('request.jwt.claim.role','service_role',true)`;
    const gate=(await tx`SELECT prepare_account_deletion_community_safety(id,${token}) result FROM account_deletion_jobs WHERE user_id=${viewer}`)[0].result;
-   equal(gate,{state:'review',completionAuthorized:false});
+   equal(gate.state,'review');equal(gate.completionAuthorized,false);
    equal((await tx`SELECT count(*)::int n FROM account_deletion_review WHERE category='community_safety'`)[0].n,1);
    // Execute the actual Edge orchestration against the real Safety SQL gate.
    // Earlier independently approved steps are inert here; no external effects.
@@ -104,7 +107,7 @@ async function main(){
    await tx`SELECT set_config('request.jwt.claim.sub',${viewer},true),set_config('request.jwt.claim.role','authenticated',true)`;
    await assert.rejects(()=>tx.savepoint(s=>s`UPDATE community_ride_participant SET status='joined' WHERE community_ride_id=${ride} AND rider_id=${viewerRider}`),e=>e.code==='42501');assertions++;
    for(const [key,operation] of [
-     ['report',s=>s`SELECT report_community_content(${ride},'organiser','other','Synthetic lifecycle probe')`],
+     ['report',s=>s`SELECT report_community_content(${ride},'organiser','other','')`],
      ['block',s=>s`SELECT set_community_block(${rider},true)`]
    ]){try{await tx.savepoint(operation);restrictedAccountWrites[key]='succeeded';}catch(e){restrictedAccountWrites[key]=e.code;}}
  });

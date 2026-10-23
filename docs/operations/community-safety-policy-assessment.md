@@ -1,5 +1,59 @@
 # Community Safety privacy governance decision
 
+## Final source-control addendum — 23 October 2026
+
+The owner-authorized ordinary-data assessment and fixed periods below remain in
+force. The final source narrows collection and supplies the previously missing
+technical controls; no external legal opinion or production approval reference is
+created. This addendum supersedes earlier source-gap/receipt statements below.
+
+- Rider reports are structured category/target/revision only. Nonempty narrative
+  is rejected; the UI collects no narrative or attachment. No blanket title/text,
+  account, ride or location snapshot is copied. Report evidence keys are only
+  moderation_version and, for an image report, the existing cover_image_path.
+- Raw queue, image evidence, minimization and ordinary-evidence attestation require
+  both community.manage and privacy.deletion.compliance.review. Other publication
+  staff retain existing publication capability but receive no raw Safety queue.
+  Incidental sensitive/offence material is restricted to Privacy triage; intentional
+  collection/retention/use needing Article 9/10 authority remains withheld. The
+  ordinary-data confirmation is version-bound and cannot confer that authority.
+  New decisions invalidate it. Minimize/delete unnecessary material rather than
+  copying it into reasons/logs. A hold cannot supply a missing legal condition.
+- Additional permitted case fields: deletion_cleared_version and
+  ordinary_evidence_reviewed_version, nullable version-bound Privacy review stamps.
+  They are necessary concurrency safeguards, not identity/publication authorities;
+  access, original closure deadline, export/redaction and disposal match the case.
+- Receipt fields are operation_id, case_digest, policy_version, counts (reports,
+  decisions, cases), created_at, completed_at and expires_at. No image bytes, path,
+  narrative, names or account IDs enter receipts; the digest remains linkable data.
+  This is necessary operation accountability/retry evidence within the existing
+  moderation purpose and **original case closure +24-month deadline**, never a new
+  post-disposal period. No-closure work has no extra post-completion horizon.
+  Expired receipts remain only while confirmed cleanup is outstanding; purge as
+  soon as completion is verified. Do not lose uncertain tasks on clock expiry.
+  created_at marks preparation, completed_at only verified completion. The exact
+  registry keys disposal.operation_id, disposal.case_digest, disposal.counts,
+  disposal.timestamps belong to community_moderation/case_closure, not a separate
+  community_disposal_receipt duration. No production registry rule is inserted.
+- Exact source-supported personal.erase manifest is returned by the service-only
+  community_safety_deletion_manifest(). It covers directional block links and
+  cleared report/case/decision/event links and content; no Community ride, roster,
+  history or financial table is in it. The canonical claimed worker requires an
+  exact approved manifest, closed/unreopened current-version Privacy clearance,
+  minimized evidence, no active case/job hold and confirmed unreferenced Storage
+  cleanup. Missing approval/clearance is canonical Privacy review, never completion.
+  The existing destructive-execution gate still denies writes. Review after an
+  account fence must use canonical deletion governance; the ordinary staff command
+  cannot bypass that fence. No automatic sensitive or unresolved-case erasure is
+  introduced. Self-service export stays the narrow own report/block projection;
+  wider evidence/hold access requires reviewed third-party redaction.
+
+These technical conditions are tested in isolated canonical SQL/HTTP/Storage,
+including exact-manifest failure, held-case denial, disabled execution, cleared
+disposition retry, preserved participation and financial rows. Production policy
+registration, retained evidence and disposal execution remain inactive. No new
+retention period or invented legal duty is approved by this change.
+
 ## Internal decision and scope — 23 October 2026
 
 **Finalized under the owner's instruction “MOVRR — Finalize Community Safety Privacy Governance”.**
@@ -50,7 +104,8 @@ No Article 9 condition or Article 10/UAVG authority is established by this packa
 Stop deliberate collection/retention/use of that dependent material until its
 specific authority, restricted handling and minimization are assessed. Unsolicited
 material needs restricted Privacy triage; do not circulate it, copy it to support
-logs or pretend the current general queue implements separate sensitive access.
+logs. The source now limits the raw queue to dual-authorized Privacy reviewers;
+that restriction does not supply the missing legal condition.
 An ordinary non-sensitive extract may be used where sufficient and lawfully
 produced. A legal hold does not cure a missing sensitive-data authorization.
 
@@ -75,18 +130,18 @@ evidence references and display labels cannot authorize access or reconstruct a 
 | `community_report`: `id, ride_id, content_version, target, reason, created_at, status, version, resolved_at` | Core: report/revision identity, category, outcome, concurrency and original resolution clock. `resolved_at` is null until final outcome. | Existing `community.manage` staff via authorized service projection; no rider table access. | First committed dismissed/actioned outcome starts 12 months. Delete expired report independently of decision retention. Open reports require necessity review; no extra open-case term is invented. | Own metadata projection only; reviewed additional access below. Remove on deletion unless an exact necessary exception applies. |
 | Report `reporter_user_id` | Core opaque linkage for implemented same-revision deduplication, own export and deletion inventory during ordinary report handling. No email/name/contact copy. On account deletion deduplication no longer justifies keeping this link; erase it with the report or approved canonical transformation. | Narrow RPC/service operations; excluded from moderation queue and other riders. | No longer than the report's original 12-month deadline; earlier removal when purpose ends. | No reporter identity in another person's routine export. Never invent a replacement identity authority. |
 | Report `subject_rider_id` | Conditional: the rider organizer actually implicated by the reported content/organizer and necessary follow-up. Null where not applicable; not a general association register. | Authorized staff/Privacy review. | Report deadline; remove earlier if the allegation no longer needs the link. | Individual reviewed disclosure; deletion removes linkage unless a justified exact exception remains. |
-| Report `description, evidence` | Conditional relevant allegation/extract only. `description` stays empty where category/revision suffice. `evidence` permits only `title, description, cover_image_path, moderation_version`; the first three require target-specific necessity, while version binds the record to the reported revision without authorizing publication. | Authorized case reviewers; sensitive limitation applies. | Same report clock. Minimize irrelevant/third-party details before retained use; no blanket snapshots. | Requester-authored content considered in reviewed access; third-party redaction. No automatic copy on account deletion. |
-| `community_safety_case`: `id, report_id, ride_id, created_at, first_review_at, urgency, closed_at, closed_by, reopened_at, version` | Core lifecycle identity/review/concurrency. `report_id` conditional and cleared when report expires; timestamps/reviewer nullable until events occur. Original `closed_at/closed_by` establish closure accountability; reopening is a state event, not an extension. | Existing `community.manage`; Privacy for rights/holds. | 24 months from original case closure. Explicit closure also applies to standalone publication cases. Case/event metadata is removed on due unheld disposal. | Reviewed own information, not raw staff-wide case rows. Canonical deletion inventory includes reviewer/event references; detach unnecessary identity under an exact manifest. |
+| Report `description, evidence` | Narrative is disabled and remains empty. Evidence contains only moderation_version and, for an image target, the necessary immutable cover_image_path; no copied title/text. | Dual-authorized moderation/Privacy reviewers; incidental sensitive material restricted to triage, with dependent processing withheld. | Report original resolution +12 months; minimize unnecessary references sooner. | Reviewed own records and third-party redaction; no automatic content archive on deletion. |
+| `community_safety_case`: `id, report_id, ride_id, created_at, first_review_at, urgency, closed_at, closed_by, reopened_at, deletion_cleared_version, ordinary_evidence_reviewed_version, version` | Core lifecycle identity/review/concurrency. `report_id` conditional and cleared when report expires; timestamps/reviewer nullable until events occur. Original `closed_at/closed_by` establish closure accountability; reopening is a state event, not an extension. | Existing `community.manage`; Privacy for rights/holds. | 24 months from original case closure. Explicit closure also applies to standalone publication cases. Case/event metadata is removed on due unheld disposal. | Reviewed own information, not raw staff-wide case rows. Canonical deletion inventory includes reviewer/event references; detach unnecessary identity under an exact manifest. |
 | `community_moderation_audit`: `id, operation_id, case_id, report_id, ride_id, actor_user_id, action, reason, created_at, evidence` | Core decision identity, idempotence, reviewer and concise necessary decision reason; `report_id` conditional until report expiry. `evidence` is conditional under the four-key allowlist above, never a universal snapshot. | Existing `community.manage`; restricted Privacy review. | 24 months from linked original case closure. Default closure drops content snapshots; explicit necessary retention must pass the approved field gate. | Redact third-party/reporter identity. Retain a reviewer link after account deletion only if necessary to the actual decision/claim and covered by the canonical exception. |
 | `community_safety_event`: `operation_id, case_id, actor_user_id, action, reason, payload, created_at` | Core command accountability and retry. `reason` is concise decision/necessity text, not a duplicate report. `payload` allows only `hold, authority, review, policy, retain`, with values only for the command that needs them; otherwise null/empty. | Authorized case staff; hold/release requires additional `privacy.deletion.compliance.review`. | Same original case deadline; holds suspend disposal of their scope. No separate event archive. | Reviewed disclosure only; actor linkage follows the same necessity/deletion rule as decisions. |
 | `community_block`: `blocker_rider_id, blocked_rider_id, created_at, display_name` | Directional IDs/time are core enforcement. `display_name` is conditional, at most the existing 200-character known label needed to identify an unblock choice; generic label where sufficient. It is a non-authoritative display copy, never identity evidence. | Requester-owned block RPC; enforcement internally. No inverse “who blocked me” projection. | While active; canonical unblock deletes it. No separate unblock history/audit retention is authorized. | Own directional choices only. Delete relationships involving the deleted account through canonical dispositions; preserve shared rides/rosters. |
 | Existing `account_deletion_hold`: `id, job_id, community_case_id, category, authority_reference, owner_capability, review_due_at, released_at` | One job OR case link, never both. Core scoped authorization/owner/review/release metadata. Case event records authorizer, actual purpose/basis, scope and release reason/time without duplicating evidence. | Both existing moderation and Privacy compliance capabilities for Safety commands. | Until explicitly released; then original deadlines apply. Released case holds expire with their case; deletion-job holds retain canonical governance. | Reviewed rights response; account deletion cannot bypass a hold. No blanket indefinite retention. |
 | `community_cover_disposal`: `path, case_id, operation_id, lease_until, confirmed_at, attempts` | Core minimal retry/reference/confirmation state. Path can contain account linkage: treat it as personal data. No image bytes/narrative in task rows. | Controlled internal disposal service only. | Pending work remains pending until confirmed byte removal; confirmed rows are eligible with approved receipt cleanup. No independent task-retention period. | Operational status may be reviewed; no path/token disclosure in routine export. A new hold or surviving reference prevents deletion. |
-| `community_safety_disposal_receipt`: `operation_id, case_digest, policy_version, counts, completed_at, expires_at` | Core only for idempotent, auditable confirmation. `counts` contains report/decision totals, no identifiers/narratives. Digest is linkable personal data, not anonymous. | Controlled disposal/authorized Privacy audit. | **Fields adopted; processing withheld:** no applicable Safety-receipt horizon is approved. Current SQL requires a positive finite `community_disposal_receipt` rule. Do not borrow the 30-day receipt-access approval or choose an arbitrary period. | Reviewed status only; no duplicate identity archive. No receipt creation/disposal activation until the specific lifecycle issue below is resolved. |
+| `community_safety_disposal_receipt`: `operation_id, case_digest, policy_version, counts, created_at, completed_at, expires_at` | Necessary operation retry/accountability only. Counts are reports/decisions/cases; digest is linkable personal data. No bytes, paths, narrative or account IDs. | Controlled disposal service and authorized Privacy audit. | Original case closure +24 months; no separate post-disposal period. Expired pending work survives only until confirmed completion, then is eligible for immediate purge. | Reviewed status only; approved exact registry fields required before execution. |
 
 Registry mapping remains `community_reports` / `report_resolution` (12 months),
-`community_moderation` / `case_closure` (24 months), and the unactivated
-`community_disposal_receipt` / `disposal_completed`. Logical keys in 082 map to the
+`community_moderation` / `case_closure` (24 months, including minimal receipts).
+There is no separate receipt-period category. Logical keys in 082 map to the
 exact columns above: `case_id` covers entity/revision/operation links, `category`
 target/reason, `timestamps` lifecycle clocks, `outcome` status/version, `decision`
 action/necessary reason, `reviewer` actor/closure references. Conditional report
@@ -133,17 +188,13 @@ logical key never authorizes more columns than this inventory.
    third parties and credentials; record the specific reason for any limitation.
    An unavailable Safety contract is pending review, not an empty completed export.
 
-**Specific remaining dependencies:** (a) additional authority/restricted handling
-for actual Article 9/10 material; (b) a justified finite Safety-disposal-receipt
-lifecycle decision, or a separately reviewed source design that avoids such
-post-disposal retention—no new duration is selected here; (c) exact canonical
-registry/manifests and verified conditional minimization/deletion transformations.
-Current report `reporter_user_id` is non-null and current commands cannot redact
-every conditional report field. Do not authorize a registry-wide narrative/image
-allowlist as a substitute: retained processing needing those transformations stays
-disabled until they conform. These are scoped activation dependencies, not another
-open ordinary-data basis/field policy question. No migration or previous regression
-audit is rerun by this governance-only finalization.
+**Specific activation dependencies:** actual additional authority for Article 9/10
+material remains unestablished; that processing stays withheld. Exact ordinary-data
+registry rules and personal.erase manifest must be approved/registered through the
+existing governance before dependent execution. The finite receipt design and
+conditional minimization/deletion source controls are now implemented and verified
+as described above; no new duration or production approval reference was invented.
+Retained-evidence/disposal and irreversible account execution remain inactive.
 
 ## Final EN/NL Privacy Policy copy
 
@@ -163,7 +214,7 @@ that rider. It does not automatically end existing shared-ride participation;
 authorized shared-ride access can remain. We do not send block-specific notifications.
 
 MOVRR processes account/rider references, the relevant ride and content version,
-report category, necessary explanation or evidence, blocking choices and moderation
+report category, necessary evidence references, blocking choices and moderation
 decisions/timestamps. Authorized internal MOVRR administrators review reports and
 content. We use this information for our legitimate interests in protecting
 participants, investigating abuse, honoring blocking choices and reviewing our
@@ -181,8 +232,8 @@ You may request access, correction, erasure or restriction and object to process
 based on legitimate interests. We review requests individually, including other
 people's rights and applicable lawful limitations. Contact privacy@movrr.nl for
 privacy rights or support@movrr.nl for Community Safety help. You can complain to
-the Autoriteit Persoonsgegevens. Please avoid including irrelevant personal or
-sensitive details in a report.
+the Autoriteit Persoonsgegevens. Reports use structured categories; please do not send unnecessary personal or
+sensitive information through support channels.
 
 **NL**
 
@@ -194,7 +245,7 @@ gedeelde rit eindigt niet automatisch; toegestane toegang tot die rit kan blijve
 bestaan. We sturen geen afzonderlijke melding over een blokkering.
 
 MOVRR verwerkt account- en fietsersverwijzingen, de betreffende rit en inhoudsversie,
-de meldingscategorie, noodzakelijke toelichting of bewijsstukken, blokkeerkeuzes en
+de meldingscategorie, noodzakelijke bewijsverwijzingen, blokkeerkeuzes en
 moderatiebesluiten met tijdstippen. Bevoegde interne MOVRR-beheerders beoordelen
 meldingen en inhoud. We verwerken deze gegevens voor onze gerechtvaardigde belangen:
 deelnemers beschermen, misbruik onderzoeken, blokkeerkeuzes uitvoeren en onze

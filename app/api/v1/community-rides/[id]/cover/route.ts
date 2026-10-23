@@ -1,3 +1,4 @@
+import { COMMUNITY_CLIENT_CONTRACT } from "@/features/community/domain/clientContract";
 import { z } from "zod";
 import { platformRoute, applicationResultToHttpStatus } from "@/lib/http/platformRoute";
 import { productionAuthDeps } from "@/features/platform/infrastructure/productionPlatformApi";
@@ -13,7 +14,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id } = await params;
     const path = new URL(request.url).searchParams.get("staged");
     if (!z.string().uuid().safeParse(id).success || !path) return new Response(null, { status: 404, headers: coverHeaders });
-    return await platformRoute({ request, capability: "rewards.catalog.read", authDeps: productionAuthDeps, preferRider: true,
+    return await platformRoute({ clientContract: COMMUNITY_CLIENT_CONTRACT, request, capability: "rewards.catalog.read", authDeps: productionAuthDeps, preferRider: true,
       handle: async ctx => {
         const allowed = await createSupabaseRequestClient(request).rpc("community_cover_orphan_authorized", { p_ride: id, p_path: path });
         if (allowed.error || allowed.data !== true) return fail("permission_denied", "Cover unavailable");
@@ -30,7 +31,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const query = new URL(request.url).searchParams;
     if (request.headers.has("authorization")) {
       if (query.has("report")) return new Response(null, { status: 403, headers: coverHeaders });
-      const response = await platformRoute({ request, capability: "rewards.catalog.read", authDeps: productionAuthDeps,
+      const response = await platformRoute({ clientContract: COMMUNITY_CLIENT_CONTRACT, request, capability: "rewards.catalog.read", authDeps: productionAuthDeps,
         preferRider: true,
         handle: ctx => readCommunityCover(createSupabaseRequestClient(request), createSupabaseAdminClient(), id,
           { userId: ctx.principal.userId, staged: query.get("staged") ?? undefined }),
@@ -42,6 +43,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     // A failed bearer request is never retried through dashboard credentials.
     await requireCapability("community.manage");
     const report = query.get("report") ?? undefined;
+    if (report) await requireCapability("privacy.deletion.compliance.review");
     if (report && !z.string().uuid().safeParse(report).success) return new Response(null, { status: 404, headers: coverHeaders });
     const db = createSupabaseAdminClient();
     const result = await readCommunityCover(db, db, id, { staff: true, report });

@@ -4,7 +4,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const ts=require('typescript'),{createClient}=require('@supabase/supabase-js');
 module.exports=async({db,base,token,owner,outsider,organiser,third,create,review,storage})=>{
- let n=0,onDownload,staff=false,staffChecks=0;const equal=(a,b)=>{assert.deepEqual(a,b);n++};
+ let n=0,onDownload,staff=false,privacy=false,staffChecks=0;const equal=(a,b)=>{assert.deepEqual(a,b);n++};
  const serviceToken=storage.token(owner,'service_role');
  const server=http.createServer(async(req,res)=>{
   const target=req.url.startsWith('/rest/v1/')?base+req.url.slice('/rest/v1'.length):storage.base+req.url.slice('/storage/v1'.length);
@@ -12,16 +12,16 @@ module.exports=async({db,base,token,owner,outsider,organiser,third,create,review
   // only this exact server credential to its PostgREST equivalent; rider tokens
   // always reach the real verifier untouched.
   const authorization=req.url.startsWith('/rest/v1/')&&req.headers.authorization==='Bearer '+serviceToken?'Bearer '+token(owner,undefined,'service_role'):req.headers.authorization??'';
-  try{if(req.url.startsWith('/storage/v1/object/')&&onDownload){const pending=onDownload;onDownload=undefined;await pending();}const response=await fetch(target,{headers:{authorization,apikey:'isolated'},signal:AbortSignal.timeout(10000)});res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}
+  try{if(req.url.startsWith('/storage/v1/object/')&&onDownload){const pending=onDownload;onDownload=undefined;await pending();}const response=await fetch(target,{headers:{authorization,apikey:'isolated',...(req.headers['x-movrr-community-contract']?{'x-movrr-community-contract':req.headers['x-movrr-community-contract']}:{})},signal:AbortSignal.timeout(10000)});res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}
   catch{res.writeHead(503);res.end();}
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url='http://127.0.0.1:'+server.address().port;
- const client=bearer=>createClient(url,'isolated-test-key',{global:{headers:{Authorization:'Bearer '+bearer}},auth:{persistSession:false,autoRefreshToken:false}});
+ const client=bearer=>createClient(url,'isolated-test-key',{global:{headers:{'x-movrr-community-contract':'private-media-v1',Authorization:'Bearer '+bearer}},auth:{persistSession:false,autoRefreshToken:false}});
  const privileged=client(serviceToken);
  const deps={
   verifyAccessToken:async bearer=>{
    // PostgREST checks the actual signature, expiry and canonical account RPC.
-   const response=await fetch(base+'/rpc/my_community_blocks',{method:'POST',headers:{Authorization:'Bearer '+bearer,'Content-Type':'application/json'},body:'{}'});
+   const response=await fetch(base+'/rpc/my_community_blocks',{method:'POST',headers:{'x-movrr-community-contract':'private-media-v1',Authorization:'Bearer '+bearer,'Content-Type':'application/json'},body:'{}'});
    if(!response.ok)return null;
    return {userId:JSON.parse(Buffer.from(bearer.split('.')[1],'base64url')).sub,email:null};
   },
@@ -32,7 +32,7 @@ module.exports=async({db,base,token,owner,outsider,organiser,third,create,review
   '@/features/platform/infrastructure/productionPlatformApi':{productionAuthDeps:deps},
   '@/lib/supabase-request':{createSupabaseRequestClient:request=>client(request.headers.get('authorization').slice(7))},
   '@/lib/supabase-admin':{createSupabaseAdminClient:()=>privileged},
-  '@/lib/admin':{requireCapability:async capability=>{staffChecks++;assert.equal(capability,'community.manage');if(!staff)throw Error('No synthetic dashboard cookie session');}},
+  '@/lib/admin':{requireCapability:async capability=>{staffChecks++;assert(['community.manage','privacy.deletion.compliance.review'].includes(capability));if(!staff||(capability==='privacy.deletion.compliance.review'&&!privacy))throw Error('No synthetic dashboard cookie session');}},
  };
  const cache=new Map();
  function load(file){
@@ -50,7 +50,7 @@ module.exports=async({db,base,token,owner,outsider,organiser,third,create,review
  }
  try{
   const handler=load(path.resolve(__dirname,'../app/api/v1/community-rides/[id]/cover/route.ts'));
-  const read=(user,ride,query='',bearer=user?token(user):null)=>handler.GET(new Request('http://isolated.invalid/api/v1/community-rides/'+ride+'/cover'+query,{headers:bearer?{Authorization:'Bearer '+bearer}:{}}),{params:Promise.resolve({id:ride})});
+  const read=(user,ride,query='',bearer=user?token(user):null)=>handler.GET(new Request('http://isolated.invalid/api/v1/community-rides/'+ride+'/cover'+query,{headers:bearer?{'x-movrr-community-contract':'private-media-v1',Authorization:'Bearer '+bearer}:{}}),{params:Promise.resolve({id:ride})});
   const ride=await create(),imagePath=owner+'/'+ride.id+'/secure-media.png';
   equal((await storage.request(owner,'/object/community-rides/'+imagePath,'POST',storage.image)).status,200);
   await db.begin(async tx=>{await tx`SELECT set_config('request.jwt.claim.role','service_role',true)`;await tx`UPDATE community_ride SET cover_image_path=${imagePath} WHERE id=${ride.id}`;});
@@ -70,8 +70,9 @@ module.exports=async({db,base,token,owner,outsider,organiser,third,create,review
   equal((await read(outsider,ride.id,'?staged='+encodeURIComponent(imagePath))).status,403);
   await review((await db`SELECT * FROM community_ride WHERE id=${ride.id}`)[0]);
   const allowed=await read(outsider,ride.id);equal(allowed.status,200);equal(Buffer.from(await allowed.arrayBuffer()),storage.image);
-  const reportId=await db.begin(async tx=>{await tx.unsafe('SET LOCAL ROLE authenticated');await tx`SELECT set_config('request.jwt.claim.sub',${outsider},true),set_config('request.jwt.claim.role','authenticated',true)`;return (await tx`SELECT report_community_content(${ride.id},'image','other','Synthetic private evidence') id`)[0].id;});
+  const reportId=await db.begin(async tx=>{await tx.unsafe('SET LOCAL ROLE authenticated');await tx`SELECT set_config('request.jwt.claim.sub',${outsider},true),set_config('request.jwt.claim.role','authenticated',true)`;return (await tx`SELECT report_community_content(${ride.id},'image','other','') id`)[0].id;});
   staff=true;
+  equal((await read(null,ride.id,'?report='+reportId)).status,403);privacy=true;
   const evidence=await read(null,ride.id,'?report='+reportId);equal(evidence.status,200);equal(Buffer.from(await evidence.arrayBuffer()),storage.image);
   equal((await read(null,ride.id,'?report='+ride.id)).status,404);
   staff=false;

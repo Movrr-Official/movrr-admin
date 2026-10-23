@@ -60,6 +60,8 @@ function CaseControls({ item }: { item: Queue["cases"][number] }) {
     <Input aria-label="Hold review date" type="datetime-local" value={review} disabled={busy || !!retry} onChange={e => setReview(e.target.value)} />
     <Input aria-label="Hold ID" placeholder="Hold ID for release (shown after creation)" value={hold} disabled={busy || !!retry} onChange={e => setHold(e.target.value)} />
     <div className="flex flex-wrap gap-2">{(["hold", "release"] as const).map(action => <Button key={action} variant="outline" disabled={busy || (!retry && (reason.trim().length < 3 || (action === "hold" ? !authority || !review : !hold))) || (!!retry && retry.action !== action)} onClick={() => void save(action)}>{action === "hold" ? "Authorise scoped hold" : "Release scoped hold"}</Button>)}</div>
+    <p className="text-sm text-muted-foreground">Confirm only necessary ordinary-data evidence. This does not authorise sensitive or offence evidence; withhold that material for Privacy escalation.</p>
+    <div className="flex flex-wrap gap-2">{(["ordinary_evidence", "minimise", "deletion_clearance"] as const).map(action => <Button key={action} variant="outline" disabled={busy || (!retry && reason.trim().length < 3) || (!!retry && retry.action !== action)} onClick={() => void save(action)}>{action === "ordinary_evidence" ? "Confirm ordinary evidence" : action === "minimise" ? "Minimise case evidence" : "Clear closed case for deletion"}</Button>)}</div>
   </article>;
 }
 async function bounded<T>(work: Promise<T>): Promise<T> {

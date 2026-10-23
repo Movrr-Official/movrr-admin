@@ -7,7 +7,7 @@ module.exports=async function startStorage(db){
  const token=(sub,role='authenticated')=>{const a=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),b=Buffer.from(JSON.stringify({sub,role,exp:Math.floor(Date.now()/1000)+300})).toString('base64url');return a+'.'+b+'.'+crypto.createHmac('sha256',secret).update(a+'.'+b).digest('base64url')};
  const image=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aHJkAAAAASUVORK5CYII=','base64');
  const equal=(a,b)=>{assert.deepEqual(a,b);count++},denied=r=>{assert(r.status>=400,'Unexpected Storage grant '+r.status);count++};
- async function request(user,url,method='GET',body,role='authenticated') {return fetch(base+url,{method,headers:{...(user?{Authorization:'Bearer '+token(user,role)}:{}),...(body?{'Content-Type':Buffer.isBuffer(body)?'image/png':'application/json'}:{})},body:body?(Buffer.isBuffer(body)?body:JSON.stringify(body)):undefined,signal:AbortSignal.timeout(10000)});}
+ async function request(user,url,method='GET',body,role='authenticated') {return fetch(base+url,{method,headers:{'x-movrr-community-contract':'private-media-v1',...(user?{Authorization:'Bearer '+token(user,role)}:{}),...(body?{'Content-Type':Buffer.isBuffer(body)?'image/png':'application/json'}:{})},body:body?(Buffer.isBuffer(body)?body:JSON.stringify(body)):undefined,signal:AbortSignal.timeout(10000)});}
  try{
   docker(['run','--pull=never','--detach','--name',container,'--publish','127.0.0.1::5000',
    '--env',`DATABASE_URL=postgres://postgres:isolated-local-test-only@host.docker.internal:${db.options.port}/${db.options.database}`,
@@ -28,7 +28,7 @@ module.exports=async function startStorage(db){
    const bytes=await request(viewer,'/object/authenticated/community-rides/'+fixture.path,'GET',undefined,'service_role');equal(bytes.status,200);equal(Buffer.from(await bytes.arrayBuffer()),image);
   },run:async({owner,outsider,create,review,report,as})=>{
    const c=await create(),path=`${owner}/${c.id}/${crypto.randomUUID()}.png`,url='/object/community-rides/'+path;
-   const uploaded=await request(owner,url,'POST',image);equal(uploaded.status,200);
+   const uploaded=await request(owner,url,'POST',image);if(uploaded.status!==200)console.error('ISOLATED Storage fixture:',await uploaded.clone().text());equal(uploaded.status,200);
    await as(owner,tx=>tx`UPDATE community_ride SET cover_image_path=${path} WHERE id=${c.id}`);
    denied(await request(outsider,'/object/sign/community-rides/'+path,'POST',{expiresIn:60}));
    denied(await request(null,'/object/sign/community-rides/'+path,'POST',{expiresIn:60}));
@@ -78,6 +78,11 @@ module.exports=async function startStorage(db){
    await db.unsafe('ALTER TABLE community_report ENABLE TRIGGER community_report_clock');
    const disposalOperation=crypto.randomUUID();
    await as(null,tx=>tx`SELECT dispose_community_safety(${disposalOperation},${reportId},900001)`,'service_role');
+   // Receipt expiry cannot erase uncertain cleanup work. Advance only this
+   // synthetic receipt clock, not a production duration/configuration switch.
+   await db`UPDATE community_safety_disposal_receipt SET expires_at=clock_timestamp()-interval '1 second' WHERE operation_id=${disposalOperation}`;
+   await as(null,tx=>tx`SELECT expire_community_safety_receipts(900001)`,'service_role');
+   equal((await db`SELECT completed_at FROM community_safety_disposal_receipt WHERE operation_id=${disposalOperation}`)[0].completed_at,null);
    const claim=()=>as(null,tx=>tx`SELECT claim_community_cover_disposal(${disposalOperation}) path`,'service_role');
    equal((await claim()).map(x=>x.path),[disposalPath]);equal((await claim()).length,0);
    const hold=crypto.randomUUID();await caseCommand('hold',hold);
@@ -90,6 +95,10 @@ module.exports=async function startStorage(db){
    await as(null,tx=>tx`SELECT confirm_community_cover_disposal(${disposalOperation},${disposalPath})`,'service_role');
    denied(await request(owner,'/object/authenticated/community-rides/'+disposalPath,'GET',undefined,'service_role'));
    equal((await as(null,tx=>tx`SELECT community_safety_disposal_status(${disposalOperation}) data`,'service_role'))[0].data.remaining,0);
+   equal((await db`SELECT completed_at IS NOT NULL done FROM community_safety_disposal_receipt WHERE operation_id=${disposalOperation}`)[0].done,true);
+   await as(null,tx=>tx`SELECT expire_community_safety_receipts(900001)`,'service_role');
+   equal((await db`SELECT count(*)::int n FROM community_safety_disposal_receipt WHERE operation_id=${disposalOperation}`)[0].n,0);
+   equal((await db`SELECT count(*)::int n FROM community_cover_disposal WHERE operation_id=${disposalOperation}`)[0].n,0);
    console.log(JSON.stringify({storageAssertions:count,storageApi:'1.79.36',actualByteTransfer:true,productionMutations:false}));return count;
   }};
  }catch(e){try{stop()}catch{}throw e;}

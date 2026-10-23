@@ -9,9 +9,8 @@
     "productionRegistryApprovalCreated": false,
     "enNlDisclosureCopy": "finalized internally; not published before described behavior is operational",
     "specificDependencies": [
-      "Actual Article 9 condition or Article 10/UAVG authority and restricted handling for material within those scopes",
-      "Justified Safety-disposal-receipt lifecycle; no extra period invented or receipt-access approval borrowed",
-      "Exact canonical registry/manifests and verified conditional minimization/deletion transformations before dependent processing"
+      "Actual additional authority for dependent Article 9/10 material",
+      "Exact ordinary-data registry approval before dependent retained-evidence/disposal execution; no processing activated. Receipt design/full-column manifest/minimization source controls now verified in currentRemediation."
     ],
     "runtimeSourceChanged": false,
     "canonicalMigrationChanged": false,
@@ -21,6 +20,223 @@
     "decisionRecord": "../operations/community-safety-policy-assessment.md"
   },
   "currentRemediation": {
+    "date": "2026-10-23",
+    "verdict": "SOURCE_RC_VERIFIED_PRODUCTION_ACTIVATION_GATED",
+    "migrationSha256Lf": "ddd69eb840097500310e0aa61da6b662f343eabb6db62d607ac8a4c5e7eaaf1d",
+    "productionSchemaSha256": "3930a9082a74505ca611a5bbffa6bbf9f907c56aec65017b1ff325f57419c3aa",
+    "restoredSchemaTables": 192,
+    "schemaAssertions": 29,
+    "canonicalLifecycleRehearsalAssertions": 51,
+    "canonicalLifecycleMigrations": 55,
+    "sqlAssertions": 97,
+    "authenticatedHttpAssertions": 33,
+    "actualStorageAssertions": 39,
+    "actualMediaHandlerAssertions": 27,
+    "retentionLifecycleAssertions": 48,
+    "storageApi": "1.79.36",
+    "database": "PostgreSQL 17",
+    "adminTests": 97,
+    "adminTestSuites": 6,
+    "mobileSelectedTests": 733,
+    "mobileSelectedSuites": 84,
+    "mobileAdditionalChecks": {
+      "testSuites": 3,
+      "tests": 8,
+      "overlapWithSelected": true,
+      "purposes": [
+        "contract retirement mapping",
+        "cover header/cancellation",
+        "production EAS profile safety"
+      ]
+    },
+    "typeScript": {
+      "admin": "pass",
+      "mobile": "pass"
+    },
+    "adminProductionBuild": "pass",
+    "mobileIosAndroidLocalExports": "pass; production environment / hosted API; no native bytecode or EAS build",
+    "changedMobileEslint": "0 errors; one pre-existing unused disable warning in lib/platform/client.ts",
+    "renderedUi": {
+      "changedStates": 8,
+      "languages": [
+        "en",
+        "nl"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "mobileWidths": [
+        320,
+        414
+      ],
+      "adminWidths": [
+        320,
+        1280
+      ],
+      "horizontalOverflow": 0,
+      "browserErrors": 0,
+      "actualSourceComponents": true,
+      "syntheticSessionAndNetwork": true,
+      "physicalDeviceAcceptance": false
+    },
+    "sourceControls": [
+      "structured-only reports; no narrative or blanket title/text snapshot",
+      "raw case/evidence access requires moderation and Privacy compliance capabilities",
+      "version-bound ordinary evidence review, minimization and deletion clearance",
+      "minimal receipts on original closure +24-month clock; preserve pending work, purge after verified completion",
+      "exact full-column six-entity Safety deletion manifest with canonical claim/policy/hold/execution gates",
+      "cleared synthetic erasure retry; held/wrong-manifest/disabled-execution denial; participation/financial records unchanged",
+      "private-media-v1 transport boundary on direct RLS/RPCs and existing Platform Community routes; spoofed header grants no identity or media permission"
+    ],
+    "protocolTransition": {
+      "activated": false,
+      "knownIncompatibleIos": [
+        6,
+        8,
+        9
+      ],
+      "knownIncompatibleAndroid": [
+        6
+      ],
+      "replacementArtifactsAvailable": false,
+      "installedAdoptionVerified": false,
+      "boundary": "all missing/obsolete Community protocol requests denied after controlled cutover; no arbitrary numeric build gate",
+      "legacyUserExperience": "old binary retains generic error; existing TestFlight/Play update path and EN/NL notice required before retirement"
+    },
+    "configPreflight": {
+      "status": "pass locally",
+      "bundle": "nl.movrr.app",
+      "package": "nl.movrr.app",
+      "platformApiHost": "admin.movrr.nl",
+      "productionProfile": true,
+      "hostedApi": true,
+      "remoteVersionSource": true,
+      "autoIncrement": true,
+      "requireCommit": true,
+      "storeAssetMode": false,
+      "localMapsKeysPresent": false,
+      "remoteEasEnvironmentVerification": "read-only env:list exited 1; not verified, do not infer missing variables",
+      "remoteSigningVerified": false
+    },
+    "externalBoundaries": "Disposable schema-only restoration and synthetic records. Actual local PostgREST JWT verification/Storage bytes; not production Auth, hosted CDN or native device acceptance.",
+    "retainedEvidenceOrDisposalActivated": false,
+    "productionMutations": false,
+    "fullIrreversibleAccountDeletionAcceptance": false,
+    "rolloutProcedure": "../operations/community-safety-rollout.md",
+    "sourceHashesSha256Lf": {
+      "scripts/082_community_safety.sql": "ddd69eb840097500310e0aa61da6b662f343eabb6db62d607ac8a4c5e7eaaf1d",
+      "app/actions/communitySafety.ts": "5fad64fd51e77a1ab9ad64bb1ee635739880d31cb434c98e1af3342ecdcbdb1f",
+      "lib/http/platformRoute.ts": "ea60b9a37398dca85923771a73075aa98608f9296aed3bfd79661b657aba1043",
+      "lib/services/communitySafetyDisposal.ts": "0f99af7ca29749b291af591b5a43c5f144f816440a2c200c3d79cb3dbb638869",
+      "app/api/v1/community-rides/[id]/cover/route.ts": "b9ff18a5e69684110c8d4d57cf2939100d782423e9f4873e795ef92501700f74"
+    },
+    "mobileCommit": "acf742b6dd9e3f83068065773f52787a7c20b862",
+    "adminSourceReference": "Commit containing this receipt; prior accepted main 08d12218b199fdd7220dffedc821ea8cec38556d"
+  },
+  "verdict": "SOURCE_RC_VERIFIED; production activation gated. currentRemediation is authoritative; other sections are historical evidence.",
+  "productionMutations": false,
+  "sourceChanges": "test tooling and documentation only",
+  "runtimeBaseline": {
+    "admin": "f765f1b7f4879bdc91de7530e5ad34d89aa20814",
+    "mobile": "0aeb626f28c9761f486e8b5fb17aad4bb6a29dae"
+  },
+  "consolidatedDocumentation": {
+    "admin": "6dec5e98fba2eaa17cc26b18d9f5d01817dab046",
+    "mobile": "621c3cf29eaf12a8ea7b31e8a4533c861b479003"
+  },
+  "policyStatus": "Owner confirmed separate internal approval; remaining implementation/disclosure gates unresolved",
+  "sourceFiles": {
+    "scripts/082_community_safety.sql": "6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0",
+    "scripts/test-community-safety-rehearsal.cjs": "b963eb1c36e2ac7e3e862b8b557fce26f04c5f5d05ef4c478aa922cadb7497c7",
+    "scripts/test-community-safety.cjs": "09a8b682e293c648ceb2436e86da81c5afe972d4b377d48d1523e95641b6caa8",
+    "scripts/test-community-safety-http.cjs": "9731ab68d8fb69632303b3c8eaf3a7add367ab4c046edfda26aff145be8283cb",
+    "scripts/test-community-safety-storage.cjs": "04e86f4a47565daf5c76fbc02e16f5dd8924b8d8492d3e7689667f2887e7c0e7"
+  },
+  "scoped": {
+    "sql": 96,
+    "http": 21,
+    "storage": 28,
+    "storageApi": "1.79.36",
+    "actualByteTransfer": true
+  },
+  "expandedRehearsal": {
+    "assertions": 16,
+    "migrationSha256": "6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0",
+    "existingPublicRidePreserved": true,
+    "participantsPreserved": true,
+    "deletionBarrierRollback": true,
+    "prerequisiteDriftRollback": true,
+    "safetyDeletionBindings": [],
+    "restrictedAccountWrites": {
+      "report": "succeeded",
+      "block": "succeeded"
+    },
+    "governanceGate": "Review ownership bindings and approved retention/disposition before release; migration success alone is not readiness",
+    "productionMutations": false
+  },
+  "components": {
+    "mobileTests": 204,
+    "mobileSuites": 20,
+    "adminTests": 31,
+    "adminSuites": 3
+  },
+  "checks": {
+    "mobileTypeScript": true,
+    "adminTypeScript": true,
+    "mobileFocusedESLint": true,
+    "iosJavaScriptExport": true,
+    "androidJavaScriptExport": true,
+    "bytecode": false
+  },
+  "browser": {
+    "states": 192,
+    "javaScriptErrors": 0,
+    "horizontalOverflows": 0,
+    "homeGeometryComparisons": 24,
+    "io": "synthetic",
+    "physicalDeviceAcceptance": false
+  },
+  "nativeMetroVerification": false,
+  "releaseBlockers": [
+    "Compatible signed artifact availability, real installed iPhone XR/Samsung S23 Ultra acceptance and explicit old Community contract retirement notice/acknowledgement",
+    "Integrity/recovery/reference manifest and actual hosted old-public/signed/transformed URL CDN containment; hosted private byte route acceptance",
+    "Actual Article 9/10 authority for any dependent sensitive processing; ordinary exact registry approvals before dependent retained/disposal processing (jobs remain inactive)",
+    "EAS production environment/native Maps credentials and signing must be verified by owner at manual build; local CLI read-only environment query failed"
+  ],
+  "retainedVisualEvidence": "Existing curated audit images retained; fresh matrix reproduced through Mobile scripts/fixtures/community-safety-visual without committing redundant screenshot iterations",
+  "previousRemediation": {
+    "date": "2026-10-23",
+    "verdict": "FAIL_PENDING_PRIVACY_AND_CLIENT_DECISIONS",
+    "migrationSha256Lf": "29de9a9406311fa5c30b7647c83be9429ebdc5107b3c904eb66c8a345782ed7d",
+    "productionSchemaSha256": "3930a9082a74505ca611a5bbffa6bbf9f907c56aec65017b1ff325f57419c3aa",
+    "restoredSchemaTables": 192,
+    "schemaAssertions": 29,
+    "canonicalLifecycleRehearsalAssertions": 18,
+    "sqlAssertions": 96,
+    "authenticatedHttpAssertions": 24,
+    "actualStorageAssertions": 28,
+    "mobileTests": 137,
+    "adminTests": 31,
+    "mobileTypeScript": "passed",
+    "adminTypeScript": "passed",
+    "adminProductionBuild": "passed locally; no deployment",
+    "accountLifecycleFence": "corrected; active permitted, inactive/suspended/deleted/restricted denied; concurrent fence serialization verified",
+    "safetyPrincipalBindings": 5,
+    "sharedParticipationPreserved": true,
+    "uiSourceChanged": false,
+    "nativeAndProductionCdnAcceptance": false,
+    "retentionLifecycleImplemented": false,
+    "retainedDeletionEvidenceActivated": false,
+    "installedClientAdoptionVerified": false,
+    "retiredBuildNumbers": [],
+    "releaseInventory": "../../../movrr-mobile/docs/implementation/community-safety-release-inventory.json",
+    "decisionPackage": "../operations/community-safety-policy-assessment.md",
+    "rolloutProposal": "../operations/community-safety-rollout.md",
+    "productionMigrationApplied": false,
+    "deploymentOrMobileReleasePerformed": false
+  },
+  "priorSourceCandidateRemediation": {
     "date": "2026-10-23",
     "verdict": "INDEPENDENT_SOURCE_VERIFIED_PRODUCTION_NO_GO",
     "migrationSha256Lf": "888c95b5d684838ee1202bb432848d7d6cba6918c01810d1c6964a5dee97ae4d",
@@ -108,108 +324,5 @@
     "clientContract": "../../../movrr-mobile/docs/implementation/community-safety-private-covers.md",
     "decisionPackage": "../operations/community-safety-policy-assessment.md",
     "rolloutProposal": "../operations/community-safety-rollout.md"
-  },
-  "verdict": "PRODUCTION_NO_GO; currentRemediation is authoritative; remaining sections record earlier baseline evidence",
-  "productionMutations": false,
-  "sourceChanges": "test tooling and documentation only",
-  "runtimeBaseline": {
-    "admin": "f765f1b7f4879bdc91de7530e5ad34d89aa20814",
-    "mobile": "0aeb626f28c9761f486e8b5fb17aad4bb6a29dae"
-  },
-  "consolidatedDocumentation": {
-    "admin": "6dec5e98fba2eaa17cc26b18d9f5d01817dab046",
-    "mobile": "621c3cf29eaf12a8ea7b31e8a4533c861b479003"
-  },
-  "policyStatus": "Owner confirmed separate internal approval; remaining implementation/disclosure gates unresolved",
-  "sourceFiles": {
-    "scripts/082_community_safety.sql": "6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0",
-    "scripts/test-community-safety-rehearsal.cjs": "b963eb1c36e2ac7e3e862b8b557fce26f04c5f5d05ef4c478aa922cadb7497c7",
-    "scripts/test-community-safety.cjs": "09a8b682e293c648ceb2436e86da81c5afe972d4b377d48d1523e95641b6caa8",
-    "scripts/test-community-safety-http.cjs": "9731ab68d8fb69632303b3c8eaf3a7add367ab4c046edfda26aff145be8283cb",
-    "scripts/test-community-safety-storage.cjs": "04e86f4a47565daf5c76fbc02e16f5dd8924b8d8492d3e7689667f2887e7c0e7"
-  },
-  "scoped": {
-    "sql": 96,
-    "http": 21,
-    "storage": 28,
-    "storageApi": "1.79.36",
-    "actualByteTransfer": true
-  },
-  "expandedRehearsal": {
-    "assertions": 16,
-    "migrationSha256": "6072bdf88bb1256439ad2ab6a1510b3894014125154f35c44449b6ba84ad20d0",
-    "existingPublicRidePreserved": true,
-    "participantsPreserved": true,
-    "deletionBarrierRollback": true,
-    "prerequisiteDriftRollback": true,
-    "safetyDeletionBindings": [],
-    "restrictedAccountWrites": {
-      "report": "succeeded",
-      "block": "succeeded"
-    },
-    "governanceGate": "Review ownership bindings and approved retention/disposition before release; migration success alone is not readiness",
-    "productionMutations": false
-  },
-  "components": {
-    "mobileTests": 204,
-    "mobileSuites": 20,
-    "adminTests": 31,
-    "adminSuites": 3
-  },
-  "checks": {
-    "mobileTypeScript": true,
-    "adminTypeScript": true,
-    "mobileFocusedESLint": true,
-    "iosJavaScriptExport": true,
-    "androidJavaScriptExport": true,
-    "bytecode": false
-  },
-  "browser": {
-    "states": 192,
-    "javaScriptErrors": 0,
-    "horizontalOverflows": 0,
-    "homeGeometryComparisons": 24,
-    "io": "synthetic",
-    "physicalDeviceAcceptance": false
-  },
-  "nativeMetroVerification": false,
-  "releaseBlockers": [
-    "Scoped sensitive-data authority, Safety-receipt lifecycle and exact canonical registry/manifests with minimization conformance; ordinary internal basis/inventory/disclosure package finalized",
-    "Compatible binary distribution and demonstrated adoption across supported installations; no retirement or minimum build invented",
-    "Approved original-object recovery/relocation/reference manifest, old public/signed URL CDN containment and hosted route acceptance",
-    "Physical iOS/Android acceptance and assigned moderation coverage/escalation",
-    "Separate migration/deployment/disposal-worker/release operating authorisations"
-  ],
-  "retainedVisualEvidence": "Existing curated audit images retained; fresh matrix reproduced through Mobile scripts/fixtures/community-safety-visual without committing redundant screenshot iterations",
-  "previousRemediation": {
-    "date": "2026-10-23",
-    "verdict": "FAIL_PENDING_PRIVACY_AND_CLIENT_DECISIONS",
-    "migrationSha256Lf": "29de9a9406311fa5c30b7647c83be9429ebdc5107b3c904eb66c8a345782ed7d",
-    "productionSchemaSha256": "3930a9082a74505ca611a5bbffa6bbf9f907c56aec65017b1ff325f57419c3aa",
-    "restoredSchemaTables": 192,
-    "schemaAssertions": 29,
-    "canonicalLifecycleRehearsalAssertions": 18,
-    "sqlAssertions": 96,
-    "authenticatedHttpAssertions": 24,
-    "actualStorageAssertions": 28,
-    "mobileTests": 137,
-    "adminTests": 31,
-    "mobileTypeScript": "passed",
-    "adminTypeScript": "passed",
-    "adminProductionBuild": "passed locally; no deployment",
-    "accountLifecycleFence": "corrected; active permitted, inactive/suspended/deleted/restricted denied; concurrent fence serialization verified",
-    "safetyPrincipalBindings": 5,
-    "sharedParticipationPreserved": true,
-    "uiSourceChanged": false,
-    "nativeAndProductionCdnAcceptance": false,
-    "retentionLifecycleImplemented": false,
-    "retainedDeletionEvidenceActivated": false,
-    "installedClientAdoptionVerified": false,
-    "retiredBuildNumbers": [],
-    "releaseInventory": "../../../movrr-mobile/docs/implementation/community-safety-release-inventory.json",
-    "decisionPackage": "../operations/community-safety-policy-assessment.md",
-    "rolloutProposal": "../operations/community-safety-rollout.md",
-    "productionMigrationApplied": false,
-    "deploymentOrMobileReleasePerformed": false
   }
 }

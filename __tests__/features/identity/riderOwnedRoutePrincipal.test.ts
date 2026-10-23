@@ -31,7 +31,7 @@ import { GET as riderFeature } from "@/app/api/v1/riders/me/[feature]/route";
 import { POST as cancelCommunityRide } from "@/app/api/v1/community-rides/[id]/cancel/route";
 
 const request = (path: string, method = "GET") =>
-  new Request(`https://admin.movrr.test${path}`, { method, headers: { authorization: "Bearer valid" }, ...(method === "POST" ? { body: "{}" } : {}) });
+  new Request(`https://admin.movrr.test${path}`, { method, headers: { authorization: "Bearer valid", "x-movrr-community-contract": "private-media-v1" }, ...(method === "POST" ? { body: "{}" } : {}) });
 const call = {
   campaigns: () => listCampaigns(request("/api/v1/riders/me/campaigns")),
   // An unknown feature proves the Rider principal reached the handler (404), not a principal denial (403).
@@ -51,6 +51,15 @@ beforeEach(() => {
 });
 
 describe("Rider-owned API principal resolution", () => {
+  it("requires the negotiated Community contract before handling an authenticated legacy request", async () => {
+    identity.rider = { id: "r1", userId: "u1" };
+    const response = await cancelCommunityRide(new Request("https://admin.movrr.test/api/v1/community-rides/x/cancel", {
+      method: "POST", headers: { authorization: "Bearer valid" }, body: "{}",
+    }), { params: Promise.resolve({ id: "x" }) });
+    expect(response.status).toBe(426);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect((await response.json()).error.kind).toBe("client_update_required");
+  });
   for (const [name, invoke] of Object.entries(call) as Array<[keyof typeof call, () => Promise<Response>]>) {
     it(`${name}: a Rider who is also Staff acts as the Rider`, async () => {
       identity.admin = { ...employee };

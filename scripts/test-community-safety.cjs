@@ -3,7 +3,7 @@ const fs = require('node:fs'), path = require('node:path'), assert = require('no
 const postgres = require('postgres');
 const testPort = Number(process.env.MOVRR_COMMUNITY_TEST_PORT || 55439);
 if (!Number.isInteger(testPort) || testPort < 1024 || testPort > 65535) throw new Error('Invalid isolated test port');
-const options = { host: '127.0.0.1', port: testPort, username: 'postgres', password: 'isolated-local-test-only', max: 8, onnotice() {} };
+const options = { host: '127.0.0.1', port: testPort, username: 'postgres', password: 'isolated-local-test-only', max: 8, connection: { 'request.headers': '{"x-movrr-community-contract":"private-media-v1"}' }, onnotice() {} };
 const root = postgres({ ...options, database: 'postgres' }), name = 'movrr_safety_' + process.pid, db = postgres({ ...options, database: name });
 const id = () => crypto.randomUUID(); let assertions = 0;
 const equal = (a,b) => { assert.deepEqual(a,b); assertions++; };
@@ -17,7 +17,7 @@ const admin = id(), owner = id(), organiser = id(), reporter = id(), rider = id(
 const rideInput = { title: 'Canal ride', description: 'A relaxed ride together', organizer_type: 'rider', organizer_name: 'Organiser', organizer_user_id: owner, organizer_rider_id: organiser, created_by_user_id: owner, is_public: true, status: 'upcoming', scheduled_at: '2099-01-01T12:00:00Z', max_participants: 20, category: 'social' };
 const create = (extra = {}) => as(owner, async tx => (await tx`INSERT INTO community_ride ${tx({ id: id(), ...rideInput, ...extra })} RETURNING *`)[0]);
 const review = (ride, action = 'approve', report = null, operation = id(), reason = 'Reviewed all text and image against Community Guidelines') => as(null, tx => tx`SELECT moderate_community_content(${operation},${admin},${ride.id},${ride.moderation_version},${action},${reason},${report?.id ?? null},${report?.version ?? null})`, 'service_role');
-const report = (ride, target = 'ride', user = reporter) => as(user, async tx => (await tx`SELECT report_community_content(${ride.id},${target},'harassment','Please review') id`)[0].id);
+const report = (ride, target = 'ride', user = reporter) => as(user, async tx => (await tx`SELECT report_community_content(${ride.id},${target},'harassment','') id`)[0].id);
 let storage;
 async function main() {
   await root.unsafe('CREATE DATABASE ' + name);

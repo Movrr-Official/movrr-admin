@@ -22,5 +22,9 @@ export async function disposeCommunitySafetyCase(operation: string, caseId: stri
   }
   const status = await db.rpc("community_safety_disposal_status", { p_operation: operation });
   if (status.error) throw new Error("Safety disposal confirmation unavailable");
+  if (!pending && !status.data?.remaining) {
+    const expired = await db.rpc("expire_community_safety_receipts", { p_policy: policy });
+    if (expired.error) return { state: "pending", cleanup: "receipt_expiry" };
+  }
   return { state: pending || status.data?.remaining ? "pending" : "confirmed", counts: prepared.data };
 }

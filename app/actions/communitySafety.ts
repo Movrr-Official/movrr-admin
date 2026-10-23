@@ -15,6 +15,9 @@ const decision = z.object({
 
 export async function getCommunitySafetyQueue(input: z.input<typeof filters>) {
   await requireCapability("community.manage");
+  // Raw allegations/evidence can contain incidental sensitive material. Ordinary
+  // publication capability alone must not expose the case-data projection.
+  await requireCapability("privacy.deletion.compliance.review");
   const parsed = filters.parse(input);
   const db = createSupabaseAdminClient();
   let query = db.from("community_report")
@@ -51,7 +54,7 @@ export async function getCommunitySafetyQueue(input: z.input<typeof filters>) {
 
 const caseCommand = z.object({
   operation: z.string().uuid(), caseId: z.string().uuid(), version: z.number().int().positive(),
-  action: z.enum(["triage_urgent", "triage_routine", "close", "reopen", "hold", "release"]),
+  action: z.enum(["triage_urgent", "triage_routine", "close", "reopen", "hold", "release", "minimise", "deletion_clearance", "ordinary_evidence"]),
   reason: z.string().trim().min(3).max(500), hold: z.string().uuid().optional(),
   authority: z.string().trim().min(3).max(500).optional(), review: z.string().datetime({ offset: true }).optional(),
   policy: z.number().int().positive().optional(), retain: z.boolean().default(false),
@@ -59,7 +62,7 @@ const caseCommand = z.object({
 export async function commandCommunitySafetyCase(input: z.input<typeof caseCommand>) {
   const actor = await requireCapability("community.manage", { mutation: true });
   const parsed = caseCommand.parse(input);
-  if (["hold", "release"].includes(parsed.action)) await requireCapability("privacy.deletion.compliance.review", { mutation: true });
+  if (parsed.retain || ["hold", "release", "minimise", "deletion_clearance", "ordinary_evidence"].includes(parsed.action)) await requireCapability("privacy.deletion.compliance.review", { mutation: true });
   const result = await createSupabaseAdminClient().rpc("command_community_safety_case", {
     p_operation: parsed.operation, p_actor: actor.authUser.id, p_case: parsed.caseId,
     p_version: parsed.version, p_action: parsed.action, p_reason: parsed.reason,

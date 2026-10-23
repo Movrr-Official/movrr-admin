@@ -11,7 +11,7 @@ import { requireCapability } from "@/lib/admin";
 import { getCommunitySafetyQueue, moderateCommunityContent, commandCommunitySafetyCase } from "@/app/actions/communitySafety";
 const input = { operation: "22222222-2222-4222-8222-222222222222", ride: "33333333-3333-4333-8333-333333333333", version: 1, action: "approve" as const, reason: "Reviewed text and image" };
 beforeEach(() => {
-  vi.clearAllMocks(); state.role = "operations_manager"; state.rpc.mockResolvedValue({ error: null });
+  vi.clearAllMocks(); state.role = "super_admin"; state.rpc.mockResolvedValue({ error: null });
   const builder = { select: state.select, eq: vi.fn(), order: vi.fn(), limit: vi.fn(), then: (resolve: (value: { data: never[]; error: null }) => unknown) => Promise.resolve(resolve({ data: [], error: null })) };
   state.select.mockReturnValue(builder); builder.eq.mockReturnValue(builder); builder.order.mockReturnValue(builder);
   builder.limit.mockReturnValue(builder); state.from.mockReturnValue(builder);
@@ -23,7 +23,8 @@ it.each(CANONICAL_EMPLOYEE_ROLES)("uses the existing capability bundle for revie
     await expect(moderateCommunityContent(input)).rejects.toThrow("Not authorised");
     expect(state.from).not.toHaveBeenCalled(); expect(state.rpc).not.toHaveBeenCalled();
   } else {
-    expect(await getCommunitySafetyQueue({ status: "open" })).toEqual({ reports: [], pending: [], cases: [] });
+    if (employeeHasCapability(role, "privacy.deletion.compliance.review")) expect(await getCommunitySafetyQueue({ status: "open" })).toEqual({ reports: [], pending: [], cases: [] });
+    else await expect(getCommunitySafetyQueue({ status: "open" })).rejects.toThrow("Not authorised");
     expect(await moderateCommunityContent(input)).toEqual({ success: true });
     expect(requireCapability).toHaveBeenLastCalledWith("community.manage", { mutation: true });
   }

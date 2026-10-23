@@ -12,7 +12,7 @@ const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 // The captured schema remains authoritative; rehearse the current candidate,
 // rather than requiring its hash to equal the known failing old migration.
 assert.equal(hash(schema),'3930a9082a74505ca611a5bbffa6bbf9f907c56aec65017b1ff325f57419c3aa');
-const options={host:'127.0.0.1',port:55469,username:'postgres',password:'isolated-local-test-only',max:1,onnotice(){}};
+const options={host:'127.0.0.1',port:55469,username:'postgres',password:'isolated-local-test-only',max:1,connection:{'request.headers':'{"x-movrr-community-contract":"private-media-v1"}'},onnotice(){}};
 const name='safety_rollout_'+process.pid,root=postgres({...options,database:'postgres'}),db=postgres({...options,database:name});
 const quote=s=>'"'+s.replaceAll('"','""')+'"';
 let checks=0;const equal=(a,b)=>{assert.deepEqual(a,b);checks++};
@@ -75,20 +75,20 @@ const as=(user,fn)=>db.begin(async tx=>{await tx.unsafe('SET LOCAL ROLE authenti
   if(status==='inactive') await db`UPDATE public.rider SET status='inactive' WHERE id=${participant}`;
   else await db`UPDATE public."user" SET status=${status} WHERE id=${viewer}`;
   for(const command of [
-   tx=>tx`SELECT public.report_community_content(${ride},'ride','other','Denied status')`,
+   tx=>tx`SELECT public.report_community_content(${ride},'ride','other','')`,
    tx=>tx`SELECT public.set_community_block(${organiser},true)`,
    tx=>tx`SELECT public.set_community_block(${organiser},false)`
   ]) {await assert.rejects(as(viewer,command),e=>e.code==='42501');checks++;}
   await db`UPDATE public."user" SET status='active' WHERE id=${viewer}`;
   await db`UPDATE public.rider SET status='active' WHERE id=${participant}`;
  }
- const report=(await as(viewer,tx=>tx`SELECT public.report_community_content(${ride},'ride','other','Active report') id`))[0].id;
+ const report=(await as(viewer,tx=>tx`SELECT public.report_community_content(${ride},'ride','other','') id`))[0].id;
  equal(typeof report,'string');
  stage='restricted account lifecycle probe';
  // Model the existing established write fence without creating a deletion
  // request, activating a gate or invoking irreversible deletion.
  // The deployed AFTER INSERT trigger establishes the fence for this local job.
- const competing=postgres({...options,database:name,connection:{application_name:'safety_fence_contender'}});
+ const competing=postgres({...options,database:name,connection:{...options.connection,application_name:'safety_fence_contender'}});
  let pendingWrite;
  try {
   await db.begin(async tx=>{
@@ -114,7 +114,7 @@ const as=(user,fn)=>db.begin(async tx=>{await tx.unsafe('SET LOCAL ROLE authenti
  const restrictedAccountWrites={};
  for(const [key,operation] of [
   ['block',()=>as(viewer,tx=>tx`SELECT public.set_community_block(${organiser},true)`)],
-  ['report',()=>as(viewer,tx=>tx`SELECT public.report_community_content(${ride},'ride','other','Isolated lifecycle probe')`)]
+  ['report',()=>as(viewer,tx=>tx`SELECT public.report_community_content(${ride},'ride','other','')`)]
  ]) {try{await operation();restrictedAccountWrites[key]='succeeded';}catch(error){restrictedAccountWrites[key]=error.code;}}
  equal(restrictedAccountWrites,{block:'42501',report:'42501'});
  await assert.rejects(as(viewer,tx=>tx`SELECT public.set_community_block(${organiser},false)`),e=>e.code==='42501');checks++;

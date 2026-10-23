@@ -29,7 +29,7 @@ it("keeps an unconfirmed removal pending and reuses the original operation on re
   expect((await disposeCommunitySafetyCase("operation", "case", 1)).state).toBe("pending");
   state.rpc.mockImplementation(normal);
   expect((await disposeCommunitySafetyCase("operation", "case", 1)).state).toBe("confirmed");
-  expect(state.rpc).toHaveBeenLastCalledWith("community_safety_disposal_status", { p_operation: "operation" });
+  expect(state.rpc).toHaveBeenLastCalledWith("expire_community_safety_receipts", { p_policy: 1 });
 });
 it("does not mistake another worker's live lease for completed disposal", async () => {
   state.rpc.mockImplementation(async (name: string) => ({ data: name === "dispose_community_safety" ? {} : name === "claim_community_cover_disposal" ? [] : { remaining: 1 }, error: null }));

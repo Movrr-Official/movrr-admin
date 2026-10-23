@@ -20,6 +20,7 @@ export type PlatformRouteConfig<T> = {
   preferRider?: boolean;
   /** Binary transport after the same canonical authentication/authorisation. */
   respond?: (value: T) => Response;
+  clientContract?: { header: string; value: string };
 };
 
 /**
@@ -110,6 +111,9 @@ export async function platformRoute<T>(
     return errorResponse(guard, ctx.correlationId);
   }
 
+  if (config.clientContract && config.request.headers.get(config.clientContract.header) !== config.clientContract.value) {
+    return NextResponse.json({ error: { kind: "client_update_required", message: "Update MOVRR to use Community Rides" } }, { status: 426, headers: { "cache-control": "private, no-store" } });
+  }
   const result = await config.handle(ctx, config.request);
   if (!result.ok) {
     return errorResponse(result, ctx.correlationId);
