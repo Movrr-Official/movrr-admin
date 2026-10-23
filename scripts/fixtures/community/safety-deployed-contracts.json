@@ -1,0 +1,345 @@
+{
+  "capturedAt": "2026-10-23T11:08:03.452Z",
+  "readOnly": true,
+  "containsCustomerRecords": false,
+  "policies": [
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "Admins can read all community rides",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "identity_has_capability('riders.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "Approved riders can create community rides",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((created_by_user_id = auth.uid()) AND (organizer_type = 'rider'::text) AND (organizer_user_id = auth.uid()) AND (organizer_rider_id IS NOT NULL) AND can_create_community_ride(auth.uid()) AND (EXISTS ( SELECT 1\n   FROM rider r\n  WHERE ((r.id = community_ride.organizer_rider_id) AND (r.user_id = auth.uid())))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "Community ride organizers can read own rides",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(organizer_user_id = auth.uid())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "Community ride participants can read joined rides",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM (community_ride_participant crp\n     JOIN rider r ON ((r.id = crp.rider_id)))\n  WHERE ((crp.community_ride_id = community_ride.id) AND (r.user_id = auth.uid()))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "Public upcoming rides are readable",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "((is_public = true) AND (status = ANY (ARRAY['upcoming'::text, 'active'::text])))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "Rider organizers can update own rides",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "UPDATE",
+      "qual": "((organizer_type = 'rider'::text) AND (organizer_user_id = auth.uid()))",
+      "with_check": "((organizer_type = 'rider'::text) AND (organizer_user_id = auth.uid()) AND (organizer_rider_id IS NOT NULL))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "account_status_required",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "ALL",
+      "qual": "account_is_active()",
+      "with_check": "account_is_active()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "community_ride_creator_required",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((created_by_user_id = auth.uid()) AND (organizer_user_id = auth.uid()) AND (organizer_type = 'rider'::text) AND can_create_community_ride(auth.uid()) AND (EXISTS ( SELECT 1\n   FROM rider r\n  WHERE ((r.id = community_ride.organizer_rider_id) AND (r.user_id = auth.uid())))))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "community_ride_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(organizer_user_id = auth.uid())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "community_ride_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "(is_public = true)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "community_ride_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "UPDATE",
+      "qual": "(organizer_user_id = auth.uid())",
+      "with_check": "(organizer_user_id = auth.uid())"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride",
+      "policyname": "identity_status_required",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "ALL",
+      "qual": "account_is_active()",
+      "with_check": "account_is_active()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride_creator_grant",
+      "policyname": "Users can read own community ride grant",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(user_id = auth.uid())",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride_creator_grant",
+      "policyname": "identity_status_required",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "ALL",
+      "qual": "account_is_active()",
+      "with_check": "account_is_active()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride_participant",
+      "policyname": "Admins can read all participants",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "identity_has_capability('riders.read'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride_participant",
+      "policyname": "Participants visible on public rides",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(community_ride_participant_read_allowed(community_ride_id) OR (EXISTS ( SELECT 1\n   FROM rider r\n  WHERE ((r.id = community_ride_participant.rider_id) AND (r.user_id = auth.uid())))))",
+      "with_check": null
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride_participant",
+      "policyname": "account_status_required",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "ALL",
+      "qual": "account_is_active()",
+      "with_check": "account_is_active()"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride_participant",
+      "policyname": "community_ride_participant_write",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(rider_id IN ( SELECT r.id\n   FROM rider r\n  WHERE (r.user_id = auth.uid())))",
+      "with_check": "(rider_id IN ( SELECT r.id\n   FROM rider r\n  WHERE (r.user_id = auth.uid())))"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "community_ride_participant",
+      "policyname": "identity_status_required",
+      "permissive": "RESTRICTIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "ALL",
+      "qual": "account_is_active()",
+      "with_check": "account_is_active()"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "community_rides_images_owner_delete",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "DELETE",
+      "qual": "((bucket_id = 'community-rides'::text) AND (auth.role() = 'authenticated'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "community_rides_images_owner_insert",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((bucket_id = 'community-rides'::text) AND (auth.role() = 'authenticated'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "community_rides_images_owner_read",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "authenticated"
+      ],
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'community-rides'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "community_rides_images_owner_update",
+      "permissive": "PERMISSIVE",
+      "roles": [
+        "public"
+      ],
+      "cmd": "UPDATE",
+      "qual": "((bucket_id = 'community-rides'::text) AND (auth.role() = 'authenticated'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text))",
+      "with_check": null
+    }
+  ],
+  "helpers": [
+    {
+      "signature": "account_identity_active(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.account_identity_active(p_user uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n SELECT EXISTS(SELECT 1 FROM public.\"user\" u JOIN auth.users a ON a.id=u.id WHERE u.id=p_user AND u.status='active'\n AND a.deleted_at IS NULL AND (a.banned_until IS NULL OR a.banned_until<=now()))\n$function$\n",
+      "owner": "postgres",
+      "execute_roles": [
+        "postgres",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "account_is_active()",
+      "definition": "CREATE OR REPLACE FUNCTION public.account_is_active()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n SELECT public.account_identity_active(auth.uid())\n$function$\n",
+      "owner": "postgres",
+      "execute_roles": [
+        "postgres",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "assert_active_account()",
+      "definition": "CREATE OR REPLACE FUNCTION public.assert_active_account()\n RETURNS void\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nBEGIN\n IF auth.uid() IS NULL OR NOT public.account_is_active() THEN\n  RAISE EXCEPTION 'Account access restricted' USING ERRCODE='42501';\n END IF;\nEND $function$\n",
+      "owner": "postgres",
+      "execute_roles": [
+        "postgres",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "community_ride_participant_read_allowed(uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.community_ride_participant_read_allowed(p_ride_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\n  SELECT EXISTS (\r\n    SELECT 1\r\n    FROM public.community_ride\r\n    WHERE id = p_ride_id\r\n      AND (\r\n        is_public = true\r\n        OR organizer_user_id = auth.uid()\r\n      )\r\n  );\r\n$function$\n",
+      "owner": "postgres",
+      "execute_roles": [
+        "PUBLIC",
+        "postgres",
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "identity_has_capability(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.identity_has_capability(p_capability text)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n SELECT public.account_identity_active(auth.uid()) AND\n  coalesce(nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'aal',current_setting('request.jwt.claim.aal',true),'')='aal2'\n  AND EXISTS(SELECT 1 FROM public.admin_users a WHERE a.user_id=auth.uid() AND public.ops_employee_capabilities(a.role) ? p_capability)\n$function$\n",
+      "owner": "postgres",
+      "execute_roles": [
+        "postgres",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "storage.foldername(text)",
+      "definition": "CREATE OR REPLACE FUNCTION storage.foldername(name text)\n RETURNS text[]\n LANGUAGE plpgsql\n IMMUTABLE\nAS $function$\nDECLARE\n    _parts text[];\nBEGIN\n    -- Split on \"/\" to get path segments\n    SELECT string_to_array(name, '/') INTO _parts;\n    -- Return everything except the last segment\n    RETURN _parts[1 : array_length(_parts,1) - 1];\nEND\n$function$\n",
+      "owner": "supabase_storage_admin",
+      "execute_roles": [
+        "PUBLIC",
+        "supabase_storage_admin"
+      ]
+    }
+  ]
+}

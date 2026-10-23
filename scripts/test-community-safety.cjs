@@ -25,23 +25,30 @@ async function main() {
     ${storage?"INSERT INTO storage.buckets(id,name,public) VALUES('community-rides','community-rides',true);":"CREATE SCHEMA storage; CREATE TABLE storage.buckets(id text PRIMARY KEY,public boolean); INSERT INTO storage.buckets VALUES('community-rides',true); CREATE TABLE storage.objects(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),bucket_id text,name text,UNIQUE(bucket_id,name));"}
     ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY; GRANT USAGE ON SCHEMA storage TO anon,authenticated,service_role;
     GRANT ALL ON storage.objects TO anon,authenticated,service_role;
-    CREATE POLICY existing_owner_read ON storage.objects FOR SELECT TO authenticated USING(bucket_id='community-rides' AND split_part(name,'/',1)=auth.uid()::text);
-    CREATE POLICY existing_owner_insert ON storage.objects FOR INSERT TO authenticated WITH CHECK(bucket_id='community-rides' AND split_part(name,'/',1)=auth.uid()::text);
-    CREATE POLICY existing_owner_update ON storage.objects FOR UPDATE TO authenticated USING(bucket_id='community-rides' AND split_part(name,'/',1)=auth.uid()::text);
-    CREATE POLICY existing_owner_delete ON storage.objects FOR DELETE TO authenticated USING(bucket_id='community-rides' AND split_part(name,'/',1)=auth.uid()::text);
     ALTER TABLE community_ride ENABLE ROW LEVEL SECURITY; ALTER TABLE community_ride_participant ENABLE ROW LEVEL SECURITY;
     GRANT SELECT,INSERT,UPDATE ON community_ride,community_ride_participant TO authenticated; GRANT SELECT ON community_ride,community_ride_participant TO anon;
     GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
     GRANT SELECT ON admin_users TO authenticated;`);
   const captured=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/community/production-contracts.json'),'utf8'));
-  await db.unsafe(fs.readFileSync(path.join(__dirname,'fixtures/community/participant-read.sql'),'utf8'));
+  const deployed=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/community/safety-deployed-contracts.json'),'utf8'));
+  // The older creator-approval fixture predates identity-policy retirement.
+  // Reconstruct current helpers AND execution grants, without broadening RLS.
+  await db.unsafe("DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='supabase_storage_admin') THEN CREATE ROLE supabase_storage_admin NOLOGIN; END IF; END $$");
+  const roles=['PUBLIC','postgres','anon','authenticated','service_role','supabase_storage_admin'];
+  for(const helper of deployed.helpers){
+    assert(roles.includes(helper.owner));assert(helper.execute_roles.every(role=>roles.includes(role)));
+    await db.unsafe(helper.definition);
+    await db.unsafe(`ALTER FUNCTION ${helper.signature} OWNER TO ${helper.owner}; REVOKE ALL ON FUNCTION ${helper.signature} FROM ${roles.join(',')}; GRANT EXECUTE ON FUNCTION ${helper.signature} TO ${helper.execute_roles.join(',')}`);
+  }
   // Use the actual permissive AND restrictive Community policies. A permissive
   // synthetic replacement cannot establish compatibility with deployed RLS.
-  for(const policy of captured.policies) {
-    await db.unsafe(`DROP POLICY IF EXISTS "${policy.policyname}" ON public.${policy.tablename}`);
-    await db.unsafe(`CREATE POLICY "${policy.policyname}" ON public.${policy.tablename} AS ${policy.permissive} FOR ${policy.cmd} TO ${policy.roles.join(',')} ${policy.qual?'USING ('+policy.qual+')':''} ${policy.with_check?'WITH CHECK ('+policy.with_check+')':''}`);
+  for(const policy of deployed.policies) {
+    await db.unsafe(`DROP POLICY IF EXISTS "${policy.policyname}" ON ${policy.schemaname}.${policy.tablename}`);
+    await db.unsafe(`CREATE POLICY "${policy.policyname}" ON ${policy.schemaname}.${policy.tablename} AS ${policy.permissive} FOR ${policy.cmd} TO ${policy.roles.join(',')} ${policy.qual?'USING ('+policy.qual+')':''} ${policy.with_check?'WITH CHECK ('+policy.with_check+')':''}`);
   }
   await db.begin(tx=>tx.unsafe(fs.readFileSync(path.join(__dirname,'065_community_approved_rider_authorization.sql'),'utf8').replace(/^BEGIN;$/m,'').replace(/^COMMIT;$/m,'')));
+  const installed=await db`SELECT schemaname,tablename,policyname,permissive,roles,cmd,qual,with_check FROM pg_policies WHERE (schemaname='public' AND tablename IN ('community_ride','community_ride_participant','community_ride_creator_grant')) OR (schemaname='storage' AND tablename='objects' AND (coalesce(qual,'')||coalesce(with_check,'')) LIKE '%community-rides%') ORDER BY schemaname,tablename,policyname`;
+  equal(JSON.parse(JSON.stringify(installed)),deployed.policies);
   await db.unsafe(`CREATE TABLE community_ride_invites(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),community_ride_id uuid,inviter_rider_id uuid,invite_code text,source_screen text,expires_at timestamptz,UNIQUE(community_ride_id,inviter_rider_id));`);
   const referralSource=fs.readFileSync(path.join(__dirname,'../../movrr-mobile/scripts/017_referral_tables.sql'),'utf8');
   for(const fn of ['create_or_get_community_ride_invite','resolve_invite_code']) {

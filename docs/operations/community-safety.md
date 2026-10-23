@@ -6,7 +6,7 @@ test-account creation or financial/account action is authorised by this document
 The independent post-implementation audit corrected the publication/block policy
 below. Its detailed regression matrix and remaining acceptance requirements are
 in Mobile `docs/implementation/community-safety-regression-audit.md`. The latest
-isolated run passes 95 SQL, 21 HTTP and 28 actual Storage API assertions using
+isolated run passes 96 SQL, 21 HTTP and 28 actual Storage API assertions using
 `node scripts/test-community-safety.cjs --http --storage`. Historical results below
 describe the original source handoff, not a release acceptance decision.
 
