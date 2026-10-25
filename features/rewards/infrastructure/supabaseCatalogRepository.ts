@@ -15,6 +15,10 @@ function throwOnError(error: { message: string } | null, action: string): void {
 async function mapCatalogRow(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   data: {
+    description?: string;
+    category?: string;
+    inventory_count?: number | null;
+    updated_at?: string;
     id: string;
     sku: string;
     title: string;
@@ -37,6 +41,7 @@ async function mapCatalogRow(
   }
 
   return {
+    description: data.description, category: data.category, inventoryCount: data.inventory_count, updatedAt: data.updated_at,
     id: String(data.id),
     sku: String(data.sku),
     title: String(data.title),
@@ -49,11 +54,20 @@ async function mapCatalogRow(
 }
 
 const CATALOG_COLUMNS =
-  "id, sku, title, status, points_price, fulfilment_type, resource_id, partner_id";
+  "id, sku, title, status, points_price, fulfilment_type, resource_id, partner_id, description, category, inventory_count, updated_at";
 
 export function createSupabaseCatalogRepository(): CatalogRepository &
-  CatalogListPort {
+  CatalogListPort & { listForPartner: (organisationId: string) => Promise<CatalogItem[]> } {
   return {
+    async listForPartner(organisationId) {
+      const supabase = createSupabaseAdminClient();
+      const { data: partner, error: partnerError } = await supabase.from("reward_partner").select("id").eq("organisation_id", organisationId).maybeSingle();
+      throwOnError(partnerError, "catalog.partner");
+      if (!partner) return [];
+      const { data, error } = await supabase.from("reward_catalog").select(CATALOG_COLUMNS).eq("partner_id", partner.id).order("updated_at", { ascending: false });
+      throwOnError(error, "catalog.partnerList");
+      return Promise.all((data ?? []).map(row => mapCatalogRow(supabase, row)));
+    },
     async getById(id) {
       const supabase = createSupabaseAdminClient();
       const { data, error } = await supabase

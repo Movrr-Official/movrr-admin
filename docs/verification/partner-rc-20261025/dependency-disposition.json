@@ -1,0 +1,104 @@
+{
+  "checkedAt": "2026-10-25T13:16:57.590501+00:00",
+  "scope": "Installed production dependency graph; npm audit --omit=dev; no exploit or production deployment claim",
+  "counts": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 3,
+    "critical": 1,
+    "total": 4
+  },
+  "packages": {
+    "@cloudinary-util/url-loader": {
+      "severity": "high",
+      "installed": "5.10.4",
+      "range": "3.24.0-beta.3 - 5.10.6",
+      "fixAvailable": {
+        "name": "next-cloudinary",
+        "version": "5.19.0",
+        "isSemVerMajor": true
+      },
+      "via": [
+        "zod"
+      ]
+    },
+    "maplibre-gl": {
+      "severity": "critical",
+      "installed": "5.17.0",
+      "range": "<=6.4.0",
+      "fixAvailable": {
+        "name": "maplibre-gl",
+        "version": "6.15.0",
+        "isSemVerMajor": true
+      },
+      "via": [
+        {
+          "source": 1193680,
+          "name": "maplibre-gl",
+          "dependency": "maplibre-gl",
+          "title": "MapLibre GL JS: XSS Sanitizer Bypass in DOM.sanitize() via Live NamedNodeMap Removal Skip",
+          "url": "https://github.com/advisories/GHSA-jrc7-96c5-q579",
+          "severity": "critical",
+          "cwe": [
+            "CWE-79"
+          ],
+          "cvss": {
+            "score": 10,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"
+          },
+          "range": "<=6.4.0"
+        }
+      ]
+    },
+    "next-cloudinary": {
+      "severity": "high",
+      "installed": "6.17.5",
+      "range": "5.20.0 - 7.0.0-beta.4",
+      "fixAvailable": {
+        "name": "next-cloudinary",
+        "version": "5.19.0",
+        "isSemVerMajor": true
+      },
+      "via": [
+        "@cloudinary-util/url-loader"
+      ]
+    },
+    "zod": {
+      "severity": "high",
+      "installed": "3.25.67",
+      "range": "<4.6.6",
+      "fixAvailable": {
+        "name": "zod",
+        "version": "4.6.7",
+        "isSemVerMajor": true
+      },
+      "via": [
+        {
+          "source": 1243066,
+          "name": "zod",
+          "dependency": "zod",
+          "title": "Zod can exhaust memory while validating oversized constrained collections",
+          "url": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5",
+          "severity": "high",
+          "cwe": [
+            "CWE-770"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": "<4.6.6"
+        }
+      ]
+    }
+  },
+  "boundedZodReproduction": {
+    "installed": "3.25.67",
+    "max": 1,
+    "inputLength": 100,
+    "elementsVisited": 100,
+    "accepted": false
+  },
+  "decision": "NO-GO for Admin production deployment until remediation or explicit security risk acceptance; no waiver granted"
+}

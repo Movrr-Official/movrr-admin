@@ -101,6 +101,7 @@ export function createPartnerQueries(deps: {
     partnerOrgId?: string | null;
   }) => Promise<PartnerResourceReadModel[]>;
   listCatalog?: () => Promise<CatalogItem[]>;
+  listCatalogForOrg?: (organisationId: string) => Promise<CatalogItem[]>;
   listStaffByOrg?: (
     organisationId: string,
   ) => Promise<OrganisationMembership[]>;
@@ -125,12 +126,14 @@ export function createPartnerQueries(deps: {
       if (!org.ok) return org;
       if (!deps.listFulfilments) return ok([]);
       const rows = await deps.listFulfilments();
+      const catalog = deps.listCatalogForOrg ? await deps.listCatalogForOrg(org.value.organisationId) : await deps.listCatalog?.() ?? [];
+      const titles = new Map(catalog.filter(item => item.partnerOrgId === org.value.organisationId).map(item => [item.id, item.title]));
       return ok(
         rows.filter(
           (f) =>
             f.partnerOrgId === org.value.organisationId &&
             PENDING_PARTNER_STATES.has(f.state),
-        ),
+        ).map(f => ({ ...f, rewardTitle: titles.get(f.catalogItemId) })),
       );
     },
     async listResources(ctx) {
@@ -153,6 +156,7 @@ export function createPartnerQueries(deps: {
       if (!authz.ok) return authz;
       const scope = allowPartnerOrAdminList(ctx);
       if (!scope.ok) return scope;
+      if (scope.value.organisationId && deps.listCatalogForOrg) return ok(await deps.listCatalogForOrg(scope.value.organisationId));
       if (!deps.listCatalog) return ok([]);
       const items = await deps.listCatalog();
       if (!scope.value.organisationId) return ok(items);

@@ -1,0 +1,74 @@
+{
+  "checkedAt": "2026-10-25T12:20:04.384248+00:00",
+  "scope": "Installed local runtime dependencies only; no deployment or exploit claim",
+  "partner": {
+    "next": "16.4.3",
+    "zod": "4.6.6",
+    "audit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    }
+  },
+  "admin": {
+    "next": "16.4.3",
+    "zod": "3.25.67",
+    "audit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 3,
+      "critical": 1,
+      "total": 4
+    },
+    "remaining": [
+      {
+        "package": "@cloudinary-util/url-loader",
+        "severity": "high",
+        "fix": {
+          "name": "next-cloudinary",
+          "version": "5.19.0",
+          "isSemVerMajor": true
+        },
+        "advisories": []
+      },
+      {
+        "package": "maplibre-gl",
+        "severity": "critical",
+        "fix": {
+          "name": "maplibre-gl",
+          "version": "6.15.0",
+          "isSemVerMajor": true
+        },
+        "advisories": [
+          "https://github.com/advisories/GHSA-jrc7-96c5-q579"
+        ]
+      },
+      {
+        "package": "next-cloudinary",
+        "severity": "high",
+        "fix": {
+          "name": "next-cloudinary",
+          "version": "5.19.0",
+          "isSemVerMajor": true
+        },
+        "advisories": []
+      },
+      {
+        "package": "zod",
+        "severity": "high",
+        "fix": {
+          "name": "zod",
+          "version": "4.6.7",
+          "isSemVerMajor": true
+        },
+        "advisories": [
+          "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5"
+        ]
+      }
+    ]
+  }
+}

@@ -22,7 +22,9 @@ import { changeAccountMembership, getAccountMemberships, getAccountOrganisations
 // Opt-in, localhost only, no .env loading and no production connection override.
 const integration = process.env.MOVRR_EMPLOYEE_POSTGRES === "1";
 describe.skipIf(!integration)("external account domains: actual services and PostgreSQL", () => {
-  const opts = { host: "127.0.0.1", port: process.env.MOVRR_DETAILS_HTTP === "1" ? 55443 : 55442, username: "postgres", password: "isolated-local-test-only", max: 16, onnotice: () => {} };
+  const port = Number(process.env.MOVRR_ISOLATED_POSTGRES_PORT ?? (process.env.MOVRR_DETAILS_HTTP === "1" ? 55443 : 55442));
+  if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error("Invalid isolated localhost PostgreSQL port");
+  const opts = { host: "127.0.0.1", port, username: "postgres", password: "isolated-local-test-only", max: 16, onnotice: () => {} };
   const root = postgres({ ...opts, database: "postgres" });
   const database = `external_domains_${process.pid}`;
   const db = postgres({ ...opts, database });

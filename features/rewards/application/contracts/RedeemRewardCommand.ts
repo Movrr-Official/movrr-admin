@@ -45,6 +45,10 @@ export type RedeemRewardResult = {
 };
 
 export type CatalogItem = {
+  description?: string;
+  category?: string;
+  inventoryCount?: number | null;
+  updatedAt?: string;
   id: string;
   sku: string;
   title: string;

@@ -183,7 +183,16 @@ export async function createPlatformApiForTests(
   const fulfilmentQueries = createFulfilmentQueries({ authorisation, port: fulfilmentPort });
   const organisationStore = options.organisationStore ?? getSharedOrganisationOpsStore();
   const partnerQueries = createPartnerQueries({ authorisation, listFulfilments: () => fulfilmentPort.list(), listResources: listResourcesFn,
-    listCatalog: () => catalogPort.list(), listStaffByOrg: id => organisationStore.listMembersByOrganisation(id), getOrganisation: id => organisationStore.findOrganisationById(id) });
+    listCatalogForOrg: catalogPort.listForPartner?.bind(catalogPort),
+    listCatalog: () => catalogPort.list(), listStaffByOrg: async id => {
+      const members = await organisationStore.listMembersByOrganisation(id);
+      if (!isProductionComposition || members.length === 0) return members;
+      const { createSupabaseAdminClient } = await import("@/lib/supabase-admin");
+      const { data, error } = await createSupabaseAdminClient().from("user").select("id,name,email").in("id", members.map(member => member.userId));
+      if (error) throw new Error("Team details are temporarily unavailable");
+      const labels = new Map((data ?? []).map(user => [user.id, user]));
+      return members.map(member => ({ ...member, name: labels.get(member.userId)?.name ?? null, email: labels.get(member.userId)?.email ?? null }));
+    }, getOrganisation: id => organisationStore.findOrganisationById(id) });
   const organisationQueries = createOrganisationOpsQueries({ authorisation, store: organisationStore });
   const organisationCommands = createOrganisationOpsCommands({ authorisation, store: organisationStore });
 

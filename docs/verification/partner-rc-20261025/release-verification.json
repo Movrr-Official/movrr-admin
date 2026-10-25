@@ -1,0 +1,74 @@
+{
+  "checkedAt": "2026-10-25T13:20:16.666963+00:00",
+  "productionMutation": false,
+  "shopActivation": false,
+  "adminCandidate": "Commit containing this manifest; source hashes below identify tested uncommitted Admin content",
+  "adminParent": "32ef08ba94365a2c05209e2b7c26b056c3de304a",
+  "partnerCommit": "6d83f6d6b29515a499c21e09cac4175dc4fd0336",
+  "mobileFixturesCommit": "35ad03fa63dc8363dc2a995f0d35bf31397c2da2",
+  "lineEndingConvention": "SHA-256 UTF-8 LF for text; raw bytes for binary assets",
+  "adminSourceHashes": {
+    "__tests__/features/identity/externalAccountDomains.postgres.test.ts": "9c5c7e10a0a894dfbeabcedafaba0e9b75c8e8996bbf30cb604504ae71a81f33",
+    "__tests__/features/organisations/partnerEmailInvitation.test.ts": "0898846d20e8ee60a21a23373789026faad056f325d95618cb7daa947f87a7e1",
+    "__tests__/features/organisations/partnerReadiness.test.ts": "a728101a01c41d147afc70611786e7e020e4957cfa28471a88f412b22de7e160",
+    "__tests__/features/partners/partnerWorkspaceContracts.test.ts": "1b8ebd5b9effc24152a2023ac646c250b8f2b35d77244eb77dd6aba92f115044",
+    "app/api/v1/organisations/[id]/invitations/route.ts": "9fe449caf6422f50e4fc2f5f6918c6d10a0bd3e398733edf0df13f5eb0b1984a",
+    "features/organisations/presentation/partnerReadiness.ts": "e0ae728ce794417a6624c868fb12912d3be3ca1eb6d067490ee5710100f15c60",
+    "features/partners/application/partnerServices.ts": "5f04b5cafdbb5a103e8c60107643ff9a9a94ca5bee4c2ccc68527e05c130564c",
+    "features/platform/infrastructure/composePlatformApi.ts": "5ce45c83a97469662639d45751f75e2ae1b1129003b82f4cf17eb830b9bf1543",
+    "features/rewards/application/contracts/RedeemRewardCommand.ts": "e27c37db0832dbc0e8fbb00315a2928ccecde4a36e2c351ba7ea3e181adbc15b",
+    "features/rewards/application/queries/catalogAndRedemptions.ts": "5be0ed24ba4cda585e7bd4f1b7632cac61e829de767c0eaf961eab561edc339c",
+    "features/rewards/infrastructure/supabaseCatalogRepository.ts": "2c0c951c8465fc98d459a7822590d24b3b10efee3d08160afa41edddbeeb5a9d",
+    "package-lock.json": "8d668befcc5c395df4467891f5cd3ca678d4474345a816a575158342a73a8af9",
+    "package.json": "682e64de6cb1adf67a4400a5d30e0ac52b4fe34b5e2173a8713bc6ffb425e765",
+    "scripts/085_canonical_debit_refund_compatibility.sql": "c45e511cc771382b34dec6d3306343e17a9e66a22f33c415299ccb961896fb24",
+    "scripts/rollback/085_canonical_debit_refund_compatibility.sql": "895aa2f990b2d6c8440cf9f69e4a2da77db7b294734a134b379f16d347695cfd"
+  },
+  "gates": {
+    "partner": {
+      "suites": 21,
+      "testsPassed": 127,
+      "typecheck": true,
+      "changedSourceLint": true,
+      "productionBuild": true,
+      "runtimeAdvisories": 0
+    },
+    "admin": {
+      "suitesPassed": 88,
+      "testsPassed": 954,
+      "suitesSkipped": 8,
+      "testsSkipped": 105,
+      "typecheck": true,
+      "productionBuild": true,
+      "runtimeAdvisories": {
+        "critical": 1,
+        "high": 3
+      }
+    },
+    "onboardingAndPartnerDomains": {
+      "suitesPassed": 4,
+      "testsPassed": 34,
+      "optionalTransportTestsSkipped": 8
+    },
+    "financialLifecycleAssertions": 391,
+    "crossAppAcceptance": {
+      "assertions": 253,
+      "httpRequests": 122,
+      "checkpoints": 20,
+      "denials": 18,
+      "reconciliationMismatches": 0
+    },
+    "migration085": {
+      "requiresExistingFunctions": true,
+      "requiresRestrictedAcl": true,
+      "oidsOwnersAclAndSecurityPreserved": true,
+      "repeatInstallPreserved": true,
+      "rollbackBodiesMatch083": true,
+      "actual051DebitRefundReplayedExactlyOnce": true,
+      "forgedBindingDenied": true
+    }
+  },
+  "productionDeploymentDecision": "NO-GO: security disposition and explicit RC authorization required",
+  "publicRedemptionDecision": "NO-GO: merchant supply and operational/readiness acceptance incomplete",
+  "deviceAndProviderAcceptance": false
+}

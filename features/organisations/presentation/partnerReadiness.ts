@@ -17,7 +17,7 @@ function hasUsableContact(org: Organisation): boolean {
 }
 
 function hasLinkedProfile(org: Organisation): boolean {
-  return Boolean(org.partnerProfile?.id);
+  return Boolean(org.partnerProfile?.id && org.partnerProfile.organisationId === org.id);
 }
 
 /**
@@ -50,6 +50,11 @@ export function assessPartnerReadiness(
       profileIncomplete,
       reasons,
     };
+  }
+
+  if (org.partnerProfile && org.partnerProfile.status !== "active") {
+    reasons.push("Partner profile is not active");
+    return { readiness: "not_ready", missingStaff, profileIncomplete, reasons };
   }
 
   if (missingStaff) {

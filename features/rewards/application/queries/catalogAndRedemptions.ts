@@ -14,6 +14,7 @@ import type {
 
 export type CatalogListPort = CatalogRepository & {
   list: () => Promise<CatalogItem[]>;
+  listForPartner?: (organisationId: string) => Promise<CatalogItem[]>;
 };
 
 export type RedemptionListPort = RedemptionRepository & {

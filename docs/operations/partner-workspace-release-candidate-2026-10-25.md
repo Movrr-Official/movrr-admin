@@ -1,0 +1,76 @@
+# Partner Workspace release candidate - 25 October 2026
+
+Status: source verified and prepared for review; **NO-GO for production deployment or public redemption**. No production migration, application deployment, account provisioning, inventory change, financial command, EAS build or OTA update was performed. Shop remains Disabled. This supplements the [accepted implementation report](partner-workspace-acceptance-2026-10-25.md), rather than reopening completed financial, Mobile or Community Safety work.
+
+## Candidate scope and verification
+
+At the start of finalization all 69 source hashes captured by the accepted application run matched the local sources, with no intervening concurrent changes. All three main branches matched origin/main before work. The Admin candidate is the commit containing this runbook and its source-hash manifest. Partner is `6d83f6d6b29515a499c21e09cac4175dc4fd0336`; Mobile fixture/evidence commit is `35ad03fa63dc8363dc2a995f0d35bf31397c2da2`. [Release verification](../verification/partner-rc-20261025/release-verification.json) records the tested Admin source hashes and gates. Finalization adds Partner management localization, fail-closed 085 installation preconditions, four migration safety assertions, and the dependency disposition below. The retained source and tests implement scoped catalog editing, exact-email membership invitations, readiness correction, camera-first QR verification, explicit handover and the offline-only PWA from the accepted report.
+
+| Gate rerun for this candidate | Result |
+| --- | --- |
+| Partner | 21 suites / 127 tests; changed/new TypeScript lint clean; TypeScript and production build passed on Next 16.4.3 |
+| Admin | TypeScript and production build passed; 88 suites / 954 tests passed; 8 opt-in suites / 105 tests skipped |
+| Isolated onboarding + Partner domain contracts | 4 suites / 34 tests passed; 8 optional transport tests skipped (19 onboarding tests included) |
+| PostgreSQL lifecycle | 391 assertions passed, including independent-connection races, refund/stock, audit rollback and notification recovery |
+| Actual clients -> HTTP -> API composition -> PostgreSQL | 253 assertions, 122 HTTP requests, 20 checkpoints, 18 denial/error scenarios; all returned financial health counters zero |
+| Runtime dependency audit | Partner: zero advisories; Admin: 1 critical / 3 high package entries, disposition below |
+
+The complete application run and its source/dependency/migration hashes are preserved in Mobile `docs/verification/partner-rc-20261025/journeys.json`. Fixtures are isolated localhost PostgreSQL 17, with session identities and provider transports substituted as documented in that artifact. No production .env is loaded by the financial runners. No real provider/device/merchant acceptance is claimed. Native Mobile runtime sources are unchanged; the previously accepted 31 suites / 359 reward tests were not rerun for tooling-only changes. Existing deliberate negative-test logs and the existing Next image-quality warning remain.
+
+## Canonical migration 085
+
+File: `scripts/085_canonical_debit_refund_compatibility.sql`.
+
+SHA-256 (UTF-8, LF, as committed):
+
+`c45e511cc771382b34dec6d3306343e17a9e66a22f33c415299ccb961896fb24`
+
+Rollback: `scripts/rollback/085_canonical_debit_refund_compatibility.sql`, SHA-256:
+
+`895aa2f990b2d6c8440cf9f69e4a2da77db7b294734a134b379f16d347695cfd`
+
+Only `wallet_settle_refund_entry(uuid,uuid,uuid,integer,text,text,text,uuid)` and `shop_redemption_financials(uuid)` are replaced. A transaction preflight requires both existing 083 functions and their restricted execution boundaries. Missing functions or unsafe privileges abort the transaction, preventing creation of a new SECURITY DEFINER primitive with default PUBLIC execution. CREATE OR REPLACE preserves the existing owner and ACL; there are no grants, ledger updates, flag changes or 083/084 rewrites.
+
+The compatibility predicate accepts source=adjustment only for a bound canonical 051 debit: wallet_contract=2 on both rows, settlement_kind=debit, matching redemption_id, redemption ledger_transaction_id=debit.id, matching fulfilment_id and an existing corresponding fulfilment. Existing rider, amount, refundable-state, locking, historical binding, idempotency and remaining-refund checks remain. Historical unbound adjustments remain denied.
+
+Evidence includes a real paid 051 claim, rollback to the original 083 definitions reproducing cancellation failure, reinstalling 085, rejecting a forged binding, and eight concurrent identical cancellations producing one compensating credit. Core historical/authorization regressions pass. New checks reject missing prerequisites and unsafe authenticated execution, compare function OIDs/owners/ACL/security settings before/after, and reapply 085 without changes. The two rollback function bodies match 083 exactly (apart from CREATE OR REPLACE syntax).
+
+## Admin dependency advisory disposition
+
+Fresh `npm audit --omit=dev` result and bounded reproduction are preserved in [dependency-disposition.json](../verification/partner-rc-20261025/dependency-disposition.json). Four package entries represent two advisory roots, not four independently demonstrated exploits.
+
+| Entry | Applicability and disposition |
+| --- | --- |
+| maplibre-gl 5.17.0 - critical GHSA-jrc7-96c5-q579 | **Applicable exposure; unresolved.** AdminMap and RouteLocationsMap enable attribution controls and load third-party MapTiler/OpenFreeMap styles or configured style URLs. These attributions reach the vulnerable sanitizer. No evidence shows a merchant controls those URLs, but third-party attribution is explicitly within the upstream impact boundary; authentication does not sanitize it. No exploit was attempted against production. A supported patched version (upstream >=6.4.1; audit currently suggests 6.15.0) requires a reviewed major-version compatibility change or a separately verified sanitization mitigation. Neither is silently included in this RC. |
+| zod 3.25.67 - high GHSA-mrhx-c7xc-m3w5 | **Potential server resource-exhaustion exposure; unresolved.** Direct imports use v3. Although the named upstream fix is v4, installed v3 also continues element validation after rejecting a collection length. A bounded local 100-element array with max(1) visited all 100 elements and rejected the input. This is a work-bound reproduction, not an OOM/exploit claim. LocationInputSchema has max(30) and is parsed only after Admin rewards.manage authorization, which limits exposure for that route but does not establish protection for every Zod caller. No global request/element work bound has been verified. Do not dismiss this as a version-range false positive or force v4 into v3 callers. |
+| next-cloudinary 6.17.5 + @cloudinary-util/url-loader 5.10.4 - high inherited Zod entries | The same Zod advisory propagates through url-loader's ^3.22.4 dependency. The inspected MOVRR surface uses CldImage for generated image props; no CldUploadWidget call was found. No independent oversized-collection exploit is demonstrated through that image path, but the graph is still affected and direct server Zod remains unresolved. npm's suggested next-cloudinary 5.19.0 is a major downgrade, not an accepted fix. A compatible upstream resolution and image/signature regression verification are required. |
+
+Primary references: [MapLibre advisory](https://github.com/maplibre/maplibre-gl-js/security/advisories/GHSA-jrc7-96c5-q579), [Zod advisory](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), [upstream v4 bounds fix](https://github.com/colinhacks/zod/pull/6652). Applicability above combines those advisories with local source inspection; it does not assert that production was exploited.
+
+Release owner/security reviewer must approve a tested remediation or explicitly accept each remaining risk and its conditions before Admin deployment. No waiver or risk acceptance was granted in this session. Same-major security updates already in the accepted implementation remain included and verified. Unrelated maps, ride tracking and Cloudinary behavior were not redesigned.
+
+## Partner localization and QR/PWA acceptance
+
+Management copy now supports English and Dutch across overview, navigation/breadcrumbs, staff invitation/role/revoke/restore, voucher pools/import, rewards create/edit, analytics, settings and notification controls. The canonical account languagePreference supplies the default; an authenticated, actor-bound, HttpOnly/SameSite presentation cookie optionally selects EN/NL across dashboard navigation. The cookie grants no capabilities or membership. Tests cover foreign/malformed preferences and stopping unauthorized actions before commands, including awaited localized redirects. Scanner/collection controls use that initial locale and retain their local bilingual selector. Shared connection/error/offline fallback states are translated or explicitly bilingual. Merchant-authored names/descriptions and stored notification message bodies remain authored content, not automatically translated. This is source/test completeness, not linguistic/device sign-off.
+
+QR/PWA automated gates pass: canonical payload decoding, camera permission/error/cleanup fixtures, no offline validation or handover, replay/tenant denials, installable manifest/icon dimensions, and public-offline-document-only caching. The worker never caches private data or queues financial commands. Production HTTPS camera behavior, real iOS/Android installation/focus, signed-in EN/NL visual/accessibility review and merchant handover acceptance are still required.
+
+## Exact controlled rollout order (execute only after explicit RC authorization)
+
+1. Review the actual Admin and Partner commit SHAs and this 085 checksum, complete security disposition and approve a named deployment window. Fetch main and verify those exact commits and clean trees; use immutable candidate checkouts. Keep Git-triggered deployment disabled (`vercel.json` already disables main in both repos). Check real production environment configuration; `https://platform-build.invalid/api` used for a local build is never a deployment value.
+2. Capture current production deployment IDs/SHAs/aliases and both SQL function definitions, owners, ACLs and security settings into approved release evidence. Capture current 051/083/084 definitions and migration records, confirm no intervening contract drift, backup/recovery availability and production Shop Disabled/version baseline. Read financial health counters in a READ ONLY transaction; stop on unexplained discrepancies. Never use source-parent SHAs as a substitute for actual deployed rollback IDs.
+3. After the separate migration authorization, apply the exact Admin 085 file transactionally to Supabase project `kzdvunpuxaxlphqvmzxw`. Record 085 once using the existing canonical migration-record procedure (this SQL file does not invent a second registry). Do not replay 083/084 or touch financial rows. Compare installed function definitions against the candidate and verify restricted ACLs, retained owners/search_path and Disabled state. Recheck read-only reconciliation. Abort the application rollout if any migration or health check fails.
+4. Build and deploy the **approved Admin SHA** to existing Vercel project `movrr-admin`, ID `prj_VdWMMAnBPo7u5G9RPmlA6t9hMgCT`, team `team_Ni9dGJAOzL2buDAyllswezVl`, region fra1, alias `admin.movrr.nl`. Use the existing production environment and Platform configuration. Verify deployment source metadata, immutable URL health, authenticated authorized/denied reads and alias before proceeding. No cron/provider reconfiguration is part of this release.
+5. Build and deploy Partner SHA `6d83f6d6b29515a499c21e09cac4175dc4fd0336` to existing Vercel project `movrr-app`, ID `prj_I89dOyt1njax9XYP3aZBHNtprqwF`, same team/region, alias `app.movrr.nl`. Verify the actual project/origin mapping and production API origin before deployment. Use the configured project runtime and verify the build there. Keep main auto-deployment disabled. No Mobile deployment accompanies the fixture/evidence commit.
+6. Record deployment IDs, exact source SHAs and final migration checksum. Verify signed-in authorized Partner organization/role/location reads, foreign/viewer denials, draft catalog visibility, safe errors, EN/NL navigation and success/failure copy, manifest/icon/SW headers, installation and camera behavior on real target devices. Confirm no private offline caching and no offline redemption. Reconcile Admin/Rider views with server state using approved existing records and read-only checks. Recheck Shop Disabled, financial health and durable notification backlog. Do not create accounts, inventory, live entitlements, scans or refunds for a canary without separate explicit authorization; use an approved isolated environment for mutating scenarios.
+7. Obtain merchant, provider/device and readiness acceptance independently. No release step activates Shop. Public redemption needs a subsequent explicit decision after all readiness gates pass.
+
+## Rollback conditions and acceptance blockers
+
+Stop rollout for prerequisite/ACL/checksum drift, failed migration/build/health check, tenant leak, unauthorized command, false QR success, duplicate settlement, unexplained financial or notification mismatch, loss of authentication, or failed critical language/install/camera journeys. If applications are deployed, restore their captured previous known-good deployment IDs (Partner first, then Admin where applicable), preserving Shop Disabled. Confirm source/alias and read-only health after rollback.
+
+Leave the corrected 085 contract installed for an unrelated UI rollback. Only a separately authorized SQL rollback may use the exact rollback file if 085 itself causes a demonstrated regression. It restores the known original refund incompatibility, so keep affected operations contained and arrange recovery review. It does not undo any ledger entry or notification, and no financial compensation should be improvised.
+
+Latest production evidence is the read-only 25 October acceptance snapshot, **not refreshed by this finalization**: Shop Disabled/version 0, readiness/inventory false, 10 active reward-partner organizations, zero published merchant locations, zero current launch attestations and 20 missing readiness evidence items. These counts do not prove that any merchant is operationally ready. Genuine blockers remain merchant-approved usable voucher supply and fulfilment/refund terms, verified published collection locations/staff readiness, signed-in physical-device EN/NL camera/PWA acceptance, real email/push delivery acceptance, security disposition, explicit deployment authorization, and canonical launch attestations. No fabricated inventory or merchants were added.
+
+Implementation/source acceptance is complete for this RC. **Production deployment: NO-GO pending security disposition and explicit RC authorization. Public redemption: NO-GO pending the separate operational and launch gates.**

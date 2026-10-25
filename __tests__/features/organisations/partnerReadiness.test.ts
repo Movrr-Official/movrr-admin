@@ -118,3 +118,12 @@ describe("fleet and directory KPIs", () => {
     );
   });
 });
+
+it("does not mark an inactive catalog profile ready", () => {
+  const org=partner();org.partnerProfile!.status="inactive";
+  expect(assessPartnerReadiness(org)).toMatchObject({readiness:"not_ready",reasons:["Partner profile is not active"]});
+});
+it("flags a profile linked to a different organisation", () => {
+  const org=partner();org.partnerProfile!.organisationId="another-tenant";
+  expect(assessPartnerReadiness(org)).toMatchObject({readiness:"at_risk",profileIncomplete:true});
+});
