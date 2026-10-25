@@ -1,6 +1,6 @@
 {
-  "at": "2026-10-25T17:26:33.684Z",
-  "preflightAt": "2026-10-25T17:17:55.236Z",
+  "at": "2026-10-25T17:32:12.158Z",
+  "preflightAt": "2026-10-25T17:30:47.910Z",
   "productionProject": "kzdvunpuxaxlphqvmzxw",
   "shop": {
     "state": "disabled",
@@ -25,5 +25,7 @@
   "journalHash": "92866a69bbb8326b591ce649c2546657acd6a447633fda6e1d771c44a2803614",
   "allHashesMatchPreflight": true,
   "productionFinancialMutations": false,
-  "migrationAppliedDuringThisRollout": false
+  "migrationAppliedDuringThisRollout": false,
+  "contrastFollowupUnchanged": true,
+  "unchangedAcrossBothReleaseWindows": true
 }

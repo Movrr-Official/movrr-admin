@@ -44,13 +44,28 @@
   "acceptanceException": {
     "scope": "Dark workspace account caption and Current workspace label contrast",
     "preparedFix": "43f11fcec679f145c7fe8d29ced2085d16d3edc8",
-    "deployed": false,
-    "authorization": "Pending exact follow-up approval"
+    "deployed": true,
+    "authorization": "Explicitly approved by owner; deployed and verified",
+    "status": "resolved"
   },
   "operationalAcceptance": {
     "physicalCamera": false,
     "physicalPwaInstall": false,
     "realMerchantUpload": false,
     "publicRedemptionActivation": false
+  },
+  "contrastFollowup": {
+    "sha": "43f11fcec679f145c7fe8d29ced2085d16d3edc8",
+    "deploymentId": "dpl_B823jSAiYWG9n8NRsX9NYnPKUXML",
+    "explicitOwnerApproval": true,
+    "productionUrl": "https://app.movrr.nl",
+    "signedInNativeChrome": true,
+    "freshWorkspacePageReload": true,
+    "accountCaptionReadable": true,
+    "currentWorkspaceLabelReadable": true,
+    "authorizedWorkspaceReentry": true,
+    "whiteCtaTextPreserved": true,
+    "originalEnglishRetained": true,
+    "physicalDevice": false
   }
 }

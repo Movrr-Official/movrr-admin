@@ -178,6 +178,206 @@
     "physicalDeviceAcceptance": false
   },
   "partner": {
+    "at": "2026-10-25T17:32:10.870Z",
+    "production": true,
+    "name": "partner",
+    "deploymentId": "dpl_B823jSAiYWG9n8NRsX9NYnPKUXML",
+    "sha": "43f11fcec679f145c7fe8d29ced2085d16d3edc8",
+    "url": "https://app.movrr.nl",
+    "immutableUrl": "https://movrr-c7gum4g0n-movrrops-projects.vercel.app",
+    "aliasVerified": true,
+    "existingFirewallAuthenticationSettingsPreserved": true,
+    "regions": [
+      "fra1"
+    ],
+    "checks": [
+      {
+        "route": "/",
+        "method": "GET",
+        "status": 307,
+        "location": "/auth/signin",
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "bytes": 7799,
+        "sha256": "57971717d455b6fc328e317650facc9aa5b3ef9f92bab2a95512bc7a6fd9db40"
+      },
+      {
+        "route": "/dashboard",
+        "method": "GET",
+        "status": 307,
+        "location": "/auth/signin",
+        "contentType": "text/plain",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 15,
+        "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+      },
+      {
+        "route": "/workspaces",
+        "method": "GET",
+        "status": 307,
+        "location": "/auth/signin?redirectTo=/workspaces",
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "bytes": 8592,
+        "sha256": "b0ac4456adf87db6dd21ddd14c3a309ebdf439ebff379653ffb2e3d5fdf85133"
+      },
+      {
+        "route": "/dashboard/validate",
+        "method": "GET",
+        "status": 307,
+        "location": "/auth/signin?redirectTo=%2Fdashboard%2Fvalidate",
+        "contentType": "text/plain",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 15,
+        "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+      },
+      {
+        "route": "/dashboard/collections",
+        "method": "GET",
+        "status": 307,
+        "location": "/auth/signin",
+        "contentType": "text/plain",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 15,
+        "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+      },
+      {
+        "route": "/dashboard/rewards",
+        "method": "GET",
+        "status": 307,
+        "location": "/auth/signin",
+        "contentType": "text/plain",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 15,
+        "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+      },
+      {
+        "route": "/dashboard/resources",
+        "method": "GET",
+        "status": 307,
+        "location": "/auth/signin",
+        "contentType": "text/plain",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 15,
+        "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+      },
+      {
+        "route": "/dashboard/staff",
+        "method": "GET",
+        "status": 307,
+        "location": "/auth/signin",
+        "contentType": "text/plain",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 15,
+        "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+      },
+      {
+        "route": "/dashboard/settings",
+        "method": "GET",
+        "status": 307,
+        "location": "/auth/signin",
+        "contentType": "text/plain",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 15,
+        "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+      },
+      {
+        "route": "/manifest.webmanifest",
+        "method": "GET",
+        "status": 200,
+        "location": null,
+        "contentType": "application/manifest+json; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 400,
+        "sha256": "69c5c7bfe12b2fb47bc6f6cff6d24cd80b12de03f2ebc7d284bbdea405cdd847"
+      },
+      {
+        "route": "/pwa/icon-192.png",
+        "method": "GET",
+        "status": 200,
+        "location": null,
+        "contentType": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 6389,
+        "sha256": "649ca4b05160a615be4ef654e94c45ffdc573db896e586ccb0ea93c7d922cff1"
+      },
+      {
+        "route": "/pwa/icon-512.png",
+        "method": "GET",
+        "status": 200,
+        "location": null,
+        "contentType": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 20369,
+        "sha256": "aac0b99a34c41d9ef6d6e6ff375389def447a49974d6b323f435e08a7637439e"
+      },
+      {
+        "route": "/flags/gb.svg",
+        "method": "GET",
+        "status": 200,
+        "location": null,
+        "contentType": "image/svg+xml",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 504,
+        "sha256": "c8be1e7208798a4ae692ee1e937065d498bb29e741943f6172b29118b8ed8066"
+      },
+      {
+        "route": "/flags/nl.svg",
+        "method": "GET",
+        "status": 200,
+        "location": null,
+        "contentType": "image/svg+xml",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 225,
+        "sha256": "8f691f17fe70894537af8e92f2ca47761d353639b0defc15cbe561eb503ab010"
+      },
+      {
+        "route": "/sw.js",
+        "method": "GET",
+        "status": 200,
+        "location": null,
+        "contentType": "application/javascript; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "bytes": 945,
+        "sha256": "ffda8571accb99e4590548d803b6f4698fe03823a603465a39b36ede36493fa0"
+      },
+      {
+        "route": "/offline.html",
+        "method": "GET",
+        "status": 200,
+        "location": null,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "bytes": 1228,
+        "sha256": "921acea7b76c2fc112b948774e4771b5e86e1f8225b5af6b4947897c50ea1352"
+      }
+    ],
+    "authenticatedBrowserAcceptance": false,
+    "physicalDeviceAcceptance": false
+  },
+  "rollbackBaselines": {
+    "admin": {
+      "priorId": "dpl_3gKnSPdcW8RqgT6w9XaZi2wu669A",
+      "priorSha": "6c825a5ee4de1f57e842f9dace43d2553f1d4fd2",
+      "priorUrl": "movrr-admin-re8tirawc-movrrops-projects.vercel.app",
+      "firewall": true,
+      "protection": {
+        "deploymentType": "all_except_custom_domains"
+      },
+      "productionBranch": "main"
+    },
+    "partner": {
+      "priorId": "dpl_9eiApXd8jaEXMZrSEkGovrJ76MNV",
+      "priorSha": "9c2db98b3dad424757e0e08855862f77a0f86c58",
+      "priorUrl": "movrr-el2h7nac4-movrrops-projects.vercel.app",
+      "firewall": true,
+      "protection": {
+        "deploymentType": "all_except_custom_domains"
+      },
+      "productionBranch": "main"
+    }
+  },
+  "partnerBeforeContrastFix": {
     "at": "2026-10-25T17:21:13.800Z",
     "production": true,
     "name": "partner",
@@ -354,27 +554,5 @@
     ],
     "authenticatedBrowserAcceptance": false,
     "physicalDeviceAcceptance": false
-  },
-  "rollbackBaselines": {
-    "admin": {
-      "priorId": "dpl_3gKnSPdcW8RqgT6w9XaZi2wu669A",
-      "priorSha": "6c825a5ee4de1f57e842f9dace43d2553f1d4fd2",
-      "priorUrl": "movrr-admin-re8tirawc-movrrops-projects.vercel.app",
-      "firewall": true,
-      "protection": {
-        "deploymentType": "all_except_custom_domains"
-      },
-      "productionBranch": "main"
-    },
-    "partner": {
-      "priorId": "dpl_9eiApXd8jaEXMZrSEkGovrJ76MNV",
-      "priorSha": "9c2db98b3dad424757e0e08855862f77a0f86c58",
-      "priorUrl": "movrr-el2h7nac4-movrrops-projects.vercel.app",
-      "firewall": true,
-      "protection": {
-        "deploymentType": "all_except_custom_domains"
-      },
-      "productionBranch": "main"
-    }
   }
 }

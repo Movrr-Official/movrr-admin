@@ -1,11 +1,11 @@
 # Partner media and controls production rollout ? 25 October 2026
 
-The owner explicitly authorized Admin 19790c4 and Partner bc16e2c. Both exact revisions are deployed to their existing production projects and aliases. A minor dark workspace-label contrast regression was identified during signed-in acceptance; the verified Partner-only correction 43f11fc awaits its own exact-candidate approval. This record does not silently close that exception.
+The owner explicitly authorized Admin 19790c4 and Partner bc16e2c, then separately authorized Partner-only contrast correction 43f11fc. All were deployed in that order. Final runtime: Admin 19790c4 and Partner 43f11fc. The dark workspace-label acceptance exception is resolved and verified in the existing signed-in Chrome session.
 
 | Runtime | Source SHA | Deployment ID | Production URL |
 | --- | --- | --- | --- |
 | Admin | 19790c43a92b9ba11996a8e23bd8cb091397855c | dpl_n2M4CuqU8hCcv4Na3nKZJQJiDqCJ | https://admin.movrr.nl |
-| Partner | bc16e2c4b6d387404d7149260c857ad674099d36 | dpl_EwibrbWVwUkekKms31GuPnPQuiYX | https://app.movrr.nl |
+| Partner | 43f11fcec679f145c7fe8d29ced2085d16d3edc8 | dpl_B823jSAiYWG9n8NRsX9NYnPKUXML | https://app.movrr.nl |
 
 Admin was deployed and accepted before Partner. Both builds reached READY, matched the authorized Git source metadata, existing project/region fra1 and custom domain. Existing firewall and authentication protection settings were preserved. Production Partner API remains https://admin.movrr.nl/api, with mocks off and the authorized Supabase project. No production settings were changed.
 
@@ -21,12 +21,14 @@ Admin was deployed and accepted before Partner. Both builds reached READY, match
 - Desktop Scan shows Continue on your phone with the existing app link/QR; it does not request a desktop camera. No voucher was scanned, validated or fulfilled.
 - Manifest, icons, flags, SW and offline page return 200; flag/SW/offline hashes match candidate source. Anonymous browser with a mobile viewport verifies SW control, offline navigation fallback, zero offline forms and only the public offline.html cached. No private data caching.
 
-## Acceptance exception and remaining operational gates
+## Resolved acceptance exception and remaining operational gates
 
-The deeper CTA green also affected two dark workspace-picker text labels. Partner-only 43f11fcec679f145c7fe8d29ced2085d16d3edc8 restores their established light accent without changing white buttons, authorization or API behavior. Production build and four light/dark desktop/mobile actual-route accessibility checks pass. Deployment is pending owner approval because the current authorization pins bc16e2c. See movrr-app/docs/verification/partner-header-and-images-20261025/workspace-contrast.json and captures.
+The deeper CTA green also affected two dark workspace-picker text labels. Partner-only 43f11fcec679f145c7fe8d29ced2085d16d3edc8 restores their established light accent without changing white buttons, authorization or API behavior. Production build and four light/dark desktop/mobile actual-route accessibility checks pass. The owner subsequently authorized this exact correction. Deployment dpl_B823jSAiYWG9n8NRsX9NYnPKUXML is READY, source/alias verified. A fresh signed-in workspace-page reload confirms both labels readable; re-entering the authorized workspace confirms white primary-button text remains intact and English retained. Final read-only checks at 2026-10-25T17:32:12Z match both rollout windows; Admin remains at its approved deployment. See movrr-app/docs/verification/partner-header-and-images-20261025/workspace-contrast.json and captures.
 
 Shop remains Disabled/version 0/redemption_enabled false. No merchant identities, inventory, rewards, media uploads, redemptions, refunds or financial transactions were created by acceptance. Migration, Community Safety, account deletion, Rider Mobile and ride tracking remain unchanged. Browser-emulated PWA checks do not establish physical-device acceptance. Real merchant supply, collection locations/staff, launch attestations, iOS/Android camera/install/focus and legitimate merchant upload acceptance remain separate public-activation prerequisites. Public redemption remains NO-GO.
 
 ## Recovery
 
 Captured prior deployments: Partner dpl_9eiApXd8jaEXMZrSEkGovrJ76MNV (9c2db98), Admin dpl_3gKnSPdcW8RqgT6w9XaZi2wu669A (6c825a5). If rollback becomes necessary for an authorization, data-integrity, authentication or critical interaction failure, restore Partner first and Admin second, preserving legitimate records/media and Shop Disabled. Leave 085 installed; no financial replay or SQL rollback is authorized here. Recovery/private receipts remain in ignored task-specific production audit storage.
+
+**Verdict: DEPLOYED & VERIFIED for the authorized software rollout. No software acceptance exception remains from this rollout. Public redemption stays Disabled and NO-GO until the separate merchant/device/operational gates are fulfilled.**

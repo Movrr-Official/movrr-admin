@@ -87,3 +87,5 @@ Remaining gates: explicit authorization for this exact rollout, production backu
 
 
 Execution follow-up: owner-authorized Admin `19790c4` and Partner `bc16e2c` are deployed. [Production checks and exact deployment IDs](../verification/partner-media-production-20261025/README.md) record unchanged financial/authorization/migration hashes, Shop Disabled, and the small dark-workspace label contrast exception with verified follow-up `43f11fc` awaiting its own deployment authorization.
+
+Final contrast follow-up: owner-authorized Partner `43f11fc` is deployed as `dpl_B823jSAiYWG9n8NRsX9NYnPKUXML`; the dark workspace-label exception is resolved in fresh signed-in production acceptance. Admin remains `19790c4`. [Final production closure](../verification/partner-media-production-20261025/README.md) records unchanged financial/authorization/migration state and Shop Disabled.
