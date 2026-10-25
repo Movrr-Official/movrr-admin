@@ -125,7 +125,7 @@ export default function CreateUserPage() {
     return undefined;
   }, [searchParams]);
 
-  const form = useForm<CreateUserFormData>({
+  const form = useForm<z.input<typeof createUserFormSchema>, unknown, CreateUserFormData>({
     resolver: zodResolver(createUserFormSchema),
     defaultValues: {
       email: "",
@@ -281,7 +281,7 @@ export default function CreateUserPage() {
                     </FormItem>)} />
                   {["partner", "advertiser", "government"].includes(watchedValues.domain) && <FormField control={form.control} name="organisationId" render={({ field }) => (
                     <FormItem><FormLabel>Organisation</FormLabel>
-                      <Select value={field.value ?? ""} onValueChange={field.onChange}><FormControl><SelectTrigger><SelectValue placeholder="Select organisation" /></SelectTrigger></FormControl>
+                      <Select value={String(field.value ?? "")} onValueChange={field.onChange}><FormControl><SelectTrigger><SelectValue placeholder="Select organisation" /></SelectTrigger></FormControl>
                         <SelectContent>{organisations.filter(org => org.type === ORGANISATION_TYPES[watchedValues.domain as keyof typeof ORGANISATION_TYPES]).map(org => <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>)}</SelectContent>
                       </Select><FormMessage />{organisationError && <p role="alert" className="text-destructive text-sm">{organisationError}</p>}
                     </FormItem>)} />}
@@ -305,7 +305,7 @@ export default function CreateUserPage() {
                             <Input
                               placeholder="Enter full name"
                               className="rounded-xl border-border/50 bg-background/60"
-                              {...field}
+                              {...field} value={String(field.value ?? "")}
                             />
                           </FormControl>
                           <FormMessage />
@@ -326,7 +326,7 @@ export default function CreateUserPage() {
                               type="email"
                               placeholder="user@example.com"
                               className="rounded-xl border-border/50 bg-background/60"
-                              {...field}
+                              {...field} value={String(field.value ?? "")}
                             />
                           </FormControl>
                           <FormMessage />
@@ -349,7 +349,7 @@ export default function CreateUserPage() {
                               type="tel"
                               placeholder="+31 6 12345678"
                               className="rounded-xl border-border/50 bg-background/60"
-                              {...field}
+                              {...field} value={String(field.value ?? "")}
                             />
                           </FormControl>
                           <FormDescription className="text-xs">
@@ -374,7 +374,7 @@ export default function CreateUserPage() {
                               <Input
                                 placeholder="Amsterdam"
                                 className="rounded-xl border-border/50 bg-background/60"
-                                {...field}
+                                {...field} value={String(field.value ?? "")}
                               />
                             </FormControl>
                             <FormDescription className="text-xs">
@@ -396,7 +396,7 @@ export default function CreateUserPage() {
                               <Input
                                 placeholder="Netherlands"
                                 className="rounded-xl border-border/50 bg-background/60"
-                                {...field}
+                                {...field} value={String(field.value ?? "")}
                               />
                             </FormControl>
                             <FormDescription className="text-xs">
@@ -478,7 +478,7 @@ export default function CreateUserPage() {
                           >
                             <FormControl>
                               <SelectTrigger className="w-full rounded-xl border-border/50 bg-background/60">
-                                <SelectValue placeholder="Select status">{field.value.charAt(0).toUpperCase() + field.value.slice(1)}</SelectValue>
+                                <SelectValue placeholder="Select status">{(field.value ?? "active").charAt(0).toUpperCase() + (field.value ?? "active").slice(1)}</SelectValue>
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -515,7 +515,7 @@ export default function CreateUserPage() {
                             </SelectContent>
                           </Select>
                           <FormDescription className="text-xs">
-                            {statusDescriptions[field.value]}
+                            {statusDescriptions[field.value ?? "active"]}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>

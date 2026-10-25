@@ -184,7 +184,7 @@ export function CommunityRideFormDrawer({
   const isPending =
     createMutation.isPending || updateMutation.isPending || isUploadingCover;
 
-  const form = useForm<FormValues>({
+  const form = useForm<z.input<typeof formSchema>, unknown, FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: DEFAULT_VALUES,
   });
@@ -349,7 +349,7 @@ export function CommunityRideFormDrawer({
                         <FormControl>
                           <Input
                             placeholder="e.g. Sunday Morning City Loop"
-                            {...field}
+                            {...field} value={String(field.value ?? "")}
                           />
                         </FormControl>
                         <FormMessage />
@@ -465,7 +465,7 @@ export function CommunityRideFormDrawer({
                       <FormItem>
                         <FormLabel>Date &amp; Time</FormLabel>
                         <FormControl>
-                          <Input type="datetime-local" {...field} />
+                          <Input type="datetime-local" {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -482,7 +482,7 @@ export function CommunityRideFormDrawer({
                         <FormControl>
                           <Input
                             placeholder="e.g. Vondelpark main entrance"
-                            {...field}
+                            {...field} value={String(field.value ?? "")}
                           />
                         </FormControl>
                         <FormMessage />
@@ -504,7 +504,7 @@ export function CommunityRideFormDrawer({
                               step={0.000001}
                               placeholder="51.5074"
                               {...field}
-                              value={field.value ?? ""}
+                              value={String(field.value ?? "")}
                               onChange={(e) =>
                                 field.onChange(
                                   e.target.value === ""
@@ -530,7 +530,7 @@ export function CommunityRideFormDrawer({
                               step={0.000001}
                               placeholder="-0.1278"
                               {...field}
-                              value={field.value ?? ""}
+                              value={String(field.value ?? "")}
                               onChange={(e) =>
                                 field.onChange(
                                   e.target.value === ""
@@ -560,7 +560,7 @@ export function CommunityRideFormDrawer({
                             min={0.1}
                             placeholder="e.g. 45"
                             {...field}
-                            value={field.value ?? ""}
+                            value={String(field.value ?? "")}
                             onChange={(e) =>
                               field.onChange(
                                 e.target.value === ""
@@ -626,7 +626,7 @@ export function CommunityRideFormDrawer({
                                   : 2
                               }
                               max={100}
-                              {...field}
+                              {...field} value={String(field.value ?? "")}
                               onChange={(e) =>
                                 field.onChange(Number(e.target.value) || 2)
                               }
@@ -732,7 +732,7 @@ export function CommunityRideFormDrawer({
                             <FormControl>
                               <Input
                                 placeholder="Displayed organizer label"
-                                {...field}
+                                {...field} value={String(field.value ?? "")}
                               />
                             </FormControl>
                             <FormMessage />
@@ -751,7 +751,7 @@ export function CommunityRideFormDrawer({
                                 <Input
                                   placeholder="Rider UUID"
                                   className="font-mono text-sm"
-                                  {...field}
+                                  {...field} value={String(field.value ?? "")}
                                 />
                               </FormControl>
                               <FormMessage />

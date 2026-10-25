@@ -153,19 +153,19 @@ const routeEditSchema = z.object({
   city: z.string().min(1, "City is required"),
   country: z.string().optional(),
   startLat: z.coerce
-    .number({ invalid_type_error: "Required" })
+    .number({ error: "Required" })
     .min(-90, "Must be −90 to 90")
     .max(90, "Must be −90 to 90"),
   startLng: z.coerce
-    .number({ invalid_type_error: "Required" })
+    .number({ error: "Required" })
     .min(-180, "Must be −180 to 180")
     .max(180, "Must be −180 to 180"),
   endLat: z.coerce
-    .number({ invalid_type_error: "Required" })
+    .number({ error: "Required" })
     .min(-90, "Must be −90 to 90")
     .max(90, "Must be −90 to 90"),
   endLng: z.coerce
-    .number({ invalid_type_error: "Required" })
+    .number({ error: "Required" })
     .min(-180, "Must be −180 to 180")
     .max(180, "Must be −180 to 180"),
   estimatedDurationMinutes: optNum,
@@ -246,7 +246,7 @@ export function RouteDetailsDrawer({
   const [isSavingStops, setIsSavingStops] = useState(false);
   const [campaignId, setCampaignId] = useState("");
 
-  const routeForm = useForm<RouteEditValues>({
+  const routeForm = useForm<z.input<typeof routeEditSchema>, unknown, RouteEditValues>({
     resolver: zodResolver(routeEditSchema),
     defaultValues: {
       name: "",
@@ -1464,7 +1464,7 @@ export function RouteDetailsDrawer({
                             <FormItem>
                               <FormLabel>Route name</FormLabel>
                               <FormControl>
-                                <Input placeholder="Downtown Loop" {...field} />
+                                <Input placeholder="Downtown Loop" {...field} value={String(field.value ?? "")} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1564,7 +1564,7 @@ export function RouteDetailsDrawer({
                             <FormItem>
                               <FormLabel>City</FormLabel>
                               <FormControl>
-                                <Input {...field} />
+                                <Input {...field} value={String(field.value ?? "")} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1580,7 +1580,7 @@ export function RouteDetailsDrawer({
                             <FormItem>
                               <FormLabel>Country</FormLabel>
                               <FormControl>
-                                <Input {...field} />
+                                <Input {...field} value={String(field.value ?? "")} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1597,7 +1597,7 @@ export function RouteDetailsDrawer({
                                   type="number"
                                   min={0}
                                   {...field}
-                                  value={field.value ?? ""}
+                                  value={String(field.value ?? "")}
                                   onChange={(e) =>
                                     field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
                                   }
@@ -1619,7 +1619,7 @@ export function RouteDetailsDrawer({
                                   min={0}
                                   step={0.1}
                                   {...field}
-                                  value={field.value ?? ""}
+                                  value={String(field.value ?? "")}
                                   onChange={(e) =>
                                     field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
                                   }
@@ -1642,7 +1642,7 @@ export function RouteDetailsDrawer({
                                 <Input
                                   type="number"
                                   step={0.0001}
-                                  {...field}
+                                  {...field} value={String(field.value ?? "")}
                                   onChange={(e) =>
                                     field.onChange(e.target.value === "" ? NaN : Number(e.target.value))
                                   }
@@ -1662,7 +1662,7 @@ export function RouteDetailsDrawer({
                                 <Input
                                   type="number"
                                   step={0.0001}
-                                  {...field}
+                                  {...field} value={String(field.value ?? "")}
                                   onChange={(e) =>
                                     field.onChange(e.target.value === "" ? NaN : Number(e.target.value))
                                   }
@@ -1682,7 +1682,7 @@ export function RouteDetailsDrawer({
                                 <Input
                                   type="number"
                                   step={0.0001}
-                                  {...field}
+                                  {...field} value={String(field.value ?? "")}
                                   onChange={(e) =>
                                     field.onChange(e.target.value === "" ? NaN : Number(e.target.value))
                                   }
@@ -1702,7 +1702,7 @@ export function RouteDetailsDrawer({
                                 <Input
                                   type="number"
                                   step={0.0001}
-                                  {...field}
+                                  {...field} value={String(field.value ?? "")}
                                   onChange={(e) =>
                                     field.onChange(e.target.value === "" ? NaN : Number(e.target.value))
                                   }
@@ -1727,7 +1727,7 @@ export function RouteDetailsDrawer({
                                   min={0}
                                   max={100}
                                   {...field}
-                                  value={field.value ?? ""}
+                                  value={String(field.value ?? "")}
                                   onChange={(e) =>
                                     field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
                                   }

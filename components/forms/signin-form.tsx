@@ -64,7 +64,7 @@ export function SignInForm({ enforceAdminMfa }: { enforceAdminMfa: boolean }) {
               ? "Sign in to access the admin dashboard."
               : "";
 
-  const form = useForm<SignInFormData>({
+  const form = useForm<z.input<typeof signInFormSchema>, unknown, SignInFormData>({
     resolver: zodResolver(signInFormSchema),
     defaultValues: {
       email: "",
@@ -173,7 +173,7 @@ export function SignInForm({ enforceAdminMfa }: { enforceAdminMfa: boolean }) {
                   </FormLabel>
                   <FormControl>
                     <Input
-                      {...field}
+                      {...field} value={String(field.value ?? "")}
                       placeholder="Enter your email"
                       disabled={isPending}
                       className="bg-background border border-border-input"
@@ -229,7 +229,7 @@ export function SignInForm({ enforceAdminMfa }: { enforceAdminMfa: boolean }) {
                     <div className="relative">
                       <Input
                         type={showPassword ? "text" : "password"}
-                        {...field}
+                        {...field} value={String(field.value ?? "")}
                         placeholder="Enter your password"
                         disabled={isPending}
                         className="bg-background border border-border-input"

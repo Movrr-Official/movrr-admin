@@ -541,7 +541,7 @@ function RouteFormDialog({
   onSubmit: (data: RouteFormData) => void;
   isSubmitting: boolean;
 }) {
-  const form = useForm<RouteFormData>({
+  const form = useForm<z.input<typeof routeFormSchema>, unknown, RouteFormData>({
     resolver: zodResolver(routeFormSchema),
     defaultValues: {
       name: "",
@@ -613,7 +613,7 @@ function RouteFormDialog({
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input
-                      {...field}
+                      {...field} value={String(field.value ?? "")}
                       placeholder="Canal Ring Loop"
                       className="rounded-xl border-border/50"
                     />
@@ -632,7 +632,7 @@ function RouteFormDialog({
                   <FormControl>
                     <Textarea
                       {...field}
-                      value={field.value ?? ""}
+                      value={String(field.value ?? "")}
                       rows={2}
                       className="resize-none rounded-xl border-border/50"
                       placeholder="Route description…"
@@ -653,7 +653,7 @@ function RouteFormDialog({
                     <FormControl>
                       <Input
                         {...field}
-                        value={field.value ?? ""}
+                        value={String(field.value ?? "")}
                         placeholder="Amsterdam"
                         className="rounded-xl border-border/50"
                       />
@@ -695,7 +695,7 @@ function RouteFormDialog({
                     <FormLabel>Distance (m)</FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
+                        {...field} value={String(field.value ?? "")}
                         type="number"
                         min={100}
                         className="rounded-xl border-border/50"
@@ -713,7 +713,7 @@ function RouteFormDialog({
                     <FormLabel>Duration (min)</FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
+                        {...field} value={String(field.value ?? "")}
                         type="number"
                         min={1}
                         className="rounded-xl border-border/50"
@@ -755,7 +755,7 @@ function RouteFormDialog({
                     <FormLabel>Reward Value</FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
+                        {...field} value={String(field.value ?? "")}
                         type="number"
                         min={0}
                         step={0.1}
@@ -780,7 +780,7 @@ function RouteFormDialog({
                         {...field}
                         type="number"
                         min={0}
-                        value={field.value ?? ""}
+                        value={String(field.value ?? "")}
                         onChange={(e) =>
                           field.onChange(
                             e.target.value === ""
@@ -807,7 +807,7 @@ function RouteFormDialog({
                         {...field}
                         type="number"
                         min={0}
-                        value={field.value ?? ""}
+                        value={String(field.value ?? "")}
                         onChange={(e) =>
                           field.onChange(
                             e.target.value === ""

@@ -139,7 +139,7 @@ export default function CreateCampaignPage() {
     }));
   }, [routes]);
 
-  const form = useForm<CreateCampaignFormData>({
+  const form = useForm<z.input<typeof createCampaignFormSchema>, unknown, CreateCampaignFormData>({
     resolver: zodResolver(createCampaignFormSchema),
     defaultValues: {
       name: "",
@@ -174,11 +174,11 @@ export default function CreateCampaignPage() {
 
   // Calculate cost per impression
   const costPerImpression = useMemo(() => {
-    if (watchedValues.budget > 0 && watchedValues.impressionGoal > 0) {
-      return watchedValues.budget / watchedValues.impressionGoal;
+    if (Number(watchedValues.budget ?? 0) > 0 && Number(watchedValues.impressionGoal ?? 0) > 0) {
+      return Number(watchedValues.budget ?? 0) / Number(watchedValues.impressionGoal ?? 0);
     }
     return 0;
-  }, [watchedValues.budget, watchedValues.impressionGoal]);
+  }, [Number(watchedValues.budget ?? 0), Number(watchedValues.impressionGoal ?? 0)]);
 
   const onSubmit = async (data: CreateCampaignFormData) => {
     setIsLoading(true);
@@ -329,7 +329,7 @@ export default function CreateCampaignPage() {
                             <Input
                               placeholder="Enter campaign name"
                               className="rounded-xl border-border/50 bg-background/60"
-                              {...field}
+                              {...field} value={String(field.value ?? "")}
                             />
                           </FormControl>
                           <FormMessage />
@@ -526,7 +526,7 @@ export default function CreateCampaignPage() {
                               min="0.01"
                               placeholder="0.00"
                               className="rounded-xl border-border/50 bg-background/60"
-                              {...field}
+                              {...field} value={String(field.value ?? "")}
                               onChange={(e) => field.onChange(e.target.value)}
                             />
                           </FormControl>
@@ -552,7 +552,7 @@ export default function CreateCampaignPage() {
                               min="1"
                               placeholder="0"
                               className="rounded-xl border-border/50 bg-background/60"
-                              {...field}
+                              {...field} value={String(field.value ?? "")}
                               onChange={(e) => field.onChange(e.target.value)}
                             />
                           </FormControl>
@@ -565,8 +565,8 @@ export default function CreateCampaignPage() {
                     />
                   </div>
 
-                  {watchedValues.budget > 0 &&
-                    watchedValues.impressionGoal > 0 && (
+                  {Number(watchedValues.budget ?? 0) > 0 &&
+                    Number(watchedValues.impressionGoal ?? 0) > 0 && (
                       <Alert>
                         <Info className="h-4 w-4" />
                         <AlertDescription>
@@ -597,7 +597,7 @@ export default function CreateCampaignPage() {
                             <Input
                               type="datetime-local"
                               className="rounded-xl border-border/50 bg-background/60"
-                              {...field}
+                              {...field} value={String(field.value ?? "")}
                             />
                           </FormControl>
                           <FormMessage />
@@ -617,7 +617,7 @@ export default function CreateCampaignPage() {
                               type="datetime-local"
                               className="rounded-xl border-border/50 bg-background/60"
                               min={watchedValues.startDate || undefined}
-                              {...field}
+                              {...field} value={String(field.value ?? "")}
                             />
                           </FormControl>
                           {estimatedDuration > 0 && (
@@ -839,7 +839,7 @@ export default function CreateCampaignPage() {
                         Budget
                       </p>
                       <p className="text-base font-medium">
-                        {formatCurrencyEUR(watchedValues.budget)}
+                        {formatCurrencyEUR(Number(watchedValues.budget ?? 0))}
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -847,7 +847,7 @@ export default function CreateCampaignPage() {
                         Impression Goal
                       </p>
                       <p className="text-base font-medium">
-                        {watchedValues.impressionGoal.toLocaleString()}
+                        {Number(watchedValues.impressionGoal ?? 0).toLocaleString()}
                       </p>
                     </div>
                     <div className="space-y-2">

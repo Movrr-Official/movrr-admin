@@ -23,7 +23,7 @@ import MapGL, {
   Marker,
   Source,
   type MapRef,
-} from "react-map-gl/maplibre";
+} from "@/components/AdminMap/MapRenderer";
 import { useQuery } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { Badge } from "@/components/ui/badge";

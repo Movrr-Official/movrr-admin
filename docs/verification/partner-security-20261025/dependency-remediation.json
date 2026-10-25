@@ -1,0 +1,175 @@
+{
+  "checkedAt": "2026-10-25T14:38:35.044262+00:00",
+  "productionMutation": false,
+  "lockSha256": "cf2d63419537e42c02ee6fd66819bd0d8e455f1be5fc5f3d90d5dcb2cfc2aef1",
+  "manifestSha256": "cd7141101c175bb9a405f6d86c73ac9c4382f0523a215d82c226692de36e3b73",
+  "auditAll": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 366,
+      "dev": 271,
+      "optional": 142,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 691
+    }
+  },
+  "auditRuntime": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 366,
+      "dev": 271,
+      "optional": 142,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 691
+    }
+  },
+  "installed": {
+    "maplibre-gl": "6.4.1",
+    "react-map-gl": "8.1.3",
+    "zod": "4.6.7",
+    "@hookform/resolvers": "5.2.2",
+    "@cloudinary/url-gen": "1.15.0",
+    "react-email": "6.11.3",
+    "@react-email/ui": "6.11.3",
+    "vitest": "4.1.12",
+    "next": "16.4.3"
+  },
+  "removed": [
+    "next-cloudinary",
+    "@cloudinary-util/url-loader",
+    "@react-email/preview-server"
+  ],
+  "findings": [
+    {
+      "advisory": "GHSA-jrc7-96c5-q579",
+      "before": "maplibre-gl 5.17.0; direct and via react-map-gl -> @vis.gl/react-maplibre",
+      "exposure": "Third-party style/source attribution reaches enabled controls in AdminMap and RouteLocationsMap",
+      "correction": "maplibre-gl 6.4.1, compatible react-map-gl 8.1.3, same-origin worker AND its shared module; actual malicious attribution, GeoJSON, zoom and resize browser verification passed",
+      "disposition": "remediated"
+    },
+    {
+      "advisory": "GHSA-mrhx-c7xc-m3w5",
+      "before": "zod 3.25.67; direct schema/form/server parsers",
+      "exposure": "Bounded oversized constrained arrays continued parsing elements; authenticated callers can reach collection schemas",
+      "correction": "zod 4.6.7 and v4-compatible resolver 5.2.2; input/output types, preprocessing UI values, arbitrary-key and partial enum records and issues API adapted",
+      "disposition": "remediated; test proves oversized max(1) array visits zero of 100 elements"
+    },
+    {
+      "advisory": "GHSA-mrhx-c7xc-m3w5 (inherited)",
+      "before": "next-cloudinary 6.17.5 -> @cloudinary-util/url-loader 5.10.4 -> zod ^3.22.4",
+      "exposure": "Sole local usage was CldImage preview; upstream stable wrapper still pinned old loader; not dismissed as a false positive",
+      "correction": "Remove wrapper and loader. Next Image plus existing official Cloudinary URL SDK preserves public-id preview transforms and persisted HTTPS asset URLs. Upload endpoint, validation and stored secure_url unchanged",
+      "disposition": "removed from dependency graph"
+    },
+    {
+      "before": "Deprecated @react-email/preview-server carried a separate vulnerable Next preview graph; additional test/preview tooling advisories were development-only",
+      "correction": "Supported React Email 6 CLI/UI migration and compatible same-major test transitive updates; production template/component/render imports unchanged; all ten existing email templates export successfully",
+      "disposition": "remediated; full audit zero as well as runtime audit zero"
+    }
+  ],
+  "noForceOrAuditSuppression": true,
+  "gates": {
+    "adminSuitesPassed": 89,
+    "adminTestsPassed": 960,
+    "optionalSuitesSkipped": 8,
+    "optionalTestsSkipped": 105,
+    "typecheck": true,
+    "productionBuild": true,
+    "isolatedOnboardingTestsPassed": 19,
+    "optionalOnboardingTestsSkipped": 8,
+    "emailTemplatesExported": 10,
+    "oversizedCollectionElementsVisited": 0,
+    "mapBrowser": {
+      "production": false,
+      "physicalGpu": false,
+      "rendererSha256": "ccebd25162aa678e767946ae066f80a7795f605cf546bd142fcc59f8a3562144",
+      "initial": {
+        "loaded": true,
+        "features": 1,
+        "webgl2": true,
+        "zoom": 11,
+        "unsafe": false,
+        "executed": false
+      },
+      "zoomAndResize": true,
+      "assets": [
+        {
+          "file": "maplibre-gl-worker.mjs",
+          "status": 200
+        },
+        {
+          "file": "maplibre-gl-shared.mjs",
+          "status": 200
+        }
+      ],
+      "errors": []
+    }
+  },
+  "migration085Sha256": "c45e511cc771382b34dec6d3306343e17a9e66a22f33c415299ccb961896fb24",
+  "migration085Applied": false,
+  "deploymentPerformed": false,
+  "knownActionableProductionDependencyAdvisories": 0,
+  "sourceHashes": {
+    ".gitignore": "8bfd5df2c0e600ae3c13692a57820d6e98cf24dc4d70df514822cb45adef05f2",
+    "__tests__/features/partners/partnerWorkspaceContracts.test.ts": "f21934e46fda3290bc1196d7bcd6aba51153990801ff53ff83ef596332db21a4",
+    "__tests__/security/dependencyRemediation.test.ts": "82edf74bf201e896b0430ab34960a4f1959492a4f85cfea4ae5d4a499817a289",
+    "app/actions/campaigns.ts": "f6790b1e9d873f75b6af1eddac044a67eda662855736d181a7c13258aff078fb",
+    "app/actions/routes.ts": "06f15c24cb0e81b6db5b8acf240387772ec4592091e7639c80d15d41467cb713",
+    "app/advertisers/create/CreateAdvertiserPage.tsx": "a2ce696b530909ebe7538ff44222513a40ada3859879690b498b9fa9faf4ac0e",
+    "app/api/v1/partners/fulfilments/history/route.ts": "67ae834d22cad049dbf98f9aa1161da7ebe6be12b02818109b6413ce70e843d8",
+    "app/auth/reset-password/ResetPasswordForm.tsx": "06d0844ba0cc046cb5388283fa92b7d47498ee653f7181a1d63a2bf5da1056a2",
+    "app/campaigns/create/CreateCampaignPage.tsx": "bbd247fce7a38117842887db4f1f50102f578a87bc4a9225c54941cd97bc7327",
+    "app/fulfilment/partners/create/CreatePartnerPageClient.tsx": "339fad5109e453422850ccda8bcde5a38ee78d1a9081ad5477891ae4a4fe23f9",
+    "app/rewards/catalog/create/CreateRewardCatalogPage.tsx": "02bcbcf50470f6b1903ad44dc32d0063cfb18680203874378ed484e40df17117",
+    "app/routes/create/CreateRoutePage.tsx": "fd7f167b0ddf0cf316ab6efde8718e726003b5697038b01fc1eeb50b6ac2d9f1",
+    "app/suggested-routes/SuggestedRoutesOverview.tsx": "2ac7c8d6ff6de60db44c0f6cee59263ce9f904c5f9a65c25244b4973198bd761",
+    "app/users/create/CreateUserPage.tsx": "26d29904dda3c4d2be9c2f1bd2c1a82e50adc50ae41035f424f3515e688a2a81",
+    "components/AdminMap/AdminMap.tsx": "cfb38cd23ce3ec0dd244264b71a804114832f59e655e6205e5d4a4002eda127f",
+    "components/AdminMap/MapRenderer.tsx": "ccebd25162aa678e767946ae066f80a7795f605cf546bd142fcc59f8a3562144",
+    "components/ImageUploadInput.tsx": "05a57d1b2da160c91266dec1f19f918b3cd6c31a3edb93267969beff90f19b2c",
+    "components/advertisers/AdvertiserDetailsDrawer.tsx": "984f779e7fdb1fe051dfa0706826af0f6f357150c4ccf69773694bbcd76627ef",
+    "components/campaigns/CampaignDetailsDrawer.tsx": "c870b8bad10d986dbe4999ab098e488ed696c82652b299a7ed496b4cf5b51552",
+    "components/community-rides/CommunityRideFormDrawer.tsx": "d6731ec8242e9a4503ac15a69b96f2cbb9e47a20a8939ac3db8867c800e3e6d3",
+    "components/forms/signin-form.tsx": "dc5c708e211eba6f983b35e76f8ea578c17756f925c33feffd7b4eedf7df7020",
+    "components/pro-tips/ProTipFormDrawer.tsx": "3941705221e81247959aceafa85432ccf3e8cf03c17f4f8a58bfcc18ec11de4f",
+    "components/rewards/RiderBalanceDetailsDrawer.tsx": "464824e23cd9c5253c7d14746fcfd1b63404da9913dcaa8f55d2ea3805310c3c",
+    "components/rewards/organisations/CreateOrganisationDialog.tsx": "6e40cca577b83f290361cac84d94e5bad2dc0bc5627c7d1acf218738b12b293c",
+    "components/rewards/organisations/OrganisationDetailsDrawer.tsx": "d7723bbd930c8d695c6940a9ccda78adbbddd7be72fb3860a48513ccde5662c8",
+    "components/routes/RouteDetailsDrawer.tsx": "9de8837e47fb910f0148915bb2c85d3ae5c44e7819b84996b60619808ac2f413",
+    "components/routes/RouteLocationsMap.tsx": "4220f7864c8d80121428247153d9288abffabf48b0abbc600c85a27db289abb0",
+    "components/routes/RouteTrackingMap.tsx": "755a34291064411f9e3c4d32efacc016f8be523fd12478c6110bbc32a3715532",
+    "components/users/UserDetailsDrawer.tsx": "fe26168a16c38513c2a8d97cb6971b5b8a2670608f5d7820df17ca71388b5f96",
+    "features/partners/application/partnerServices.ts": "ed5297fe072d9ca6b8e5da9d5f0515b1188ee389cfafe9393ecfe5aa3c6500bf",
+    "features/platform/infrastructure/composePlatformApi.ts": "9a4d02f6640b9e382f137cf4654d52c64a8bb27ce2f2ab7f7546377c4d8a79f9",
+    "lib/actions.ts": "8a973f7abd3b9ca9a563c88a3fe5cfbba46f5516e312a4b7fab973e435efd5f2",
+    "lib/cloudinaryPreview.ts": "6272ea877d82c3275f3be6749f63d1beea9d7ba0e7e98da5fa240e07dfdaf8dd",
+    "lib/env.ts": "c39a684a477815612962cf781e6515c83f138882f09be56c3f615a672f44ca93",
+    "lib/pathMatch.ts": "0072df3a673f63c8aa98898496a1df9efc6b4bf977d5a533c3116234ec66f5c9",
+    "package-lock.json": "cf2d63419537e42c02ee6fd66819bd0d8e455f1be5fc5f3d90d5dcb2cfc2aef1",
+    "package.json": "cd7141101c175bb9a405f6d86c73ac9c4382f0523a215d82c226692de36e3b73",
+    "schemas/audit.ts": "23c30310be28c4b5bd88ee7ec771fb95ef93cce8c9b84b418164298472f8dc1c",
+    "schemas/badge.ts": "b6013deb2240f756c33e6f186ce43dc2269906fee76bf326784349e520928feb",
+    "schemas/notification.ts": "eb39c8cdde740a97f5fb753f943b3c425a92ec788e90909127ef38bdbc8e6718",
+    "schemas/rewardCatalog.ts": "b1ec23387aea7f8df5bb824bb20666b79255855252707c5f74fbec125e9ef0d3",
+    "schemas/routeIntelligence.ts": "ed1c8181694ebf022fb718293b09d892b5fc61bc60888916b5e2f4e0dfee723a",
+    "schemas/settings.ts": "47fbd5d96851a84f5b7bd6cae8c24d047ab56e6b5670b248b4c162a903e77f2b",
+    "scripts/prepare-maplibre-worker.mjs": "0369531e9c3b20830c285ae81720d42cd90afcfb9d94131948de9f7825ae9190",
+    "scripts/verify-maplibre-browser.cjs": "0296bab3e15b94a3aaa35cc4916591881359849e2ac633104cb3693e48044c16"
+  }
+}

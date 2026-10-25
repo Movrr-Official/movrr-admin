@@ -133,7 +133,7 @@ export function CampaignDetailsDrawer({
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [isRunningSelection, setIsRunningSelection] = useState(false);
 
-  const form = useForm<EditCampaignFormData>({
+  const form = useForm<z.input<typeof editCampaignSchema>, unknown, EditCampaignFormData>({
     resolver: zodResolver(editCampaignSchema),
     defaultValues: {
       name: "",
@@ -532,7 +532,7 @@ export function CampaignDetailsDrawer({
                                   <Input
                                     placeholder="Campaign Name"
                                     className="rounded-xl border-border/50 bg-background/60"
-                                    {...field}
+                                    {...field} value={String(field.value ?? "")}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -554,7 +554,7 @@ export function CampaignDetailsDrawer({
                                     min="0.01"
                                     placeholder="0.00"
                                     className="rounded-xl border-border/50 bg-background/60"
-                                    {...field}
+                                    {...field} value={String(field.value ?? "")}
                                     onChange={(e) =>
                                       field.onChange(e.target.value)
                                     }
@@ -578,7 +578,7 @@ export function CampaignDetailsDrawer({
                                     min="1"
                                     placeholder="0"
                                     className="rounded-xl border-border/50 bg-background/60"
-                                    {...field}
+                                    {...field} value={String(field.value ?? "")}
                                     onChange={(e) =>
                                       field.onChange(e.target.value)
                                     }
@@ -600,7 +600,7 @@ export function CampaignDetailsDrawer({
                                   <Input
                                     type="datetime-local"
                                     className="rounded-xl border-border/50 bg-background/60"
-                                    {...field}
+                                    {...field} value={String(field.value ?? "")}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -619,7 +619,7 @@ export function CampaignDetailsDrawer({
                                   <Input
                                     type="datetime-local"
                                     className="rounded-xl border-border/50 bg-background/60"
-                                    {...field}
+                                    {...field} value={String(field.value ?? "")}
                                   />
                                 </FormControl>
                                 <FormMessage />

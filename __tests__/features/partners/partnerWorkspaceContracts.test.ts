@@ -15,3 +15,13 @@ it("enriches the pending queue with reward names while excluding other organisat
   const queries=createPartnerQueries({authorisation:authorisationService,listFulfilments:async()=>[fulfilment,{...fulfilment,id:"foreign",partnerOrgId:"foreign"}],listCatalogForOrg:async()=>[{id:"coffee",title:"Coffee",partnerOrgId:"tenant"} as never]});
   const result=await queries.pendingFulfilments(context());expect(result.ok).toBe(true);if(result.ok)expect(result.value).toMatchObject([{id:"collection",rewardTitle:"Coffee"}]);
 });
+
+it("keeps collection history scoped and separates closed outcomes from the pending queue", async () => {
+  const base=createFulfilment({id:"completed",redemptionId:"order",riderId:"rider",catalogItemId:"coffee",fulfilmentType:"qr_barcode",partnerOrgId:"tenant",state:"completed",idempotencyKey:"fixture"});
+  const read=vi.fn(async()=>[base,{...base,id:"cancelled",state:"cancelled" as const},{...base,id:"pending",state:"validated" as const},{...base,id:"processing",state:"processing" as const},{...base,id:"foreign",partnerOrgId:"foreign"}]);
+  const queries=createPartnerQueries({authorisation:authorisationService,listFulfilments:read,listCatalogForOrg:async()=>[{id:"coffee",title:"Coffee",partnerOrgId:"tenant"} as never]});
+  const result=await queries.fulfilmentHistory(context());expect(result.ok).toBe(true);if(result.ok)expect(result.value).toMatchObject([{id:"completed",rewardTitle:"Coffee"},{id:"cancelled"}]);
+  const pending=await queries.pendingFulfilments(context());if(pending.ok)expect(pending.value).toMatchObject([{id:"pending"}]);
+  read.mockClear();const denied=await queries.fulfilmentHistory({...context(),permissions:[]});expect(denied.ok).toBe(false);expect(read).not.toHaveBeenCalled();
+  const admin=await queries.fulfilmentHistory({...context(),principal:{type:"admin",userId:"admin",adminUserId:"admin",email:null,role:"super_admin"}});expect(admin.ok).toBe(false);expect(read).not.toHaveBeenCalled();
+});

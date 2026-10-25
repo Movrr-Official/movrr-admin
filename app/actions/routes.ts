@@ -83,8 +83,8 @@ const routeStopSchema = z.object({
 const createRouteBundleSchema = routePayloadSchema.extend({
   operationId: z.string().uuid().optional(),
   stops: z.array(routeStopSchema).optional(),
-  zones: z.array(z.object({ name: z.string().min(1), geom: z.record(z.unknown()) })).optional(),
-  hotZones: z.array(z.object({ name: z.string().min(1), geom: z.record(z.unknown()),
+  zones: z.array(z.object({ name: z.string().min(1), geom: z.record(z.string(), z.unknown()) })).optional(),
+  hotZones: z.array(z.object({ name: z.string().min(1), geom: z.record(z.string(), z.unknown()),
     bonus_percent: z.number().min(0), starts_at: z.string().nullable().optional(), ends_at: z.string().nullable().optional(),
   })).optional(),
 });

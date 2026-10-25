@@ -126,7 +126,7 @@ export default function CreateRewardCatalogPage() {
     thumbnailCleared: false,
   });
 
-  const form = useForm<RewardCatalogFormValues>({
+  const form = useForm<z.input<typeof rewardCatalogFormSchema>, unknown, RewardCatalogFormValues>({
     resolver: zodResolver(rewardCatalogFormSchema),
     defaultValues: {
       sku: "",
@@ -151,7 +151,7 @@ export default function CreateRewardCatalogPage() {
   });
 
   const mediaValue = {
-    thumbnailUrl: form.watch("thumbnailUrl") ?? "",
+    thumbnailUrl: String(form.watch("thumbnailUrl") ?? ""),
     galleryUrls: (form.watch("galleryUrls") ?? "")
       .split(",")
       .map((url) => url.trim())
@@ -288,7 +288,7 @@ export default function CreateRewardCatalogPage() {
                         <FormLabel>SKU</FormLabel>
                         <FormControl>
                           <Input
-                            {...field}
+                            {...field} value={String(field.value ?? "")}
                             placeholder="MOVRR-HELMET-URBAN-001"
                           />
                         </FormControl>
@@ -304,7 +304,7 @@ export default function CreateRewardCatalogPage() {
                         <FormLabel>Title</FormLabel>
                         <FormControl>
                           <Input
-                            {...field}
+                            {...field} value={String(field.value ?? "")}
                             placeholder="Urban Commuter Helmet"
                           />
                         </FormControl>
@@ -339,7 +339,7 @@ export default function CreateRewardCatalogPage() {
                       <FormItem>
                         <FormLabel>Category</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="safety" />
+                          <Input {...field} value={String(field.value ?? "")} placeholder="safety" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -378,7 +378,7 @@ export default function CreateRewardCatalogPage() {
                       <FormItem>
                         <FormLabel>Points</FormLabel>
                         <FormControl>
-                          <Input type="number" min={0} {...field} />
+                          <Input type="number" min={0} {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -443,7 +443,7 @@ export default function CreateRewardCatalogPage() {
                       <FormControl>
                         <Input
                           {...field}
-                          value={field.value ?? ""}
+                          value={String(field.value ?? "")}
                           placeholder="fulfilment resource uuid"
                           className="font-mono text-sm"
                         />
@@ -468,7 +468,7 @@ export default function CreateRewardCatalogPage() {
                       <FormItem>
                         <FormLabel>Partner name</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="RideSafe" />
+                          <Input {...field} value={String(field.value ?? "")} placeholder="RideSafe" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -482,7 +482,7 @@ export default function CreateRewardCatalogPage() {
                         <FormLabel>Partner URL</FormLabel>
                         <FormControl>
                           <Input
-                            {...field}
+                            {...field} value={String(field.value ?? "")}
                             placeholder="https://partner.example"
                           />
                         </FormControl>
@@ -546,7 +546,7 @@ export default function CreateRewardCatalogPage() {
                       <FormItem>
                         <FormLabel>Inventory count</FormLabel>
                         <FormControl>
-                          <Input type="number" min={0} {...field} />
+                          <Input type="number" min={0} {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -559,7 +559,7 @@ export default function CreateRewardCatalogPage() {
                       <FormItem>
                         <FormLabel>Max per rider</FormLabel>
                         <FormControl>
-                          <Input type="number" min={1} {...field} />
+                          <Input type="number" min={1} {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -575,7 +575,7 @@ export default function CreateRewardCatalogPage() {
                       <FormItem>
                         <FormLabel>Featured rank</FormLabel>
                         <FormControl>
-                          <Input type="number" min={1} {...field} />
+                          <Input type="number" min={1} {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -588,7 +588,7 @@ export default function CreateRewardCatalogPage() {
                       <FormItem>
                         <FormLabel>Tags (comma separated)</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="safety, helmet" />
+                          <Input {...field} value={String(field.value ?? "")} placeholder="safety, helmet" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

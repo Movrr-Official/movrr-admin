@@ -92,7 +92,7 @@ export function RiderBalanceDetailsDrawer({
   const { data: transactions, isLoading: isLoadingTransactions } =
     useRewardTransactions(balance ? { riderId: balance.riderId } : undefined);
 
-  const form = useForm<AdjustPointsFormData>({
+  const form = useForm<z.input<typeof adjustPointsSchema>, unknown, AdjustPointsFormData>({
     resolver: zodResolver(adjustPointsSchema),
     defaultValues: {
       points: 0,
@@ -402,7 +402,7 @@ export function RiderBalanceDetailsDrawer({
                                     <Input
                                       type="number"
                                       placeholder="Enter points (positive to add, negative to deduct)"
-                                      {...field}
+                                      {...field} value={String(field.value ?? "")}
                                       onChange={(e) =>
                                         field.onChange(
                                           e.target.value === ""

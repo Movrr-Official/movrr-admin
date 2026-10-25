@@ -9,7 +9,7 @@ import MapGL, {
   Source,
   Layer,
   Marker,
-} from "react-map-gl/maplibre";
+} from "@/components/AdminMap/MapRenderer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {

@@ -72,7 +72,7 @@ export default function CreateAdvertiserPage() {
     ? "Back to Campaigns"
     : "Back to Advertisers";
 
-  const form = useForm<CreateAdvertiserFormData>({
+  const form = useForm<z.input<typeof createAdvertiserFormSchema>, unknown, CreateAdvertiserFormData>({
     resolver: zodResolver(createAdvertiserFormSchema),
     defaultValues: {
       companyName: "",
@@ -162,7 +162,7 @@ export default function CreateAdvertiserPage() {
                       <FormItem>
                         <FormLabel>Company Name *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Acme Mobility" {...field} />
+                          <Input placeholder="Acme Mobility" {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -175,7 +175,7 @@ export default function CreateAdvertiserPage() {
                       <FormItem>
                         <FormLabel>Contact Name *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Jane Doe" {...field} />
+                          <Input placeholder="Jane Doe" {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -191,7 +191,7 @@ export default function CreateAdvertiserPage() {
                           <Input
                             type="email"
                             placeholder="jane@acme.com"
-                            {...field}
+                            {...field} value={String(field.value ?? "")}
                           />
                         </FormControl>
                         <FormMessage />
@@ -205,7 +205,7 @@ export default function CreateAdvertiserPage() {
                       <FormItem>
                         <FormLabel>Phone</FormLabel>
                         <FormControl>
-                          <Input placeholder="+31 6 12345678" {...field} />
+                          <Input placeholder="+31 6 12345678" {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -218,7 +218,7 @@ export default function CreateAdvertiserPage() {
                       <FormItem>
                         <FormLabel>Website</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://acme.com" {...field} />
+                          <Input placeholder="https://acme.com" {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -231,7 +231,7 @@ export default function CreateAdvertiserPage() {
                       <FormItem>
                         <FormLabel>Industry</FormLabel>
                         <FormControl>
-                          <Input placeholder="Mobility" {...field} />
+                          <Input placeholder="Mobility" {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -248,7 +248,7 @@ export default function CreateAdvertiserPage() {
                             type="number"
                             min="0"
                             step="0.01"
-                            value={field.value}
+                            value={String(field.value ?? "")}
                             onChange={(event) => field.onChange(event.target.value)}
                           />
                         </FormControl>
@@ -289,7 +289,7 @@ export default function CreateAdvertiserPage() {
                       <FormItem>
                         <FormLabel>Timezone</FormLabel>
                         <FormControl>
-                          <Input placeholder="UTC" {...field} />
+                          <Input placeholder="UTC" {...field} value={String(field.value ?? "")} />
                         </FormControl>
                         <FormDescription>
                           Example: `UTC`, `Europe/Amsterdam`
@@ -351,7 +351,7 @@ export default function CreateAdvertiserPage() {
                       <FormLabel>Company Logo</FormLabel>
                       <FormControl>
                         <CompanyLogoUploadField
-                          value={field.value}
+                          value={String(field.value ?? "")}
                           onChange={field.onChange}
                           disabled={isLoading}
                         />

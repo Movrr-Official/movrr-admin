@@ -128,7 +128,7 @@ export default function CreateRoutePage() {
   const { data: campaigns } = useCampaignsData();
   const useMockData = shouldUseMockData();
 
-  const form = useForm<RouteFormValues>({
+  const form = useForm<z.input<typeof routeFormSchema>, unknown, RouteFormValues>({
     resolver: zodResolver(routeFormSchema),
     defaultValues: {
       name: "",
@@ -351,7 +351,7 @@ export default function CreateRoutePage() {
                       <FormItem>
                         <FormLabel>Route name</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Morning Market Loop" />
+                          <Input {...field} value={String(field.value ?? "")} placeholder="Morning Market Loop" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -481,7 +481,7 @@ export default function CreateRoutePage() {
                             <Input
                               type="number"
                               min={0}
-                              value={field.value ?? ""}
+                              value={String(field.value ?? "")}
                               onChange={field.onChange}
                               placeholder="45"
                             />
@@ -501,7 +501,7 @@ export default function CreateRoutePage() {
                               type="number"
                               min={0}
                               step={0.1}
-                              value={field.value ?? ""}
+                              value={String(field.value ?? "")}
                               onChange={field.onChange}
                               placeholder="12.5"
                             />
@@ -521,7 +521,7 @@ export default function CreateRoutePage() {
                       <FormItem>
                         <FormLabel>City</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Nairobi" />
+                          <Input {...field} value={String(field.value ?? "")} placeholder="Nairobi" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -534,7 +534,7 @@ export default function CreateRoutePage() {
                       <FormItem>
                         <FormLabel>Country</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Kenya" />
+                          <Input {...field} value={String(field.value ?? "")} placeholder="Kenya" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -551,7 +551,7 @@ export default function CreateRoutePage() {
                             type="number"
                             min={0}
                             max={100}
-                            value={field.value ?? ""}
+                            value={String(field.value ?? "")}
                             onChange={field.onChange}
                             placeholder="10"
                           />
@@ -580,7 +580,7 @@ export default function CreateRoutePage() {
                           <Input
                             type="number"
                             step={0.0001}
-                            value={field.value ?? ""}
+                            value={String(field.value ?? "")}
                             onChange={field.onChange}
                             placeholder="-1.286389"
                           />
@@ -599,7 +599,7 @@ export default function CreateRoutePage() {
                           <Input
                             type="number"
                             step={0.0001}
-                            value={field.value ?? ""}
+                            value={String(field.value ?? "")}
                             onChange={field.onChange}
                             placeholder="36.817223"
                           />
@@ -620,7 +620,7 @@ export default function CreateRoutePage() {
                           <Input
                             type="number"
                             step={0.0001}
-                            value={field.value ?? ""}
+                            value={String(field.value ?? "")}
                             onChange={field.onChange}
                             placeholder="-1.292066"
                           />
@@ -639,7 +639,7 @@ export default function CreateRoutePage() {
                           <Input
                             type="number"
                             step={0.0001}
-                            value={field.value ?? ""}
+                            value={String(field.value ?? "")}
                             onChange={field.onChange}
                             placeholder="36.821945"
                           />

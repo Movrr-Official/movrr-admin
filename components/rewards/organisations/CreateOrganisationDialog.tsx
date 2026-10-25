@@ -68,7 +68,7 @@ export function CreateOrganisationDialog({
   const createOrganisation = useCreateOrganisation();
   const [submitting, setSubmitting] = useState(false);
 
-  const form = useForm<FormData>({
+  const form = useForm<z.input<typeof schema>, unknown, FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
@@ -134,7 +134,7 @@ export function CreateOrganisationDialog({
                     <Input
                       placeholder="Institution name"
                       disabled={submitting}
-                      {...field}
+                      {...field} value={String(field.value ?? "")}
                     />
                   </FormControl>
                   <FormMessage />

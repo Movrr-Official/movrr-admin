@@ -3,11 +3,11 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { useEffect, useMemo, useRef } from "react";
-import MapGL, { Layer, MapRef, Marker, Source } from "react-map-gl/maplibre";
-import type { LayerProps } from "react-map-gl/maplibre";
+import MapGL, { Layer, MapRef, Marker, Source } from "@/components/AdminMap/MapRenderer";
+import type { LayerProps } from "@/components/AdminMap/MapRenderer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { NavigationControl } from "react-map-gl/maplibre";
+import { NavigationControl } from "@/components/AdminMap/MapRenderer";
 import { NEXT_PUBLIC_MAP_STYLE_URL } from "@/lib/env";
 import { MOVRR_MAP } from "@/lib/movrr-map-colors";
 

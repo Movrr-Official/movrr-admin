@@ -20,7 +20,7 @@ export const riderBadgeSchema = z.object({
   isActive: z.boolean().default(true),
   source: z.string().default("system_rule"),
   revokeReason: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type RiderBadge = z.infer<typeof riderBadgeSchema>;

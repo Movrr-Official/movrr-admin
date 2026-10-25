@@ -164,7 +164,7 @@ export function OrganisationDetailsDrawer({
     org && isRewardPartner ? assessPartnerReadiness(org) : null;
   const isLoading = updateOrganisation.isPending;
 
-  const form = useForm<EditOrganisationFormData>({
+  const form = useForm<z.input<typeof editOrganisationSchema>, unknown, EditOrganisationFormData>({
     resolver: zodResolver(editOrganisationSchema),
     defaultValues: {
       name: "",
@@ -305,7 +305,7 @@ export function OrganisationDetailsDrawer({
                           <FormItem>
                             <FormLabel>Name</FormLabel>
                             <FormControl>
-                              <Input {...field} disabled={isLoading} />
+                              <Input {...field} value={String(field.value ?? "")} disabled={isLoading} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -361,7 +361,7 @@ export function OrganisationDetailsDrawer({
                               <FormControl>
                                 <Input
                                   type="email"
-                                  {...field}
+                                  {...field} value={String(field.value ?? "")}
                                   disabled={isLoading}
                                 />
                               </FormControl>
@@ -376,7 +376,7 @@ export function OrganisationDetailsDrawer({
                             <FormItem>
                               <FormLabel>Website</FormLabel>
                               <FormControl>
-                                <Input {...field} disabled={isLoading} />
+                                <Input {...field} value={String(field.value ?? "")} disabled={isLoading} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -413,7 +413,7 @@ export function OrganisationDetailsDrawer({
                             <FormItem>
                               <FormLabel>Logo URL</FormLabel>
                               <FormControl>
-                                <Input {...field} disabled={isLoading} />
+                                <Input {...field} value={String(field.value ?? "")} disabled={isLoading} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

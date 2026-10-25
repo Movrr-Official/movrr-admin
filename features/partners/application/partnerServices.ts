@@ -26,6 +26,7 @@ export type PartnerQueries = {
   me: (
     ctx: RequestContext,
   ) => Promise<ApplicationResult<PartnerProfileReadModel>>;
+  fulfilmentHistory: (ctx: RequestContext) => Promise<ApplicationResult<unknown[]>>;
   pendingFulfilments: (
     ctx: RequestContext,
   ) => Promise<ApplicationResult<unknown[]>>;
@@ -64,6 +65,8 @@ const PENDING_PARTNER_STATES = new Set<FulfilmentState>([
   "validated",
   "reserved",
 ]);
+
+const HISTORY_PARTNER_STATES = new Set<FulfilmentState>(["collected","dispatched","delivered","completed","cancelled","failed","expired","refunded","reversed"]);
 
 function requireOrg(ctx: RequestContext): ApplicationResult<{
   organisationId: string;
@@ -107,19 +110,7 @@ export function createPartnerQueries(deps: {
   ) => Promise<OrganisationMembership[]>;
   getOrganisation?: (organisationId: string) => Promise<Organisation | null>;
 }): PartnerQueries {
-  return {
-    async me(ctx) {
-      const authz = deps.authorisation.assertCapability(ctx, "fulfilment.read");
-      if (!authz.ok) return authz;
-      const org = requireOrg(ctx);
-      if (!org.ok) return org;
-      return ok({
-        organisationId: org.value.organisationId,
-        role: org.value.role,
-        type: "reward_partner" as const,
-      });
-    },
-    async pendingFulfilments(ctx) {
+  async function scopedFulfilments(ctx: RequestContext, history: boolean): Promise<ApplicationResult<unknown[]>> {
       const authz = deps.authorisation.assertCapability(ctx, "fulfilment.read");
       if (!authz.ok) return authz;
       const org = requireOrg(ctx);
@@ -132,10 +123,24 @@ export function createPartnerQueries(deps: {
         rows.filter(
           (f) =>
             f.partnerOrgId === org.value.organisationId &&
-            PENDING_PARTNER_STATES.has(f.state),
+            (history ? HISTORY_PARTNER_STATES.has(f.state) : PENDING_PARTNER_STATES.has(f.state)),
         ).map(f => ({ ...f, rewardTitle: titles.get(f.catalogItemId) })),
       );
+  }
+  return {
+    async me(ctx) {
+      const authz = deps.authorisation.assertCapability(ctx, "fulfilment.read");
+      if (!authz.ok) return authz;
+      const org = requireOrg(ctx);
+      if (!org.ok) return org;
+      return ok({
+        organisationId: org.value.organisationId,
+        role: org.value.role,
+        type: "reward_partner" as const,
+      });
     },
+    pendingFulfilments: ctx => scopedFulfilments(ctx, false),
+    fulfilmentHistory: ctx => scopedFulfilments(ctx, true),
     async listResources(ctx) {
       const authz = deps.authorisation.assertCapability(ctx, "resources.manage");
       if (!authz.ok) return authz;

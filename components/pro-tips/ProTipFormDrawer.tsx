@@ -1,5 +1,7 @@
 "use client";
 
+import { z } from "zod";
+
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -72,7 +74,7 @@ export function ProTipFormDrawer({
   const updateMutation = useUpdateProTip();
   const isEditing = !!tip;
 
-  const form = useForm<CreateProTipFormData>({
+  const form = useForm<z.input<typeof createProTipSchema>, unknown, CreateProTipFormData>({
     resolver: zodResolver(createProTipSchema),
     defaultValues: {
       icon: "",
@@ -153,7 +155,7 @@ export function ProTipFormDrawer({
                     <FormItem>
                       <FormLabel>Icon (emoji)</FormLabel>
                       <FormControl>
-                        <Input placeholder="🚲" maxLength={8} {...field} />
+                        <Input placeholder="🚲" maxLength={8} {...field} value={String(field.value ?? "")} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -171,7 +173,7 @@ export function ProTipFormDrawer({
                           type="number"
                           min={0}
                           placeholder="0"
-                          {...field}
+                          {...field} value={String(field.value ?? "")}
                           onChange={(e) =>
                             field.onChange(Number(e.target.value))
                           }
@@ -213,7 +215,7 @@ export function ProTipFormDrawer({
                     <FormLabel>Category</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value ?? ""}
+                      value={String(field.value ?? "")}
                     >
                       <FormControl>
                         <SelectTrigger>

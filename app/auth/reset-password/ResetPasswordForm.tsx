@@ -44,7 +44,7 @@ export function ResetPasswordForm() {
   const [error, setError] = useState("");
   const [isComplete, setIsComplete] = useState(false);
 
-  const form = useForm<ResetPasswordFormData>({
+  const form = useForm<z.input<typeof resetPasswordSchema>, unknown, ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       password: "",
@@ -108,7 +108,7 @@ export function ResetPasswordForm() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} disabled={isPending} />
+                      <Input type="password" {...field} value={String(field.value ?? "")} disabled={isPending} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -121,7 +121,7 @@ export function ResetPasswordForm() {
                   <FormItem>
                     <FormLabel>Confirm password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} disabled={isPending} />
+                      <Input type="password" {...field} value={String(field.value ?? "")} disabled={isPending} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -118,7 +118,7 @@ export function AdvertiserDetailsDrawer({
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const form = useForm<EditAdvertiserData>({
+  const form = useForm<z.input<typeof editAdvertiserSchema>, unknown, EditAdvertiserData>({
     resolver: zodResolver(editAdvertiserSchema),
     defaultValues: {
       companyName: "",
@@ -285,7 +285,7 @@ export function AdvertiserDetailsDrawer({
                             </FormLabel>
                             <FormControl>
                               <Input
-                                {...field}
+                                {...field} value={String(field.value ?? "")}
                                 className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
@@ -303,7 +303,7 @@ export function AdvertiserDetailsDrawer({
                             </FormLabel>
                             <FormControl>
                               <Input
-                                {...field}
+                                {...field} value={String(field.value ?? "")}
                                 className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
@@ -322,7 +322,7 @@ export function AdvertiserDetailsDrawer({
                             <FormControl>
                               <Input
                                 type="email"
-                                {...field}
+                                {...field} value={String(field.value ?? "")}
                                 className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
@@ -340,7 +340,7 @@ export function AdvertiserDetailsDrawer({
                             </FormLabel>
                             <FormControl>
                               <Input
-                                {...field}
+                                {...field} value={String(field.value ?? "")}
                                 className="rounded-xl border-border/50 bg-background/60"
                               />
                             </FormControl>
@@ -358,7 +358,7 @@ export function AdvertiserDetailsDrawer({
                             </FormLabel>
                             <FormControl>
                               <Input
-                                {...field}
+                                {...field} value={String(field.value ?? "")}
                                 placeholder="https://example.com"
                                 className="rounded-xl border-border/50 bg-background/60"
                               />
@@ -377,7 +377,7 @@ export function AdvertiserDetailsDrawer({
                             </FormLabel>
                             <Select
                               onValueChange={field.onChange}
-                              value={field.value}
+                              value={String(field.value ?? "")}
                             >
                               <FormControl>
                                 <SelectTrigger className="rounded-xl border-border/50 bg-background/60">
@@ -409,7 +409,7 @@ export function AdvertiserDetailsDrawer({
                                 type="number"
                                 min="0"
                                 step="0.01"
-                                value={field.value}
+                                value={String(field.value ?? "")}
                                 onChange={(event) =>
                                   field.onChange(event.target.value)
                                 }
@@ -458,7 +458,7 @@ export function AdvertiserDetailsDrawer({
                             </FormLabel>
                             <FormControl>
                               <Input
-                                {...field}
+                                {...field} value={String(field.value ?? "")}
                                 placeholder="UTC"
                                 className="rounded-xl border-border/50 bg-background/60"
                               />
@@ -545,7 +545,7 @@ export function AdvertiserDetailsDrawer({
                           </FormLabel>
                           <FormControl>
                             <CompanyLogoUploadField
-                              value={field.value}
+                              value={String(field.value ?? "")}
                               onChange={field.onChange}
                               disabled={isLoading}
                             />

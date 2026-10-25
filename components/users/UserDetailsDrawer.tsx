@@ -140,7 +140,7 @@ export function UserDetailsDrawer({
   const [pointsBalance, setPointsBalance] = useState<any>(null);
   const [isLoadingAdditionalData, setIsLoadingAdditionalData] = useState(false);
 
-  const form = useForm<EditUserFormData>({
+  const form = useForm<z.input<typeof editUserSchema>, unknown, EditUserFormData>({
     resolver: zodResolver(editUserSchema),
     defaultValues: {
       name: "",
@@ -451,7 +451,7 @@ export function UserDetailsDrawer({
                                 <Input
                                   placeholder="John Doe"
                                   className="rounded-xl border-border/50 bg-background/60"
-                                  {...field}
+                                  {...field} value={String(field.value ?? "")}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -472,7 +472,7 @@ export function UserDetailsDrawer({
                                   readOnly
                                   placeholder="user@example.com"
                                   className="rounded-xl border-border/50 bg-background/60"
-                                  {...field}
+                                  {...field} value={String(field.value ?? "")}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -492,7 +492,7 @@ export function UserDetailsDrawer({
                                   type="tel"
                                   placeholder="+1 (555) 123-4567"
                                   className="rounded-xl border-border/50 bg-background/60"
-                                  {...field}
+                                  {...field} value={String(field.value ?? "")}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -511,7 +511,7 @@ export function UserDetailsDrawer({
                                 <Input
                                   placeholder="Company Name"
                                   className="rounded-xl border-border/50 bg-background/60"
-                                  {...field}
+                                  {...field} value={String(field.value ?? "")}
                                 />
                               </FormControl>
                               <FormMessage />

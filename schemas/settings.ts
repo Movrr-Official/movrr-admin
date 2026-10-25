@@ -298,12 +298,12 @@ export const billingRuntimeSchema = z.object({
 
 export const adminSettingsResponseSchema = z.object({
   values: adminSettingsValuesSchema,
-  metadata: z.record(settingsSectionIdSchema, settingsSectionMetadataSchema),
+  metadata: z.partialRecord(settingsSectionIdSchema, settingsSectionMetadataSchema),
   missingSections: z.array(settingsSectionIdSchema).default([]),
   runtime: z.object({
     integrationStatus: z.array(integrationStatusCardSchema),
     adminNotificationRecipients: z.array(z.string().email()),
-    envManagedFields: z.record(settingsSectionIdSchema, z.array(z.string())),
+    envManagedFields: z.partialRecord(settingsSectionIdSchema, z.array(z.string())),
     billing: billingRuntimeSchema,
   }),
 });
@@ -315,14 +315,14 @@ export const settingsAuditEntrySchema = z.object({
   timestamp: z.string().datetime(),
   performedBy: settingsActorSchema,
   changedFields: z.array(z.string()),
-  previousValue: z.record(z.unknown()).optional(),
-  newValue: z.record(z.unknown()).optional(),
+  previousValue: z.record(z.string(), z.unknown()).optional(),
+  newValue: z.record(z.string(), z.unknown()).optional(),
   snapshotAvailable: z.boolean().default(false),
 });
 
 export const updateSettingsSectionInputSchema = z.object({
   section: settingsSectionIdSchema,
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   confirmedRiskyChanges: z.boolean().default(false),
 });
 

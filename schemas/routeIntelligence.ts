@@ -44,7 +44,7 @@ export const routeSuggestionInputSchema = z.object({
     })
     .optional(),
   city: z.string().trim().max(100).optional(),
-  preferences: z.record(z.unknown()).optional(),
+  preferences: z.record(z.string(), z.unknown()).optional(),
   campaignContext: z
     .object({
       id: z.string().optional(),
@@ -106,7 +106,7 @@ export type RouteExplanationOutput = z.infer<typeof routeExplanationOutputSchema
 
 export const policyTranslationInputSchema = z.object({
   naturalLanguagePolicy: z.string().trim().min(1).max(1000),
-  context: z.record(z.unknown()).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
 });
 
 const normalisedPreferencesSchema = z.object({
@@ -120,7 +120,7 @@ const normalisedPreferencesSchema = z.object({
 
 export const policyTranslationOutputSchema = z.object({
   normalizedPreferences: normalisedPreferencesSchema,
-  suggestedConstraints: z.record(z.unknown()).default({}),
+  suggestedConstraints: z.record(z.string(), z.unknown()).default({}),
   warnings: boundedStringArray,
   ambiguous: z.boolean().default(false),
 });

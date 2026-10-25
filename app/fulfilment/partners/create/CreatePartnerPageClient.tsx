@@ -64,7 +64,7 @@ export default function CreatePartnerPageClient() {
   const createOrganisation = useCreateOrganisation();
   const [formStep, setFormStep] = useState<FormStep>("basic");
 
-  const form = useForm<CreatePartnerFormData>({
+  const form = useForm<z.input<typeof createPartnerFormSchema>, unknown, CreatePartnerFormData>({
     resolver: zodResolver(createPartnerFormSchema),
     defaultValues: {
       name: "",
@@ -194,7 +194,7 @@ export default function CreatePartnerPageClient() {
                             placeholder="Enter partner organisation name"
                             className="rounded-xl border-border/50 bg-background/60"
                             disabled={formStep === "review"}
-                            {...field}
+                            {...field} value={String(field.value ?? "")}
                           />
                         </FormControl>
                         <FormDescription className="text-xs">

@@ -57,7 +57,7 @@ const auditLogSchema = z.object({
     .optional(),
   userAgent: z.string().optional(),
   resourceId: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type AuditAction = z.infer<typeof auditActionSchema>;

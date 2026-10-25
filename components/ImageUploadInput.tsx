@@ -2,7 +2,8 @@
 
 import React from "react";
 import { useEffect, useState } from "react";
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
+import { cloudinaryPreviewUrl } from "@/lib/cloudinaryPreview";
 import { AiOutlineCloseCircle } from "react-icons/ai";
 import { MdOutlineCloudUpload } from "react-icons/md";
 import { UseFormSetValue } from "react-hook-form";
@@ -230,8 +231,8 @@ const ImageUploadInput = ({
       <div className="flex items-center">
         {publicId && (
           <div className="relative w-full">
-            <CldImage
-              src={publicId}
+            <Image
+              src={cloudinaryPreviewUrl(publicId, NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME)}
               width={150}
               height={150}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

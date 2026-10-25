@@ -73,6 +73,7 @@ export type PlatformApiHandlers = {
   partners: {
     me: (request: Request) => Promise<Response>;
     pending: (request: Request) => Promise<Response>;
+    history: (request: Request) => Promise<Response>;
     validate: (request: Request) => Promise<Response>;
     confirmCollection: (request: Request) => Promise<Response>;
     resources: (request: Request) => Promise<Response>;
@@ -275,6 +276,7 @@ export async function createPlatformApiForTests(
     partners: {
       me: (request) =>
         route(request, "fulfilment.read", (ctx) => partnerQueries.me(ctx)),
+      history: request => route(request, "fulfilment.read", ctx => partnerQueries.fulfilmentHistory(ctx)),
       pending: (request) =>
         route(request, "fulfilment.read", (ctx) =>
           partnerQueries.pendingFulfilments(ctx),
