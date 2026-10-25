@@ -1,0 +1,49 @@
+{
+  "at": "2026-10-25T15:31:59.500Z",
+  "production": true,
+  "deployed": {
+    "admin": {
+      "deploymentId": "dpl_H7qu5RTahSCkYyM7R2TYCCzADx6g",
+      "sha": "74f0738825d4b6f067eca3ff6a522679e809cee0",
+      "immutableUrl": "https://movrr-admin-7gox2bijt-movrrops-projects.vercel.app",
+      "productionUrl": "https://admin.movrr.nl",
+      "readyState": "READY",
+      "regions": [
+        "fra1"
+      ],
+      "rollbackDeploymentId": "dpl_91fW9Py6MWJzvSiFPbsLr7idrusu",
+      "rollbackUrl": "https://movrr-admin-4lqww5idt-movrrops-projects.vercel.app",
+      "rollbackSha": "32ef08ba94365a2c05209e2b7c26b056c3de304a"
+    },
+    "partner": {
+      "deploymentId": "dpl_2ViChyESsubMoQN1UBy8TTVXNZy6",
+      "sha": "28e01614d3ec9d2ee75bf5a87c12be9bc8e369ee",
+      "immutableUrl": "https://movrr-bntxqv7zu-movrrops-projects.vercel.app",
+      "productionUrl": "https://app.movrr.nl",
+      "readyState": "READY",
+      "regions": [
+        "fra1"
+      ],
+      "rollbackDeploymentId": "dpl_H9zGwPGVYryNPBuadumTtkEzeLuj",
+      "rollbackUrl": "https://movrr-bz6rcsq63-movrrops-projects.vercel.app",
+      "rollbackSha": "3f6faa02c57f55923841737399175eac6b70fbb9"
+    }
+  },
+  "shopActivation": false,
+  "followUp": {
+    "sha": "97da8f1528f1cba7a8dd5474808b05b8388efa61",
+    "deployed": false,
+    "pendingSpecificApproval": true
+  },
+  "browserAcceptance": {
+    "partnerSignedInObserved": [
+      "/dashboard/validate",
+      "/dashboard/resources",
+      "/dashboard/collections"
+    ],
+    "adminSignedIn": false,
+    "adminSessionExpired": true,
+    "remaining": "Windows helper repeatedly failed to activate the captured window; Chrome DevTools connector has no DevToolsActivePort. No cookies or credentials extracted.",
+    "physicalDevice": false
+  }
+}

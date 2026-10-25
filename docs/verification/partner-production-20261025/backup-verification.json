@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-25T15:07:00.865Z",
+  "scope": "public schema and all application data plus canonical migration journal; private archive; storage bytes/provider PITR not claimed",
+  "bytes": 2382360,
+  "sha256": "280e93ab32de9aaffde5b1bd449a8a90d5b18452505cbbc7b2f7ed745e37a5a0",
+  "archiveReadable": true,
+  "objects": 2469,
+  "productionMutations": false
+}

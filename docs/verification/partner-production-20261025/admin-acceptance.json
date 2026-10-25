@@ -1,0 +1,148 @@
+{
+  "at": "2026-10-25T15:14:24.935Z",
+  "production": true,
+  "name": "admin",
+  "deploymentId": "dpl_H7qu5RTahSCkYyM7R2TYCCzADx6g",
+  "sha": "74f0738825d4b6f067eca3ff6a522679e809cee0",
+  "url": "https://admin.movrr.nl",
+  "immutableUrl": "https://movrr-admin-7gox2bijt-movrrops-projects.vercel.app",
+  "aliasVerified": true,
+  "existingFirewallAuthenticationSettingsPreserved": true,
+  "regions": [
+    "fra1"
+  ],
+  "checks": [
+    {
+      "route": "/",
+      "method": "GET",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2F",
+      "contentType": "text/plain",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "bytes": 15,
+      "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+    },
+    {
+      "route": "/fulfilment/partners",
+      "method": "GET",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Ffulfilment%2Fpartners",
+      "contentType": "text/plain",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "bytes": 15,
+      "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+    },
+    {
+      "route": "/api/v1/partners/me",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "bytes": 97,
+      "sha256": "a3c7e61379894673c61958e56a55adb6f368d16e64a13299542d9a662da6ef37"
+    },
+    {
+      "route": "/api/v1/partners/fulfilments/pending",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "bytes": 97,
+      "sha256": "a3c7e61379894673c61958e56a55adb6f368d16e64a13299542d9a662da6ef37"
+    },
+    {
+      "route": "/api/v1/partners/fulfilments/history",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "bytes": 97,
+      "sha256": "a3c7e61379894673c61958e56a55adb6f368d16e64a13299542d9a662da6ef37"
+    },
+    {
+      "route": "/api/v1/partners/staff",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "bytes": 97,
+      "sha256": "a3c7e61379894673c61958e56a55adb6f368d16e64a13299542d9a662da6ef37"
+    },
+    {
+      "route": "/api/v1/partners/rewards",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "bytes": 97,
+      "sha256": "a3c7e61379894673c61958e56a55adb6f368d16e64a13299542d9a662da6ef37"
+    },
+    {
+      "route": "/api/v1/fulfilment/health",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "bytes": 97,
+      "sha256": "a3c7e61379894673c61958e56a55adb6f368d16e64a13299542d9a662da6ef37"
+    },
+    {
+      "route": "/api/v1/rewards/redemptions",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "bytes": 97,
+      "sha256": "a3c7e61379894673c61958e56a55adb6f368d16e64a13299542d9a662da6ef37"
+    },
+    {
+      "route": "/api/v1/partners/validate",
+      "method": "POST",
+      "status": 401,
+      "location": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "bytes": 97,
+      "sha256": "a3c7e61379894673c61958e56a55adb6f368d16e64a13299542d9a662da6ef37"
+    },
+    {
+      "route": "/api/v1/partners/collections/confirm",
+      "method": "POST",
+      "status": 401,
+      "location": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "bytes": 97,
+      "sha256": "a3c7e61379894673c61958e56a55adb6f368d16e64a13299542d9a662da6ef37"
+    },
+    {
+      "route": "/maplibre-gl-worker.mjs",
+      "method": "GET",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Fmaplibre-gl-worker.mjs",
+      "contentType": "text/plain",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "bytes": 15,
+      "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+    },
+    {
+      "route": "/maplibre-gl-shared.mjs",
+      "method": "GET",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Fmaplibre-gl-shared.mjs",
+      "contentType": "text/plain",
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "bytes": 15,
+      "sha256": "7c040f8633b8823d72ed63da9b3b2dfe9846e912c66a64c9433ec9c4815d76c2"
+    }
+  ],
+  "authenticatedBrowserAcceptance": false,
+  "physicalDeviceAcceptance": false
+}

@@ -1,0 +1,15 @@
+{
+  "admin": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://kzdvunpuxaxlphqvmzxw.supabase.co",
+    "NEXT_PUBLIC_APP_URL": "https://admin.movrr.nl",
+    "APP_URL": "https://admin.movrr.nl",
+    "NEXT_PUBLIC_USE_MOCK_DATA": "false"
+  },
+  "partner": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://kzdvunpuxaxlphqvmzxw.supabase.co",
+    "PLATFORM_API_URL": "https://admin.movrr.nl/api",
+    "NEXT_PUBLIC_APP_URL": "https://app.movrr.nl",
+    "APP_URL": "https://app.movrr.nl",
+    "NEXT_PUBLIC_USE_MOCK_DATA": "false"
+  }
+}

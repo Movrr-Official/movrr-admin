@@ -1,0 +1,38 @@
+{
+  "at": "2026-10-25T15:28:53.627Z",
+  "financialTablesUnchanged": 14,
+  "financialTables": [
+    "fulfilment",
+    "fulfilment_event",
+    "fulfilment_resource",
+    "fulfilment_resource_allocation",
+    "fulfilment_resource_item",
+    "fulfilment_token",
+    "reward_catalog",
+    "reward_catalog_location",
+    "reward_catalog_sync_log",
+    "reward_partner",
+    "reward_partner_location",
+    "reward_redemptions",
+    "reward_transactions",
+    "rider_reward_balance"
+  ],
+  "expectedHeartbeatTablesChanged": [
+    "shop_scheduler_state",
+    "shop_worker_health"
+  ],
+  "allOtherPublicTablesUnchanged": true,
+  "communityAndDeletionSchemaUnchanged": true,
+  "health": {
+    "wallet_mismatches": 0,
+    "unpaired_paid_claims": 0,
+    "free_financial_entries": 0,
+    "pending_delivery": 0,
+    "delivery_failures": 0
+  },
+  "shop": {
+    "state": "disabled",
+    "version": "0",
+    "redemption_enabled": false
+  }
+}

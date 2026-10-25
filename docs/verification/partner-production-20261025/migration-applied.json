@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-25T15:10:36.637Z",
+  "applied": true,
+  "journal": {
+    "version": "20261025150000",
+    "name": "085_canonical_debit_refund_compatibility",
+    "checksum": "c45e511cc771382b34dec6d3306343e17a9e66a22f33c415299ccb961896fb24",
+    "created_by": "owner-authorized Partner production release:74f0738825d4b6f067eca3ff6a522679e809cee0",
+    "idempotency_key": "partner-085:c45e511cc771382b34dec6d3306343e17a9e66a22f33c415299ccb961896fb24"
+  },
+  "exactSource": true,
+  "ownersOidsAclsUnchanged": true,
+  "allOtherFunctionsUnchanged": true,
+  "rlsTriggersGrantsUnchanged": true,
+  "allPublicTablesUnchanged": 167,
+  "health": {
+    "wallet_mismatches": 0,
+    "unpaired_paid_claims": 0,
+    "free_financial_entries": 0,
+    "pending_delivery": 0,
+    "delivery_failures": 0
+  },
+  "shop": {
+    "state": "disabled",
+    "version": "0",
+    "redemption_enabled": false
+  },
+  "postgrestReloadNotified": true
+}
