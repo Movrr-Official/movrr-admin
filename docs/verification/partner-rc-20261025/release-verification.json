@@ -4,7 +4,7 @@
   "shopActivation": false,
   "adminCandidate": "Commit containing this manifest; source hashes below identify tested uncommitted Admin content",
   "adminParent": "32ef08ba94365a2c05209e2b7c26b056c3de304a",
-  "partnerCommit": "6d83f6d6b29515a499c21e09cac4175dc4fd0336",
+  "partnerCommit": "2e544099e5a5e61376a24879f156a63c92212bd1",
   "mobileFixturesCommit": "35ad03fa63dc8363dc2a995f0d35bf31397c2da2",
   "lineEndingConvention": "SHA-256 UTF-8 LF for text; raw bytes for binary assets",
   "adminSourceHashes": {
@@ -70,5 +70,7 @@
   },
   "productionDeploymentDecision": "NO-GO: security disposition and explicit RC authorization required",
   "publicRedemptionDecision": "NO-GO: merchant supply and operational/readiness acceptance incomplete",
-  "deviceAndProviderAcceptance": false
+  "deviceAndProviderAcceptance": false,
+  "crossAppPartnerSourceCommit": "6d83f6d6b29515a499c21e09cac4175dc4fd0336",
+  "finalPartnerDelta": "Role-label presentation and reward-price spacing only; all 127 Partner tests, affected lint and production build rerun; financial clients unchanged"
 }
