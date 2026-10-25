@@ -15,6 +15,7 @@ function throwOnError(error: { message: string } | null, action: string): void {
 async function mapCatalogRow(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   data: {
+    thumbnail_url?: string | null;
     description?: string;
     category?: string;
     inventory_count?: number | null;
@@ -41,6 +42,7 @@ async function mapCatalogRow(
   }
 
   return {
+    thumbnailUrl: data.thumbnail_url ?? null,
     description: data.description, category: data.category, inventoryCount: data.inventory_count, updatedAt: data.updated_at,
     id: String(data.id),
     sku: String(data.sku),
@@ -54,7 +56,7 @@ async function mapCatalogRow(
 }
 
 const CATALOG_COLUMNS =
-  "id, sku, title, status, points_price, fulfilment_type, resource_id, partner_id, description, category, inventory_count, updated_at";
+  "id, sku, title, status, points_price, fulfilment_type, resource_id, partner_id, description, category, inventory_count, updated_at, thumbnail_url";
 
 export function createSupabaseCatalogRepository(): CatalogRepository &
   CatalogListPort & { listForPartner: (organisationId: string) => Promise<CatalogItem[]> } {

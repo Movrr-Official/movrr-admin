@@ -45,6 +45,7 @@ export type RedeemRewardResult = {
 };
 
 export type CatalogItem = {
+  thumbnailUrl?: string | null;
   description?: string;
   category?: string;
   inventoryCount?: number | null;

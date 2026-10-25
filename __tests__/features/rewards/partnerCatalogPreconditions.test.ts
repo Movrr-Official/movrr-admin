@@ -1,5 +1,6 @@
 import { expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/rewardCatalogImage", () => ({ uploadRewardCatalogThumbnail: vi.fn(), deleteRewardCatalogImage: vi.fn() }));
 vi.mock("@/lib/supabase-admin", () => ({ createSupabaseAdminClient: vi.fn() }));
 import { partnerCatalogCreateSchema, partnerCatalogUpdateSchema } from "@/features/rewards/application/partnerCatalogCommands";
 it.each([undefined, null, "", "0", -1, 1.5])("never converts missing/invalid partner price %s to Free", pointsCost => {
