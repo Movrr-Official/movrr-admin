@@ -1,0 +1,56 @@
+{
+  "at": "2026-10-25T17:28:29.350Z",
+  "method": "Existing native Chrome sessions; UI observation and read-only navigation",
+  "physicalDevice": false,
+  "admin": {
+    "sha": "19790c43a92b9ba11996a8e23bd8cb091397855c",
+    "signedIn": true,
+    "existingRoleRetained": true,
+    "routes": [
+      "/",
+      "/fulfilment",
+      "/fulfilment/partners"
+    ],
+    "dashboardAndPartnerOperationsRendered": true
+  },
+  "partner": {
+    "sha": "bc16e2c4b6d387404d7149260c857ad674099d36",
+    "signedIn": true,
+    "existingMembershipRetained": true,
+    "rewardBannersWithActualImages": true,
+    "createRewardImageControl": true,
+    "whiteCtaText": true,
+    "flagOnlyLanguageTrigger": true,
+    "languageOutsideDismiss": true,
+    "notificationPreviewLoadingAndEmpty": true,
+    "notificationViewAllNavigation": true,
+    "dutchCreateForm": true,
+    "dutchWorkspaceHandoffPreserved": true,
+    "originalEnglishRestored": true,
+    "foreignMerchantEditRouteDenied": "Page not found; no foreign reward details or editor",
+    "desktopPhoneHandoff": true,
+    "desktopCameraNotRequested": true,
+    "existingRewardEditorWithImageReplaceRemove": true
+  },
+  "mutations": {
+    "productionMerchantCreation": false,
+    "productionRewardCreation": false,
+    "productionMediaUpload": false,
+    "financial": false,
+    "roles": false,
+    "notificationReadState": false,
+    "languagePreference": "Dutch checked, original English restored"
+  },
+  "acceptanceException": {
+    "scope": "Dark workspace account caption and Current workspace label contrast",
+    "preparedFix": "43f11fcec679f145c7fe8d29ced2085d16d3edc8",
+    "deployed": false,
+    "authorization": "Pending exact follow-up approval"
+  },
+  "operationalAcceptance": {
+    "physicalCamera": false,
+    "physicalPwaInstall": false,
+    "realMerchantUpload": false,
+    "publicRedemptionActivation": false
+  }
+}

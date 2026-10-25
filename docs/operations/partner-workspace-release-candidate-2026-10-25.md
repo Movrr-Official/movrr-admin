@@ -84,3 +84,6 @@ Leave 085 installed for unrelated UI rollback. Only separately authorized SQL ro
 Remaining gates: explicit authorization for this exact rollout, production backup/drift checks, post-deployment signed-in reads, physical iOS/Android EN/NL camera/PWA/focus acceptance, target Admin WebGL2 support, genuine approved voucher supply and fulfilment/refund terms, published collection locations and trained staff, real email/push delivery acceptance and canonical launch attestations. No release step enables Shop or authorizes production test mutations.
 
 **Software candidate: complete. Controlled deployment recommendation: GO after explicit release authorization and rollout preflight. Public redemption: NO-GO until separate operational acceptance and authorization.**
+
+
+Execution follow-up: owner-authorized Admin `19790c4` and Partner `bc16e2c` are deployed. [Production checks and exact deployment IDs](../verification/partner-media-production-20261025/README.md) record unchanged financial/authorization/migration hashes, Shop Disabled, and the small dark-workspace label contrast exception with verified follow-up `43f11fc` awaiting its own deployment authorization.

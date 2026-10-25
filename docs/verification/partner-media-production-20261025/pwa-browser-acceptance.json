@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-25T17:21:22.861Z",
+  "productionOrigin": "https://app.movrr.nl",
+  "desktopChromiumMobileViewport": true,
+  "physicalDevice": false,
+  "session": "isolated anonymous; no real identity or permission",
+  "serviceWorkerControlled": true,
+  "cache": [
+    {
+      "name": "movrr-partner-offline-v2",
+      "urls": [
+        "https://app.movrr.nl/offline.html"
+      ]
+    }
+  ],
+  "offlineNavigationFallback": true,
+  "offlineForms": 0,
+  "noPrivateCache": true,
+  "errors": []
+}

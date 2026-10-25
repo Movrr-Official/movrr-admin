@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-25T17:26:33.684Z",
+  "preflightAt": "2026-10-25T17:17:55.236Z",
+  "productionProject": "kzdvunpuxaxlphqvmzxw",
+  "shop": {
+    "state": "disabled",
+    "version": "0",
+    "redemption_enabled": false
+  },
+  "migration": {
+    "version": "20261025150000",
+    "name": "085_canonical_debit_refund_compatibility",
+    "checksum": "c45e511cc771382b34dec6d3306343e17a9e66a22f33c415299ccb961896fb24"
+  },
+  "health": {
+    "wallet_mismatches": 0,
+    "unpaired_paid_claims": 0,
+    "pending_delivery": 0,
+    "delivery_failures": 0
+  },
+  "financialTablesVerified": 14,
+  "financialCatalogInventoryUnchanged": true,
+  "functionsHash": "ecfd412ad71593398a3c47f370c95e366b31177ee574d3289bfecf6db5dd195a",
+  "policiesRlsGrantsHash": "e49af71736b2f7f659ad7f90523bffdba2b0c72f71ea68fb89145275ef0f2940",
+  "journalHash": "92866a69bbb8326b591ce649c2546657acd6a447633fda6e1d771c44a2803614",
+  "allHashesMatchPreflight": true,
+  "productionFinancialMutations": false,
+  "migrationAppliedDuringThisRollout": false
+}
