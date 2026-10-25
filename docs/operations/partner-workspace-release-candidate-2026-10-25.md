@@ -1,6 +1,6 @@
 # Partner Workspace release candidate - 25 October 2026
 
-Execution update: the authorized 085/Admin/Partner rollout is deployed. See the [production execution record](../verification/partner-production-20261025/README.md) for exact deployment IDs, integrity checks, incomplete signed-in acceptance and the separately requested phone-handoff candidate. Shop remains Disabled. The reviewed candidate instructions below are retained as release history.
+Execution update: the authorized 085/Admin/Partner rollout is deployed. See the [production execution record](../verification/partner-production-20261025/README.md) for exact deployment IDs, integrity checks, completed targeted signed-in acceptance and the separately authorized/deployed phone-handoff follow-up. Shop remains Disabled. The reviewed candidate instructions below are retained as release history.
 
 Status: **software gates passed; GO recommendation for controlled Admin/Partner/085 rollout, subject to explicit release authorization. Public redemption remains NO-GO and Disabled.** No production migration, deployment, account provisioning, inventory change or financial command was performed. This updates the existing candidate; completed financial architecture, Community Safety and Rider Mobile product scope remain closed.
 

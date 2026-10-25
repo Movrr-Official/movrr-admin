@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-25T15:31:59.500Z",
+  "at": "2026-10-25T15:54:05.181Z",
   "production": true,
   "deployed": {
     "admin": {
@@ -16,34 +16,48 @@
       "rollbackSha": "32ef08ba94365a2c05209e2b7c26b056c3de304a"
     },
     "partner": {
-      "deploymentId": "dpl_2ViChyESsubMoQN1UBy8TTVXNZy6",
-      "sha": "28e01614d3ec9d2ee75bf5a87c12be9bc8e369ee",
-      "immutableUrl": "https://movrr-bntxqv7zu-movrrops-projects.vercel.app",
+      "deploymentId": "dpl_5Pf1wFCa8uoDPsTJkaL1ZCwzNZeZ",
+      "sha": "97da8f1528f1cba7a8dd5474808b05b8388efa61",
+      "immutableUrl": "https://movrr-f30sb1utv-movrrops-projects.vercel.app",
       "productionUrl": "https://app.movrr.nl",
       "readyState": "READY",
       "regions": [
         "fra1"
       ],
-      "rollbackDeploymentId": "dpl_H9zGwPGVYryNPBuadumTtkEzeLuj",
-      "rollbackUrl": "https://movrr-bz6rcsq63-movrrops-projects.vercel.app",
-      "rollbackSha": "3f6faa02c57f55923841737399175eac6b70fbb9"
+      "rollbackDeploymentId": "dpl_2ViChyESsubMoQN1UBy8TTVXNZy6",
+      "rollbackUrl": "https://movrr-bntxqv7zu-movrrops-projects.vercel.app",
+      "rollbackSha": "28e01614d3ec9d2ee75bf5a87c12be9bc8e369ee"
     }
   },
   "shopActivation": false,
   "followUp": {
     "sha": "97da8f1528f1cba7a8dd5474808b05b8388efa61",
-    "deployed": false,
-    "pendingSpecificApproval": true
+    "deployed": true,
+    "pendingSpecificApproval": false,
+    "ownerAuthorization": "Explicit approval: Deploy verified phone-handoff commit 97da8f1",
+    "deploymentId": "dpl_5Pf1wFCa8uoDPsTJkaL1ZCwzNZeZ"
   },
   "browserAcceptance": {
+    "adminSignedIn": true,
+    "adminSessionExpired": false,
+    "adminReadRoutes": [
+      "/",
+      "/fulfilment",
+      "/fulfilment/partners"
+    ],
     "partnerSignedInObserved": [
       "/dashboard/validate",
       "/dashboard/resources",
-      "/dashboard/collections"
+      "/dashboard/collections",
+      "/dashboard/settings"
     ],
-    "adminSignedIn": false,
-    "adminSessionExpired": true,
-    "remaining": "Windows helper repeatedly failed to activate the captured window; Chrome DevTools connector has no DevToolsActivePort. No cookies or credentials extracted.",
-    "physicalDevice": false
+    "desktopPhoneHandoff": true,
+    "productionHandoffUrl": "https://app.movrr.nl/dashboard/validate",
+    "desktopCameraControlsAbsent": true,
+    "crossMerchantExistingActiveCatalogReadDenied": true,
+    "crossMerchantOutcome": "Page not found; no edit form; candidate verified as foreign through SELECT-only check",
+    "languages": "English production browser observed; English/Dutch isolated regression and rendered acceptance passed. Live Dutch preference switch not verified through native select helper.",
+    "physicalDevice": false,
+    "mutatingFinancialAcceptance": "Not performed; isolated candidate evidence retained"
   }
 }

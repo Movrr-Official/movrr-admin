@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-25T15:28:53.627Z",
+  "at": "2026-10-25T15:51:52.065Z",
   "financialTablesUnchanged": 14,
   "financialTables": [
     "fulfilment",
@@ -17,11 +17,15 @@
     "reward_transactions",
     "rider_reward_balance"
   ],
-  "expectedHeartbeatTablesChanged": [
+  "protectedAuthoritySafetyDeletionTablesUnchanged": 50,
+  "changedNonfinancialTables": [
+    "admin_dashboard_sessions",
+    "audit_log",
     "shop_scheduler_state",
-    "shop_worker_health"
+    "shop_worker_health",
+    "user_activity"
   ],
-  "allOtherPublicTablesUnchanged": true,
+  "changeDisposition": "Owner-performed Admin login/session/audit and normal page activity plus existing scheduler/worker heartbeats. No operator business/role/inventory/financial command.",
   "communityAndDeletionSchemaUnchanged": true,
   "health": {
     "wallet_mismatches": 0,
@@ -34,5 +38,6 @@
     "state": "disabled",
     "version": "0",
     "redemption_enabled": false
-  }
+  },
+  "allUnrelatedFunctionDefinitionsOwnersGrantsUnchanged": true
 }
