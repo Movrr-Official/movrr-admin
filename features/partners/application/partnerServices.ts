@@ -14,6 +14,7 @@ export type PartnerProfileReadModel = {
 };
 
 export type PartnerResourceReadModel = {
+  thumbnailUrl?: string | null;
   id: string;
   name: string;
   resourceKind: string;

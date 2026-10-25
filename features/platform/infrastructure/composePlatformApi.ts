@@ -165,7 +165,7 @@ export async function createPlatformApiForTests(
   let catalogPort: import("@/features/rewards/application/queries/catalogAndRedemptions").CatalogListPort = createInMemoryCatalogListPort(options.seed?.catalog ?? []);
   let redemptionPort: RedemptionListPort = { findById: async () => null, listByRider: async () => [] };
   let fulfilmentPort = options.fulfilmentPort ?? createInMemoryFulfilmentQueryPort(options.seed?.fulfilments ?? []);
-  let listResourcesFn: ((filter: { partnerOrgId?: string | null }) => Promise<Array<{id:string;name:string;resourceKind:string;status:string;partnerOrgId:string|null;availableCount:number}>>) | undefined;
+  let listResourcesFn: ((filter: { partnerOrgId?: string | null }) => Promise<Array<{id:string;name:string;resourceKind:string;status:string;partnerOrgId:string|null;availableCount:number;thumbnailUrl?:string|null}>>) | undefined;
   if (isProductionComposition) {
     const { createSupabaseCatalogRepository } = await import("@/features/rewards/infrastructure/supabaseCatalogRepository");
     const { createSupabaseRedemptionRepository } = await import("@/features/rewards/infrastructure/supabaseRedemptionRepository");
