@@ -9,6 +9,8 @@ export async function GET(request: Request) {
       const health = await shopRpc("shop_health", { p_actor: ctx.principal.userId, p_org: ctx.principal.type === "organisation" ? ctx.principal.organisationId : null });
       if (!health.ok || ctx.principal.type !== "admin") return health;
       const scheduler = await shopRpc("shop_scheduler_health", { p_actor: ctx.principal.userId });
-      return scheduler.ok ? ok({ ...health.value, scheduler: scheduler.value }) : scheduler;
+      if (!scheduler.ok) return scheduler;
+      const push = await shopRpc("notification_push_health", {});
+      return push.ok ? ok({ ...health.value, scheduler: scheduler.value, push: push.value }) : push;
     } });
 }

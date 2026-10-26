@@ -44,10 +44,12 @@ export async function runShopRecovery() {
   if(receiptError)pushDispatchFailures++;
   for(const notification of pushDue ?? []) {
     if(Date.now()-startedAt>45_000)break;
-    const {error}=await db.functions.invoke("send-push-notifications",{body:{type:"INSERT",table:"notifications",schema:"public",record:notification,old_record:null}});
-    if(error)pushDispatchFailures++;
+    const {data,error}=await db.functions.invoke("send-push-notifications",{body:{type:"INSERT",table:"notifications",schema:"public",record:{id:notification.id},old_record:null}});
+    if(error || data?.failed > 0 || data?.unknown > 0)pushDispatchFailures++;
   }
-  const result = { ...recovery, delivered, notificationFailures: failed, pushDispatchFailures };
+  const {data:pushHealth,error:healthError}=await db.rpc("notification_push_health");
+  if(healthError || !pushHealth)throw new Error("Push health unavailable");
+  const result = { ...recovery, delivered, notificationFailures: failed, pushDispatchFailures, pushHealth };
   const { error: heartbeatError } = await db.rpc("shop_finish_recovery", { p_result: result });
   if (heartbeatError) throw new Error("Shop worker outcome persistence failed");
   return result;

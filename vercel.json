@@ -2,7 +2,8 @@
   "regions": ["fra1"],
   "git": {
     "deploymentEnabled": {
-      "main": false
+      "main": false,
+      "codex/notification-reliability-20261026": false
     }
   },
   "crons": [
