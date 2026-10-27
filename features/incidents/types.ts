@@ -12,6 +12,15 @@ export type Incident = {
   createdAt: string;
   updatedAt: string;
   createdBy?: string;
+  settlementOperations?: {
+    condition: string;
+    active: boolean;
+    observedCount: number;
+    ownerRole: "super_admin";
+    acknowledgedAt: string | null;
+    escalatedAt: string | null;
+    deliveries: Array<{ operation: string; phase: string; attempts: number; deliveredAt: string | null; nextAttemptAt: string; deadLetterAt: string | null; category: string | null }>;
+  } | null;
 };
 
 export type CreateIncidentInput = {

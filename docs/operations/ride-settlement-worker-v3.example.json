@@ -1,0 +1,121 @@
+{
+  "enabled": false,
+  "purpose": "Prepared configuration only; requires explicit rollout authorization",
+  "worker": {
+    "method": "POST",
+    "path": "/api/internal/ride-settlement",
+    "schedule": "* * * * *",
+    "authorization": "Bearer <secret-manager:MAINTENANCE_JOB_TOKEN-or-CRON_SECRET>",
+    "timeoutSeconds": 55,
+    "claimsPerInvocation": 5,
+    "leaseSeconds": 300,
+    "attemptLimit": 8,
+    "applicationGate": "RIDE_SETTLEMENT_WORKER_ENABLED=false",
+    "databaseGates": {
+      "worker_enabled": false,
+      "financial_enabled": false
+    },
+    "concurrencyProtection": "Existing fenced per-job claims and leases; repeated HTTP invocations cannot duplicate awards"
+  },
+  "ownership": {
+    "accountableEmployeeRole": "super_admin",
+    "requiredHumanOwnerEmployeeReference": "employee-sha256:fda75718291e1b61ff83",
+    "assignmentAuthority": "Founder-approved initial launch: same verified existing Super Admin owns reviews, triage, technical escalation and acknowledgement. No account creation or role grant.",
+    "triageEmployeeRoles": [
+      "super_admin"
+    ],
+    "technicalEscalationRoles": [
+      "super_admin"
+    ],
+    "technicalEscalationFunction": "Same accountable founder during initial launch",
+    "technicalEscalationDestination": {
+      "kind": "existing_admin_inbox",
+      "employeeReference": "employee-sha256:fda75718291e1b61ff83",
+      "path": "/notifications"
+    },
+    "financialApproval": "Existing capability, MFA, evidence and independent approval remain mandatory; incident acknowledgement grants no financial authority"
+  },
+  "alerts": {
+    "logEvents": [
+      "ride_settlement_operational_alert",
+      "ride_settlement_worker_failed"
+    ],
+    "conditions": [
+      "delayed > 0",
+      "overdueReviews > 0",
+      "retryExhausted > 0",
+      "evidenceAbsent > 0",
+      "workerDiagnostics > 0",
+      "scheduled invocation missing for 3 minutes"
+    ],
+    "payload": "Allowlisted aggregate counts only; investigate via restricted Admin session details",
+    "requiredDestination": {
+      "kind": "existing_admin_inbox",
+      "employeeReference": "employee-sha256:fda75718291e1b61ff83",
+      "path": "/notifications"
+    },
+    "requiredDeliveryAndAcknowledgementEvidence": null,
+    "identifiedInboxDestination": {
+      "kind": "existing_admin_inbox",
+      "employeeReference": "employee-sha256:fda75718291e1b61ff83",
+      "path": "/notifications",
+      "incidentPath": "/incidents",
+      "status": "Implemented; disabled and deployment pending"
+    },
+    "acknowledgementContract": {
+      "action": "Explicit acknowledge_ride_ops_incident command, pinned owner and AAL2 even if global MFA setting is disabled",
+      "capability": "incidents.manage",
+      "audit": "platform_audit_record plus ops_command_receipt",
+      "notificationReadFlagIsAcknowledgement": false,
+      "productionEvidence": "Not executed"
+    },
+    "runtimeGate": "RIDE_SETTLEMENT_ALERTS_ENABLED=false",
+    "databaseGate": "ride_ops_control.enabled=false",
+    "retry": {
+      "attemptLimit": 8,
+      "backoffSeconds": "30 * 2^attempt, bounded to 3600",
+      "deadLetter": "Visible in existing Incidents; assigned owner may request audited MFA delivery retry",
+      "escalationMinutes": 15,
+      "escalationRecipient": "Same pinned Super Admin"
+    }
+  },
+  "activationPreconditions": [
+    "Explicit rollout authorization and deployment SHAs",
+    "Full schema acceptance and actual schema/grant drift check",
+    "Android and iOS bicycle certification",
+    "Verified pinned Super Admin owner and same-founder inbox escalation",
+    "Test alert delivered and acknowledged; record incident reference",
+    "Old active-ride and installed-build capability verification",
+    "Read-only wallet and receipt reconciliation",
+    "Historical 23-attempt hold remains untouched",
+    "Separately scheduled watchdog and its own missing-run/failure visibility acknowledged by assigned founder",
+    "Migration100 then101 and separately authorized disabled schedule preparation; verify all gates remain off"
+  ],
+  "scheduler": {
+    "installed": false,
+    "enabled": false,
+    "worker": {
+      "provider": "Existing Supabase pg_cron + pg_net",
+      "schedule": "* * * * *",
+      "active": false
+    },
+    "monitor": {
+      "provider": "Separate pg_cron job",
+      "schedule": "* * * * *",
+      "active": false,
+      "authorization": "Bearer <secret-manager:RIDE_SETTLEMENT_MONITOR_TOKEN>"
+    },
+    "independentWatchdog": {
+      "enabled": false,
+      "provider": null,
+      "schedule": "* * * * *",
+      "command": "node scripts/ride-settlement-independent-watchdog.cjs",
+      "requiredEnvironment": [
+        "MOVRR_ADMIN_ORIGIN",
+        "RIDE_SETTLEMENT_MONITOR_TOKEN",
+        "RIDE_OPS_WATCHDOG_ENABLED"
+      ],
+      "requirement": "Run outside Supabase cron; assign provider run-failure and missing-run visibility to the same existing Super Admin. Actual provider and delivery acknowledgement not yet verified."
+    }
+  }
+}

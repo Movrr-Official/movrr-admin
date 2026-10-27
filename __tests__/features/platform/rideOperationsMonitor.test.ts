@@ -1,0 +1,20 @@
+import { beforeEach, expect, it, vi } from "vitest";
+import { recordWorkerHeartbeat, runRideOperationsMonitor } from "@/lib/services/rideOperationsMonitor";
+const mocks = vi.hoisted(() => ({ create: vi.fn(), run: vi.fn() }));
+vi.mock("@supabase/supabase-js", () => ({ createClient: mocks.create }));
+vi.mock("@/lib/env", () => ({ NEXT_PUBLIC_SUPABASE_URL: "https://invalid.example", SUPABASE_SERVICE_ROLE_KEY: "test-only" }));
+vi.mock("@/lib/services/rideOperationsMonitor", async original => ({ ...await original<typeof import("@/lib/services/rideOperationsMonitor")>(), runRideOperationsMonitor: mocks.run }));
+import { POST } from "@/app/api/internal/ride-settlement-monitor/route";
+const token = "synthetic-only-monitor-token-32-characters";
+const request = (secret = token) => new Request("https://invalid.example", { method: "POST", headers: { authorization: `Bearer ${secret}` } });
+beforeEach(() => { vi.clearAllMocks(); vi.stubEnv("RIDE_SETTLEMENT_MONITOR_TOKEN", token); vi.stubEnv("RIDE_SETTLEMENT_ALERTS_ENABLED", "false"); });
+it("denies unauthorized independent monitor before privileged client creation", async () => { expect((await POST(request("wrong"))).status).toBe(401); vi.stubEnv("RIDE_SETTLEMENT_MONITOR_TOKEN", "short"); expect((await POST(request("short"))).status).toBe(401); expect(mocks.create).not.toHaveBeenCalled(); });
+it("monitor defaults disabled independently from worker gate", async () => { expect(await (await POST(request())).json()).toEqual({ enabled: false }); expect(mocks.create).not.toHaveBeenCalled(); });
+it("surfaces failed delivery to external monitor without private SQL", async () => { vi.stubEnv("RIDE_SETTLEMENT_ALERTS_ENABLED", "true"); mocks.run.mockResolvedValue({ enabled: true, failed: 1, deadLetters: 0 }); expect((await POST(request())).status).toBe(503); mocks.run.mockRejectedValue(Error("private SQL GPS credentials")); const response = await POST(request()); expect(response.status).toBe(503); expect(await response.json()).toEqual({ error: "ride_operations_monitor_failed" }); });
+it("heartbeat uses restricted RPC and propagates safe failure", async () => { const rpc = vi.fn().mockResolvedValue({ data: {}, error: null }); await recordWorkerHeartbeat({ rpc }, "failed", "synthetic-correlation"); expect(rpc).toHaveBeenCalledWith("record_ride_worker_heartbeat", { p_outcome: "failed", p_correlation: "synthetic-correlation" }); rpc.mockResolvedValue({ error: { message: "private" } }); await expect(recordWorkerHeartbeat({ rpc }, "failed", "synthetic-correlation")).rejects.toThrow("ride_worker_heartbeat_failed"); });
+it("validates monitor result and drops arbitrary data", async () => {
+ const actual = await vi.importActual<typeof import("@/lib/services/rideOperationsMonitor")>("@/lib/services/rideOperationsMonitor");
+ const rpc = vi.fn().mockResolvedValue({ data: { enabled: true, delivered: 1, failed: 0, pending: 0, deadLetters: 0, unacknowledged: 1, private: "SQL" }, error: null });
+ expect(await actual.runRideOperationsMonitor({ rpc })).toEqual({ enabled: true, delivered: 1, failed: 0, pending: 0, deadLetters: 0, unacknowledged: 1 });
+ rpc.mockResolvedValue({ data: { enabled: true, delivered: -1 }, error: null }); await expect(actual.runRideOperationsMonitor({ rpc })).rejects.toThrow("ride_operations_monitor_contract");
+});

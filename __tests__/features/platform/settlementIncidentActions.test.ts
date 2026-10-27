@@ -1,0 +1,9 @@
+import { beforeEach, expect, it, vi } from "vitest";
+const mocks=vi.hoisted(()=>({ require:vi.fn(),ack:vi.fn(),retry:vi.fn() }));
+vi.mock("@/lib/admin",()=>({requireCapability:mocks.require}));
+vi.mock("@/features/incidents/supabaseIncidentStore",()=>({acknowledgeSettlementIncident:mocks.ack,retrySettlementDelivery:mocks.retry}));
+import { acknowledgeSettlement, retrySettlementAlert } from "@/app/actions/incidents";
+beforeEach(()=>{vi.clearAllMocks();mocks.require.mockResolvedValue({});});
+it("acknowledgement requires mutation capability before the user-session RPC",async()=>{mocks.require.mockRejectedValue(Error('denied'));expect((await acknowledgeSettlement({id:'synthetic',operationId:'operation'})).success).toBe(false);expect(mocks.ack).not.toHaveBeenCalled();expect(mocks.retry).not.toHaveBeenCalled();});
+it("passes the stable explicit acknowledgement operation without financial calls",async()=>{mocks.ack.mockResolvedValue({id:'synthetic'});expect((await acknowledgeSettlement({id:'synthetic',operationId:'operation'})).success).toBe(true);expect(mocks.require).toHaveBeenCalledWith('incidents.manage',{mutation:true});expect(mocks.ack).toHaveBeenCalledWith('synthetic','operation');expect(mocks.retry).not.toHaveBeenCalled();});
+it("delivery retry is separate, capability guarded and suppresses raw errors",async()=>{mocks.require.mockRejectedValue(Error('denied'));expect((await retrySettlementAlert({delivery:'delivery',operationId:'operation',reason:'Synthetic retry reason'})).success).toBe(false);expect(mocks.retry).not.toHaveBeenCalled();mocks.require.mockResolvedValue({});mocks.retry.mockRejectedValue(Error('private SQL password GPS'));const result=await retrySettlementAlert({delivery:'delivery',operationId:'operation',reason:'Synthetic retry reason'});expect(result.success).toBe(false);expect(JSON.stringify(result)).not.toContain('private SQL');expect(mocks.retry).toHaveBeenCalledWith('delivery','operation','Synthetic retry reason');});

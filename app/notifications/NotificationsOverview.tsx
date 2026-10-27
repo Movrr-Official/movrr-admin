@@ -447,6 +447,9 @@ export default function NotificationsOverview() {
                             <p className="text-xs text-muted-foreground line-clamp-2">
                               {notification.message}
                             </p>
+                            {notification.metadata?.category === "ride_settlement_operations" && (
+                              <a href="/incidents" className="text-xs underline">Review settlement incident (explicit MFA acknowledgement required)</a>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>

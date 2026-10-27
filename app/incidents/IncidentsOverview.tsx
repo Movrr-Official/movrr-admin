@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { acknowledgeSettlement, retrySettlementAlert } from "@/app/actions/incidents";
 import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, Plus } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -58,6 +59,22 @@ export default function IncidentsOverview() {
     useIncidentsData();
   const createIncident = useCreateIncident();
   const updateStatus = useUpdateIncidentStatus();
+  const commandIds = useRef(new Map<string, string>());
+  const [operationalBusy, setOperationalBusy] = useState(false);
+  const [retryReasons, setRetryReasons] = useState<Record<string, string>>({});
+  const operationalAction = async (key: string, run: (operationId: string) => Promise<{ success: boolean; error?: string }>) => {
+    setOperationalBusy(true);
+    if (!commandIds.current.has(key)) commandIds.current.set(key, crypto.randomUUID());
+    try {
+      const result = await run(commandIds.current.get(key)!);
+      if (!result.success) throw new Error(result.error || "Operational action unavailable");
+      await refetch();
+      commandIds.current.delete(key);
+      toast({ title: "Operational action recorded", description: "No financial action was taken." });
+    } catch (err) {
+      toast({ title: "Action unavailable", description: err instanceof Error ? err.message : "Refresh and retry", variant: "destructive" });
+    } finally { setOperationalBusy(false); }
+  };
 
   const [operationId, setOperationId] = useState(() => crypto.randomUUID());
   const [title, setTitle] = useState("");
@@ -239,6 +256,33 @@ export default function IncidentsOverview() {
                           <p className="mt-2 text-sm text-muted-foreground">
                             {incident.description}
                           </p>
+                          {incident.settlementOperations && (
+                            <div className="mt-3 space-y-2 text-sm" aria-live="polite">
+                              <p>Owner and technical escalation: assigned Super Admin.</p>
+                              <p>{incident.settlementOperations.condition}: {incident.settlementOperations.observedCount} observed. Condition {incident.settlementOperations.active ? "active" : "cleared"}.</p>
+                              <p>Reference: {incident.id}</p>
+                              {incident.settlementOperations.acknowledgedAt ? (
+                                <p>Human acknowledgement recorded: {new Date(incident.settlementOperations.acknowledgedAt).toLocaleString()}</p>
+                              ) : (
+                                <Button variant="outline" disabled={operationalBusy} onClick={() => void operationalAction(`ack:${incident.id}`, operationId => acknowledgeSettlement({ id: incident.id, operationId }))}>
+                                  Acknowledge responsibility (MFA required)
+                                </Button>
+                              )}
+                              <p>Acknowledgement does not credit points, reset settlement attempts or release financial holds.</p>
+                              {incident.settlementOperations.deliveries.map(delivery => (
+                                <div key={delivery.operation} className="space-y-2 rounded border p-2">
+                                  <p>{delivery.phase}: {delivery.deliveredAt ? "Delivered to Admin inbox" : delivery.deadLetterAt ? "Delivery failed: retry budget exhausted" : "Delivery retry scheduled"}. Attempts: {delivery.attempts}/8.</p>
+                                  {delivery.category && <p>Error category: {delivery.category}</p>}
+                                  {!delivery.deliveredAt && !delivery.deadLetterAt && <p>Next attempt: {new Date(delivery.nextAttemptAt).toLocaleString()}</p>}
+                                  {delivery.deadLetterAt && <>
+                                    <Label htmlFor={`reason-${delivery.operation}`}>Delivery retry reason (10-500 characters)</Label>
+                                    <Input id={`reason-${delivery.operation}`} maxLength={500} value={retryReasons[delivery.operation] || ""} onChange={event => setRetryReasons(current => ({ ...current, [delivery.operation]: event.target.value }))} />
+                                    <Button variant="outline" disabled={operationalBusy || (retryReasons[delivery.operation] || "").trim().length < 10} onClick={() => void operationalAction(`retry:${delivery.operation}:${retryReasons[delivery.operation]}`, operationId => retrySettlementAlert({ delivery: delivery.operation, operationId, reason: retryReasons[delivery.operation] }))}>Retry inbox delivery (MFA required)</Button>
+                                  </>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                           <p className="mt-2 text-xs text-muted-foreground">
                             Updated{" "}
                             {formatDistanceToNow(new Date(incident.updatedAt), {
@@ -250,6 +294,7 @@ export default function IncidentsOverview() {
                           </p>
                         </div>
                         <Select
+                          disabled={!!incident.settlementOperations && !incident.settlementOperations.acknowledgedAt}
                           value={incident.status}
                           onValueChange={(value) =>
                             void handleStatusChange(

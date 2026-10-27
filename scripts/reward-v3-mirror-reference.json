@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "packageId": "movrr-reward-engine-v3-20261027",
+  "deploymentAuthority": false,
+  "authority": {
+    "repository": "movrr-mobile",
+    "manifest": "docs/releases/reward-engine-v3/manifest.json"
+  },
+  "manifestSha256": "21eb11fb905c0affff8650310e33853baea574d29b1760395e2e513e3cdc9544",
+  "mirrors": [
+    {
+      "source": "scripts/099_ride_full_schema_compatibility_v3.sql",
+      "sourceSha256": "b41988db63369792ad0408332e35690f14bafb0428faa760832eda2cf24f1b03"
+    },
+    {
+      "source": "scripts/100_operational_notification_enum_compatibility.sql",
+      "sourceSha256": "bef24ed06d7e90106766a44cd2b5c8bef6d94358ebff3e235cbff15735e8c772"
+    },
+    {
+      "source": "scripts/101_founder_settlement_operations.sql",
+      "sourceSha256": "586c2a6cf134da36f895fa21b349e85fef2cfb315549819c4e09e47c5ce4c106"
+    }
+  ]
+}

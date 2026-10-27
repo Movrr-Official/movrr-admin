@@ -1,0 +1,4 @@
+# Preserve approved Reward Engine v3 SQL bytes and SHA-256 across checkouts.
+/scripts/099_ride_full_schema_compatibility_v3.sql -text
+/scripts/100_operational_notification_enum_compatibility.sql -text
+/scripts/101_founder_settlement_operations.sql -text

@@ -6,12 +6,31 @@ import {
   createIncident as createIncidentRecord,
   listIncidents,
   updateIncidentStatus,
+  acknowledgeSettlementIncident,
+  retrySettlementDelivery,
 } from "@/features/incidents/supabaseIncidentStore";
 import type {
   CreateIncidentInput,
   Incident,
   IncidentStatus,
 } from "@/features/incidents/types";
+
+export async function acknowledgeSettlement(input: { id: string; operationId: string }) {
+  try {
+    await requireCapability("incidents.manage", { mutation: true });
+    return { success: true, data: await acknowledgeSettlementIncident(input.id, input.operationId) };
+  } catch {
+    return { success: false, error: "Acknowledgement requires the assigned Super Admin and an MFA verified session. Refresh before retrying." };
+  }
+}
+export async function retrySettlementAlert(input: { delivery: string; operationId: string; reason: string }) {
+  try {
+    await requireCapability("incidents.manage", { mutation: true });
+    return { success: true, data: await retrySettlementDelivery(input.delivery, input.operationId, input.reason) };
+  } catch {
+    return { success: false, error: "Retry unavailable. Verify your assigned owner, MFA session and dead-letter status." };
+  }
+}
 
 export async function getIncidents(): Promise<{
   success: boolean;
