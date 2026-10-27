@@ -12,7 +12,7 @@ async function check(env=process.env,send=fetch){
  // Retry transport failures and server errors with a bounded timeout. Database queue deduplicates.
  for(let attempt=1;attempt<=3;attempt++){
   try{
-   const response=await send(new URL('/api/internal/ride-settlement-watchdog',origin),{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-correlation-id':correlation},body:'{}',signal:AbortSignal.timeout(15000),redirect:'error'});
+   const response=await send(new URL('/api/internal/ride-settlement-watchdog',origin),{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-correlation-id':correlation},body:'{}',signal:AbortSignal.timeout(15000),redirect:'manual'});
    if(response.status===401||response.status===403)throw Error('watchdog_authorization_failed');
    if(!response.ok)throw Error('watchdog_monitor_unavailable');
    const data=await response.json();
