@@ -289,7 +289,10 @@ export async function getRewardStats(dateRange?: {
         totalPointsRedeemed: totalRedeemed,
         totalPointsOutstanding,
         totalTransactions:
-          filteredTransactions.length + filteredRedemptions.filter(row => String(row.metadata?.wallet_contract) !== "2").length,
+          filteredTransactions.length +
+          filteredRedemptions.filter(
+            (row) => String(row.metadata?.wallet_contract) !== "2",
+          ).length,
         standardRidePoints,
         suggestedRouteBonusPoints,
         boostedRidePoints,
@@ -386,9 +389,20 @@ export async function getRewardTransactions(filters?: {
       return { success: false, error: redemptionError.message };
     }
 
-    const { data: receipts, error: receiptError } = await supabaseAdmin.rpc("shop_financial_receipts", { p_actor: auth.authUser.id });
-    if (receiptError) return { success: false, error: "Transaction receipts unavailable" };
-    const balancesAfter = new Map<string, number>((receipts ?? []).map((row: { transaction_id: string; balance_after: number }) => [row.transaction_id, row.balance_after]));
+    const { data: receipts, error: receiptError } = await supabaseAdmin.rpc(
+      "shop_financial_receipts",
+      { p_actor: auth.authUser.id },
+    );
+    if (receiptError)
+      return { success: false, error: "Transaction receipts unavailable" };
+    const balancesAfter = new Map<string, number>(
+      (receipts ?? []).map(
+        (row: { transaction_id: string; balance_after: number }) => [
+          row.transaction_id,
+          row.balance_after,
+        ],
+      ),
+    );
 
     const mappedTransactions = (transactions ?? []).map((txn) => {
       const m = parseRewardMetadata(txn.metadata);
@@ -560,7 +574,11 @@ export async function getRiderBalances(): Promise<{
     const supabaseAdmin = createSupabaseAdminClient();
 
     const { data: balances, error } = await supabaseAdmin
-      .from(DB_TABLES.RIDER_REWARD_BALANCE)
+      .from(
+        process.env.RIDE_GROSS_EARNED_READS === "true"
+          ? "rider_reward_balance_financial_v3"
+          : DB_TABLES.RIDER_REWARD_BALANCE,
+      )
       .select("rider_id, points_balance, lifetime_points_earned, updated_at");
 
     if (error) {
@@ -698,7 +716,8 @@ export async function adjustRiderPoints(
         p_actor: auth.authUser.id,
         p_rider: validatedData.riderId,
         p_points: validatedData.points,
-        p_reason: validatedData.description?.trim() || "Support points adjustment",
+        p_reason:
+          validatedData.description?.trim() || "Support points adjustment",
         p_operation: validatedData.operationId,
         p_correlation: crypto.randomUUID(),
       },

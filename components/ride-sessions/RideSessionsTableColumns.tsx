@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { RideSession, RideSessionStatus } from "@/schemas";
+import { lifecycleLabel } from "@/lib/contracts/rideRewardLifecycle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,7 +77,11 @@ const getLifecycleBadge = (status: RideSessionStatus | undefined) => {
         </Badge>
       );
     default:
-      return <Badge variant="secondary" className="text-xs">Unknown</Badge>;
+      return (
+        <Badge variant="secondary" className="text-xs">
+          Unknown
+        </Badge>
+      );
   }
 };
 
@@ -199,6 +204,17 @@ export function getRideSessionsTableColumns({
       ),
     },
     {
+      accessorKey: "rewardProcessingState",
+      header: "Reward processing",
+      cell: ({ row }) => (
+        <span>
+          {row.original.rewardProcessingState
+            ? lifecycleLabel(row.original.rewardProcessingState)
+            : "Unavailable"}
+        </span>
+      ),
+    },
+    {
       accessorKey: "verifiedMinutes",
       header: "Duration",
       cell: ({ row }) => (
@@ -217,7 +233,10 @@ export function getRideSessionsTableColumns({
         <div className="flex items-center gap-2">
           <Coins className="h-3.5 w-3.5 text-warning" />
           <span className="text-sm font-semibold">
-            +{row.original.pointsAwarded.toLocaleString()}
+            {row.original.pointsAwarded === 0 &&
+            row.original.settlement?.status !== "settled"
+              ? "—"
+              : `${row.original.pointsAwarded > 0 ? "+" : ""}${row.original.pointsAwarded.toLocaleString()}`}
           </span>
         </div>
       ),
@@ -312,10 +331,7 @@ export function getRideSessionsTableColumns({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="border-border"
-            >
+            <DropdownMenuContent align="end" className="border-border">
               {onView && (
                 <DropdownMenuItem onClick={() => onView(session)}>
                   <Eye className="mr-2 h-4 w-4" />

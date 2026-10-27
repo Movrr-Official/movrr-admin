@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-export const rideSessionEarningModeSchema = z.enum(["standard_ride", "ad_enhanced_ride"]);
+export const rideSessionEarningModeSchema = z.enum([
+  "standard_ride",
+  "ad_enhanced_ride",
+]);
 
 /**
  * Ride session lifecycle status — mirrors mobile's RideSessionStatus.
@@ -20,6 +23,7 @@ export const rideSessionStatusSchema = z.enum([
   "completed",
   "cancelled",
   "rejected",
+  "under_review",
 ]);
 
 export const rideVerificationStatusSchema = z.enum([
@@ -29,11 +33,56 @@ export const rideVerificationStatusSchema = z.enum([
   "manual_review",
 ]);
 
-export const bikeTypeSchema = z.enum(["standard_bike", "e_bike", "fat_bike", "unknown"]);
+export const bikeTypeSchema = z.enum([
+  "standard_bike",
+  "e_bike",
+  "fat_bike",
+  "unknown",
+]);
 
 export const rideSessionSchema = z.object({
   id: z.string(),
   riderId: z.string(),
+  rewardProcessingState: z
+    .enum([
+      "waiting_upload",
+      "verifying",
+      "calculating",
+      "delayed",
+      "review_required",
+      "credited",
+      "adjusted",
+      "not_eligible",
+      "unavailable",
+    ])
+    .optional(),
+  processing: z
+    .object({
+      version: z.literal(3),
+      processingState: z.string(),
+      evidenceCompleteness: z.string(),
+      estimatedReward: z.unknown().optional(),
+      reasonCode: z.string().nullable().optional(),
+      attempts: z.number().nullable().optional(),
+      nextActionAt: z.string().nullable().optional(),
+      reviewOwner: z.string().nullable().optional(),
+      correlationId: z.string(),
+      diagnostic: z.object({
+        stage: z.enum(['account','evidence','verification','tracking','financial','projection']),
+        category: z.enum(['schema_contract','invalid_evidence','authorization','transient_infrastructure','financial_review','internal']),
+        correlationId: z.string().uuid(), at: z.string(),
+      }).nullable().optional(),
+      receiptConfirmed: z.boolean(),
+      trackingEvidenceCount: z.number(),
+      timeline: z.array(
+        z.object({
+          type: z.string(),
+          reasonCode: z.string().nullable(),
+          at: z.string(),
+        }),
+      ),
+    })
+    .optional(),
   settlement: z
     .object({
       status: z.string(),
@@ -118,6 +167,19 @@ export const rideSessionSchema = z.object({
 });
 
 export const rideSessionFiltersSchema = z.object({
+  rewardProcessingState: z
+    .enum([
+      "all",
+      "verifying",
+      "calculating",
+      "delayed",
+      "review_required",
+      "credited",
+      "adjusted",
+      "not_eligible",
+      "unavailable",
+    ])
+    .optional(),
   earningMode: z.enum(["all", "standard_ride", "ad_enhanced_ride"]).optional(),
   verificationStatus: z
     .enum(["all", "pending", "verified", "rejected", "manual_review"])
@@ -132,6 +194,10 @@ export const rideSessionFiltersSchema = z.object({
 export type RideSession = z.infer<typeof rideSessionSchema>;
 export type RideSessionFilters = z.infer<typeof rideSessionFiltersSchema>;
 export type RideSessionStatus = z.infer<typeof rideSessionStatusSchema>;
-export type RideVerificationStatus = z.infer<typeof rideVerificationStatusSchema>;
-export type RideSessionEarningMode = z.infer<typeof rideSessionEarningModeSchema>;
+export type RideVerificationStatus = z.infer<
+  typeof rideVerificationStatusSchema
+>;
+export type RideSessionEarningMode = z.infer<
+  typeof rideSessionEarningModeSchema
+>;
 export type BikeType = z.infer<typeof bikeTypeSchema>;

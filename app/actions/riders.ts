@@ -3,7 +3,6 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
-
 import { requireCapability } from "@/lib/admin";
 import {
   fetchLatestUserActivitySignalMap,
@@ -81,7 +80,14 @@ type RiderProfileStatus = "active" | "inactive";
 /** Atomic, audited Rider status change (scripts/081_rider_status_command.sql). */
 async function changeRiderStatus(
   supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
-  params: { actorId: string; riderId: string; status: RiderProfileStatus; expectedStatus: RiderProfileStatus; correlationId: string; bulk: boolean },
+  params: {
+    actorId: string;
+    riderId: string;
+    status: RiderProfileStatus;
+    expectedStatus: RiderProfileStatus;
+    correlationId: string;
+    bulk: boolean;
+  },
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { error } = await supabaseAdmin.rpc("admin_set_rider_status", {
     p_actor: params.actorId,
@@ -93,9 +99,12 @@ async function changeRiderStatus(
   });
   if (!error) return { success: true };
   const message =
-    error.code === "40001" ? "This rider's status was changed by someone else. Reload and try again."
-      : error.code === "42501" ? "You do not have permission to change this rider's status."
-        : error.code === "P0002" ? "Rider profile not found"
+    error.code === "40001"
+      ? "This rider's status was changed by someone else. Reload and try again."
+      : error.code === "42501"
+        ? "You do not have permission to change this rider's status."
+        : error.code === "P0002"
+          ? "Rider profile not found"
           : "Failed to update rider status";
   return { success: false, error: message };
 }
@@ -209,7 +218,9 @@ const mapRiderRow = ({
     phone: user?.phone ?? rider.phone ?? undefined,
     avatarUrl: user?.avatar_url ?? undefined,
     role: "rider",
-    status: mapDbStatusToUi(user?.status && user.status !== "active" ? user.status : rider.status),
+    status: mapDbStatusToUi(
+      user?.status && user.status !== "active" ? user.status : rider.status,
+    ),
     profileStatus: rider.status === "active" ? "active" : "inactive",
     isVerified: Boolean(user?.is_verified ?? false),
     city: rider.city ?? undefined,
@@ -355,7 +366,11 @@ export async function getRiders(
         : Promise.resolve({ data: [] as any[] }),
       riderIds.length
         ? supabaseAdmin
-            .from("rider_reward_balance")
+            .from(
+              process.env.RIDE_GROSS_EARNED_READS === "true"
+                ? "rider_reward_balance_financial_v3"
+                : "rider_reward_balance",
+            )
             .select("rider_id, points_balance, lifetime_points_earned")
             .in("rider_id", riderIds)
         : Promise.resolve({ data: [] as any[] }),
@@ -503,8 +518,12 @@ export async function bulkUpdateRiderStatus(
     let firstError: string | undefined;
     for (const rider of riders) {
       const result = await changeRiderStatus(supabaseAdmin, {
-        actorId: auth.authUser.id, riderId: rider.id, status,
-        expectedStatus: rider.expectedStatus, correlationId, bulk: true,
+        actorId: auth.authUser.id,
+        riderId: rider.id,
+        status,
+        expectedStatus: rider.expectedStatus,
+        correlationId,
+        bulk: true,
       });
       if (result.success) updated++;
       else firstError ??= result.error;
@@ -667,15 +686,33 @@ export async function updateRiderProfile(
 
     // Status first: a stale or denied change saves nothing else.
     if (validatedData.status === "pending")
-      return { success: false, error: "A rider profile can only be Active or Inactive" };
-    const requestedStatus: RiderProfileStatus | undefined = validatedData.status === undefined ? undefined
-      : validatedData.status === "active" ? "active" : "inactive";
-    if (requestedStatus !== undefined && requestedStatus !== validatedData.expectedStatus) {
+      return {
+        success: false,
+        error: "A rider profile can only be Active or Inactive",
+      };
+    const requestedStatus: RiderProfileStatus | undefined =
+      validatedData.status === undefined
+        ? undefined
+        : validatedData.status === "active"
+          ? "active"
+          : "inactive";
+    if (
+      requestedStatus !== undefined &&
+      requestedStatus !== validatedData.expectedStatus
+    ) {
       if (!validatedData.expectedStatus)
-        return { success: false, error: "This rider's status was changed by someone else. Reload and try again." };
+        return {
+          success: false,
+          error:
+            "This rider's status was changed by someone else. Reload and try again.",
+        };
       const statusResult = await changeRiderStatus(supabaseAdmin, {
-        actorId: auth.authUser.id, riderId: validatedData.id, status: requestedStatus,
-        expectedStatus: validatedData.expectedStatus, correlationId: randomUUID(), bulk: false,
+        actorId: auth.authUser.id,
+        riderId: validatedData.id,
+        status: requestedStatus,
+        expectedStatus: validatedData.expectedStatus,
+        correlationId: randomUUID(),
+        bulk: false,
       });
       if (!statusResult.success) return statusResult;
     }

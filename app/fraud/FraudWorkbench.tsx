@@ -34,7 +34,10 @@ export default function FraudWorkbench() {
   const reviewQueue = (sessions ?? []).filter(
     (session) =>
       session.verificationStatus === "manual_review" ||
-      session.verificationStatus === "pending",
+      session.verificationStatus === "pending" ||
+      session.settlement?.status === "awaiting_verification" ||
+      session.settlement?.status === "failed" ||
+      session.processing?.processingState === "delayed",
   );
 
   const manualReviewCount = reviewQueue.filter(

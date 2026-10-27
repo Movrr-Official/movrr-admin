@@ -57,13 +57,30 @@ const CHART_AXIS_FONT_SIZE = 11;
 
 export default function RideSessionsOverview() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [rewardProcessingState, setRewardProcessingState] = useState<
+    | "all"
+    | "verifying"
+    | "calculating"
+    | "delayed"
+    | "review_required"
+    | "credited"
+    | "adjusted"
+    | "not_eligible"
+    | "unavailable"
+  >("all");
   const [page, setPage] = useState(0);
   const [asOf, setAsOf] = useState(() => new Date().toISOString());
   const {
     data: sessions,
     isLoading,
     isFetching,
-  } = useRideSessionsData({ searchQuery, page, pageSize: 100, asOf });
+  } = useRideSessionsData({
+    searchQuery,
+    page,
+    pageSize: 100,
+    asOf,
+    rewardProcessingState,
+  });
   const [analyticsDays, setAnalyticsDays] = useState<7 | 30 | 90>(30);
   const { data: analytics, isLoading: analyticsLoading } =
     useSessionAnalytics(analyticsDays);
@@ -112,9 +129,58 @@ export default function RideSessionsOverview() {
       <div className="flex flex-wrap items-center gap-3 p-4">
         <div className="space-y-2">
           <Label htmlFor="ride-search">Search all rides</Label>
-          <Input id="ride-search" className="max-w-md" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }} placeholder="Session ID, rider, campaign or city" />
+          <Input
+            id="ride-search"
+            className="max-w-md"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(0);
+            }}
+            placeholder="Session ID, rider, campaign or city"
+          />
+          <Label htmlFor="ride-processing-filter">
+            Search reward processing across all rides
+          </Label>
+          <select
+            id="ride-processing-filter"
+            className="rounded-md border bg-background p-2"
+            value={rewardProcessingState}
+            onChange={(e) => {
+              setRewardProcessingState(
+                e.target.value as typeof rewardProcessingState,
+              );
+              setPage(0);
+            }}
+          >
+            <option value="all">All reward states</option>
+            <option value="verifying">Verifying</option>
+            <option value="calculating">Calculating</option>
+            <option value="delayed">Delayed / retry</option>
+            <option value="review_required">
+              Financial review / historical holds
+            </option>
+            <option value="credited">Credited</option>
+            <option value="adjusted">Adjusted</option>
+            <option value="not_eligible">Not eligible</option>
+            <option value="unavailable">Unavailable</option>
+          </select>
         </div>
-        <Button variant="outline" disabled={!page || isFetching} onClick={() => setPage(p => p - 1)}>Previous</Button><span>Page {page + 1}</span><Button variant="outline" disabled={isFetching || (sessions?.length ?? 0) < 100} onClick={() => setPage(p => p + 1)}>Next</Button>
+        <Button
+          variant="outline"
+          disabled={!page || isFetching}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          Previous
+        </Button>
+        <span>Page {page + 1}</span>
+        <Button
+          variant="outline"
+          disabled={isFetching || (sessions?.length ?? 0) < 100}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Next
+        </Button>
       </div>
       <div className="space-y-6 md:space-y-8">
         {/* Stats */}
@@ -255,7 +321,10 @@ export default function RideSessionsOverview() {
               isRefetching={isFetching}
               toolbar={true}
               searchBar={false}
-              refetchData={() => { setPage(0); setAsOf(new Date().toISOString()); }}
+              refetchData={() => {
+                setPage(0);
+                setAsOf(new Date().toISOString());
+              }}
             />
           </TabsContent>
 
@@ -512,7 +581,11 @@ export default function RideSessionsOverview() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="mb-2 text-xs text-muted-foreground">Equivalent car journey WTW estimate; not actual emissions avoided. Completed sessions with backend-verified recorded distance, including verified history.</p>
+                    <p className="mb-2 text-xs text-muted-foreground">
+                      Equivalent car journey WTW estimate; not actual emissions
+                      avoided. Completed sessions with backend-verified recorded
+                      distance, including verified history.
+                    </p>
                     <div className="h-48">
                       <ResponsiveContainer width="100%" height="100%">
                         <RechartsAreaChart
@@ -571,7 +644,10 @@ export default function RideSessionsOverview() {
                             formatter={(v: number, name: string) =>
                               name === "distanceKm"
                                 ? [`${v} km`, "Distance"]
-                                : [`${Number(v).toFixed(2)} kg`, "Car comparison (CO₂e WTW)"]
+                                : [
+                                    `${Number(v).toFixed(2)} kg`,
+                                    "Car comparison (CO₂e WTW)",
+                                  ]
                             }
                           />
                           <Area

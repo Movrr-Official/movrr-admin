@@ -3,6 +3,10 @@
 import { requireCapability } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
+  rewardLifecycle,
+  parseRewardEstimate,
+} from "@/lib/contracts/rideRewardLifecycle";
+import {
   BikeType,
   RideSession,
   RideSessionFilters,
@@ -33,8 +37,11 @@ export async function getDistanceStats(): Promise<{
     await requireCapability("rides.read");
     const supabase = createSupabaseAdminClient();
 
-    const { data, error } = await supabase.rpc("get_impact_summary", { p_rider: null });
-    if (error || !data?.[0]) return { success: false, error: "Impact summary unavailable" };
+    const { data, error } = await supabase.rpc("get_impact_summary", {
+      p_rider: null,
+    });
+    if (error || !data?.[0])
+      return { success: false, error: "Impact summary unavailable" };
     const metric = data[0];
     const totalDistanceKm = Number(metric.total_distance_km);
     const co2SavedKg = Number(metric.co2_saved_kg);
@@ -71,13 +78,32 @@ export async function getRideSessions(
     //   verification_result ← JSONB machine verdict written at ride end
     // points_awarded / verified_minutes are sourced from reward_transactions, NOT ride_session columns.
     const parsedFilters = rideSessionFiltersSchema.parse(filters ?? {});
-    const { data: sessionRows, error: sessionError } = await supabaseAdmin.rpc("ops_ride_session_page", { p_filters: parsedFilters });
+    if (
+      parsedFilters.rewardProcessingState &&
+      parsedFilters.rewardProcessingState !== "all" &&
+      process.env.RIDE_COMPLETION_V3_READS !== "true"
+    )
+      return {
+        success: false,
+        error: "Reward processing filter requires the activated read contract",
+      };
+    const { data: sessionRows, error: sessionError } = await supabaseAdmin.rpc(
+      process.env.RIDE_COMPLETION_V3_READS === "true"
+        ? "ops_ride_processing_page_v3"
+        : "ops_ride_session_page",
+      { p_filters: parsedFilters },
+    );
 
     if (sessionError) {
       return { success: false, error: sessionError.message };
     }
 
     const rows = (sessionRows ?? []) as Array<Record<string, any>>;
+    let processingBySession: Record<string, RideSession["processing"]> = {};
+    if (process.env.RIDE_COMPLETION_V3_READS === "true")
+      processingBySession = Object.fromEntries(
+        rows.map((row) => [row.id, row._processing]),
+      );
     const riderIds = [...new Set(rows.map((r) => r.rider_id).filter(Boolean))];
     const campaignIds = [
       ...new Set(rows.map((r) => r.campaign_id).filter(Boolean)),
@@ -237,7 +263,8 @@ export async function getRideSessions(
         raw === "paused" ||
         raw === "completed" ||
         raw === "cancelled" ||
-        raw === "rejected"
+        raw === "rejected" ||
+        raw === "under_review"
       )
         return raw;
       return undefined;
@@ -258,6 +285,9 @@ export async function getRideSessions(
 
     const mapped: RideSession[] = rows.map((row) => {
       const r = row as Record<string, unknown>;
+      const settlement = r._settlement as
+        | (NonNullable<RideSession["settlement"]> & { award_status?: string })
+        | undefined;
       const machineVerdict = machineVerdictMap.get(row.id);
       const sessionReward = rewardBySession.get(row.id) ?? {
         points: 0,
@@ -277,6 +307,21 @@ export async function getRideSessions(
 
       return {
         id: row.id,
+        processing: processingBySession[row.id],
+        rewardProcessingState: rewardLifecycle({
+          status: settlement?.status ?? "unknown",
+          sessionStatus: row.status,
+          verification: effectiveVerStatus,
+          awardStatus: settlement?.award_status,
+          finalPoints:
+            settlement?.status === "settled" ? sessionReward.points : null,
+          estimatedPoints: parseRewardEstimate(
+            processingBySession[row.id]?.estimatedReward,
+          )?.points,
+          committedPoints: sessionReward.points || null,
+          updatedAt: settlement?.updated_at,
+          reason: settlement?.reason_code,
+        }),
         settlement: r._settlement as RideSession["settlement"],
         riderId: row.rider_id,
         riderName: riderNameMap.get(row.rider_id) ?? "Unknown",

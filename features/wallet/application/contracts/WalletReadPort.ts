@@ -4,11 +4,18 @@ export type LedgerEntry = {
   /** Signed committed points, exactly as recorded in the ledger. */
   points: number;
   source: string;
-  category: "campaign" | "route" | "adjustment" | "redemption" | "refund" | "other";
+  category:
+    | "campaign"
+    | "route"
+    | "adjustment"
+    | "redemption"
+    | "refund"
+    | "other";
   description: string;
   createdAt: string;
 };
 export type WalletBalance = {
+  financialTotals?: import("@/lib/contracts/rideRewardLifecycle").WalletFinancialTotals;
   riderId: string;
   pointsBalance: number;
   lifetimePointsEarned: number;
@@ -20,8 +27,15 @@ export type LedgerPage = {
   nextCursor: string | null;
   asOf: string;
 };
-export type LedgerPageInput = { cursor?: string; asOf?: string; limit?: number };
+export type LedgerPageInput = {
+  cursor?: string;
+  asOf?: string;
+  limit?: number;
+};
 export type LedgerRepository = {
   getBalance: (riderId: string) => Promise<WalletBalance>;
-  listEntries: (riderId: string, input?: LedgerPageInput) => Promise<LedgerPage>;
+  listEntries: (
+    riderId: string,
+    input?: LedgerPageInput,
+  ) => Promise<LedgerPage>;
 };

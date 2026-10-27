@@ -180,7 +180,56 @@ export function RideSessionDetailsDrawer({
             <VerificationStatusBadge status={session.verificationStatus} />
           </div>
 
-          <div className="rounded-xl border p-4 text-sm space-y-1"><p>Settlement: {session.settlement?.status ?? "Unavailable"}</p><p>Completeness: {session.settlement?.completeness ?? "Unavailable"}</p>{session.settlement?.reason_code && <p>Review: {session.settlement.reason_code.replaceAll("_", " ")}</p>}<p>Committed points are separate from completion of settlement.</p></div>
+          <div className="rounded-xl border p-4 text-sm space-y-1">
+            <p>Settlement: {session.settlement?.status ?? "Unavailable"}</p>
+            <p>
+              Completeness: {session.settlement?.completeness ?? "Unavailable"}
+            </p>
+            {session.settlement?.reason_code && (
+              <p>
+                Review: {session.settlement.reason_code.replaceAll("_", " ")}
+              </p>
+            )}
+            <p>Committed points are separate from completion of settlement.</p>
+            {session.processing && (
+              <>
+                <p>Evidence: {session.processing.evidenceCompleteness}</p>
+                <p>Attempts: {session.processing.attempts ?? 0}</p>
+                <p>
+                  Execution receipt:{" "}
+                  {session.processing.receiptConfirmed
+                    ? "Confirmed"
+                    : "Not confirmed"}
+                </p>
+                <p>
+                  Tracking records: {session.processing.trackingEvidenceCount}
+                  {session.processing.trackingEvidenceCount > 1
+                    ? " — independent evidence review required"
+                    : ""}
+                </p>
+                <p>
+                  Review owner: {session.processing.reviewOwner ?? "Unassigned"}
+                </p>
+                <p>
+                  Next action:{" "}
+                  {session.processing.nextActionAt ??
+                    "No automatic action scheduled"}
+                </p>
+                <p>Correlation: {session.processing.correlationId}</p>
+                {session.processing.diagnostic && <p role="status">
+                  Processing diagnostic: {session.processing.diagnostic.category.replaceAll('_', ' ')}
+                  {' / '}{session.processing.diagnostic.stage} at {session.processing.diagnostic.at}
+                </p>}
+                <ol aria-label="Settlement timeline">
+                  {session.processing.timeline.map((event, index) => (
+                    <li key={`${event.at}:${index}`}>
+                      {event.at} — {event.type.replaceAll("_", " ")}
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
+          </div>
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-4 rounded-xl bg-muted/30 border border-border/50">

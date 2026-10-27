@@ -8,9 +8,7 @@ import { provisionExternalAccount } from "@/features/identity/application/extern
 import { synchronizeAccountAuthStatus } from "@/features/identity/application/accountAuthStatus";
 import { type AccountCreationDomain } from "@/features/identity/domain/accountDomains";
 import { isEmployeeRole } from "@/features/organisations/domain/employeeRoleTemplates";
-import {
-  capabilityRequiredToAssignRole,
-} from "@/features/authorization/sod";
+import { capabilityRequiredToAssignRole } from "@/features/authorization/sod";
 
 import { revalidatePath } from "next/cache";
 import { requireCapability, requireAnyCapability } from "@/lib/admin";
@@ -33,7 +31,12 @@ import {
 import { z } from "zod";
 import { Resend } from "resend";
 import PasswordResetEmail, { passwordResetText } from "@/emails/password-reset";
-import { APP_URL, CUSTOMER_APP_URL, FROM_EMAIL, RESEND_API_KEY } from "@/lib/env";
+import {
+  APP_URL,
+  CUSTOMER_APP_URL,
+  FROM_EMAIL,
+  RESEND_API_KEY,
+} from "@/lib/env";
 import {
   getPlatformOperationalPolicies,
   getPlatformPrivacyPolicy,
@@ -42,10 +45,7 @@ import {
 } from "@/lib/platformSettings";
 import { fetchAccountActivityMap } from "@/lib/accountActivity";
 import { ADMIN_DASHBOARD_SESSION_AUDIT_ACTION } from "@/lib/adminAccessMonitoring";
-import {
-  fetchUserActivityFeed,
-  writeUserActivity,
-} from "@/lib/userActivity";
+import { fetchUserActivityFeed, writeUserActivity } from "@/lib/userActivity";
 
 const mapUiStatusToDb = (status: string) => {
   if (status === "inactive") return "suspended";
@@ -58,21 +58,22 @@ const mapDbStatusToUi = (status: string | null | undefined) => {
   return status;
 };
 
-
-const updateUserSchema = z.object({
-  id: z.string(),
-  name: z.string().min(1).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  employeeRole: employeeRoleSchema.nullable().optional(),
-  expectedEmployeeRole: employeeRoleSchema.nullable().optional(),
-  expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
-  status: z.enum(["active", "inactive", "pending"]).optional(),
-  organization: z.string().optional(),
-  languagePreference: z.string().optional(),
-  isVerified: z.boolean().optional(),
-  accountNotes: z.string().optional(),
-}).strict();
+const updateUserSchema = z
+  .object({
+    id: z.string(),
+    name: z.string().min(1).optional(),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    employeeRole: employeeRoleSchema.nullable().optional(),
+    expectedEmployeeRole: employeeRoleSchema.nullable().optional(),
+    expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
+    status: z.enum(["active", "inactive", "pending"]).optional(),
+    organization: z.string().optional(),
+    languagePreference: z.string().optional(),
+    isVerified: z.boolean().optional(),
+    accountNotes: z.string().optional(),
+  })
+  .strict();
 
 const getResendClient = () => {
   const apiKey = RESEND_API_KEY;
@@ -91,7 +92,11 @@ const getRecoveryRedirectUrl = (origin: string) =>
  * Uses token_hash (from generateLink) instead of action_link so the token
  * is only consumed after the user explicitly clicks "Continue" on /auth/confirm.
  */
-const buildConfirmUrl = (hashedToken: string, type: string, origin: string): string => {
+const buildConfirmUrl = (
+  hashedToken: string,
+  type: string,
+  origin: string,
+): string => {
   const url = new URL("/auth/confirm", origin);
   url.searchParams.set("token_hash", hashedToken);
   url.searchParams.set("type", type);
@@ -248,14 +253,19 @@ const toAdminAccessTimelineEntries = (
 export async function getUsers(
   filters?: UserFiltersSchema,
   selectedAdvertiserIds: string[] = [],
-): Promise<{ success: boolean; data?: User[]; error?: string; warnings?: string[] }> {
+): Promise<{
+  success: boolean;
+  data?: User[];
+  error?: string;
+  warnings?: string[];
+}> {
   try {
     const actor = await requireCapability("users.read");
     const supabaseAdmin = createSupabaseAdminClient();
-    if (filters?.role && !userRoleSchema.safeParse(filters.role).success) return { success: false, error: "Invalid user role filter" };
+    if (filters?.role && !userRoleSchema.safeParse(filters.role).success)
+      return { success: false, error: "Invalid user role filter" };
 
     let query = supabaseAdmin.from("user").select("*");
-
 
     if (filters?.status) {
       query = query.eq("status", mapUiStatusToDb(filters.status));
@@ -267,7 +277,9 @@ export async function getUsers(
         // Quote PostgREST values and escape LIKE metacharacters. Search is literal.
         const pattern = q.replace(/[\\%_]/g, "\\$&");
         const literal = pattern.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-        query = query.or(`name.ilike."%${literal}%",email.ilike."%${literal}%"`);
+        query = query.or(
+          `name.ilike."%${literal}%",email.ilike."%${literal}%"`,
+        );
       }
     }
 
@@ -279,23 +291,71 @@ export async function getUsers(
       query = query.lte("created_at", filters.dateRange.to.toISOString());
     }
 
-    const data = await readAllRows((from, to) => query.order("created_at", { ascending: false }).order("id").range(from, to));
+    const data = await readAllRows((from, to) =>
+      query
+        .order("created_at", { ascending: false })
+        .order("id")
+        .range(from, to),
+    );
 
-    const employeeRows = await readAllRows((from, to) => supabaseAdmin
-      .from("admin_users").select("user_id, role").order("user_id").range(from, to));
-    const employeeRoles = new Map((employeeRows ?? []).map((row) => [row.user_id, row.role]));
-    const riderRows = await readAllRows((from, to) => supabaseAdmin.from("rider").select("user_id,status").order("id").range(from, to));
-    const riderStatuses = new Map((riderRows ?? []).map(row => [row.user_id, row.status]));
-    const memberships = await readAllRows((from, to) => supabaseAdmin.from("organisation_membership")
-      .select("id,user_id,organisation_id,role,status,updated_at,organisation:organisation_id(name,type)").order("id").range(from, to));
-    const membershipsByUser = new Map<string, NonNullable<User["memberships"]>>();
+    const employeeRows = await readAllRows((from, to) =>
+      supabaseAdmin
+        .from("admin_users")
+        .select("user_id, role")
+        .order("user_id")
+        .range(from, to),
+    );
+    const employeeRoles = new Map(
+      (employeeRows ?? []).map((row) => [row.user_id, row.role]),
+    );
+    const riderRows = await readAllRows((from, to) =>
+      supabaseAdmin
+        .from("rider")
+        .select("user_id,status")
+        .order("id")
+        .range(from, to),
+    );
+    const riderStatuses = new Map(
+      (riderRows ?? []).map((row) => [row.user_id, row.status]),
+    );
+    const memberships = await readAllRows((from, to) =>
+      supabaseAdmin
+        .from("organisation_membership")
+        .select(
+          "id,user_id,organisation_id,role,status,updated_at,organisation:organisation_id(name,type)",
+        )
+        .order("id")
+        .range(from, to),
+    );
+    const membershipsByUser = new Map<
+      string,
+      NonNullable<User["memberships"]>
+    >();
     for (const membership of memberships ?? []) {
-      const organisation = (Array.isArray(membership.organisation) ? membership.organisation[0] : membership.organisation) as { name: string; type: string };
-      if (!organisation || !["reward_partner", "advertiser", "government"].includes(organisation.type)) continue;
+      const organisation = (
+        Array.isArray(membership.organisation)
+          ? membership.organisation[0]
+          : membership.organisation
+      ) as { name: string; type: string };
+      if (
+        !organisation ||
+        !["reward_partner", "advertiser", "government"].includes(
+          organisation.type,
+        )
+      )
+        continue;
       const current = membershipsByUser.get(membership.user_id) ?? [];
-      current.push({ id: membership.id, organisationId: membership.organisation_id, organisationName: organisation.name,
-        domain: (organisation.type === "reward_partner" ? "partner" : organisation.type) as "partner" | "advertiser" | "government",
-        role: membership.role, status: membership.status, updatedAt: membership.updated_at });
+      current.push({
+        id: membership.id,
+        organisationId: membership.organisation_id,
+        organisationName: organisation.name,
+        domain: (organisation.type === "reward_partner"
+          ? "partner"
+          : organisation.type) as "partner" | "advertiser" | "government",
+        role: membership.role,
+        status: membership.status,
+        updatedAt: membership.updated_at,
+      });
       membershipsByUser.set(membership.user_id, current);
     }
 
@@ -303,27 +363,44 @@ export async function getUsers(
     const pendingAuthSync = new Set<string>();
     for (let offset = 0; offset < userIds.length; offset += 500) {
       const result = await supabaseAdmin.rpc("read_user_auth_sync_pending", {
-        p_actor: actor.authUser.id, p_users: userIds.slice(offset, offset + 500),
+        p_actor: actor.authUser.id,
+        p_users: userIds.slice(offset, offset + 500),
       });
       if (result.error) throw new Error(result.error.message);
-      if (!Array.isArray(result.data)) throw new Error("Auth synchronization status unavailable");
+      if (!Array.isArray(result.data))
+        throw new Error("Auth synchronization status unavailable");
       for (const row of result.data) pendingAuthSync.add(row.user_id);
     }
     const warnings: string[] = [];
-    const lastActivitySignalMap = await fetchAccountActivityMap(supabaseAdmin, actor.authUser.id, userIds)
-      .catch(error => {
-        console.error("Users activity projection unavailable:", error);
-        warnings.push("Recent activity is unavailable. Retry to refresh activity statistics.");
-        return new Map<string, string>();
-      });
+    const lastActivitySignalMap = await fetchAccountActivityMap(
+      supabaseAdmin,
+      actor.authUser.id,
+      userIds,
+    ).catch((error) => {
+      console.error("Users activity projection unavailable:", error);
+      warnings.push(
+        "Recent activity is unavailable. Retry to refresh activity statistics.",
+      );
+      return new Map<string, string>();
+    });
 
     let users = (data ?? []).map((row) => ({
       id: row.id,
       email: row.email,
       name: row.name,
       phone: row.phone ?? undefined,
-      employeeRole: isEmployeeRole(employeeRoles.get(row.id)) ? employeeRoles.get(row.id) : null,
-      domains: [...new Set([...(riderStatuses.has(row.id) ? ["rider"] : []), ...(isEmployeeRole(employeeRoles.get(row.id)) ? ["staff"] : []), ...(membershipsByUser.get(row.id) ?? []).filter(member => member.status !== "revoked").map(member => member.domain)])],
+      employeeRole: isEmployeeRole(employeeRoles.get(row.id))
+        ? employeeRoles.get(row.id)
+        : null,
+      domains: [
+        ...new Set([
+          ...(riderStatuses.has(row.id) ? ["rider"] : []),
+          ...(isEmployeeRole(employeeRoles.get(row.id)) ? ["staff"] : []),
+          ...(membershipsByUser.get(row.id) ?? [])
+            .filter((member) => member.status !== "revoked")
+            .map((member) => member.domain),
+        ]),
+      ],
       riderStatus: riderStatuses.get(row.id),
       authSyncPending: pendingAuthSync.has(row.id),
       memberships: membershipsByUser.get(row.id) ?? [],
@@ -341,15 +418,27 @@ export async function getUsers(
     })) as User[];
 
     if (filters?.role) {
-      users = users.filter(user => filters.role === "unassigned"
-        ? !user.riderStatus && !user.employeeRole && !user.memberships?.some(member => member.status !== "revoked")
-        : user.employeeRole === filters.role || user.domains?.some(domain => domain === filters.role) || user.memberships?.some(member => member.role === filters.role && member.status !== "revoked"));
+      users = users.filter((user) =>
+        filters.role === "unassigned"
+          ? !user.riderStatus &&
+            !user.employeeRole &&
+            !user.memberships?.some((member) => member.status !== "revoked")
+          : user.employeeRole === filters.role ||
+            user.domains?.some((domain) => domain === filters.role) ||
+            user.memberships?.some(
+              (member) =>
+                member.role === filters.role && member.status !== "revoked",
+            ),
+      );
     }
 
     if (selectedAdvertiserIds.length > 0) {
       users = users.filter(
         (user) =>
-          !user.memberships?.some(member => member.domain === "advertiser" && member.status !== "revoked") || selectedAdvertiserIds.includes(user.id),
+          !user.memberships?.some(
+            (member) =>
+              member.domain === "advertiser" && member.status !== "revoked",
+          ) || selectedAdvertiserIds.includes(user.id),
       );
     }
 
@@ -368,7 +457,18 @@ export async function getUsers(
  */
 export async function createUser(
   data: z.input<typeof accountCreationSchema>,
-): Promise<{ success: boolean; error?: string; warning?: string; data?: { id: string; domain: AccountCreationDomain; role?: string; organisationId?: string; status: string } }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  warning?: string;
+  data?: {
+    id: string;
+    domain: AccountCreationDomain;
+    role?: string;
+    organisationId?: string;
+    status: string;
+  };
+}> {
   try {
     const auth = await requireCapability("users.manage", { mutation: true });
     const supabaseAdmin = createSupabaseAdminClient();
@@ -388,57 +488,127 @@ export async function createUser(
       };
     }
 
-    const canonicalRole = validatedData.domain === "staff" && isEmployeeRole(validatedData.role) ? validatedData.role : undefined;
+    const canonicalRole =
+      validatedData.domain === "staff" && isEmployeeRole(validatedData.role)
+        ? validatedData.role
+        : undefined;
     let account;
     if (validatedData.domain === "user") {
       account = await provisionProduct(supabaseAdmin, auth.authUser.id, {
-        email: validatedData.email, name: validatedData.name, role: null, status: validatedData.status,
-        phone: validatedData.phone, languagePreference: validatedData.languagePreference,
-        isVerified: validatedData.isVerified, accountNotes: validatedData.accountNotes,
+        email: validatedData.email,
+        name: validatedData.name,
+        role: null,
+        status: validatedData.status,
+        phone: validatedData.phone,
+        languagePreference: validatedData.languagePreference,
+        isVerified: validatedData.isVerified,
+        accountNotes: validatedData.accountNotes,
       });
     } else if (canonicalRole) {
-      await requireCapability(capabilityRequiredToAssignRole(canonicalRole), { mutation: true });
-      account = await provisionEmployee(supabaseAdmin, auth.authUser.id, {
-        email: validatedData.email, name: validatedData.name, role: canonicalRole,
-        status: validatedData.status, phone: validatedData.phone, organization: validatedData.organization,
-        languagePreference: validatedData.languagePreference, isVerified: validatedData.isVerified,
-        accountNotes: validatedData.accountNotes, sendWelcomeEmail: validatedData.sendWelcomeEmail,
+      await requireCapability(capabilityRequiredToAssignRole(canonicalRole), {
+        mutation: true,
       });
-    } else if (validatedData.domain === "advertiser" && validatedData.advertiserProfile && !validatedData.organisationId) {
+      account = await provisionEmployee(supabaseAdmin, auth.authUser.id, {
+        email: validatedData.email,
+        name: validatedData.name,
+        role: canonicalRole,
+        status: validatedData.status,
+        phone: validatedData.phone,
+        organization: validatedData.organization,
+        languagePreference: validatedData.languagePreference,
+        isVerified: validatedData.isVerified,
+        accountNotes: validatedData.accountNotes,
+        sendWelcomeEmail: validatedData.sendWelcomeEmail,
+      });
+    } else if (
+      validatedData.domain === "advertiser" &&
+      validatedData.advertiserProfile &&
+      !validatedData.organisationId
+    ) {
       await requireCapability("advertisers.manage", { mutation: true });
       account = await provisionProduct(supabaseAdmin, auth.authUser.id, {
-        email: validatedData.email, name: validatedData.name, role: "advertiser", status: validatedData.status,
-        phone: validatedData.phone, organization: validatedData.organization,
-        languagePreference: validatedData.languagePreference, isVerified: validatedData.isVerified,
-        accountNotes: validatedData.accountNotes, advertiserProfile: validatedData.advertiserProfile,
+        email: validatedData.email,
+        name: validatedData.name,
+        role: "advertiser",
+        status: validatedData.status,
+        phone: validatedData.phone,
+        organization: validatedData.organization,
+        languagePreference: validatedData.languagePreference,
+        isVerified: validatedData.isVerified,
+        accountNotes: validatedData.accountNotes,
+        advertiserProfile: validatedData.advertiserProfile,
       });
-    } else if (validatedData.domain !== "rider" && validatedData.domain !== "staff") {
-      account = await provisionExternalAccount(supabaseAdmin, auth.authUser.id, {
-        domain: validatedData.domain, organisationId: validatedData.organisationId!,
-        membershipStatus: validatedData.membershipStatus,
-        role: validatedData.role as "owner" | "manager" | "partner_operations_manager" | "staff" | "viewer",
-        email: validatedData.email, name: validatedData.name, status: validatedData.status,
-        phone: validatedData.phone, languagePreference: validatedData.languagePreference,
-        isVerified: validatedData.isVerified, accountNotes: validatedData.accountNotes,
-      });
+    } else if (
+      validatedData.domain !== "rider" &&
+      validatedData.domain !== "staff"
+    ) {
+      account = await provisionExternalAccount(
+        supabaseAdmin,
+        auth.authUser.id,
+        {
+          domain: validatedData.domain,
+          organisationId: validatedData.organisationId!,
+          membershipStatus: validatedData.membershipStatus,
+          role: validatedData.role as
+            | "owner"
+            | "manager"
+            | "partner_operations_manager"
+            | "staff"
+            | "viewer",
+          email: validatedData.email,
+          name: validatedData.name,
+          status: validatedData.status,
+          phone: validatedData.phone,
+          languagePreference: validatedData.languagePreference,
+          isVerified: validatedData.isVerified,
+          accountNotes: validatedData.accountNotes,
+        },
+      );
     } else if (validatedData.domain === "rider") {
       account = await provisionProduct(supabaseAdmin, auth.authUser.id, {
-        email: validatedData.email, name: validatedData.name, role: "rider",
-        status: validatedData.status, phone: validatedData.phone, organization: validatedData.organization,
-        languagePreference: validatedData.languagePreference, isVerified: validatedData.isVerified,
-        accountNotes: validatedData.accountNotes, city: validatedData.city, country: validatedData.country,
+        email: validatedData.email,
+        name: validatedData.name,
+        role: "rider",
+        status: validatedData.status,
+        phone: validatedData.phone,
+        organization: validatedData.organization,
+        languagePreference: validatedData.languagePreference,
+        isVerified: validatedData.isVerified,
+        accountNotes: validatedData.accountNotes,
+        city: validatedData.city,
+        country: validatedData.country,
       });
-    }
-    else throw new Error("Unsupported account domain or scoped role");
-    const warning = validatedData.sendWelcomeEmail ? await notifyAccountSetup(supabaseAdmin, { ...account, domain: validatedData.domain }) : undefined;
+    } else throw new Error("Unsupported account domain or scoped role");
+    const warning = validatedData.sendWelcomeEmail
+      ? await notifyAccountSetup(supabaseAdmin, {
+          ...account,
+          domain: validatedData.domain,
+        })
+      : undefined;
     await writeUserActivity(supabaseAdmin, {
-      user_id: account.id, actor_user_id: auth.authUser.id, source: "account", action: "Account created",
-      description: account.role ? `Account created with ${account.role} access.` : "User account created.", related_entity_type: "user", related_entity_id: account.id,
+      user_id: account.id,
+      actor_user_id: auth.authUser.id,
+      source: "account",
+      action: "Account created",
+      description: account.role
+        ? `Account created with ${account.role} access.`
+        : "User account created.",
+      related_entity_type: "user",
+      related_entity_id: account.id,
       metadata: { role: account.role, status: account.status },
     }).catch(() => undefined);
     revalidatePath("/users");
-    return { success: true, warning, data: { id: account.id, domain: validatedData.domain, role: validatedData.role,
-      organisationId: validatedData.organisationId, status: validatedData.status } };
+    return {
+      success: true,
+      warning,
+      data: {
+        id: account.id,
+        domain: validatedData.domain,
+        role: validatedData.role,
+        organisationId: validatedData.organisationId,
+        status: validatedData.status,
+      },
+    };
   } catch (error) {
     console.error("Create user error:", error);
     return {
@@ -481,13 +651,20 @@ export async function updateUser(
       updateData.account_notes = validatedData.accountNotes;
 
     if (validatedData.employeeRole !== undefined) {
-      await requireCapability(validatedData.employeeRole ? capabilityRequiredToAssignRole(validatedData.employeeRole) : "users.role.assign", { mutation: true });
+      await requireCapability(
+        validatedData.employeeRole
+          ? capabilityRequiredToAssignRole(validatedData.employeeRole)
+          : "users.role.assign",
+        { mutation: true },
+      );
       updateData.employee_role = validatedData.employeeRole;
       updateData.expected_employee_role = validatedData.expectedEmployeeRole;
     }
-    if (validatedData.expectedUpdatedAt) updateData.expected_updated_at = validatedData.expectedUpdatedAt;
+    if (validatedData.expectedUpdatedAt)
+      updateData.expected_updated_at = validatedData.expectedUpdatedAt;
     const { error } = await supabaseAdmin.rpc("update_admin_user_profile", {
-      p_actor: auth.authUser.id, p_user: validatedData.id,
+      p_actor: auth.authUser.id,
+      p_user: validatedData.id,
       p_patch: updateData,
     });
 
@@ -497,7 +674,11 @@ export async function updateUser(
     }
 
     if (validatedData.status) {
-      await synchronizeAccountAuthStatus(supabaseAdmin, auth.authUser.id, validatedData.id);
+      await synchronizeAccountAuthStatus(
+        supabaseAdmin,
+        auth.authUser.id,
+        validatedData.id,
+      );
     }
 
     await writeUserActivity(supabaseAdmin, {
@@ -537,7 +718,11 @@ export async function toggleUserStatus(
     const supabaseAdmin = createSupabaseAdminClient();
     const validatedData = toggleUserStatusSchema.parse(data);
 
-    const updated = await updateUser({ id: validatedData.userId, status: validatedData.status, expectedUpdatedAt: validatedData.expectedUpdatedAt });
+    const updated = await updateUser({
+      id: validatedData.userId,
+      status: validatedData.status,
+      expectedUpdatedAt: validatedData.expectedUpdatedAt,
+    });
     if (!updated.success) return updated;
 
     // Suspension preserves the exact employee template. Access readers enforce
@@ -591,11 +776,21 @@ export async function sendPasswordResetEmail(
     }
 
     email = z.string().trim().email().toLowerCase().parse(email);
-    const profile = await supabaseAdmin.from("user").select("id,name").eq("email", email).single();
+    const profile = await supabaseAdmin
+      .from("user")
+      .select("id,name")
+      .eq("email", email)
+      .single();
     if (profile.error) throw new Error(profile.error.message);
-    const employee = await supabaseAdmin.from("admin_users").select("role").eq("user_id", profile.data.id).maybeSingle();
+    const employee = await supabaseAdmin
+      .from("admin_users")
+      .select("role")
+      .eq("user_id", profile.data.id)
+      .maybeSingle();
     if (employee.error) throw new Error(employee.error.message);
-    const origin = isEmployeeRole(employee.data?.role) ? APP_URL : CUSTOMER_APP_URL;
+    const origin = isEmployeeRole(employee.data?.role)
+      ? APP_URL
+      : CUSTOMER_APP_URL;
     const accountLabel = origin === APP_URL ? "MOVRR Admin" : "MOVRR";
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
@@ -629,11 +824,13 @@ export async function sendPasswordResetEmail(
       to: email,
       subject: `Reset your ${accountLabel} password`,
       react: PasswordResetEmail({
-        name: profile.data.name || "there", accountLabel,
+        name: profile.data.name || "there",
+        accountLabel,
         resetUrl: resetLink,
       }),
       text: passwordResetText({
-        name: profile.data.name || "there", accountLabel,
+        name: profile.data.name || "there",
+        accountLabel,
         resetUrl: resetLink,
       }),
     });
@@ -745,7 +942,11 @@ export async function exportUserData(
     // Fetch reward balance
     const { data: rewardBalance } = riderId
       ? await supabaseAdmin
-          .from("rider_reward_balance")
+          .from(
+            process.env.RIDE_GROSS_EARNED_READS === "true"
+              ? "rider_reward_balance_financial_v3"
+              : "rider_reward_balance",
+          )
           .select("*")
           .eq("rider_id", riderId)
           .single()
@@ -810,8 +1011,13 @@ export async function bulkUpdateUserStatus(
     userStatusSchema.parse(status);
     let updatedCount = 0;
     for (const id of requested) {
-      const result = await updateUser({ id, status, expectedUpdatedAt: expectedVersions?.[id] });
-      if (!result.success) return { success: false, updatedCount, error: result.error };
+      const result = await updateUser({
+        id,
+        status,
+        expectedUpdatedAt: expectedVersions?.[id],
+      });
+      if (!result.success)
+        return { success: false, updatedCount, error: result.error };
       updatedCount++;
     }
     return { success: true, updatedCount };
@@ -1250,7 +1456,11 @@ export async function getUserPointsBalance(
     }
 
     const { data, error } = await supabaseAdmin
-      .from("rider_reward_balance")
+      .from(
+        process.env.RIDE_GROSS_EARNED_READS === "true"
+          ? "rider_reward_balance_financial_v3"
+          : "rider_reward_balance",
+      )
       .select("*")
       .eq("rider_id", rider.id)
       .single();

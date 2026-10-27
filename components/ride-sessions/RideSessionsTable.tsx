@@ -33,13 +33,12 @@ function RideSessionsTableContent({
   isRefetching,
 }: Omit<RideSessionsTableProps, "sessions">) {
   const { selectedId, setSelectedId } = useDrawerQueryId();
-  const [selectedSession, setSelectedSession] = useState<RideSession | null>(null);
+  const [selectedSession, setSelectedSession] = useState<RideSession | null>(
+    null,
+  );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const {
-    data: sessions,
-    filteredData,
-  } = useDataTable();
+  const { data: sessions, filteredData } = useDataTable();
 
   useEffect(() => {
     if (!selectedId) {
@@ -49,8 +48,7 @@ function RideSessionsTableContent({
       }
       return;
     }
-    const found =
-      sessions.find((session) => session.id === selectedId) ?? null;
+    const found = sessions.find((session) => session.id === selectedId) ?? null;
     setSelectedSession(found);
     setIsDrawerOpen(true);
   }, [selectedId, sessions]);
@@ -73,6 +71,10 @@ function RideSessionsTableContent({
       latestSession.verificationStatus !== selectedSession.verificationStatus ||
       latestSession.endedAt !== selectedSession.endedAt ||
       latestSession.pointsAwarded !== selectedSession.pointsAwarded ||
+      JSON.stringify(latestSession.processing) !==
+        JSON.stringify(selectedSession.processing) ||
+      JSON.stringify(latestSession.settlement) !==
+        JSON.stringify(selectedSession.settlement) ||
       latestSession.verifiedMinutes !== selectedSession.verifiedMinutes ||
       latestSession.riderName !== selectedSession.riderName ||
       latestSession.campaignName !== selectedSession.campaignName;
@@ -173,6 +175,26 @@ export function RideSessionsTable({
   isRefetching = false,
 }: RideSessionsTableProps) {
   const filterConfig: FilterConfig[] = [
+    {
+      id: "rewardProcessingState",
+      label: "Reward processing",
+      type: "multi-select",
+      key: "rewardProcessingState",
+      primary: true,
+      options: [
+        { value: "verifying", label: "Verifying" },
+        { value: "calculating", label: "Calculating" },
+        { value: "delayed", label: "Delayed / retry" },
+        {
+          value: "review_required",
+          label: "Financial review / historical hold",
+        },
+        { value: "credited", label: "Credited" },
+        { value: "adjusted", label: "Adjusted" },
+        { value: "not_eligible", label: "Not eligible" },
+        { value: "unavailable", label: "Unavailable" },
+      ],
+    },
     {
       id: "earningMode",
       label: "Ride Mode",
