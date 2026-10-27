@@ -6,13 +6,13 @@ async function check(env=process.env,send=fetch){
  if(env.RIDE_OPS_WATCHDOG_ENABLED!=='true')return{enabled:false};
  const origin=new URL(env.MOVRR_ADMIN_ORIGIN||'');
  if(origin.protocol!=='https:'||origin.username||origin.password||origin.pathname!=='/'||origin.search||origin.hash)throw Error('watchdog_origin_invalid');
- const token=env.RIDE_SETTLEMENT_MONITOR_TOKEN;
+ const token=env.RIDE_SETTLEMENT_WATCHDOG_TOKEN;
  if(!token||token.length<32)throw Error('watchdog_token_required');
  const correlation=randomUUID();
  // Retry transport failures and server errors with a bounded timeout. Database queue deduplicates.
  for(let attempt=1;attempt<=3;attempt++){
   try{
-   const response=await send(new URL('/api/internal/ride-settlement-monitor',origin),{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-correlation-id':correlation},body:'{}',signal:AbortSignal.timeout(15000),redirect:'error'});
+   const response=await send(new URL('/api/internal/ride-settlement-watchdog',origin),{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-correlation-id':correlation},body:'{}',signal:AbortSignal.timeout(15000),redirect:'error'});
    if(response.status===401||response.status===403)throw Error('watchdog_authorization_failed');
    if(!response.ok)throw Error('watchdog_monitor_unavailable');
    const data=await response.json();

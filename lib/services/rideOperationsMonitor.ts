@@ -20,3 +20,8 @@ export async function recordWorkerHeartbeat(client: RideWorkerRpc, outcome: "suc
   const { error } = await client.rpc("record_ride_worker_heartbeat", { p_outcome: outcome, p_correlation: correlation });
   if (error) throw new Error("ride_worker_heartbeat_failed");
 }
+
+export async function recordWatchdogHeartbeat(client: RideWorkerRpc, outcome: "succeeded" | "failed", correlation: string) {
+  const { data, error } = await client.rpc("record_ride_watchdog_heartbeat", { p_outcome: outcome, p_correlation: correlation });
+  if (error || !data || (data as Record<string, unknown>).recorded !== true) throw new Error("ride_watchdog_heartbeat_failed");
+}

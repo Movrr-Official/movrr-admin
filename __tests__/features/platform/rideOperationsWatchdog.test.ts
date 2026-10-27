@@ -1,0 +1,14 @@
+import { beforeEach, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({ create: vi.fn(), run: vi.fn(), heartbeat: vi.fn() }));
+vi.mock("@supabase/supabase-js", () => ({ createClient: mocks.create }));
+vi.mock("@/lib/env", () => ({ NEXT_PUBLIC_SUPABASE_URL: "https://invalid.example", SUPABASE_SERVICE_ROLE_KEY: "test-only" }));
+vi.mock("@/lib/services/rideOperationsMonitor", () => ({ runRideOperationsMonitor: mocks.run, recordWatchdogHeartbeat: mocks.heartbeat }));
+import { POST } from "@/app/api/internal/ride-settlement-watchdog/route";
+const token = "synthetic-only-watchdog-token-32-characters";
+const request = (secret = token) => new Request("https://invalid.example", { method: "POST", headers: { authorization: `Bearer ${secret}` } });
+beforeEach(() => { vi.clearAllMocks(); vi.stubEnv("RIDE_SETTLEMENT_WATCHDOG_TOKEN", token); vi.stubEnv("RIDE_SETTLEMENT_ALERTS_ENABLED", "true"); mocks.create.mockReturnValue({ rpc: vi.fn() }); mocks.heartbeat.mockResolvedValue(undefined); });
+it("denies invalid credentials before creating a privileged client", async () => { expect((await POST(request("wrong"))).status).toBe(401); vi.stubEnv("RIDE_SETTLEMENT_WATCHDOG_TOKEN", "short"); expect((await POST(request("short"))).status).toBe(401); expect(mocks.create).not.toHaveBeenCalled(); });
+it("does not create a heartbeat when operations are disabled", async () => { vi.stubEnv("RIDE_SETTLEMENT_ALERTS_ENABLED", "false"); expect(await (await POST(request())).json()).toEqual({ enabled: false }); expect(mocks.create).not.toHaveBeenCalled(); vi.stubEnv("RIDE_SETTLEMENT_ALERTS_ENABLED", "true"); mocks.run.mockResolvedValue({ enabled: false }); await POST(request()); expect(mocks.heartbeat).not.toHaveBeenCalled(); });
+it("records independent success after monitoring succeeds", async () => { mocks.run.mockResolvedValue({ enabled: true, failed: 0, deadLetters: 0 }); expect((await POST(request())).status).toBe(200); expect(mocks.heartbeat).toHaveBeenCalledWith(expect.anything(), "succeeded", expect.any(String)); });
+it("propagates delivery failure and records failed heartbeat", async () => { mocks.run.mockResolvedValue({ enabled: true, failed: 1 }); expect((await POST(request())).status).toBe(503); expect(mocks.heartbeat).toHaveBeenCalledWith(expect.anything(), "failed", expect.any(String)); });
+it("fails closed if the heartbeat cannot persist and suppresses details", async () => { mocks.run.mockResolvedValue({ enabled: true }); mocks.heartbeat.mockRejectedValue(Error("private database details")); const response = await POST(request()); expect(response.status).toBe(503); expect(await response.json()).toEqual({ error: "ride_operations_watchdog_failed" }); });
