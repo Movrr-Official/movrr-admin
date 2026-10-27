@@ -2,3 +2,4 @@
 /scripts/099_ride_full_schema_compatibility_v3.sql -text
 /scripts/100_operational_notification_enum_compatibility.sql -text
 /scripts/101_founder_settlement_operations.sql -text
+/scripts/102_canonical_ride_lifecycle_v3.sql -text

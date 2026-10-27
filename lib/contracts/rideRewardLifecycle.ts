@@ -11,7 +11,7 @@ export type EvidencePoint = { latitude: number; longitude: number; timestamp?: n
 export type PauseBoundary = { startedAtMs: number; endedAtMs: number };
 export type RewardEstimate = {
   version: 1; points: number | null; confidence: 'valid' | 'limited' | 'unavailable';
-  policyVersion: 'legacy-primary-v1' | 'movrr-combined-v3'; movementVersion: typeof MOVEMENT_VERSION;
+  policyVersion: 'movrr-combined-v3'; movementVersion: typeof MOVEMENT_VERSION;
   basisDigest: string | null; capturedAt: string; exclusions: string[];
 };
 export function deriveEligibleMovement(points: readonly EvidencePoint[], pauses: readonly PauseBoundary[] = []) {
@@ -43,7 +43,7 @@ export function deriveEligibleMovement(points: readonly EvidencePoint[], pauses:
 export function parseRewardEstimate(value: unknown): RewardEstimate | null {
   if (!value || typeof value !== 'object') return null;
   const e = value as RewardEstimate;
-  if (e.version !== 1 || !['legacy-primary-v1','movrr-combined-v3'].includes(e.policyVersion) || e.movementVersion !== MOVEMENT_VERSION || !['valid','limited','unavailable'].includes(e.confidence) || !Number.isFinite(Date.parse(e.capturedAt)) || !Array.isArray(e.exclusions) || e.exclusions.some(x => typeof x !== 'string' || !/^[a-z_]+$/.test(x))) return null;
+  if (e.version !== 1 || e.policyVersion !== 'movrr-combined-v3' || e.movementVersion !== MOVEMENT_VERSION || !['valid','limited','unavailable'].includes(e.confidence) || !Number.isFinite(Date.parse(e.capturedAt)) || !Array.isArray(e.exclusions) || e.exclusions.some(x => typeof x !== 'string' || !/^[a-z_]+$/.test(x))) return null;
   if (e.confidence === 'unavailable' ? e.points !== null : !Number.isSafeInteger(e.points) || e.points! < 0 || !e.basisDigest || !/^[a-f0-9]{32,64}$/.test(e.basisDigest)) return null;
   return e;
 }
@@ -72,5 +72,5 @@ export function rewardLifecycle(input: { status: string; sessionStatus?: string 
 export function supportsRideCompletionV3(value: unknown): boolean {
   if (!value || typeof value !== 'object') return false;
   const c = value as Record<string, unknown>;
-  return c.version === 3 && c.enabled === true && c.schemaRevision === 99 && c.evidenceAckVersion === 1;
+  return c.version === 3 && c.enabled === true && c.schemaRevision === 102 && c.evidenceAckVersion === 1;
 }

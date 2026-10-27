@@ -78,20 +78,8 @@ export async function getRideSessions(
     //   verification_result ← JSONB machine verdict written at ride end
     // points_awarded / verified_minutes are sourced from reward_transactions, NOT ride_session columns.
     const parsedFilters = rideSessionFiltersSchema.parse(filters ?? {});
-    if (
-      parsedFilters.rewardProcessingState &&
-      parsedFilters.rewardProcessingState !== "all" &&
-      process.env.RIDE_COMPLETION_V3_READS !== "true"
-    )
-      return {
-        success: false,
-        error: "Reward processing filter requires the activated read contract",
-      };
     const { data: sessionRows, error: sessionError } = await supabaseAdmin.rpc(
-      process.env.RIDE_COMPLETION_V3_READS === "true"
-        ? "ops_ride_processing_page_v3"
-        : "ops_ride_session_page",
-      { p_filters: parsedFilters },
+      "ops_ride_processing_page_v3", { p_filters: parsedFilters },
     );
 
     if (sessionError) {
@@ -99,9 +87,7 @@ export async function getRideSessions(
     }
 
     const rows = (sessionRows ?? []) as Array<Record<string, any>>;
-    let processingBySession: Record<string, RideSession["processing"]> = {};
-    if (process.env.RIDE_COMPLETION_V3_READS === "true")
-      processingBySession = Object.fromEntries(
+    const processingBySession: Record<string, RideSession["processing"]> = Object.fromEntries(
         rows.map((row) => [row.id, row._processing]),
       );
     const riderIds = [...new Set(rows.map((r) => r.rider_id).filter(Boolean))];

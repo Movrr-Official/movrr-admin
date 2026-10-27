@@ -28,7 +28,7 @@ beforeEach(() => {
   queries.length = 0;
   rpc.mockImplementation(async (name: string) => ({
     data:
-      name === "ops_ride_session_page"
+      name === "ops_ride_processing_page_v3"
         ? [{ ...ride, _settlement: { status: "pending", completeness: "unresolved" } }]
         : name === "get_impact_summary"
           ? [{ total_rides: 1, total_distance_km: 1, co2_saved_kg: 0.19 }]
