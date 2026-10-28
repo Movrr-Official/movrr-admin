@@ -76,6 +76,7 @@ const serverEnvSchema = publicEnvSchema
 
   // Email (Resend)
   RESEND_API_KEY: z.string().min(1, "Resend API key is required"),
+  ACCOUNT_ACCESS_RECOVERY_ENABLED: booleanDefaultFalse,
   FROM_EMAIL: z.string().email("Invalid FROM_EMAIL"),
   WELCOME_EMAIL: z.string().email("Invalid WELCOME_EMAIL"),
   ADMIN_EMAIL: z.string().email("Invalid ADMIN_EMAIL").optional(),
@@ -195,6 +196,7 @@ function getEnv(): PublicEnv | ServerEnv {
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
       RESEND_API_KEY: process.env.RESEND_API_KEY,
+      ACCOUNT_ACCESS_RECOVERY_ENABLED: process.env.ACCOUNT_ACCESS_RECOVERY_ENABLED,
       FROM_EMAIL: process.env.FROM_EMAIL,
       WELCOME_EMAIL: process.env.WELCOME_EMAIL,
       ADMIN_EMAIL: process.env.ADMIN_EMAIL,
@@ -249,6 +251,7 @@ export const SUPABASE_URL = serverEnv?.SUPABASE_URL ?? "";
 export const SUPABASE_SERVICE_ROLE_KEY =
   serverEnv?.SUPABASE_SERVICE_ROLE_KEY ?? "";
 export const RESEND_API_KEY = serverEnv?.RESEND_API_KEY ?? "";
+export const ACCOUNT_ACCESS_RECOVERY_ENABLED = serverEnv?.ACCOUNT_ACCESS_RECOVERY_ENABLED ?? false;
 export const FROM_EMAIL = serverEnv?.FROM_EMAIL || "hello@movrr.nl";
 export const WELCOME_EMAIL = serverEnv?.WELCOME_EMAIL || "welcome@movrr.nl";
 export const ADMIN_EMAIL = serverEnv?.ADMIN_EMAIL || "admin@movrr.nl";

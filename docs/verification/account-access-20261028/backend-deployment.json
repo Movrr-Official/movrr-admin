@@ -1,0 +1,51 @@
+{
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "version": "20261028103000",
+  "sha256": "7e058230bd3ce8583738de0a33af9aea6de7cde80bd44c730952f1b4535afc61",
+  "applied": true,
+  "verifiedAt": "2026-10-28T09:11:45.175Z",
+  "functions": [
+    {
+      "proname": "account_access_state",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "proname": "begin_account_access",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "proname": "finish_account_access",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    },
+    {
+      "proname": "record_account_access_delivery",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=\"\""
+      ],
+      "anon": false,
+      "authenticated": false,
+      "service": true
+    }
+  ],
+  "countsUnchanged": true,
+  "emailsSent": 0
+}

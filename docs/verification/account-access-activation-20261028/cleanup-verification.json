@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-10-28T10:06:39.799Z",
+  "accounts": {
+    "setup": {
+      "id": "236feec3-e543-4e65-ae8a-455ad6f2548d",
+      "employeeRole": null,
+      "banned": true
+    },
+    "invitation": {
+      "id": "f82e03fc-0e6d-4e6d-8c8b-a54aa1db9972",
+      "employeeRole": null,
+      "banned": true
+    },
+    "operator": {
+      "id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "employeeRole": null,
+      "banned": false
+    },
+    "operator-2": {
+      "id": "69e50d84-b406-43ef-a4cd-143fc520266b",
+      "employeeRole": null,
+      "banned": false
+    },
+    "setup-2": {
+      "id": "c1643cdf-9446-45ca-87ca-e5c07f97c9c9",
+      "employeeRole": null,
+      "banned": true
+    },
+    "invitation-2": {
+      "id": "1703a5ee-f2e3-4e5f-95f6-88109200257b",
+      "employeeRole": null,
+      "banned": true
+    }
+  },
+  "syntheticTargetsBanned": true,
+  "syntheticEmployeeGrantsRevoked": true,
+  "uncertainSyntheticManagedWritesPreserved": [
+    {
+      "id": "0d8716c6-bdc8-44a4-be96-aef76f57cf4e",
+      "state": "uncertain",
+      "method": "PUT",
+      "created_at": "2026-10-28T09:40:07.677Z"
+    }
+  ],
+  "activeRecoveryRetryBackends": 0
+}

@@ -176,6 +176,10 @@ describe.skipIf(!integration)("external account domains: actual services and Pos
     await db.unsafe(readFileSync("scripts/fixtures/enterprise-identity/resend-functions.sql", "utf8"));
     await db.begin(tx => tx.unsafe(readFileSync("scripts/077_invitation_authority_boundaries.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
     await db.begin(tx => tx.unsafe(readFileSync("scripts/078_independent_user_accounts.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
+    await db.unsafe(`ALTER TABLE auth.users ADD COLUMN encrypted_password text, ADD COLUMN last_sign_in_at timestamptz;
+      ALTER TABLE public.platform_audit_record ADD COLUMN id uuid DEFAULT gen_random_uuid();`);
+    await db.begin(tx => tx.unsafe(readFileSync("scripts/087_account_access_recovery.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
+    await db.begin(tx => tx.unsafe(readFileSync("scripts/088_account_access_http_errors.sql", "utf8").replace(/^BEGIN;$/m, "").replace(/^COMMIT;$/m, "")));
     await db.unsafe(`CREATE FUNCTION fail_external_membership() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
       IF current_setting('test.fail_member',true)='on' THEN RAISE EXCEPTION 'Injected membership persistence failure'; END IF; RETURN NEW; END $$;
       CREATE TRIGGER fail_external_membership BEFORE INSERT ON public.organisation_membership FOR EACH ROW EXECUTE FUNCTION fail_external_membership();`);
@@ -451,6 +455,85 @@ describe.skipIf(!integration)("external account domains: actual services and Pos
     const invitation = await invitationCommand("issue", account.id, org, randomUUID());
     await expect(command("prepare", invitation.id)).rejects.toThrow(/administrator/);
     await expect(db.begin(async tx => { await tx.unsafe('SET LOCAL ROLE service_role'); return tx`update platform_invitations set role='owner' where id=${invitation.id}`; })).rejects.toThrow(/canonical lifecycle/);
+  });
+  describe("account access recovery uses existing identity and invitation authorities", () => {
+    const begin = (user: string, org: string, actorId = actor, hash = "a".repeat(64), attempt = randomUUID()) => db.begin(async tx => {
+      await tx`select set_config('request.jwt.claim.role','service_role',true)`;
+      return (await tx`select begin_account_access(${actorId}::uuid,${user}::uuid,${org}::uuid,${attempt}::uuid,${hash}) data`)[0].data;
+    });
+    const access = (user: string) => db.begin(async tx => {
+      await tx`select set_config('request.jwt.claim.role','service_role',true)`;
+      return (await tx`select account_access_state(${actor}::uuid,${user}::uuid) data`)[0].data;
+    });
+    it("sends and supersedes an expired invitation without changing membership or creating another identity", async () => {
+      const org = await organisation("partner"), account = await provisionExternalAccount(client, actor, { ...externalInput("partner", org), membershipStatus: "invited" });
+      const before = await db`select * from organisation_membership where user_id=${account.id}`;
+      expect((await begin(account.id, org)).action).toBe("invitation");
+      await expect(begin(account.id, org)).rejects.toThrow(/cooling/);
+      await db`update platform_audit_record set created_at=now()-interval '16 minutes' where target_entity_id=${account.id}`;
+      await db`update platform_invitations set expires_at=now()-interval '1 second' where email=${account.email}`;
+      expect((await access(account.id)).memberships[0].invitationStatus).toBe("expired");
+      expect((await begin(account.id, org, actor, "b".repeat(64))).action).toBe("resend");
+      expect((await db`select token_hash from platform_invitations where email=${account.email}`)[0].token_hash).toBe("b".repeat(64));
+      expect(await db`select * from organisation_membership where user_id=${account.id}`).toEqual(before);
+      expect(await db`select id from auth.users where id=${account.id}`).toHaveLength(1);
+    });
+    it("serializes concurrent resends across organisations and rejects cross-tenant or unauthorized actors", async () => {
+      const org = await organisation("partner"), other = await organisation("partner"), account = await provisionExternalAccount(client, actor, externalInput("partner", org));
+      await expect(begin(account.id, other)).rejects.toThrow(/denied/);
+      await expect(begin(account.id, org, incidentId)).rejects.toThrow(/denied/);
+      const outcomes = await Promise.allSettled([begin(account.id, org), begin(account.id, org)]);
+      expect(outcomes.filter(x => x.status === "fulfilled")).toHaveLength(1);
+    });
+    it("uses Auth credential presence, preserves sole Owners, and blocks suspended/deleted targets", async () => {
+      const org = await organisation("partner"), account = await provisionExternalAccount(client, actor, { ...externalInput("partner", org), role: "owner" });
+      const before = await db`select * from organisation_membership where user_id=${account.id}`;
+      expect((await access(account.id)).hasPassword).toBe(false);
+      await expect(begin(account.id, org, restrictedActor)).rejects.toThrow(/denied/);
+      expect((await begin(account.id, org)).action).toBe("setup");
+      await db`update platform_audit_record set created_at=now()-interval '16 minutes' where target_entity_id=${account.id}`;
+      await db`update auth.users set encrypted_password='synthetic-hash',last_sign_in_at=now() where id=${account.id}`;
+      expect((await access(account.id)).hasPassword).toBe(true);
+      expect((await begin(account.id, org)).action).toBe("reset");
+      expect(await db`select * from organisation_membership where user_id=${account.id}`).toEqual(before);
+      await db`update auth.users set banned_until=now()+interval '1 hour' where id=${account.id}`;
+      await expect(begin(account.id, org)).rejects.toThrow(/denied/);
+      await db`update auth.users set banned_until=null,deleted_at=now() where id=${account.id}`;
+      await expect(begin(account.id, org)).rejects.toThrow(/denied/);
+    });
+    it("enforces a durable hourly limit and records failed outcomes without tokens", async () => {
+      const org = await organisation("partner"), account = await provisionExternalAccount(client, actor, externalInput("partner", org));
+      for (let n = 0; n < 5; n++) {
+        const attempt = randomUUID(); await begin(account.id, org, actor, "c".repeat(64), attempt);
+        await db.begin(async tx => {
+          await tx`select set_config('request.jwt.claim.role','service_role',true)`;
+          await tx`select finish_account_access(${actor}::uuid,${account.id}::uuid,${attempt}::uuid,'failed',null)`;
+        });
+        await db`update platform_audit_record set created_at=now()-interval '16 minutes' where target_entity_id=${account.id}`;
+      }
+      expect((await access(account.id)).memberships[0].deliveryState).toBe("failed");
+      await expect(begin(account.id, org)).rejects.toThrow(/hourly/);
+      const audit = await db`select resulting_state from platform_audit_record where target_entity_id=${account.id}`;
+      expect(JSON.stringify(audit)).not.toContain("c".repeat(64));
+      for (const role of ["anon", "authenticated"]) expect((await db`select has_function_privilege(${role},'begin_account_access(uuid,uuid,uuid,uuid,text)','EXECUTE') allowed`)[0].allowed).toBe(false);
+    });
+    it("binds delivery observations to an accepted provider receipt and keeps immutable, deduplicated evidence", async () => {
+      const org = await organisation("partner"), account = await provisionExternalAccount(client, actor, externalInput("partner", org)), attempt = randomUUID();
+      await begin(account.id, org, actor, "d".repeat(64), attempt);
+      await db.begin(async tx => {
+        await tx`select set_config('request.jwt.claim.role','service_role',true)`;
+        await tx`select finish_account_access(${actor}::uuid,${account.id}::uuid,${attempt}::uuid,'accepted','synthetic-receipt')`;
+      });
+      const observe = (provider: string) => db.begin(async tx => {
+        await tx`select set_config('request.jwt.claim.role','service_role',true)`;
+        await tx`select record_account_access_delivery(${actor}::uuid,${account.id}::uuid,${provider},'delivered')`;
+      });
+      await expect(observe("another-account-receipt")).rejects.toThrow(/Unknown provider/);
+      await observe("synthetic-receipt"); await observe("synthetic-receipt");
+      expect((await access(account.id)).memberships[0].deliveryState).toBe("delivered");
+      expect(await db`select id from platform_audit_record where reason='account_access.delivery' and correlation_id=${attempt}`).toHaveLength(1);
+      expect((await db`select resulting_state from platform_audit_record where reason='account_access.outcome' and correlation_id=${attempt}`)[0].resulting_state.deliveryState).toBe("accepted");
+    });
   });
   describe.skipIf(!detailsHttp)("User Details actual Server Actions through PostgREST and PostgreSQL", () => {
     async function person(staff = false) {

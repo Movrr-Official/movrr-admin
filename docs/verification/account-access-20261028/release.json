@@ -1,0 +1,64 @@
+{
+    "deployedAt":  "2026-10-28T09:17:25.231Z",
+    "status":  "ok",
+    "deployment":  {
+                       "id":  "dpl_DpwGZe7ZvmozFNH8MnKuip8j3sur",
+                       "url":  "https://movrr-admin-51grvgjn8-movrrops-projects.vercel.app",
+                       "productionUrl":  "https://admin.movrr.nl",
+                       "inspectorUrl":  "https://vercel.com/movrrops-projects/movrr-admin/DpwGZe7ZvmozFNH8MnKuip8j3sur",
+                       "readyState":  "READY",
+                       "target":  "production",
+                       "deploymentApiUrl":  "https://api.vercel.com/v13/deployments/dpl_DpwGZe7ZvmozFNH8MnKuip8j3sur",
+                       "buildMachine":  {
+                                            "cores":  2,
+                                            "memory":  8192,
+                                            "machine":  "basic",
+                                            "selectionType":  "fixed",
+                                            "selectionSource":  "plan-default"
+                                        },
+                       "deploymentProtection":  [
+                                                    "vercel_authentication"
+                                                ]
+                   },
+    "recoveryEnabled":  false,
+    "buildEnv":  {
+                     "ACCOUNT_ACCESS_RECOVERY_ENABLED":  "false"
+                 },
+    "runtimeEnv":  {
+                       "ACCOUNT_ACCESS_RECOVERY_ENABLED":  "false"
+                   },
+    "productionAuthEmailOtpExpiry":  "unconfirmed; maximum required 3600 seconds",
+    "liveSetupLinksSent":  0,
+    "verification":  {
+                         "adminUnit":  {
+                                           "passed":  1014,
+                                           "skipped":  110,
+                                           "filesPassed":  99
+                                       },
+                         "postgresIdentityAndRecovery":  {
+                                                             "passed":  24,
+                                                             "skipped":  8
+                                                         },
+                         "realAuthHttp":  {
+                                              "passed":  22
+                                          },
+                         "web":  {
+                                     "passed":  190,
+                                     "filesPassed":  36
+                                 },
+                         "adminBuild":  "passed",
+                         "adminTypeScriptAndLint":  "passed",
+                         "webTypeScript":  "passed",
+                         "webLint":  "passed; two existing warnings",
+                         "finalUiRegression":  {
+                                                   "passed":  31
+                                               },
+                         "finalEmailAndRecoveryRegression":  {
+                                                                 "passed":  34
+                                                             },
+                         "postgresAndRealPostgrest":  {
+                                                          "skipped":  0,
+                                                          "passed":  32
+                                                      }
+                     }
+}

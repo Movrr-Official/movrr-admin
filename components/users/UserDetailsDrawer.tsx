@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { UserRelationships } from "@/components/users/UserRelationships";
 import { AccountStatusRecovery } from "@/components/users/AccountStatusRecovery";
+import { AccountAccess } from "@/components/users/AccountAccess";
 import { useCapability } from "@/hooks/useAdminUser";
 import { OrganisationMembershipEditor } from "@/components/users/OrganisationMembershipEditor";
 import { accountRoleLabel } from "@/features/identity/domain/accountDomains";
@@ -654,7 +655,7 @@ export function UserDetailsDrawer({
                           </FormItem>
                         )}
                       />
-                      <OrganisationMembershipEditor key={user.id} userId={user.id} onChange={onUserUpdate} onBusyChange={setIsMembershipBusy} />
+                      <OrganisationMembershipEditor key={user.id} userId={user.id} onChange={onUserUpdate} onBusyChange={setIsMembershipBusy} accessRecoveryInDrawer />
                       <AccountStatusRecovery userId={user.id} pending={user.authSyncPending} onChange={onUserUpdate} />
                     </form>
                   </Form>
@@ -1074,6 +1075,8 @@ export function UserDetailsDrawer({
               </Card>
             )}
 
+            {open && (user.memberships?.length ?? 0) > 0 && !user.employeeRole && <AccountAccess key={`${user.id}:${user.updatedAt}:${user.memberships?.map(member => member.updatedAt).join(",")}`} userId={user.id} />}
+
             {/* Reset Password Confirmation */}
             {showResetPasswordConfirmation && isEditMode && (
               <Card className="border-border border-warning/20 dark:border-warning/20">
@@ -1178,7 +1181,7 @@ export function UserDetailsDrawer({
                       </>
                     )}
                   </Button>
-                  {canManageProfile && <Button variant="outline" size="sm" onClick={() => setShowResetPasswordConfirmation(true)} disabled={showResetPasswordConfirmation || isMembershipBusy}>
+                  {canManageProfile && (!(user.memberships?.length) || !!user.employeeRole) && <Button variant="outline" size="sm" onClick={() => setShowResetPasswordConfirmation(true)} disabled={showResetPasswordConfirmation || isMembershipBusy}>
                     <KeyRound className="mr-2 h-4 w-4" />Reset Password
                   </Button>}
                 </>

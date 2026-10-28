@@ -788,6 +788,12 @@ export async function sendPasswordResetEmail(
       .eq("user_id", profile.data.id)
       .maybeSingle();
     if (employee.error) throw new Error(employee.error.message);
+    if (!isEmployeeRole(employee.data?.role)) {
+      const membership = await supabaseAdmin.from("organisation_membership").select("organisation_id").eq("user_id", profile.data.id).maybeSingle();
+      if (membership.error || membership.data?.organisation_id) {
+        return { success: false, error: "Use Account Access in the user drawer to recover organisation account access." };
+      }
+    }
     const origin = isEmployeeRole(employee.data?.role)
       ? APP_URL
       : CUSTOMER_APP_URL;

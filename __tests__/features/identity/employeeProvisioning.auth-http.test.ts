@@ -69,7 +69,7 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
       "--env", `GOTRUE_DB_DATABASE_URL=postgres://postgres:isolated-local-test-only@host.docker.internal:55443/${database}?search_path=auth`,
       "--env", "GOTRUE_SITE_URL=http://localhost:3000", "--env", "API_EXTERNAL_URL=http://127.0.0.1:55444",
       "--env", `GOTRUE_JWT_SECRET=${secret}`, "--env", "GOTRUE_JWT_ADMIN_ROLES=service_role", "--env", "GOTRUE_JWT_AUD=authenticated",
-      "--env", "GOTRUE_EXTERNAL_EMAIL_ENABLED=true", "--env", "GOTRUE_MAILER_AUTOCONFIRM=true", "--env", "GOTRUE_DISABLE_SIGNUP=false",
+      "--env", "GOTRUE_EXTERNAL_EMAIL_ENABLED=true", "--env", "GOTRUE_MAILER_AUTOCONFIRM=true", "--env", "GOTRUE_DISABLE_SIGNUP=false", "--env", "GOTRUE_MAILER_OTP_EXP=3600",
       "public.ecr.aws/supabase/gotrue:v2.197.0"], { windowsHide: true, stdio: "pipe" });
     started = true;
     let healthy = false;
@@ -187,6 +187,28 @@ describe.skipIf(process.env.MOVRR_EMPLOYEE_AUTH_HTTP !== "1")("real GoTrue provi
     expect(login.data.session?.access_token).toBeTruthy();
     expect((await db`select u.role,u.status,r.city,r.country from public."user" u join rider r on r.user_id=u.id where u.id=${id}`)[0]).toMatchObject({ role: "rider", status: "active", city: "Amsterdam", country: "NL" });
     expect(await db`select id from admin_users where user_id=${id}`).toHaveLength(0);
+  });
+  it("recovery links preserve passwords and linked identities, supersede safely, reject expiry and allow a single use", async () => {
+    const email = `${randomUUID()}@example.test`, password = "synthetic-existing-password-only";
+    const created = await admin.createUser({ email, password, email_confirm: true });
+    expect(created.error).toBeNull(); const id = created.data.user!.id;
+    const identities = await db`select id,provider,provider_id from auth.identities where user_id=${id} order by id`;
+    const authClient = new GoTrueClient({ url: "http://127.0.0.1:55444", headers: { Authorization: `Bearer ${token}` }, autoRefreshToken: false, persistSession: false });
+    const generate = async () => {
+      const result = await admin.generateLink({ type: "recovery", email }); expect(result.error).toBeNull();
+      expect(result.data.user?.id).toBe(id); return result.data.properties!.hashed_token;
+    };
+    const first = await generate();
+    expect((await authClient.signInWithPassword({ email, password })).error).toBeNull();
+    await db`update auth.users set recovery_sent_at=now()-interval '2 hours' where id=${id}`;
+    expect((await authClient.verifyOtp({ type: "recovery", token_hash: first })).error).not.toBeNull();
+    const next = await generate();
+    if (next !== first) expect((await authClient.verifyOtp({ type: "recovery", token_hash: first })).error).not.toBeNull();
+    expect((await authClient.verifyOtp({ type: "recovery", token_hash: next })).error).toBeNull();
+    expect((await authClient.verifyOtp({ type: "recovery", token_hash: next })).error).not.toBeNull();
+    expect((await authClient.signInWithPassword({ email, password })).error).toBeNull();
+    expect(await db`select id,provider,provider_id from auth.identities where user_id=${id} order by id`).toEqual(identities);
+    expect((await authClient.verifyOtp({ type: "recovery", token_hash: "invalid-synthetic-token" })).error).not.toBeNull();
   });
   it("authenticates a deliberately User-only account with no Rider, organisation or Staff authority", async () => {
     const email = `${randomUUID()}@example.test`;

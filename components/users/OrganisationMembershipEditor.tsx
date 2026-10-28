@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 type Organisation = { id: string; name: string; type: string; status: string };
 type Invitation = { id: string; target_entity_id: string; role: string; status: string; expires_at: string };
 /** Mounted only within the existing Edit User workflow. No View-mode effects. */
-export function OrganisationMembershipEditor({ userId, onChange, onBusyChange }: { userId: string; onChange?: () => void; onBusyChange?: (busy: boolean) => void }) {
+export function OrganisationMembershipEditor({ userId, onChange, onBusyChange, accessRecoveryInDrawer = false }: { userId: string; onChange?: () => void; onBusyChange?: (busy: boolean) => void; accessRecoveryInDrawer?: boolean }) {
   const [memberships, setMemberships] = useState<AccountMembership[]>([]);
   const [organisations, setOrganisations] = useState<Organisation[]>([]);
   const [drafts, setDrafts] = useState<Record<string, { role: string; version: string }>>({});
@@ -114,7 +114,7 @@ export function OrganisationMembershipEditor({ userId, onChange, onBusyChange }:
           {canGrant(member.role, member) && <Button type="button" variant="outline" disabled={busy || protectedOwner} onClick={() => void save(member.organisationId, member.role, member.status === "revoked" ? "active" : "revoked", member)}>{member.status === "revoked" ? "Restore membership" : "Revoke membership"}</Button>}
         </div>
         {protectedOwner && <p className="text-xs text-muted-foreground">Cannot remove the last active organisation Owner. Assign another active Owner first.</p>}
-        {canGrant(member.role, member) && member.status === "invited" && !invitations.some(invitation => invitation.target_entity_id === member.organisationId && invitation.status === "pending") && <Button type="button" variant="outline" disabled={busy} onClick={() => void invite(member.organisationId, member.role, member)}>Create invitation link</Button>}
+        {!accessRecoveryInDrawer && canGrant(member.role, member) && member.status === "invited" && !invitations.some(invitation => invitation.target_entity_id === member.organisationId && invitation.status === "pending") && <Button type="button" variant="outline" disabled={busy} onClick={() => void invite(member.organisationId, member.role, member)}>Create invitation link</Button>}
         {invitations.filter(invitation => canGrant(member.role, member) && invitation.target_entity_id === member.organisationId && invitation.status === "pending").map(invitation => <Button key={invitation.id} type="button" variant="outline" disabled={busy} onClick={async () => {
           setBusy(true); setError(""); setNotice("");
           try {

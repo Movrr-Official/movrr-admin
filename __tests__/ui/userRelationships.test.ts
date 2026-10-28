@@ -9,6 +9,7 @@ const state = vi.hoisted(() => ({ allowed: true, approve: true, assign: true, ro
 vi.mock("@/hooks/useAdminUser", () => ({ useCapability: (cap: string) => state.allowed && (cap !== "users.role.approve" || state.approve) && (cap !== "users.role.assign" || state.assign) }));
 vi.mock("@/app/actions/accountMemberships", () => ({ getAccountMemberships: state.read, getAccountOrganisations: state.orgs, getAccountInvitations: state.invites, changeAccountMembership: state.change, issueAccountInvitation: state.issue, revokeAccountInvitation: vi.fn(async () => ({success:true,data:null})), retryAccountAuthSynchronization: state.retry }));
 vi.mock("@/app/actions/users", () => ({ updateUser: state.update, sendPasswordResetEmail: vi.fn(), exportUserData: vi.fn(), getUserActivityLogs: async () => ({success:true,data:[]}), getUserRoutes: state.riderRead, getUserCampaigns: state.riderRead, getUserRewardTransactions: state.riderRead, getUserPointsBalance: state.riderRead }));
+vi.mock("@/app/actions/accountAccess", () => ({ getAccountAccess: async () => ({ success: true, data: { userId: "synthetic", eligible: true, hasPassword: false, lastSignInAt: null, memberships: [] } }), sendAccountAccess: vi.fn() }));
 import { UserRelationships } from "@/components/users/UserRelationships";
 import { OrganisationMembershipEditor } from "@/components/users/OrganisationMembershipEditor";
 import { AccountStatusRecovery } from "@/components/users/AccountStatusRecovery";

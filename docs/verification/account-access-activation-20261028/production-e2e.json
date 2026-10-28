@@ -1,0 +1,55 @@
+{
+  "startedAt": "2026-10-28T10:04:29.056Z",
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "emailOtpExpirySeconds": 3600,
+  "expiryConfirmation": "User verified directly in production Supabase Dashboard",
+  "checks": {
+    "realOperatorMfa": true,
+    "deployedActionReferences": true,
+    "productionFeatureGate": true,
+    "sendSetupLinkEligible": true,
+    "resendInvitationEligible": true,
+    "unauthenticatedDenied": true,
+    "organisationPrincipalDenied": true,
+    "ownerApprovalEnforced": true,
+    "crossOrganisationDenied": true,
+    "expiredSetupLinkRejectedByProductionApp": true,
+    "concurrentCooldownRequestsDeniedWithoutDuplicateAttempt": true,
+    "freshSetupLinkAcceptedByProductionApp": true,
+    "singleUseLinkReplayRejected": true,
+    "attemptOutcomeAndDeliveryAudited": true,
+    "syntheticMembershipsUnchanged": true,
+    "preexistingMembershipsUnchanged": true
+  },
+  "emails": [
+    {
+      "target": "c1643cdf-9446-45ca-87ca-e5c07f97c9c9",
+      "providerId": "01a181f8-0bb8-7eef-881a-b36a435c5132",
+      "event": "delivered",
+      "syntheticRecipient": true,
+      "containsOrganisationName": true,
+      "containsExpiry": true
+    },
+    {
+      "target": "1703a5ee-f2e3-4e5f-95f6-88109200257b",
+      "providerId": "01a181f8-232d-7634-aefb-7ad0702b0631",
+      "event": "delivered",
+      "syntheticRecipient": true,
+      "containsOrganisationName": true,
+      "containsExpiry": true
+    }
+  ],
+  "affectedUserContacted": false,
+  "setupCredentialPresent": true,
+  "status": "passed",
+  "cleanup": {
+    "syntheticAccountsBanned": [
+      "236feec3-e543-4e65-ae8a-455ad6f2548d",
+      "c1643cdf-9446-45ca-87ca-e5c07f97c9c9",
+      "1703a5ee-f2e3-4e5f-95f6-88109200257b"
+    ],
+    "syntheticOperatorEmployeeGrantRevoked": true
+  },
+  "completedAt": "2026-10-28T10:04:50.741Z",
+  "fixtureManifest": "docs\\verification\\account-access-activation-20261028\\synthetic-fixture.json"
+}

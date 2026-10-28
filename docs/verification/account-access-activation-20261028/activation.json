@@ -1,0 +1,43 @@
+{
+  "activated": true,
+  "productionUrl": "https://admin.movrr.nl",
+  "deployment": {
+    "id": "dpl_Cb4ZtZk4SsnxJUerwW2bcfhaW85E",
+    "url": "https://movrr-admin-1tnx8gcyf-movrrops-projects.vercel.app",
+    "productionUrl": "https://admin.movrr.nl",
+    "inspectorUrl": "https://vercel.com/movrrops-projects/movrr-admin/Cb4ZtZk4SsnxJUerwW2bcfhaW85E",
+    "readyState": "READY",
+    "target": "production",
+    "deploymentApiUrl": "https://api.vercel.com/v13/deployments/dpl_Cb4ZtZk4SsnxJUerwW2bcfhaW85E",
+    "buildMachine": {
+      "cores": 2,
+      "memory": 8192,
+      "machine": "basic",
+      "selectionType": "fixed",
+      "selectionSource": "plan-default"
+    },
+    "deploymentProtection": [
+      "vercel_authentication"
+    ]
+  },
+  "productionGate": true,
+  "environmentVariablePersisted": true,
+  "emailOtpExpirationSeconds": 3600,
+  "confirmation": "User directly verified production Supabase Dashboard",
+  "verifiedAt": "2026-10-28T10:06:39.802Z",
+  "migrations": [
+    "20261028103000",
+    "20261028110000"
+  ],
+  "adminTests": {
+    "passed": 1017,
+    "skipped": 111
+  },
+  "localPostgresRecoveryTests": {
+    "passed": 24,
+    "skipped": 8
+  },
+  "typeScriptAndLint": "passed",
+  "productionEndToEnd": "passed",
+  "affectedUserContacted": false
+}

@@ -1,0 +1,20 @@
+{
+  "runId": "2c206ddf-6411-40e6-bd4c-89e176ac6192",
+  "organisationId": "1f6de656-c4f0-4c66-9837-760b6095f763",
+  "accounts": {
+    "setup": "236feec3-e543-4e65-ae8a-455ad6f2548d",
+    "invitation": "f82e03fc-0e6d-4e6d-8c8b-a54aa1db9972",
+    "operator": "f17cccef-f39b-44f7-b241-fe1c35715149",
+    "operator-2": "69e50d84-b406-43ef-a4cd-143fc520266b",
+    "setup-2": "c1643cdf-9446-45ca-87ca-e5c07f97c9c9",
+    "invitation-2": "1703a5ee-f2e3-4e5f-95f6-88109200257b"
+  },
+  "retiredOperators": [
+    "f17cccef-f39b-44f7-b241-fe1c35715149"
+  ],
+  "operatorGeneration": 2,
+  "emails": {
+    "setup-2": "delivered+movrr-2c206ddf-641-setup-2@resend.dev",
+    "invitation-2": "delivered+movrr-2c206ddf-641-invitation-2@resend.dev"
+  }
+}

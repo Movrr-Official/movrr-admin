@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-10-28T10:06:40.593Z",
+  "checks": [
+    {
+      "path": "/auth/signin",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/users",
+      "status": 307,
+      "location": "/auth/signin?redirectTo=%2Fusers"
+    },
+    {
+      "rpc": "account_access_state",
+      "anonymousStatus": 401
+    },
+    {
+      "rpc": "begin_account_access",
+      "anonymousStatus": 401
+    }
+  ],
+  "liveSetupLinksSent": 0
+}
