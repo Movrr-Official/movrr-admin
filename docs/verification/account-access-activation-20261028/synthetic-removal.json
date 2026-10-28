@@ -1,0 +1,388 @@
+{
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "startedAt": "2026-10-28T10:24:01.374Z",
+  "accountIds": [
+    "1703a5ee-f2e3-4e5f-95f6-88109200257b",
+    "236feec3-e543-4e65-ae8a-455ad6f2548d",
+    "69e50d84-b406-43ef-a4cd-143fc520266b",
+    "c1643cdf-9446-45ca-87ca-e5c07f97c9c9",
+    "f17cccef-f39b-44f7-b241-fe1c35715149",
+    "f82e03fc-0e6d-4e6d-8c8b-a54aa1db9972"
+  ],
+  "mode": "apply",
+  "affectedUserContacted": false,
+  "deleted": [
+    {
+      "relation": "auth.identities",
+      "rows": 6
+    },
+    {
+      "relation": "auth.mfa_amr_claims",
+      "rows": 5
+    },
+    {
+      "relation": "auth.mfa_challenges",
+      "rows": 2
+    },
+    {
+      "relation": "auth.mfa_factors",
+      "rows": 2
+    },
+    {
+      "relation": "auth.one_time_tokens",
+      "rows": 2
+    },
+    {
+      "relation": "auth.refresh_tokens",
+      "rows": 5
+    },
+    {
+      "relation": "auth.sessions",
+      "rows": 3
+    },
+    {
+      "relation": "auth.users",
+      "rows": 6
+    },
+    {
+      "relation": "public.admin_dashboard_sessions",
+      "rows": 2
+    },
+    {
+      "relation": "public.admin_users",
+      "rows": 2
+    },
+    {
+      "relation": "public.organisation_membership",
+      "rows": 4
+    },
+    {
+      "relation": "public.platform_invitations",
+      "rows": 2
+    },
+    {
+      "relation": "public.user",
+      "rows": 6
+    },
+    {
+      "relation": "public.user_activity",
+      "rows": 9
+    }
+  ],
+  "protectedFingerprints": [
+    {
+      "relation": "auth.audit_log_entries",
+      "rows": 3463,
+      "digest": "fb3d68f4bb6573ce7b036670f280572c"
+    },
+    {
+      "relation": "auth.identities",
+      "rows": 16,
+      "digest": "8aacd7e3d066da993417dac59c9bfd68"
+    },
+    {
+      "relation": "auth.mfa_amr_claims",
+      "rows": 70,
+      "digest": "e61d6e730f7cb3064b22b66d3921cd2c"
+    },
+    {
+      "relation": "auth.mfa_challenges",
+      "rows": 78,
+      "digest": "aa9f179b6eae851b6d0348f2ee596d6b"
+    },
+    {
+      "relation": "auth.mfa_factors",
+      "rows": 1,
+      "digest": "98ba9f89cd409973513e3ccaf6b6217e"
+    },
+    {
+      "relation": "auth.mfa_recovery_code_sets",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "auth.mfa_recovery_codes",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "auth.oauth_authorizations",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "auth.oauth_consents",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "auth.one_time_tokens",
+      "rows": 2,
+      "digest": "a15f745395632baadbd8f7411020d52d"
+    },
+    {
+      "relation": "auth.refresh_tokens",
+      "rows": 175,
+      "digest": "98202337f58c513880f0ce4094c77f74"
+    },
+    {
+      "relation": "auth.scim_users",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "auth.sessions",
+      "rows": 47,
+      "digest": "235cb0a5b576459c8832eb75e80d7790"
+    },
+    {
+      "relation": "auth.users",
+      "rows": 15,
+      "digest": "18fb9b984f079812f8c832c212b42214"
+    },
+    {
+      "relation": "auth.webauthn_challenges",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "auth.webauthn_credentials",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.account_auth_sync",
+      "rows": 1,
+      "digest": "3489aeae2b61ec6a89b44d71a71eed7b"
+    },
+    {
+      "relation": "public.account_deletion_audit",
+      "rows": 315,
+      "digest": "fc0b6f4ff6cd7b1741c9c7c5424e8e31"
+    },
+    {
+      "relation": "public.account_deletion_managed_write",
+      "rows": 100,
+      "digest": "c9e4f4a63005558079e3edb590e74098"
+    },
+    {
+      "relation": "public.account_deletion_write_guard",
+      "rows": 18,
+      "digest": "96123fb2a41bf7bb51f94c9a1f7a6849"
+    },
+    {
+      "relation": "public.admin_dashboard_sessions",
+      "rows": 2,
+      "digest": "5a2bff245c5735fa2aa09ad46f7e2d25"
+    },
+    {
+      "relation": "public.admin_users",
+      "rows": 3,
+      "digest": "f84b958c52660488539bf54cde6d08bf"
+    },
+    {
+      "relation": "public.advertiser",
+      "rows": 1,
+      "digest": "1febc297c1c5412bf7854145d3874e6a"
+    },
+    {
+      "relation": "public.audit_log",
+      "rows": 1266,
+      "digest": "3bffe678a6856c0edcd9a5b870baa191"
+    },
+    {
+      "relation": "public.auth_provider_credentials",
+      "rows": 1,
+      "digest": "504af38fb7f261d1b77453883fa4446e"
+    },
+    {
+      "relation": "public.auth_provider_proofs",
+      "rows": 1,
+      "digest": "ceacc61151b0cb4cdf608c7c22f3b1b0"
+    },
+    {
+      "relation": "public.campaign_assignment_events",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.community_ride",
+      "rows": 3,
+      "digest": "2237e9b0c59e2f439130e7b6fd507a5d"
+    },
+    {
+      "relation": "public.community_ride_creator_grant",
+      "rows": 2,
+      "digest": "c62b2d7824fdbef4212a9c9571ba3b4b"
+    },
+    {
+      "relation": "public.employee_provisioning",
+      "rows": 2,
+      "digest": "68141182a4f4dfafc14d26746638f165"
+    },
+    {
+      "relation": "public.export_history",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.external_account_provisioning",
+      "rows": 5,
+      "digest": "c14e9a45dc8fe7103f44300c990264f4"
+    },
+    {
+      "relation": "public.notifications",
+      "rows": 32,
+      "digest": "1f94a5989e1bffb127458b47c9fbf1fd"
+    },
+    {
+      "relation": "public.ops_command_receipt",
+      "rows": 2,
+      "digest": "1f62cfead6ef50829384dd418d92877e"
+    },
+    {
+      "relation": "public.ops_notification_recipient",
+      "rows": 9,
+      "digest": "957fee08f9ad5b2e4afdf080d47288f4"
+    },
+    {
+      "relation": "public.ops_notification_send",
+      "rows": 9,
+      "digest": "34bf6bff4c07624472dc51c005225677"
+    },
+    {
+      "relation": "public.organisation",
+      "rows": 12,
+      "digest": "a84cf0421681b9f016c9f6a5aa900942"
+    },
+    {
+      "relation": "public.organisation_membership",
+      "rows": 3,
+      "digest": "651305d7b2fa4abfcb222a1c212c4951"
+    },
+    {
+      "relation": "public.partner_location_audit",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.platform_audit_record",
+      "rows": 195,
+      "digest": "3e83cfce81d4c3aa6b40ab9a530d2342"
+    },
+    {
+      "relation": "public.platform_invitations",
+      "rows": 3,
+      "digest": "33872c9750442702aac661c9d788e27d"
+    },
+    {
+      "relation": "public.reward_partner_location",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.ride_ops_alert",
+      "rows": 5,
+      "digest": "4322154eff9510245c5159066252f5ec"
+    },
+    {
+      "relation": "public.rider",
+      "rows": 11,
+      "digest": "9b246a3f87b004361352198fd00ea2cf"
+    },
+    {
+      "relation": "public.rider_availability_log",
+      "rows": 33,
+      "digest": "956dc91754daf1599971268ce09f35c3"
+    },
+    {
+      "relation": "public.rider_route",
+      "rows": 3,
+      "digest": "180af5eb87b1fd33d0642ca4b8af16a9"
+    },
+    {
+      "relation": "public.route",
+      "rows": 3,
+      "digest": "b7c0f740df125566055fe923abd982a3"
+    },
+    {
+      "relation": "public.route_optimizer_decisions",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.route_optimizer_runs",
+      "rows": 2,
+      "digest": "df521cc8b0f618e4719397c5b733617b"
+    },
+    {
+      "relation": "public.scheduled_exports",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.session_flag",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.suggested_routes",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.support_ticket",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.user",
+      "rows": 14,
+      "digest": "f675bdd7a295984037b29149b3885f4c"
+    },
+    {
+      "relation": "public.user_activity",
+      "rows": 169,
+      "digest": "e8b6adb47c9402d06bd623dbad2b28b2"
+    },
+    {
+      "relation": "public.user_preferences",
+      "rows": 3,
+      "digest": "4e17f730fcf8926dfed917f23a293d09"
+    },
+    {
+      "relation": "public.user_push_tokens",
+      "rows": 30,
+      "digest": "c3416b828f39a03f1bdeeb67e2a252b7"
+    }
+  ],
+  "remaining": {
+    "auth.users": 0,
+    "public.user": 0,
+    "public.admin_users": 0,
+    "public.organisation_membership": 0,
+    "auth.sessions": 0,
+    "auth.refresh_tokens": 0,
+    "auth.identities": 0,
+    "auth.mfa_factors": 0,
+    "auth.one_time_tokens": 0,
+    "public.admin_dashboard_sessions": 0,
+    "public.user_activity": 0
+  },
+  "preservedManagedWriteHolds": true,
+  "archivedSyntheticSessionEvents": 9,
+  "independentVerification": {
+    "auth.users": 0,
+    "public.user": 0,
+    "public.admin_users": 0,
+    "public.organisation_membership": 0,
+    "auth.sessions": 0,
+    "auth.refresh_tokens": 0,
+    "auth.identities": 0,
+    "auth.mfa_factors": 0,
+    "auth.one_time_tokens": 0,
+    "public.admin_dashboard_sessions": 0,
+    "public.user_activity": 0
+  },
+  "completedAt": "2026-10-28T10:24:29.225Z"
+}

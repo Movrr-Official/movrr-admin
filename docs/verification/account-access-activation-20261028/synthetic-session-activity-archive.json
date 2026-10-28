@@ -1,0 +1,185 @@
+{
+  "reason": "Synthetic account removal requested by owner",
+  "records": [
+    {
+      "id": "2d8418fc-b444-43fa-9417-de5160037d75",
+      "user_id": "69e50d84-b406-43ef-a4cd-143fc520266b",
+      "actor_user_id": "69e50d84-b406-43ef-a4cd-143fc520266b",
+      "source": "admin_access",
+      "action": "dashboard_session_started",
+      "description": "delivered+movrr-access-2c206ddf-6411-40e6-bd4c-89e176ac6192-operator-2@resend.dev started an admin dashboard session.",
+      "related_entity_type": "admin_user",
+      "related_entity_id": "f9f9657c-8bea-4750-928e-581731f4a715",
+      "metadata": {
+        "role": "super_admin",
+        "source_ip": "86.95.122.22",
+        "entry_path": "/users",
+        "user_agent": "node",
+        "last_sign_in_at": "2026-10-28T09:52:38.134014Z",
+        "session_started_at": "2026-10-28T09:52:39.999Z"
+      },
+      "occurred_at": "2026-10-28T09:52:39.999Z",
+      "created_at": "2026-10-28T09:52:40.059Z"
+    },
+    {
+      "id": "5f892e5c-af90-4465-b6e1-367b392713eb",
+      "user_id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "actor_user_id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "source": "admin_access",
+      "action": "dashboard_session_started",
+      "description": "delivered+movrr-access-2c206ddf-6411-40e6-bd4c-89e176ac6192-operator@resend.dev started an admin dashboard session.",
+      "related_entity_type": "admin_user",
+      "related_entity_id": "1d06fd0b-395c-4113-a50a-e7af31b4f0ce",
+      "metadata": {
+        "role": "super_admin",
+        "source_ip": "86.95.122.22",
+        "entry_path": "/users",
+        "user_agent": "node",
+        "last_sign_in_at": "2026-10-28T09:40:04.141001Z",
+        "session_started_at": "2026-10-28T09:40:05.097Z"
+      },
+      "occurred_at": "2026-10-28T09:40:05.097Z",
+      "created_at": "2026-10-28T09:40:05.147Z"
+    },
+    {
+      "id": "a9b5fc3e-838b-4509-98ee-2f8fcb1f5b9f",
+      "user_id": "69e50d84-b406-43ef-a4cd-143fc520266b",
+      "actor_user_id": "69e50d84-b406-43ef-a4cd-143fc520266b",
+      "source": "admin_access",
+      "action": "dashboard_session_started",
+      "description": "delivered+movrr-access-2c206ddf-6411-40e6-bd4c-89e176ac6192-operator-2@resend.dev started an admin dashboard session.",
+      "related_entity_type": "admin_user",
+      "related_entity_id": "f9f9657c-8bea-4750-928e-581731f4a715",
+      "metadata": {
+        "role": "super_admin",
+        "source_ip": "86.95.122.22",
+        "entry_path": "/users",
+        "user_agent": "node",
+        "last_sign_in_at": "2026-10-28T10:04:31.755181Z",
+        "session_started_at": "2026-10-28T10:04:33.644Z"
+      },
+      "occurred_at": "2026-10-28T10:04:33.644Z",
+      "created_at": "2026-10-28T10:04:34.455Z"
+    },
+    {
+      "id": "b069170c-69d1-4492-9ebb-ff47e1d433db",
+      "user_id": "69e50d84-b406-43ef-a4cd-143fc520266b",
+      "actor_user_id": "69e50d84-b406-43ef-a4cd-143fc520266b",
+      "source": "admin_access",
+      "action": "dashboard_session_started",
+      "description": "delivered+movrr-access-2c206ddf-6411-40e6-bd4c-89e176ac6192-operator-2@resend.dev started an admin dashboard session.",
+      "related_entity_type": "admin_user",
+      "related_entity_id": "f9f9657c-8bea-4750-928e-581731f4a715",
+      "metadata": {
+        "role": "super_admin",
+        "source_ip": "86.95.122.22",
+        "entry_path": "/users",
+        "user_agent": "node",
+        "last_sign_in_at": "2026-10-28T09:46:41.899362Z",
+        "session_started_at": "2026-10-28T09:46:43.047Z"
+      },
+      "occurred_at": "2026-10-28T09:46:43.047Z",
+      "created_at": "2026-10-28T09:46:43.110Z"
+    },
+    {
+      "id": "b47e127b-4efd-4ab5-9710-756fc51885f6",
+      "user_id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "actor_user_id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "source": "admin_access",
+      "action": "dashboard_session_started",
+      "description": "delivered+movrr-access-2c206ddf-6411-40e6-bd4c-89e176ac6192-operator@resend.dev started an admin dashboard session.",
+      "related_entity_type": "admin_user",
+      "related_entity_id": "1d06fd0b-395c-4113-a50a-e7af31b4f0ce",
+      "metadata": {
+        "role": "super_admin",
+        "source_ip": "86.95.122.22",
+        "entry_path": "/users",
+        "user_agent": "node",
+        "last_sign_in_at": "2026-10-28T09:43:54.540185Z",
+        "session_started_at": "2026-10-28T09:43:55.822Z"
+      },
+      "occurred_at": "2026-10-28T09:43:55.822Z",
+      "created_at": "2026-10-28T09:43:55.915Z"
+    },
+    {
+      "id": "c281b398-086f-423c-9255-8781d3a6e412",
+      "user_id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "actor_user_id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "source": "admin_access",
+      "action": "dashboard_session_started",
+      "description": "delivered+movrr-access-2c206ddf-6411-40e6-bd4c-89e176ac6192-operator@resend.dev started an admin dashboard session.",
+      "related_entity_type": "admin_user",
+      "related_entity_id": "1d06fd0b-395c-4113-a50a-e7af31b4f0ce",
+      "metadata": {
+        "role": "super_admin",
+        "source_ip": "86.95.122.22",
+        "entry_path": "/users",
+        "user_agent": "node",
+        "last_sign_in_at": "2026-10-28T09:37:31.496082Z",
+        "session_started_at": "2026-10-28T09:37:32.854Z"
+      },
+      "occurred_at": "2026-10-28T09:37:32.854Z",
+      "created_at": "2026-10-28T09:37:32.912Z"
+    },
+    {
+      "id": "d6f4fab2-4133-4a55-b0fc-99a1a54154e5",
+      "user_id": "69e50d84-b406-43ef-a4cd-143fc520266b",
+      "actor_user_id": "69e50d84-b406-43ef-a4cd-143fc520266b",
+      "source": "admin_access",
+      "action": "dashboard_session_started",
+      "description": "delivered+movrr-access-2c206ddf-6411-40e6-bd4c-89e176ac6192-operator-2@resend.dev started an admin dashboard session.",
+      "related_entity_type": "admin_user",
+      "related_entity_id": "f9f9657c-8bea-4750-928e-581731f4a715",
+      "metadata": {
+        "role": "super_admin",
+        "source_ip": "86.95.122.22",
+        "entry_path": "/users",
+        "user_agent": "node",
+        "last_sign_in_at": "2026-10-28T09:56:11.212147Z",
+        "session_started_at": "2026-10-28T09:56:12.299Z"
+      },
+      "occurred_at": "2026-10-28T09:56:12.299Z",
+      "created_at": "2026-10-28T09:56:12.365Z"
+    },
+    {
+      "id": "e6d1bdb1-b001-4a5d-8839-781a5a3e5fee",
+      "user_id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "actor_user_id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "source": "admin_access",
+      "action": "dashboard_session_started",
+      "description": "delivered+movrr-access-2c206ddf-6411-40e6-bd4c-89e176ac6192-operator@resend.dev started an admin dashboard session.",
+      "related_entity_type": "admin_user",
+      "related_entity_id": "1d06fd0b-395c-4113-a50a-e7af31b4f0ce",
+      "metadata": {
+        "role": "super_admin",
+        "source_ip": "86.95.122.22",
+        "entry_path": "/users",
+        "user_agent": "node",
+        "last_sign_in_at": "2026-10-28T09:39:38.795065Z",
+        "session_started_at": "2026-10-28T09:39:39.796Z"
+      },
+      "occurred_at": "2026-10-28T09:39:39.796Z",
+      "created_at": "2026-10-28T09:39:39.897Z"
+    },
+    {
+      "id": "f96ec02f-a16e-4aa1-9aee-fcfd1d067ca2",
+      "user_id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "actor_user_id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "source": "admin_access",
+      "action": "dashboard_session_started",
+      "description": "delivered+movrr-access-2c206ddf-6411-40e6-bd4c-89e176ac6192-operator@resend.dev started an admin dashboard session.",
+      "related_entity_type": "admin_user",
+      "related_entity_id": "1d06fd0b-395c-4113-a50a-e7af31b4f0ce",
+      "metadata": {
+        "role": "super_admin",
+        "source_ip": "86.95.122.22",
+        "entry_path": "/users",
+        "user_agent": "node",
+        "last_sign_in_at": "2026-10-28T09:39:11.94915Z",
+        "session_started_at": "2026-10-28T09:39:12.901Z"
+      },
+      "occurred_at": "2026-10-28T09:39:12.901Z",
+      "created_at": "2026-10-28T09:39:12.947Z"
+    }
+  ]
+}

@@ -10,6 +10,7 @@ managed._compile(ts.transpileModule(fs.readFileSync('lib/managedWritePermit.ts',
 const url=process.env.NEXT_PUBLIC_SUPABASE_URL,anon=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
 assert.equal(new URL(url).hostname,'kzdvunpuxaxlphqvmzxw.supabase.co');
 const out='docs/verification/account-access-activation-20261028';fs.mkdirSync(out,{recursive:true});
+assert(!fs.existsSync(path.join(out,'synthetic-removal.json')),'Activation fixtures were permanently removed; this historical run must not be recreated.');
 const manifestFile=path.join(out,'synthetic-fixture.json');
 const fixture=fs.existsSync(manifestFile)?JSON.parse(fs.readFileSync(manifestFile,'utf8')):{runId:crypto.randomUUID(),organisationId:crypto.randomUUID(),accounts:{}};
 if(!fixture.accounts.operator&&fixture.retiredOperators?.length)fixture.accounts.operator=fixture.retiredOperators.at(-1);

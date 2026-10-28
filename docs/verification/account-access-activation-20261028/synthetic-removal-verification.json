@@ -1,0 +1,54 @@
+{
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "startedAt": "2026-10-28T10:25:02.826Z",
+  "accountIds": [
+    "1703a5ee-f2e3-4e5f-95f6-88109200257b",
+    "236feec3-e543-4e65-ae8a-455ad6f2548d",
+    "69e50d84-b406-43ef-a4cd-143fc520266b",
+    "c1643cdf-9446-45ca-87ca-e5c07f97c9c9",
+    "f17cccef-f39b-44f7-b241-fe1c35715149",
+    "f82e03fc-0e6d-4e6d-8c8b-a54aa1db9972"
+  ],
+  "mode": "verify-only",
+  "affectedUserContacted": false,
+  "remaining": {
+    "auth.users": 0,
+    "public.user": 0,
+    "public.admin_users": 0,
+    "public.organisation_membership": 0,
+    "auth.sessions": 0,
+    "auth.refresh_tokens": 0,
+    "auth.identities": 0,
+    "auth.mfa_factors": 0,
+    "auth.one_time_tokens": 0,
+    "public.admin_dashboard_sessions": 0,
+    "public.user_activity": 0
+  },
+  "authApi": [
+    {
+      "id": "1703a5ee-f2e3-4e5f-95f6-88109200257b",
+      "status": 404
+    },
+    {
+      "id": "236feec3-e543-4e65-ae8a-455ad6f2548d",
+      "status": 404
+    },
+    {
+      "id": "69e50d84-b406-43ef-a4cd-143fc520266b",
+      "status": 404
+    },
+    {
+      "id": "c1643cdf-9446-45ca-87ca-e5c07f97c9c9",
+      "status": 404
+    },
+    {
+      "id": "f17cccef-f39b-44f7-b241-fe1c35715149",
+      "status": 404
+    },
+    {
+      "id": "f82e03fc-0e6d-4e6d-8c8b-a54aa1db9972",
+      "status": 404
+    }
+  ],
+  "completedAt": "2026-10-28T10:25:05.101Z"
+}
