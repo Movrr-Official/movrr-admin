@@ -1,0 +1,100 @@
+{
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "organisationId": "1f6de656-c4f0-4c66-9837-760b6095f763",
+  "startedAt": "2026-10-28T11:43:19.370Z",
+  "mode": "rollback-rehearsal",
+  "affectedUserContacted": false,
+  "removedOrganisation": {
+    "id": "1f6de656-c4f0-4c66-9837-760b6095f763",
+    "name": "MOVRR synthetic recovery verification",
+    "type": "reward_partner",
+    "status": "active",
+    "created_at": "2026-10-28T09:37:27.637Z",
+    "updated_at": "2026-10-28T09:37:27.637Z"
+  },
+  "accountInventory": {
+    "auth_accounts": 0,
+    "public_accounts": 0,
+    "partner_accounts": 0
+  },
+  "protectedFingerprints": [
+    {
+      "relation": "public.account_deletion_audit",
+      "rows": 315,
+      "digest": "fc0b6f4ff6cd7b1741c9c7c5424e8e31"
+    },
+    {
+      "relation": "public.account_deletion_managed_write",
+      "rows": 100,
+      "digest": "c9e4f4a63005558079e3edb590e74098"
+    },
+    {
+      "relation": "public.advertiser",
+      "rows": 1,
+      "digest": "1febc297c1c5412bf7854145d3874e6a"
+    },
+    {
+      "relation": "public.audit_log",
+      "rows": 1345,
+      "digest": "8db522d042d0fc07dcf506b0fcd5b68c"
+    },
+    {
+      "relation": "public.employee_provisioning",
+      "rows": 2,
+      "digest": "68141182a4f4dfafc14d26746638f165"
+    },
+    {
+      "relation": "public.external_account_provisioning",
+      "rows": 5,
+      "digest": "c14e9a45dc8fe7103f44300c990264f4"
+    },
+    {
+      "relation": "public.fulfilment",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.fulfilment_resource",
+      "rows": 38,
+      "digest": "df2608f89d7b837dc5ec955f37c6b843"
+    },
+    {
+      "relation": "public.organisation",
+      "rows": 11,
+      "digest": "77493a45e1fdc2553737e040503c56a8"
+    },
+    {
+      "relation": "public.organisation_membership",
+      "rows": 3,
+      "digest": "651305d7b2fa4abfcb222a1c212c4951"
+    },
+    {
+      "relation": "public.partner_validation",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "relation": "public.platform_audit_record",
+      "rows": 195,
+      "digest": "3e83cfce81d4c3aa6b40ab9a530d2342"
+    },
+    {
+      "relation": "public.reward_partner",
+      "rows": 10,
+      "digest": "695b6e8e52229ff1e97f862ecc3df126"
+    },
+    {
+      "relation": "public.reward_partner_location",
+      "rows": 0,
+      "digest": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  ],
+  "remaining": {
+    "auth_accounts": 0,
+    "public_accounts": 0,
+    "partner_accounts": 0,
+    "organisations": 0
+  },
+  "rolledBack": true,
+  "completedAt": "2026-10-28T11:43:34.485Z"
+}

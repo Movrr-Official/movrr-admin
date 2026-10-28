@@ -1,0 +1,14 @@
+{
+  "project": "kzdvunpuxaxlphqvmzxw",
+  "organisationId": "1f6de656-c4f0-4c66-9837-760b6095f763",
+  "startedAt": "2026-10-28T11:44:12.997Z",
+  "mode": "verify-only",
+  "affectedUserContacted": false,
+  "remaining": {
+    "auth_accounts": 0,
+    "public_accounts": 0,
+    "partner_accounts": 0,
+    "organisations": 0
+  },
+  "completedAt": "2026-10-28T11:44:13.287Z"
+}
